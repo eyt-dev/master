@@ -80,14 +80,12 @@
 				<div class="dropdown profile-dropdown">
 					<a href="{{url('/' . $page='#')}}" class="nav-link pr-0 leading-none" data-toggle="dropdown">
 						<span>
-						{{-- Auth::user()->profile_url --}}
-							<img src="#" alt="img" class="avatar avatar-md brround">
+						<img src="{{URL::asset('assets/images/users/2.jpg')}}" alt="user-img" class="avatar avatar-md brround">
 						</span>
 					</a>
 					<div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow animated">
 						<div class="text-center">
 							<a href="{{url('/' . $page='#')}}" class="dropdown-item text-center user pb-0 font-weight-bold">{{ Auth::user()->name }}</a>
-{{--													<span class="text-center user-semi-title">Web Designer</span>--}}
 							<div class="dropdown-divider"></div>
 						</div>
 						<a class="dropdown-item d-flex" href="{{url('/profile/'.Auth::id())}}">

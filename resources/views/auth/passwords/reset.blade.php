@@ -1,5 +1,9 @@
 @extends('layouts.master4')
 @section('css')
+<style>
+    .hide{display: none;}
+    label.error{font-size: 87.5%; color: #dc0441;}
+</style>
 @endsection
 @section('content')
     <div class="page">
@@ -21,43 +25,49 @@
                                               action="{{ route('password.update') }}" id="login">
                                             @csrf
                                             <input type="hidden" name="token" value="{{ $token }}">
-                                            <div class="input-group mb-4">
-                                                <div class="input-group-prepend">
-                                                    <div class="input-group-text">
-                                                        <i class="fe fe-user"></i>
+                                            <div class="mb-2">
+                                                <div class="input-group mb-1">
+                                                    <div class="input-group-prepend">
+                                                        <div class="input-group-text">
+                                                            <i class="fe fe-user"></i>
+                                                        </div>
                                                     </div>
+                                                    <input type="text" class="form-control" placeholder="Email" name="email" id="email">
                                                 </div>
-                                                <input type="text" class="form-control @error('password') is-invalid @enderror" placeholder="Email" name="email" value="{{ old('email') }}" autocomplete="email" autofocus>
                                                 @error('email')
-                                                <span class="invalid-feedback" role="alert">
-                                                        <strong>{{ $message }}</strong>
-                                                    </span>
+                                                    <label id="email-error" class="error" for="email">{{ $message }}</label>
+                                                @else
+                                                    <label id="email-error" class="error hide" for="email">The Email field is required</label>
                                                 @enderror
-                                            </div>
-                                            <div class="input-group mb-4">
-                                                <div class="input-group-prepend">
-                                                    <div class="input-group-text">
-                                                        <i class="fe fe-lock"></i>
+                                            </div>   
+                                            <div class="mb-2">
+                                                <div class="input-group mb-1">
+                                                    <div class="input-group-prepend">
+                                                        <div class="input-group-text">
+                                                            <i class="fe fe-lock"></i>
+                                                        </div>
                                                     </div>
+                                                    <input id="password" type="password" class="form-control" name="password" placeholder="Password">
                                                 </div>
-                                                <input type="password" class="form-control @error('password') is-invalid @enderror" name="password" id="password" placeholder="{{ __('Password') }}">
                                                 @error('password')
-                                                <span class="invalid-feedback" role="alert">
-                                                            <strong>{{ $message }}</strong>
-                                                        </span>
+                                                    <label id="password-error" class="error" for="password">{{ $message }}</label>
+                                                @else
+                                                    <label id="password-error" class="error hide" for="password">The password field is required</label>
                                                 @enderror
                                             </div>
-                                            <div class="input-group mb-4">
-                                                <div class="input-group-prepend">
-                                                    <div class="input-group-text">
-                                                        <i class="fe fe-lock"></i>
+                                            <div class="mb-2">
+                                                <div class="input-group mb-1">
+                                                    <div class="input-group-prepend">
+                                                        <div class="input-group-text">
+                                                            <i class="fe fe-lock"></i>
+                                                        </div>
                                                     </div>
+                                                    <input id="password_confirmation" type="password" class="form-control" name="password_confirmation" placeholder="Confirm Password">
                                                 </div>
-                                                <input type="password" class="form-control @error('password_confirmation') is-invalid @enderror" name="password_confirmation" id="password_confirmation" placeholder="{{ __('Confirm Password') }}" value="{{ old('password_confirmation') }}" autocomplete="password_confirmation" autofocus>
                                                 @error('password_confirmation')
-                                                <span class="invalid-feedback" role="alert">
-                                                            <strong>{{ $message }}</strong>
-                                                        </span>
+                                                    <label id="password_confirmation-error" class="error" for="password_confirmation">{{ $message }}</label>
+                                                @else
+                                                    <label id="password_confirmation-error" class="error hide" for="password_confirmation">The password     confirmation field is required</label>
                                                 @enderror
                                             </div>
                                             <div class="row">
@@ -66,9 +76,6 @@
                                                 </div>
                                             </div>
                                         </form>
-                                        {{-- <div class="text-center pt-4">
-                                            <div class="font-weight-normal fs-16">You Don't have an account <a class="btn-link font-weight-normal" href="#">Register Here</a></div>
-                                        </div> --}}
                                     </div>
                                 </div>
                             </div>
@@ -80,11 +87,8 @@
     </div>
 @endsection
 @section('js')
-<script>
-{{--    @if($errors->any())--}}
-{{--    toastr.error("{{ $errors->first() }}");--}}
-{{--    {{ implode('', $errors->all('<div>:message</div>')) }}--}}
-{{--    @endif--}}
+<script src="{{URL::asset('assets/plugins/forn-wizard/js/jquery.validate.min.js')}}"></script>
+<script>    
     $(document).ready(function() {
         $("#reset_password").validate({
             ignore: ":hidden",

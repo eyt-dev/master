@@ -1,5 +1,10 @@
 @extends('layouts.master')
-
+@section('css')
+<style>
+    .hide{display: none;}
+    label.error{font-size: 87.5%; color: #dc0441;}
+</style>
+@endsection
 @section('page-header')
     <div class="page-header">
         <div class="page-leftheader">
@@ -14,37 +19,6 @@
     </div>
 @endsection
 @section('content')
-    <div class="main-proifle">
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="box-widget widget-user">
-                    <div class="widget-user-image1 d-sm-flex">
-                        <div class="mt-1 ml-lg-5">
-                            <h4 class="pro-user-username mb-3 font-weight-bold">{{ $user->name }} <i
-                                    class="fa fa-check-circle text-success"></i></h4>
-                            <ul class="mb-0 pro-details">
-                                <li><span class="profile-icon"><i class="fe fe-mail"></i></span><span
-                                        class="h6 mt-3">{{ $user->email }}</span></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="profile-cover">
-            <div class="wideget-user-tab">
-                <div class="tab-menu-heading p-0">
-                    <div class="tabs-menu1 px-3">
-                        <ul class="nav">
-                            <li><a href="#myProfile" class="active fs-14" data-toggle="tab"> Profile</a></li>
-                           
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div><!-- /.profile-cover -->
-    </div>
-    <!-- Row -->
     <div class="row">
         <div class="col-xl-12 col-lg-12 col-md-12">
             <div class="border-0">
@@ -59,21 +33,21 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-sm-6 col-md-6">
-                                            <div class="input-box">
-                                                <label class="input-label">Name</label>
-                                                <input type="text" class="google-input" name="name" id="name"
-                                                    value="{{ $user->name }}" />
+                                            <div class="form-group">
+                                                <label class="form-label">Name <span class="text-red">*</span></label>
+                                                <input type="text" class="form-control" name="name" id="name" placeholder="Name" value="{{ $user->name }}">
+                                                @error('name')
+                                                    <label id="name-error" class="error" for="name">{{ $message }}</label>
+                                                @enderror
                                             </div>
-                                            @error('name')
-                                                <label id="name-error" class="error"
-                                                    for="name">{{ $message }}</label>
-                                            @enderror
                                         </div>
                                         <div class="col-sm-6 col-md-6">
-                                            <div class="input-box">
-                                                <label class="input-label">Email address</label>
-                                                <input type="email" name="email" value="{{ $user->email }}"
-                                                    class="google-input">
+                                            <div class="form-group">
+                                                <label class="form-label">Email address <span class="text-red">*</span></label>
+                                                <input type="text" class="form-control" name="email" id="email" placeholder="Email address" value="{{ $user->email }}">
+                                                @error('email')
+                                                    <label id="email-error" class="error" for="email">{{ $message }}</label>
+                                                @enderror
                                             </div>
                                         </div>
                                     </div>
@@ -93,37 +67,31 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-sm-4 col-md-4">
-                                            <div class="input-box">
-                                                <label class="input-label">Old Password</label>
-                                                <input type="password" name="old_password" class="google-input"
-                                                    id="old_password">
+                                            <div class="form-group">
+                                                <label class="form-label">Old Password <span class="text-red">*</span></label>
+                                                <input type="password" class="form-control" name="old_password" id="old_password" placeholder="Old Password">
+                                                @error('old_password')
+                                                    <label id="old_password-error" class="error" for="old_password">{{ $message }}</label>
+                                                @enderror
                                             </div>
-                                            @error('old_password')
-                                                <label id="name-error" class="error"
-                                                    for="name">{{ $message }}</label>
-                                            @enderror
                                         </div>
                                         <div class="col-sm-4 col-md-4">
-                                            <div class="input-box">
-                                                <label class="input-label">New Password</label>
-                                                <input type="password" name="password" class="google-input"
-                                                    id="password">
+                                            <div class="form-group">
+                                                <label class="form-label">New Password <span class="text-red">*</span></label>
+                                                <input type="password" class="form-control" name="password" id="password" placeholder="New Password">
+                                                @error('password')
+                                                    <label id="password-error" class="error" for="password">{{ $message }}</label>
+                                                @enderror
                                             </div>
-                                            @error('password')
-                                                <label id="name-error" class="error"
-                                                    for="name">{{ $message }}</label>
-                                            @enderror
                                         </div>
                                         <div class="col-sm-4 col-md-4">
-                                            <div class="input-box">
-                                                <label class="input-label">Confirm Password</label>
-                                                <input type="password" name="password_confirmation" class="google-input"
-                                                    id="PasswordConfirmation">
+                                            <div class="form-group">
+                                                <label class="form-label">Confirm Password <span class="text-red">*</span></label>
+                                                <input type="password" class="form-control" name="password_confirmation" id="password_confirmation" placeholder="Confirm Password">
+                                                @error('password_confirmation')
+                                                    <label id="password_confirmation-error" class="error" for="password_confirmation">{{ $message }}</label>
+                                                @enderror
                                             </div>
-                                            @error('password_confirmation')
-                                                <label id="name-error" class="error"
-                                                    for="name">{{ $message }}</label>
-                                            @enderror
                                         </div>
                                     </div>
                                 </div>
@@ -140,27 +108,51 @@
     </div>
 @endsection
 @section('js')
+    <script src="{{URL::asset('assets/plugins/forn-wizard/js/jquery.validate.min.js')}}"></script>
     <script>
         $(document).ready(function() {
+            console.log(1);
             $("#editProfile").validate({
-                onkeyup: function(el, e) {
-                    $(el).valid();
-                },
                 ignore: ":hidden",
                 rules: {
                     name: {
                         required: true,
-                        maxlength: 255,
+                        maxlength: 100,
                     },
                     email: {
                         required: true,
                         email: true,
-                        maxlength: 255,
+                        maxlength: 250,
+                    },
+                    password: {
+                        required: true,
+                        minlength: 6,
+                    },
+                    password_confirmation: {
+                        required: true,
+                        minlength: 6,
+                        equalTo: "#password",
                     },
                 },
-                messages: {},
-                errorPlacement: function(error, element) {
-                    error.insertAfter($(element).parent());
+                messages: {
+                    name: {
+                        required: "The Name field is required",
+                        maxlength: "Name cannot exceed 100 characters",
+                    },
+                    email: {
+                        required: "The Email field is required",
+                        email: "Email must be a valid email",
+                        maxlength: "Email cannot exceed 250 characters",
+                    },
+                    password: {
+                        required: "The Password field is required",
+                        minlength: "Password must be at least 6 characters long",
+                    },
+                    password_confirmation: {
+                        required: "The Confirm Password field is required",
+                        minlength: "Password must be at least 6 characters long",
+                        equalTo: "Passwords do not match",
+                    },
                 },
             });
 
@@ -173,46 +165,56 @@
                     },
                     password: {
                         required: true,
-                        strong_password: true,
+                        minlength: 6,
                     },
                     password_confirmation: {
                         required: true,
-                        strong_password: true,
-                        equalTo: "#password"
-                    }
+                        minlength: 6,
+                        equalTo: "#password",
+                    },
                 },
                 messages: {
+                    old_password: {
+                        required: "The Old Password field is required",
+                        minlength: "Password must be at least 6 characters long",
+                    },
+                    password: {
+                        required: "The Password field is required",
+                        minlength: "Password must be at least 6 characters long",
+                    },
                     password_confirmation: {
-                        equalTo: "To create a valid password, both the password and confirm password field values must be matched."
-                    }
+                        required: "The Confirm Password field is required",
+                        minlength: "Password must be at least 6 characters long",
+                        equalTo: "Passwords do not match",
+                    },
                 },
             });
 
-            $.validator.addMethod("strong_password", function (value, element) {
-                let password = value;
-                if (!(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@#$%&])(.{8,20}$)/.test(password))) {
-                    return false;
-                }
-                return true;
-            }, function (value, element) {
-                let password = $(element).val();
-                if (!(/^(.{8,20}$)/.test(password))) {
-                    return 'Password must be between 8 to 20 characters long.';
-                }
-                else if (!(/^(?=.*[A-Z])/.test(password))) {
-                    return 'Password must contain at least one uppercase.';
-                }
-                else if (!(/^(?=.*[a-z])/.test(password))) {
-                    return 'Password must contain at least one lowercase.';
-                }
-                else if (!(/^(?=.*[0-9])/.test(password))) {
-                    return 'Password must contain at least one digit.';
-                }
-                else if (!(/^(?=.*[@#$%&])/.test(password))) {
-                    return "Password must contain special characters from @#$%&.";
-                }
-                return false;
-            });
+            // $.validator.addMethod("strong_password", function (value, element) {
+            //     let password = value;
+            //     if (!(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@#$%&])(.{8,20}$)/.test(password))) {
+            //         return false;
+            //     }
+            //     return true;
+            // }, function (value, element) {
+            //     let password = $(element).val();
+            //     if (!(/^(.{8,20}$)/.test(password))) {
+            //         return 'Password must be between 8 to 20 characters long.';
+            //     }
+            //     else if (!(/^(?=.*[A-Z])/.test(password))) {
+            //         return 'Password must contain at least one uppercase.';
+            //     }
+            //     else if (!(/^(?=.*[a-z])/.test(password))) {
+            //         return 'Password must contain at least one lowercase.';
+            //     }
+            //     else if (!(/^(?=.*[0-9])/.test(password))) {
+            //         return 'Password must contain at least one digit.';
+            //     }
+            //     else if (!(/^(?=.*[@#$%&])/.test(password))) {
+            //         return "Password must contain special characters from @#$%&.";
+            //     }
+            //     return false;
+            // });
         });
 
     </script>

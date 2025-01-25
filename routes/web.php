@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Profile\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,10 +13,23 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+Auth::routes();
 
-Route::get('/', function () {
-    return view('index');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/', function () {
+        return view('index');
+    });
+    Route::get('/dashboard', function () {
+        return view('index');
+    });
+
+    Route::get('/{page}', 'AdminController@index');
+
+    Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+    Route::prefix('profile')->group(function () {
+        Route::get('{id?}', [ProfileController::class, 'index'])->name('profile.index');
+        Route::post('update/{id?}', [ProfileController::class, 'update'])->name('profile.update');
+        Route::post('change-password/{id?}', [ProfileController::class, 'changePassword'])->name('profile.change-password');
+    });
 });
-
-Route::get('/{page}', 'AdminController@index');
-

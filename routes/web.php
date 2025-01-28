@@ -45,5 +45,23 @@ Route::middleware(['auth'])->group(function () {
         Route::get('destroy/{user}', 'destroy')->name('users.destroy');
     });
 
+    Route::controller(RoleController::class)->prefix('roles')->group(function () {
+        Route::get('/', 'index')->name('roles.index');
+        Route::get('create', 'create')->name('roles.create');
+        Route::post('store', 'store')->name('roles.store');
+        Route::get('edit/{role}', 'edit')->name('roles.edit');
+        Route::post('{role}', 'update')->name('roles.update');
+        Route::get('destroy/{role}', 'destroy')->name('roles.destroy');
+    });
+
+    Route::controller(PermissionController::class)->prefix('permissions')->group(function () {
+        Route::get('/', 'index')->name('permissions.index');
+        Route::get('create', 'create')->name('permissions.create');
+        Route::post('store', 'store')->name('permissions.store');
+        Route::get('edit/{permission}', 'edit')->name('permissions.edit');
+        Route::post('{permission}', 'update')->name('permissions.update');
+        Route::get('destroy/{permission}', 'destroy')->name('permissions.destroy');
+    });
+
     
 });

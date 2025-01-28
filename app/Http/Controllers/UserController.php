@@ -95,8 +95,9 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(User $user)
+    public function edit($id)
     {
+        $user = User::findOrFail($id);
         if(empty($user)){
             return redirect()->route('users.index');
         }

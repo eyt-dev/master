@@ -111,7 +111,6 @@
     <script src="{{URL::asset('assets/plugins/forn-wizard/js/jquery.validate.min.js')}}"></script>
     <script>
         $(document).ready(function() {
-            console.log(1);
             $("#editProfile").validate({
                 ignore: ":hidden",
                 rules: {

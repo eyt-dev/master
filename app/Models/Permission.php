@@ -7,11 +7,24 @@ use Illuminate\Support\Facades\Auth;
 
 class Permission extends Model
 {
-
     public $table = 'permissions';
-
-    public $gurded = [];
-
+    public $fillable = [
+        'name',
+        'guard_name',
+        'module',
+        'created_by'
+    ];
+    /**
+     * The attributes that should be casted to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'id' => 'integer',
+        'name' => 'string',
+        'guard_name' => 'string',
+        'module' => 'string'
+    ];
 
     protected static function boot() {
         parent::boot();
@@ -21,12 +34,10 @@ class Permission extends Model
     }
 
     protected $appends = array('permission_data');
-
     public function getPermissionDataAttribute()
     {
         return $this->permissions->pluck('id', 'id');
     }
-
     public function scopeFilter($query)
     {
         $userDetails = Auth::user();
@@ -38,15 +49,20 @@ class Permission extends Model
                                         $q->whereIn('id', $userDetails->groups->pluck('id'));
                                     })
                                 ->pluck('id');
-
             $query->whereIn('created_by',$currentGroupUser);
 
-        }else if($userDetails->accessScope && $userDetails->accessScope->name == 'Individual'){
+        }elseif($userDetails->accessScope && $userDetails->accessScope->name == 'Individual'){
             $query->where('created_by',$userDetails->id);
         }
         return $query;
     }
 
+    public function permissionModule(){
+        return $this->belongsTo(Module::class,'module');
+    }
 
-
+    public function messages()
+    {
+        return ['name.*.unique' => 'Firstname of the user is required'];
+    }
 }

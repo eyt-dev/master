@@ -96,6 +96,8 @@
                         $(".modal-body").html(response);
                         $(".modal-title").html("Add Role");
                         $("#role_form_modal").modal('show');
+                        checkInput();
+                        checkValidation();
                     }
                 });
             });
@@ -107,6 +109,8 @@
                         $(".modal-body").html(response);
                         $(".modal-title").html("Update Role");
                         $("#role_form_modal").modal('show');
+                        checkInput();
+                        checkValidation();
                     }
                 });
             });
@@ -164,5 +168,39 @@
                     });
             });
         });
+
+        function checkInput() {
+            console.warn(1);
+            $('.permission .check-all').click(function() {
+                var check = this.checked;
+                $(this).parents('.nav-item').find('.check-one').prop("checked", check);
+            });
+            $('.permission .check-one').click(function() {
+                var parentItem = $(this).parents('.nav-treeview').parents('.nav-item');
+                var check = $(parentItem).find('.check-one:checked').length == $(parentItem).find(
+                    '.check-one').length;
+                $(parentItem).find('.check-all').prop("checked", check)
+            });
+            $('.permission .check-all').each(function() {
+                var parentItem = $(this).parents('.nav-item');
+                var check = $(parentItem).find('.check-one:checked').length == $(parentItem).find(
+                    '.check-one').length;
+                $(parentItem).find('.check-all').prop("checked", check)
+            });
+        }
+
+        function checkValidation() {
+            var forms = document.getElementsByClassName('needs-validation');
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }
+
     </script>
 @endsection

@@ -39,8 +39,9 @@ class RoleController extends Controller
      */
     public function create()
     {
-        $allPermission = Permission::all();
+        $allPermission = Permission::get();
         $groupPermission = $allPermission->groupBy('module');
+        // dd($groupPermission[2][0]->permissionModule->name);
         return view('role.create', ['role' => new Role(), 'allPermission' => $allPermission, 'groupPermission' => $groupPermission]);
     }
     /**
@@ -52,7 +53,7 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $inputData = $request->all();
-       
+        dd($inputData);
         $permission_data=$inputData['permission_data'];
         $permission_module=$inputData['permission_module'];
         $request->validate([
@@ -72,16 +73,7 @@ class RoleController extends Controller
         }
         return redirect()->route('role.index');
     }
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
+
     /**
      * Show the form for editing the specified resource.
      *

@@ -94,12 +94,23 @@
     <script src="{{ URL::asset('assets/plugins/sweet-alert/sweetalert.min.js') }}"></script>
     <script>
         $(document).ready(function () {
+            var Testcount = $(".permission input:last").attr("name");
+            var count = 1;    
+
+            if (Testcount) {
+                count = parseInt(Testcount.slice(5, 6)) + 1;
+            }
+
             var table = $('#permission-tabel').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: "{{ route('permission.index') }}",
-                columns: [
-                    {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        orderable: false,
+                        searchable: false
+                    },
                     {data: 'name', name: 'name'},
                     {data: 'module', name: 'module'},
                     {data: 'guard_name', name: 'guard_name'},
@@ -108,13 +119,14 @@
                 order: [[1, 'asc']]
             });
 
-            $('#add_new').on('click', function () {
+            $(document).on('click', '#add_new', function () {
                 $.ajax({
                     url: "{{ route('permission.create') }}",
                     success: function (response) {
                         $(".modal-body").html(response);
                         $(".modal-title").html("Add Permission");
                         $("#permission_form_modal").modal('show');
+                        checkValidation();
                     }
                 });
             });
@@ -164,6 +176,7 @@
                     }
                 });
             });
+
             $(document).on('submit', '#ajax_module_form', function (e) {
                 e.preventDefault();
                 let formData = $(this).serialize();
@@ -200,33 +213,60 @@
                     },
                 });
             });
-            $(document).ready(function () {
-        // When a "check-all" box is toggled
-        $('.check-all').change(function () {
-            var groupKey = $(this).attr('id'); // Get the group key (id)
-            var isChecked = $(this).prop('checked'); // Check if the "check-all" is checked or unchecked
-
-            // Select all checkboxes within the same group
-            $('#' + groupKey).closest('.col-sm-12').find('.check-one').each(function () {
-                $(this).prop('checked', isChecked); // Set each permission checkbox to match the "check-all" checkbox state
-            });
-        });
-
-        // When any individual permission checkbox is clicked, update the "check-all" checkbox state
-        $('.check-one').change(function () {
-            var groupKey = $(this).closest('.col-sm-12').find('.check-all'); // Get the "check-all" checkbox for the current group
-            var totalPermissions = $(this).closest('.col-sm-12').find('.check-one').length; // Total number of permissions in the group
-            var checkedPermissions = $(this).closest('.col-sm-12').find('.check-one:checked').length; // Total number of checked permissions
-
-            // If all permissions are checked, check the "check-all" box, otherwise uncheck it
-            if (totalPermissions === checkedPermissions) {
-                groupKey.prop('checked', true); // Check the "check-all" box
-            } else {
-                groupKey.prop('checked', false); // Uncheck the "check-all" box
-            }
-        });
-    });
                 
+            $(document).on('click', '#add', function () {
+                let rules = '';
+                let appendHtml = '<div class="each-input"> <input class="permissionInput form-control" name="name['+count+']" type="text" placeholder="Enter permission name" required=""> <button type="button" class="btn btn-danger btn-remove">Remove</button> </div>';
+                $('.append-list').append(appendHtml);
+                rules = {
+                    required: true,
+                    maxlength: 250,
+                    messages: {
+                        required: 'The Permission field is required'
+                    }
+                };
+                count++;
+            });
+
+            $(document).on('click', '.btn-remove', function () {
+                $(this).parent('.each-input').remove();
+            });
+
+            $(document).on('click', '.remove-permission', function () {
+                let id = $(this).data("id");
+                $.ajax({
+                    type:'POST',
+                    url:"{{ route('permission.delete') }}",
+                    headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                    data: {'id': id},
+                    success: function(data) {
+                        toastr.success(data.msg);
+                    },
+                    error: function(data){
+                        console.log('error while deleting')
+                    }
+                });
+            });
+
+            $(document).on('submit', '#submitform', function (e) {
+                if ($("#submitform").hasClass("update-permission")) {
+                    event.preventDefault();
+                }
+            });
+
         });
+
+        function checkValidation() {
+            var forms = document.getElementsByClassName('needs-validation');
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }
     </script>
 @endsection

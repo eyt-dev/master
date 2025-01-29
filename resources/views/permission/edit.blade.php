@@ -10,7 +10,7 @@
                 @foreach($permission as $key => $value)
                     @php $selectedModule = $value->module; @endphp
                     <div class="each-input">
-                        <input class="nameInput permissionInput form-control @error('name') is-invalid @enderror" name="name[{{$key}}]" type="text" data-id="{{$value->id}}" placeholder="Enter permission name" value="{{ $value->name }}">
+                        <input class="nameInput permissionInput form-control @error('name') is-invalid @enderror" name="name[{{$key}}]" type="text" data-id="{{$value->id}}" placeholder="Enter permission name" value="{{ $value->name }}" required="">
                         <input class="" name="id[{{$key}}]" type="hidden" data-id="{{$value->id}}" placeholder="Enter permission name" value="{{ $value->id }}">
                         @if($key === 0)
                             <button type="button" name="add" id="add" class="btn btn-success">Add More</button>

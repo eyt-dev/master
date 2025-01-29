@@ -22,12 +22,13 @@
                     <label for="permission">Permission:</label>
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                         data-accordion="false">
-                        <div class="row">
+                        <div class="row  nav-item">
                             @foreach ($groupPermission as $key => $permissions)
-                                <div class="col-sm-12">
+                            {{-- @dump($permissions[0]->permissionModule->name) --}}
+                                <div class="col-sm-12 ">
                                     <div class="custom-checkbox permission">
                                         <input id="{{ $key }}" type="checkbox" class="check-all" name="checkAll">
-                                        <label for="{{ $key }}"> <b>{{ Str::ucfirst(explode('.',$permissions[0]->name)[1]) }}</b></label>
+                                        <label for="{{ $key }}"> <b>{{$permissions[0]->permissionModule->name}}</b></label>
                                     </div>
                                     @foreach ($permissions as $permission)
                                         <div class="custom-control custom-checkbox ms-3 nav-treeview">

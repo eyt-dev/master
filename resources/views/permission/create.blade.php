@@ -8,7 +8,7 @@
                 <label for="name">Permission</label>
                 <div class="permission">
                     <div class="each-input">
-                        <input class="permission Input permissionInput form-control @error('name') is-invalid @enderror" name="name[0]" type="text" placeholder="Enter permission name" value="{{ old('name[0]') }}">
+                        <input class="permission Input permissionInput form-control @error('name') is-invalid @enderror" name="name[0]" type="text" placeholder="Enter permission name" value="{{ old('name[0]') }}" required="">
                         <button type="button" name="add" id="add" class="btn btn-success">Add More</button>
                     </div>
                     <div class="append-list"></div>
@@ -22,7 +22,7 @@
             <div class="form-group col-sm-6">
                 <label for="module">Module</label>
                 <button type="button" class="float-right add-module" title="Create Module" data-toggle="modal" data-target="#module_form_modal">+</button>
-                <select class="form-control custom-select @error('module') is-invalid @enderror" name="module" id="moduleId">
+                <select class="form-control custom-select @error('module') is-invalid @enderror" name="module" id="moduleId" require="">
                     @if(count($moduleList))
                         @foreach ($moduleList as $module)
                             <option value="{{ $module->id }}" {{ isset($value) && $module->id==$value->module ? 'selected' : ''}}> {{ $module->name }} </option>

@@ -1,6 +1,7 @@
 @extends('layouts.master')
 @section('css')
     <link href="{{ URL::asset('assets/plugins/datatable/css/dataTables.bootstrap4.min.css') }}" rel="stylesheet" />
+    <link href="{{ URL::asset('assets/plugins/select2/select2.min.css') }}" rel="stylesheet" />
     <link href="{{ URL::asset('assets/plugins/sweet-alert/jquery.sweet-modal.min.css') }}" rel="stylesheet" />
     <link href="{{ URL::asset('assets/plugins/sweet-alert/sweetalert.css') }}" rel="stylesheet" />
 @endsection
@@ -75,6 +76,8 @@
     <script src="{{ URL::asset('assets/plugins/datatable/js/dataTables.buttons.min.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/sweet-alert/jquery.sweet-modal.min.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/sweet-alert/sweetalert.min.js') }}"></script>
+    <!-- INTERNAL Select2 js -->
+    <script src="{{ URL::asset('assets/plugins/select2/select2.full.min.js') }}"></script>
     <script src="{{ URL::asset('assets/js/sweet-alert.js') }}"></script>
 
     <script type="text/javascript">
@@ -131,6 +134,7 @@
                 [1, 'asc']
             ]
         });
+        
         $(document).on('click', '.delete-user', function() {
             var id = $(this).attr("data-id");
             swal({
@@ -143,7 +147,8 @@
             }, function(willDelete) {
                 if (willDelete) {
                     $.ajax({
-                        type: "GET",
+                        type: "get",
+                        headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                         url: "{{ route('users.destroy', ':id') }}".replace(':id', id),
                         success: function(response) {
                             swal({

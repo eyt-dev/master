@@ -53,7 +53,7 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $inputData = $request->all();
-        dd($inputData);
+        // dd($inputData);
         $permission_data=$inputData['permission_data'];
         $permission_module=$inputData['permission_module'];
         $request->validate([
@@ -64,12 +64,16 @@ class RoleController extends Controller
                     ],
             'guard_name' => 'required|max:255'
         ]);
-        $role = Role::create(['name' => $inputData['name'], 'guard_name' => $inputData['guard_name']]);
+        $createRoleData=array('name' => $inputData['name'], 'guard_name' => $inputData['guard_name']);
+        // dd($createRoleData,$permission_data);
+        $role = Role::create($createRoleData);
         if(empty($role)){
             return redirect()->route('role.index');
         }
         if($request->has('permission_data') && $role){
-            $role->syncPermissions($inputData['permission_data']);
+            $permissions = Permission::whereIn('id', $permission_data)->get();
+            // dd($permission_data);
+            $role->syncPermissions($permissions);
         }
         return redirect()->route('role.index');
     }
@@ -86,6 +90,7 @@ class RoleController extends Controller
             return view('role.index');
         }
         $allPermission = Permission::all();
+        // dd($allPermission);
         $groupPermission = $allPermission->groupBy('module');
         return view('role.create', ['role' => $role, 'allPermission' => $allPermission, 'groupPermission' => $groupPermission]);
     }
@@ -103,8 +108,8 @@ class RoleController extends Controller
             return redirect()->route('role.index');
         }
         $inputData = $request->all();
-        $permission_data=$inputData['permission_data'];
-        $permission_module=$inputData['permission_module'];
+        $permission_data=$request->permission_data ?? [];
+        $permission_module=$request->permission_module ?? [];
 
         $request->validate([
             'name' => ['required',
@@ -114,9 +119,13 @@ class RoleController extends Controller
             'guard_name' => 'required|max:255'
         ]);
         $role->update(['name' => $request->name, 'guard_name' => $request->guard_name]);
-        $permission_data = $request->get('permission_data'); // Fetch permission IDs
-$permissions = Permission::whereIn('id', $permission_data)->get(); // Fetch permission objects
-$role->syncPermissions($permissions);
+
+        // $permission_data = $request->get('permission_data'); // Fetch permission IDs
+        $permissions=array();
+        if($permission_data){
+            $permissions = Permission::whereIn('id', $permission_data)->get(); // Fetch permission objects
+        }
+        $role->syncPermissions($permissions);
         return redirect()->route('role.index');
     }
     /**

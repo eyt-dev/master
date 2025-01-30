@@ -142,21 +142,48 @@
                 });
             });
 
-            $(document).on('click', '.delete-permission', function () {
-                if (confirm("Are you sure to delete this permission?")) {
-                    let id = $(this).data("id");
-                    $.ajax({
-                        type: 'DELETE',
-                        url: 'permission/' + id,
-                        headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        success: function () {
-                            table.draw();
-                        },
-                        error: function () {
-                            alert('Something went wrong, please try again.');
-                        }
-                    });
-                }
+            // $(document).on('click', '.delete-permission', function () {
+            //     if (confirm("Are you sure to delete this permission?")) {
+            //         let id = $(this).data("id");
+            //         $.ajax({
+            //             type: 'DELETE',
+            //             url: 'permission/' + id,
+            //             headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+            //             success: function () {
+            //                 table.draw();
+            //             },
+            //             error: function () {
+            //                 alert('Something went wrong, please try again.');
+            //             }
+            //         });
+            //     }
+            // });
+
+            $(document).on('click', '.delete-permission', function() {
+                var id = $(this).attr("data-id");
+                swal({
+                    title: "Are you sure?",
+                    text: "Once deleted, you will not be able to recover this attribute!",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                    showCancelButton: true,
+                }, function(willDelete) {
+                    if (willDelete) {
+                        $.ajax({
+                            type: "DELETE",
+                            url: "{{ route('permission.destroy', ':id') }}".replace(':id', id),
+                            headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                            success: function(response) {
+                                swal({
+                                    title: response.msg
+                                }, function(result) {
+                                    location.reload();
+                                });
+                            }
+                        });
+                    }
+                });
             });
 
             $(document).on('click', '.add-module', function () {

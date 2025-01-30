@@ -115,21 +115,48 @@
                 });
             });
 
-            $(document).on('click', '.delete-role', function () {
-                if (confirm("Are you sure to delete this role?")) {
-                    let id = $(this).data("id");
-                    $.ajax({
-                        type: 'DELETE',
-                        url: 'role/' + id,
-                        headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        success: function () {
-                            table.draw();
-                        },
-                        error: function () {
-                            alert('Something went wrong, please try again.');
-                        }
-                    });
-                }
+            // $(document).on('click', '.delete-role', function () {
+            //     if (confirm("Are you sure to delete this role?")) {
+            //         let id = $(this).data("id");
+            //         $.ajax({
+            //             type: 'DELETE',
+            //             url: 'role/' + id,
+            //             headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+            //             success: function () {
+            //                 table.draw();
+            //             },
+            //             error: function () {
+            //                 alert('Something went wrong, please try again.');
+            //             }
+            //         });
+            //     }
+            // });
+
+            $(document).on('click', '.delete-role', function() {
+                var id = $(this).attr("data-id");
+                swal({
+                    title: "Are you sure?",
+                    text: "Once deleted, you will not be able to recover this attribute!",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                    showCancelButton: true,
+                }, function(willDelete) {
+                    if (willDelete) {
+                        $.ajax({
+                            type: "DELETE",
+                            url: "{{ route('role.destroy', ':id') }}".replace(':id', id),
+                            headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                            success: function(response) {
+                                swal({
+                                    title: response.msg
+                                }, function(result) {
+                                    location.reload();
+                                });
+                            }
+                        });
+                    }
+                });
             });
 
             $(document).on('submit', '#module_form', function (e) {

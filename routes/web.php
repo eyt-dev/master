@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Profile\ProfileController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,6 +34,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('{id?}', [ProfileController::class, 'index'])->name('profile.index');
         Route::post('update/{id?}', [ProfileController::class, 'update'])->name('profile.update');
         Route::post('change-password/{id?}', [ProfileController::class, 'changePassword'])->name('profile.change-password');
+    });
+
+    Route::controller(UserController::class)->prefix('users')->group(function () {
+        Route::get('/', 'index')->name('users.index');
+        Route::get('create', 'create')->name('users.create');
+        Route::post('store', 'store')->name('users.store');
+        Route::get('edit/{user}', 'edit')->name('users.edit');
+        Route::post('{user}', 'update')->name('users.update');
+        Route::get('destroy/{user}', 'destroy')->name('users.destroy');
     });
 
     

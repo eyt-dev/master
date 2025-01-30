@@ -4,6 +4,10 @@
     <link href="{{ URL::asset('assets/plugins/select2/select2.min.css') }}" rel="stylesheet" />
     <link href="{{ URL::asset('assets/plugins/sweet-alert/jquery.sweet-modal.min.css') }}" rel="stylesheet" />
     <link href="{{ URL::asset('assets/plugins/sweet-alert/sweetalert.css') }}" rel="stylesheet" />
+    <style>
+        .hide{display: none;}
+        label.error{font-size: 87.5%; color: #dc0441;}
+    </style>
 @endsection
 @section('page-header')
     <div class="page-header">
@@ -32,6 +36,15 @@
                     <div class="card-title">Users Data</div>
                 </div>
                 <div class="card-body">
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     <div class="table-responsive">
                         <table class="table table-bordered text-nowrap" id="user_table">
                             <thead>
@@ -79,7 +92,7 @@
     <!-- INTERNAL Select2 js -->
     <script src="{{ URL::asset('assets/plugins/select2/select2.full.min.js') }}"></script>
     <script src="{{ URL::asset('assets/js/sweet-alert.js') }}"></script>
-
+    <script src="{{URL::asset('assets/plugins/forn-wizard/js/jquery.validate.min.js')}}"></script>
     <script type="text/javascript">
         $(document).on('click', '#add_new', function() {
             $.ajax({
@@ -88,6 +101,7 @@
                     $(".modal-body").html(response);
                     $(".modal-title").html("Add User");
                     $("#user_form_modal").modal('show');
+                    checkValidation();
                 }
             });
         });
@@ -98,8 +112,8 @@
                 success: function(response) {
                     $(".modal-body").html(response);
                     $(".modal-title").html("Update User");
-                    // checkValidation();
                     $("#user_form_modal").modal('show');
+                    checkValidation();
                 }
             });
         });
@@ -161,5 +175,46 @@
                 }
             });
         });
+        // $(document).ready(function() {
+            function checkValidation(){
+                $("#user_form").validate({
+                    ignore: ":hidden",
+                    rules: {
+                        name: {
+                            required: true,
+                            maxlength: 100,
+                        },
+                        email: {
+                            required: true,
+                            email: true,
+                            maxlength: 250,
+                        }
+                    },
+                    messages: {
+                        name: {
+                            required: "The Name field is required",
+                            maxlength: "Name cannot exceed 100 characters",
+                        },
+                        email: {
+                            required: "The Email field is required",
+                            email: "Email must be a valid email",
+                            maxlength: "Email cannot exceed 250 characters",
+                        }
+                    },
+                });
+                // function checkValidation() {
+                //     var forms = document.getElementsByClassName('needs-validation');
+                //     var validation = Array.prototype.filter.call(forms, function(form) {
+                //         form.addEventListener('submit', function(event) {
+                //             if (form.checkValidity() === false) {
+                //                 event.preventDefault();
+                //                 event.stopPropagation();
+                //             }
+                //             form.classList.add('was-validated');
+                //         }, false);
+                //     });
+                // }
+            }
+        // });
     </script>
 @endsection

@@ -4,17 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\Group;
-use App\Models\UserAccessScope;
-use App\Models\Company;
-use App\Models\CompanyUser;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use App\Models\RoleSchedulerSetting;
 use App\Models\Permission;
 use Carbon\Carbon;
-use App\Models\GeneralSechdulerSetting;
 use App\Models\Module;
 use Log;
 
@@ -45,7 +39,8 @@ class UserController extends Controller
             ->addIndexColumn()
             ->make(true);
         }
-        return view('users.index', ['user' => new User()]);
+        $roles = Role::all();
+        return view('users.index', ['user' => new User(), 'roles' => $roles]);
     }
 
     /**
@@ -55,7 +50,8 @@ class UserController extends Controller
      */
     public function create()
     {
-        return view('users.create', ['user' => new User()]);
+        $roles = Role::all();
+        return view('users.create', ['user' => new User(), 'roles' => $roles]);
     }
 
     /**
@@ -70,6 +66,7 @@ class UserController extends Controller
             'name' => 'required',
             'email' => 'required|unique:users',
             'password' => 'required',
+            'role' => 'required'
         ]);
 
         $user = User::create([
@@ -84,6 +81,7 @@ class UserController extends Controller
             return redirect()->route('users.index');
         }
 
+        $user->assignRole($request->role);
         Session::flash('successMsg', 'User inserted successfully.');
         
         return redirect()->route('users.index');
@@ -97,11 +95,14 @@ class UserController extends Controller
      */
     public function edit($id)
     {
-        $user = User::findOrFail($id);
-        if(empty($user)){
+        $user = User::findOrFail($id);     
+     
+       if(empty($user)){
             return redirect()->route('users.index');
         }
-        return view('users.create', ['user' => $user]);
+
+        $roles = Role::all();
+        return view('users.create', ['user' => $user, 'roles' => $roles]);
     }
 
     /**
@@ -116,6 +117,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required',
             'email' => 'required|unique:users,email,'.$id,
+            'role' => 'required'
         ]);
 
         $user = User::find($id);
@@ -130,6 +132,7 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => $request->filled('password') ? Hash::make($request->password) : $user->password,
         ]);
+        $user->assignRole($request->role);
         
         return redirect()->route('users.index');
     }

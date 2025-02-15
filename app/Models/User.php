@@ -14,6 +14,10 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     use HasRoles, HasFactory, Notifiable;
+    const SUPER_ADMIN = 0;
+    const ADMIN = 1;
+    const PUBLIC_VENDOR = 2;
+    const PRIVATE_VENDOR = 3;
 
     /**
      * The attributes that are mass assignable.
@@ -24,6 +28,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'created_by',
+        'username',
+        'type' 
         // 'address',
         // 'phone',
         // 'website',
@@ -54,6 +61,10 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
     // public function getProfileUrlAttribute()
     // {
     //     return asset('uploads/users/'.$this->avatar);

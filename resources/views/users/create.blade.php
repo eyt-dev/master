@@ -11,6 +11,8 @@
     <div class="row">
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
+                <input type="hidden" name="type" value="{{ request('type', 1) }}">
+
                 <label for="name" class="form-label">Name <span class="text-red">*</span></label>
                 <input type="text" class="form-control" name="name" id="name" placeholder="Name" value="{{ old('name', $user->name) }}" required="" />
                 @error('name')
@@ -37,24 +39,7 @@
                 @enderror
             </div>
         </div>
-        <div class="form-group col-sm-6">
-            <label for="role">Role <span class="text-red">*</span> </label>
-            <select class="form-control custom-select @error('role') is-invalid @enderror" name="role"
-                required="">
-                <option value="" selected="selected" disabled>Select Role</option>
-                @foreach ($roles as $role)
-                    <option value="{{ $role->name }}"
-                        {{ $user->getRoleNames()->contains($role->name) ? 'selected' : '' }}>
-                        {{ $role->name }}</option>
-                @endforeach
-            </select>
-            @error('role')
-                <div class="invalid-feedback">{{ $message }}</div>
-                {{-- <span class="error invalid-feedback">{{ $message }}</span> --}}
-            @enderror
-            <div class="valid-feedback">Looks good!</div>
-            <div class="invalid-feedback">Please choose role.</div>
-        </div>
+        
 
     </div>
     <div class="card-footer">

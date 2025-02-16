@@ -125,10 +125,10 @@ class AdminController extends Controller
         $adminType = $request->type ?? 1;
     
         $prefix = match (intval($adminType)) {
-            1 => 'admin',
-            2 => 'publicvendor',
-            3 => 'privatevendor',
-            default => 'admin',
+            1 => 'Admin',
+            2 => 'PublicVendor',
+            3 => 'PrivateVendor',
+            default => 'Admin',
         };
     
         $admin = Admin::create([
@@ -139,15 +139,17 @@ class AdminController extends Controller
             'type' => $adminType,
             'created_by' => auth()->user()->id,
         ]);
-    
+
         if(empty($admin)) {
             Session::flash('errorMSg', 'Somethig went wrong.');
         
-            return redirect()->route('admins.index');
+            return redirect()->url("/admins/{$request->type}");
         }
 
-        $admin->assignRole($request->role);
-        Session::flash('successMsg', 'Admin inserted successfully.');
+        $role = Role::where(['name' => $prefix])->first();
+        $admin->assignRole([$role->id]);
+
+        Session::flash('successMsg', '{$prefix} inserted successfully.');
         
         return redirect()->route('admins.index', ['type' => $adminType]);
     }
@@ -198,7 +200,7 @@ class AdminController extends Controller
             'email' => $request->email,
             'password' => $request->filled('password') ? Hash::make($request->password) : $admin->password,
         ]);
-        $admin->assignRole($request->role);
+        // $admin->assignRole($request->role);
         
         return redirect()->route('admins.index');
     }
@@ -213,7 +215,7 @@ class AdminController extends Controller
     {
         $adminDelete = Admin::find($id)->delete();
         if($adminDelete)
-            return response()->json(['msg' => 'Admin deleted successfully!']);
+            return response()->json(['msg' => 'Deleted successfully!']);
 
         return response()->json(['msg' => 'Something went wrong, Please try again'],500);
     }

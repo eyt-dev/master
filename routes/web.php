@@ -35,7 +35,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('change-password/{id?}', [ProfileController::class, 'changePassword'])->name('profile.change-password');
     });
     Route::controller(AdminController::class)->prefix('admins')->group(function () {
-        Route::get('/{type?}', 'index')->name('admins.index');
+        Route::get('/1', 'index')->name('admins.index');
+        Route::get('/2', 'index')->name('admins.index');
+        Route::get('/3', 'index')->name('admins.index');
         Route::get('create/{type?}', 'create')->name('admins.create');
         Route::post('store', 'store')->name('admins.store');
         Route::get('edit/{admin}', 'edit')->name('admins.edit');
@@ -43,12 +45,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('destroy/{admin}', 'destroy')->name('admins.destroy');
     });
     Route::controller(RoleController::class)->prefix('role')->group(function () {
-        Route::get('/', 'index')->name('role.index');//->middleware('permission:view.role');
-        Route::get('create', 'create')->name('role.create');//->middleware('permission:create.role');
-        Route::post('store', 'store')->name('role.store');//->middleware('permission:create.role');
-        Route::get('{role}/edit', 'edit')->name('role.edit');//->middleware('permission:edit.role');
-        Route::post('{role}', 'update')->name('role.update');//->middleware('permission:edit.role');
-        Route::delete('{role}', 'destroy')->name('role.destroy');//->middleware('permission:delete.role');
+        Route::get('/', 'index')->name('role.index')->middleware('permission:view.role');
+        Route::get('create', 'create')->name('role.create')->middleware('permission:create.role');
+        Route::post('store', 'store')->name('role.store')->middleware('permission:create.role');
+        Route::get('{role}/edit', 'edit')->name('role.edit')->middleware('permission:edit.role');
+        Route::post('{role}', 'update')->name('role.update')->middleware('permission:edit.role');
+        Route::delete('{role}', 'destroy')->name('role.destroy')->middleware('permission:delete.role');
         Route::get('permission', 'assignPermissionList')->name('role.permission.index');
     });
     Route::controller(PermissionController::class)->prefix('permission')->group(function () {

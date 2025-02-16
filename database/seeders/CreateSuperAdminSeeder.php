@@ -30,7 +30,7 @@ class CreateSuperAdminSeeder extends Seeder
             'updated_at' => Carbon::now()->format('Y-m-d H:i:s')
         ]);
         
-        $role = Role::where(['name' => 'Admin'])->first();
+        $role = Role::where(['name' => 'SuperAdmin'])->first();
         $admin->assignRole([$role->id]);
     }
 }

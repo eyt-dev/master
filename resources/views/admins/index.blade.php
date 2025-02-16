@@ -12,17 +12,42 @@
 @section('page-header')
     <div class="page-header">
         <div class="page-leftheader">
-            <h4 class="page-title mb-0">Users</h4>
+            @php
+                $breadcrumbText = 'Admins'; // Default text
+
+                switch(request('type')) {
+                    case 1:
+                        $breadcrumbText = 'Admins';
+                        break;
+                    case 2:
+                        $breadcrumbText = 'Public Vendors';
+                        break;
+                    case 3:
+                        $breadcrumbText = 'Private Vendors';
+                        break;
+                }
+            @endphp
+            <h4 class="page-title mb-0">{{ $breadcrumbText }}</h4>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="#"><i class="fe fe-layout mr-2 fs-14"></i>Users</a></li>
+                <li class="breadcrumb-item">
+                    <a href="#">
+                        <i class="fe fe-layout mr-2 fs-14"></i>{{ $breadcrumbText }}
+                    </a>
+                </li>
                 <li class="breadcrumb-item active" aria-current="page"><a href="#">Listing</a></li>
             </ol>
         </div>
         <div class="page-rightheader">
             <div class="btn btn-list">
-                <a id="add_new" class="btn btn-info" data-toggle="tooltip" title="" data-original-title="Add new">
-                    <i class="fe fe-plus mr-1"></i> Add new 
-                </a>
+                @if(auth()->user()->type == 0 && request('type') != 3 || auth()->user()->type == 1 && request('type') == 3)
+                    {{-- Super Admin (0) can create admins except Private Vendors (3) --}}
+                    {{-- Admin (1) can create only Private Vendors (3) --}}
+
+                    <a id="add_new" class="btn btn-info" data-type="{{ request('type') }}" data-toggle="tooltip" title="Add new">
+                        <i class="fe fe-plus mr-1"></i> Add new 
+                    </a>
+                @endif
+
             </div>
         </div>
     </div>
@@ -33,7 +58,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Users Data</div>
+                    <div class="card-title">{{$breadcrumbText}} Data</div>
                 </div>
                 <div class="card-body">
                     @if ($errors->any())
@@ -46,12 +71,14 @@
                         </div>
                     @endif
                     <div class="table-responsive">
-                        <table class="table table-bordered text-nowrap" id="user_table">
+                        <table class="table table-bordered text-nowrap" id="admin_table">
                             <thead>
                                 <tr>
                                     <th width="30px"></th>
                                     <th>Name</th>
-                                    <th>email</th>
+                                    <th>Email</th>
+                                    <th>Username</th>
+                                    <th>Created By</th>
                                     <th data-priority="1">Action</th>
                                 </tr>
                             </thead>
@@ -67,7 +94,7 @@
     </div>
     </div>
 
-    <div class="modal fade bd-example-modal-lg" id="user_form_modal" tabindex="-1" role="dialog"
+    <div class="modal fade bd-example-modal-lg" id="admin_form_modal" tabindex="-1" role="dialog"
         aria-labelledby="myLargeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -94,13 +121,20 @@
     <script src="{{ URL::asset('assets/js/sweet-alert.js') }}"></script>
     <script src="{{URL::asset('assets/plugins/forn-wizard/js/jquery.validate.min.js')}}"></script>
     <script type="text/javascript">
+    var adminType = @json(request('type') ?? 1);
+    
         $(document).on('click', '#add_new', function() {
+            var adminType1 = @json(request('type') ?? 1);
             $.ajax({
-                url: "{{ route('users.create') }}",
+                url: "{{ route('admins.create') }}/" + adminType1,
+                type: "GET",
                 success: function(response) {
+                    console.log(response);
+                    
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Add User");
-                    $("#user_form_modal").modal('show');
+                    $(".modal-title").html("Add Admin");
+                    $("#admin_form_modal").modal('show');
+                    // $("#admin_form input[name='type']").val(adminType);
                     checkValidation();
                 }
             });
@@ -111,17 +145,22 @@
                 url: $(this).data('path'),
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Update User");
-                    $("#user_form_modal").modal('show');
+                    $(".modal-title").html("Update Admin");
+                    $("#admin_form_modal").modal('show');
                     checkValidation();
                 }
             });
         });
-        var table = $('#user_table').DataTable({
+        var table = $('#admin_table').DataTable({
             processing: true,
             serverSide: true,
             responsive: true,
-            ajax: "{{ route('users.index') }}",
+            ajax: {
+                url: "{{ route('admins.index') }}",
+                data: function (d) {
+                    d.type = adminType; // Pass type dynamically
+                }
+            },
             columns: [
                 {
                     data: 'DT_RowIndex',
@@ -138,6 +177,14 @@
                     name: 'email'
                 },
                 {
+                    data: 'username',
+                    name: 'username'
+                },
+                {
+                    data: 'created_by_name',
+                    name: 'created_by'
+                },
+                {
                     data: 'action',
                     name: 'action',
                     orderable: false,
@@ -149,21 +196,23 @@
             ]
         });
         
-        $(document).on('click', '.delete-user', function() {
+        $(document).on('click', '.delete-admin', function() {
             var id = $(this).attr("data-id");
             swal({
                 title: "Are you sure?",
-                text: "Once deleted, you will not be able to recover this attribute!",
+                text: "Once deleted, you will not be able to recover this admin!",
                 icon: "warning",
                 buttons: true,
                 dangerMode: true,
                 showCancelButton: true,
+                confirmButtonText: "Yes, delete it!",
+                cancelButtonText: "Cancel"
             }, function(willDelete) {
                 if (willDelete) {
                     $.ajax({
                         type: "get",
                         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        url: "{{ route('users.destroy', ':id') }}".replace(':id', id),
+                        url: "{{ route('admins.destroy', ':id') }}".replace(':id', id),
                         success: function(response) {
                             swal({
                                 title: response.msg
@@ -177,7 +226,7 @@
         });
         // $(document).ready(function() {
             function checkValidation(){
-                $("#user_form").validate({
+                $("#admin_form").validate({
                     ignore: ":hidden",
                     rules: {
                         name: {

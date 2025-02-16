@@ -25,7 +25,7 @@
                 <div class="tab-content">
                     <div class="tab-pane active" id="myProfile">
                         <div class="card">
-                            <form action="{{ route('profile.update', $user->id) }}" method="POST" id="editProfile">
+                            <form action="{{ route('profile.update', $admin->id) }}" method="POST" id="editProfile">
                                 @csrf
                                 <div class="card-header">
                                     <div class="card-title">Edit Profile</div>
@@ -35,7 +35,7 @@
                                         <div class="col-sm-6 col-md-6">
                                             <div class="form-group">
                                                 <label class="form-label">Name <span class="text-red">*</span></label>
-                                                <input type="text" class="form-control" name="name" id="name" placeholder="Name" value="{{ $user->name }}">
+                                                <input type="text" class="form-control" name="name" id="name" placeholder="Name" value="{{ $admin->name }}">
                                                 @error('name')
                                                     <label id="name-error" class="error" for="name">{{ $message }}</label>
                                                 @enderror
@@ -43,8 +43,17 @@
                                         </div>
                                         <div class="col-sm-6 col-md-6">
                                             <div class="form-group">
+                                                <label class="form-label">Username <span class="text-red">*</span></label>
+                                                <input type="text" class="form-control" name="username" id="username" placeholder="Username" value="{{ $admin->username }}">
+                                                @error('username')
+                                                    <label id="username-error" class="error" for="username">{{ $message }}</label>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 col-md-6">
+                                            <div class="form-group">
                                                 <label class="form-label">Email address <span class="text-red">*</span></label>
-                                                <input type="text" class="form-control" name="email" id="email" placeholder="Email address" value="{{ $user->email }}">
+                                                <input type="text" class="form-control" name="email" id="email" placeholder="Email address" value="{{ $admin->email }}">
                                                 @error('email')
                                                     <label id="email-error" class="error" for="email">{{ $message }}</label>
                                                 @enderror
@@ -58,7 +67,7 @@
                             </form>
                         </div>
                         <div class="card">
-                            <form action="{{ route('profile.change-password', $user->id) }}" method="POST"
+                            <form action="{{ route('profile.change-password', $admin->id) }}" method="POST"
                                 id="changePasswordForm">
                                 @csrf
                                 <div class="card-header">

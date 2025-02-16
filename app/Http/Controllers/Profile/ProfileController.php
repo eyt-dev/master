@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Profile;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Admin;
 use Auth;
 use Hash;
 use Illuminate\Http\Request;
@@ -14,27 +14,27 @@ class ProfileController extends Controller
 {
     public function index($id = null)
     {
-        $user_id = $id == null ? Auth::id() : $id;
-        $user = User::find( $user_id );
+        $admin_id = $id == null ? Auth::id() : $id;
+        $admin = Admin::find( $admin_id );
 
-        return view('profile.index', compact('user'));
+        return view('profile.index', compact('admin'));
     }
 
     public function update(Request $request, $id = null)
     {
-        $user_id = $id == null ? Auth::id() : $id;
+        $admin_id = $id == null ? Auth::id() : $id;
         $validator = Validator::make($request->all(), [
             'name' => 'required',
-            'email' => 'required|unique:users,email,' . $user_id,
+            'email' => 'required|unique:admins,email,' . $admin_id,
         ]);
         if (count($validator->errors()) > 0) {
             return redirect()->route('profile.index')->withErrors($validator->errors());
         }
 
-        $user = User::where('id', $user_id)->first();
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->save();
+        $admin = Admin::where('id', $admin_id)->first();
+        $admin->name = $request->name;
+        $admin->email = $request->email;
+        $admin->save();
 
         Session::flash('success', 'Profile updated successfully.');
         return redirect()->back();
@@ -42,7 +42,7 @@ class ProfileController extends Controller
 
     public function changePassword(Request $request, $id = null)
     {
-        $user_id = $id == null ? Auth::id() : $id;
+        $admin_id = $id == null ? Auth::id() : $id;
         $validator = Validator::make($request->all(), [
             'old_password'=>'required|current_password',
             'password' => 'required|confirmed|min:8',
@@ -51,9 +51,9 @@ class ProfileController extends Controller
             return redirect()->route('profile.index')->withErrors($validator->errors());
         }
 
-        $user = User::where('id', $user_id)->first();
-        $user->password = Hash::make($request->password);
-        $user->save();
+        $admin = Admin::where('id', $admin_id)->first();
+        $admin->password = Hash::make($request->password);
+        $admin->save();
 
         Session::flash('success', 'Password has been changed successfully.');
         return redirect()->route('profile.index');

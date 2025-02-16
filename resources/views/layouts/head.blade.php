@@ -23,7 +23,6 @@
 
 <!---Icons css-->
 <link href="{{URL::asset('assets/css/icons.css')}}" rel="stylesheet" />
-@yield('css')
 
 <!-- Simplebar css -->
 <link rel="stylesheet" href="{{URL::asset('assets/plugins/simplebar/css/simplebar.css')}}">
@@ -31,3 +30,4 @@
 <!-- Color Skin css -->
 <link id="theme" href="{{URL::asset('assets/colors/color1.css')}}" rel="stylesheet" type="text/css"/>
 
+@yield('css')

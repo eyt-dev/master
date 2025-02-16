@@ -67005,7 +67005,7 @@ var ContinuousView = VisualMapView.extend({
         // focus on when dragging. (see test/heatmap-large.html)
         // When realtime is set as true, highlight will not show when hover
         // handle, because the label on handle, which displays a exact value
-        // but not range, might mislead users.
+        // but not range, might mislead admins.
         var oldBatch = this._hoverLinkDataIndices;
         var newBatch = [];
         if (hoverOnBar || useHoverLinkOnHandle(visualMapModel)) {

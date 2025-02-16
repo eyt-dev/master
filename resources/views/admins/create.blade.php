@@ -1,7 +1,7 @@
 <form 
-    action="{{ isset($user) && $user->id ? route('users.update', $user->id) : route('users.store') }}" 
+    action="{{ isset($admin) && $admin->id ? route('admins.update', $admin->id) : route('admins.store') }}" 
     method="POST" 
-    id="user_form"
+    id="admin_form"
     novalidate=""
     class="needs-validation" 
     enctype="multipart/form-data">
@@ -14,7 +14,7 @@
                 <input type="hidden" name="type" value="{{ request('type', 1) }}">
 
                 <label for="name" class="form-label">Name <span class="text-red">*</span></label>
-                <input type="text" class="form-control" name="name" id="name" placeholder="Name" value="{{ old('name', $user->name) }}" required="" />
+                <input type="text" class="form-control" name="name" id="name" placeholder="Name" value="{{ old('name', $admin->name) }}" required="" />
                 @error('name')
                     <label id="name-error" class="error" for="name">{{ $message }}</label>
                 @enderror
@@ -23,8 +23,18 @@
 
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
+                <label for="username" class="form-label">Username <span class="text-red">*</span></label>
+                <input type="text" class="form-control" name="username" id="username" placeholder="Username" value="{{ old('username', $admin->username) }}" required="" />
+                @error('username')
+                    <label id="username-error" class="error" for="username">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
                 <label for="email" class="form-label">Email <span class="text-red">*</span></label>
-                <input type="email" class="form-control" name="email" id="email" value="{{ old('email', $user->email) }}" {{ !isset($user->id) ? '' : 'readonly' }} required="" />
+                <input type="email" class="form-control" name="email" id="email" value="{{ old('email', $admin->email) }}" {{ !isset($admin->id) ? '' : 'readonly' }} required="" />
                 @error('email')
                     <label id="email-error" class="error" for="email">{{ $message }}</label>
                 @enderror
@@ -44,6 +54,6 @@
     </div>
     <div class="card-footer">
         <button class="btn btn-primary" type="submit">Save</button>
-        <a href="{{ route('users.index') }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('admins.index') }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>

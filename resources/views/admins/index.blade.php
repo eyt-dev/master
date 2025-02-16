@@ -13,7 +13,7 @@
     <div class="page-header">
         <div class="page-leftheader">
             @php
-                $breadcrumbText = 'Users'; // Default text
+                $breadcrumbText = 'Admins'; // Default text
 
                 switch(request('type')) {
                     case 1:
@@ -40,7 +40,7 @@
         <div class="page-rightheader">
             <div class="btn btn-list">
                 @if(auth()->user()->type == 0 && request('type') != 3 || auth()->user()->type == 1 && request('type') == 3)
-                    {{-- Super Admin (0) can create users except Private Vendors (3) --}}
+                    {{-- Super Admin (0) can create admins except Private Vendors (3) --}}
                     {{-- Admin (1) can create only Private Vendors (3) --}}
 
                     <a id="add_new" class="btn btn-info" data-type="{{ request('type') }}" data-toggle="tooltip" title="Add new">
@@ -71,7 +71,7 @@
                         </div>
                     @endif
                     <div class="table-responsive">
-                        <table class="table table-bordered text-nowrap" id="user_table">
+                        <table class="table table-bordered text-nowrap" id="admin_table">
                             <thead>
                                 <tr>
                                     <th width="30px"></th>
@@ -94,7 +94,7 @@
     </div>
     </div>
 
-    <div class="modal fade bd-example-modal-lg" id="user_form_modal" tabindex="-1" role="dialog"
+    <div class="modal fade bd-example-modal-lg" id="admin_form_modal" tabindex="-1" role="dialog"
         aria-labelledby="myLargeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -121,20 +121,20 @@
     <script src="{{ URL::asset('assets/js/sweet-alert.js') }}"></script>
     <script src="{{URL::asset('assets/plugins/forn-wizard/js/jquery.validate.min.js')}}"></script>
     <script type="text/javascript">
-    var userType = @json(request('type') ?? 1);
+    var adminType = @json(request('type') ?? 1);
     
         $(document).on('click', '#add_new', function() {
-            var userType1 = @json(request('type') ?? 1);
+            var adminType1 = @json(request('type') ?? 1);
             $.ajax({
-                url: "{{ route('users.create') }}/" + userType1,
+                url: "{{ route('admins.create') }}/" + adminType1,
                 type: "GET",
                 success: function(response) {
                     console.log(response);
                     
                     $(".modal-body").html(response);
                     $(".modal-title").html("Add Admin");
-                    $("#user_form_modal").modal('show');
-                    // $("#user_form input[name='type']").val(userType);
+                    $("#admin_form_modal").modal('show');
+                    // $("#admin_form input[name='type']").val(adminType);
                     checkValidation();
                 }
             });
@@ -146,19 +146,19 @@
                 success: function(response) {
                     $(".modal-body").html(response);
                     $(".modal-title").html("Update Admin");
-                    $("#user_form_modal").modal('show');
+                    $("#admin_form_modal").modal('show');
                     checkValidation();
                 }
             });
         });
-        var table = $('#user_table').DataTable({
+        var table = $('#admin_table').DataTable({
             processing: true,
             serverSide: true,
             responsive: true,
             ajax: {
-                url: "{{ route('users.index') }}",
+                url: "{{ route('admins.index') }}",
                 data: function (d) {
-                    d.type = userType; // Pass type dynamically
+                    d.type = adminType; // Pass type dynamically
                 }
             },
             columns: [
@@ -196,21 +196,23 @@
             ]
         });
         
-        $(document).on('click', '.delete-user', function() {
+        $(document).on('click', '.delete-admin', function() {
             var id = $(this).attr("data-id");
             swal({
                 title: "Are you sure?",
-                text: "Once deleted, you will not be able to recover this attribute!",
+                text: "Once deleted, you will not be able to recover this admin!",
                 icon: "warning",
                 buttons: true,
                 dangerMode: true,
                 showCancelButton: true,
+                confirmButtonText: "Yes, delete it!",
+                cancelButtonText: "Cancel"
             }, function(willDelete) {
                 if (willDelete) {
                     $.ajax({
                         type: "get",
                         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        url: "{{ route('users.destroy', ':id') }}".replace(':id', id),
+                        url: "{{ route('admins.destroy', ':id') }}".replace(':id', id),
                         success: function(response) {
                             swal({
                                 title: response.msg
@@ -224,7 +226,7 @@
         });
         // $(document).ready(function() {
             function checkValidation(){
-                $("#user_form").validate({
+                $("#admin_form").validate({
                     ignore: ":hidden",
                     rules: {
                         name: {

@@ -102,10 +102,8 @@ class AdminController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function create($type = null)
-    {
-       
-        $roles = Role::all();
-        return view('admins.create', ['admin' => new Admin(), 'roles' => $roles, 'type' => $type]);
+    {       
+        return view('admins.create', ['admin' => new Admin(), 'type' => $type]);
     }
 
     /**

@@ -153,6 +153,7 @@
                                 swal({
                                     title: response.msg
                                 }, function(result) {
+                                    console.log(result)
                                     location.reload();
                                 });
                             }

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('type');
             $table->string('visibility');
             $table->string('display');
+            $table->string('image')->nullable();
             $table->integer('clips')->default(0);
             $table->unsignedBigInteger('created_by');
             $table->timestamps();

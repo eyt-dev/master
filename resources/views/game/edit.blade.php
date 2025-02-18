@@ -5,7 +5,7 @@
     <h1>Edit Game</h1>
     <form action="{{ route('game.update', $game->id) }}" method="POST" novalidate class="needs-validation">
         @csrf
-        @method('PUT')
+        {{-- @method('PUT') --}}
 
         <!-- Game Information -->
         <div class="form-group">
@@ -43,7 +43,7 @@
             <label for="clips_count">Number of Clips</label>
             <select name="clips_count" id="clips_count" class="form-control" required>
                 @for($i = 1; $i <= 30; $i++)
-                    <option value="{{ $i }}" {{ $game->clips->count() == $i ? 'selected' : '' }}>{{ $i }}</option>
+                    <option value="{{ $i }}" {{ $game->clips == $i ? 'selected' : '' }}>{{ $i }}</option>
                 @endfor
             </select>
         </div>
@@ -68,8 +68,8 @@
                 </tr>
             </thead>
             <tbody>
-                @if($game->clips->count())
-                    @foreach($game->clips as $index => $clip)
+                @if($game->clipData)
+                    @foreach($game->clipData as $index => $clip)
                         <tr>
                             <td>{{ $index + 1 }}</td>
                             <td>

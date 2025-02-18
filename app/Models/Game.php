@@ -23,7 +23,7 @@ class Game extends Model
     /**
      * Get the game clips for the game.
      */
-    public function clips()
+    public function clipData()
     {
         return $this->hasMany(GameClip::class, 'game_id');
     }

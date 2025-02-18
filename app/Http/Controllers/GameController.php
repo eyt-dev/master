@@ -86,7 +86,7 @@ class GameController extends Controller
         // Create the related game clip records.
         $clipsCount = $validated['clips_count'];
         for ($i = 0; $i < $clipsCount; $i++) {
-            $game->clips()->create([
+            $game->clipData()->create([
                 'text_length'     => $validated['text_length'][$i],
                 'text_orientation'=> $validated['text_orientation'][$i],
                 'color'           => $validated['color'][$i] ?? null,
@@ -104,7 +104,7 @@ class GameController extends Controller
     public function edit($id)
     {
         // Load the game with its related clips.
-        $game = Game::with('clips')->findOrFail($id);
+        $game = Game::with('clipData')->findOrFail($id);
         return view('game.edit', compact('game'));
     }
 
@@ -141,12 +141,12 @@ class GameController extends Controller
         ]);
 
         // Remove existing clips (you could also update them individually if you prefer).
-        $game->clips()->delete();
+        $game->clipData()->delete();
 
         // Create new clip records.
         $clipsCount = $validated['clips_count'];
         for ($i = 0; $i < $clipsCount; $i++) {
-            $game->clips()->create([
+            $game->clipData()->create([
                 'text_length'      => $validated['text_length'][$i],
                 'text_orientation' => $validated['text_orientation'][$i],
                 'color'            => $validated['color'][$i] ?? null,
@@ -161,17 +161,20 @@ class GameController extends Controller
     public function destroy($id)
     {
         // Retrieve the game along with its clips
-        $game = Game::with('clips')->findOrFail($id);
+        $game = Game::with('clipData')
+            ->where('id',$id)
+            ->first();
+        // dd($game,$id);
 
         // Delete the associated game clips first
-        $game->clips()->delete();
+        $game->clipData()->delete();
 
         // Delete the game record
         $game->delete();
 
         // Return a JSON response (you can adjust the response as needed)
         return response()->json([
-            'success' => 'Game and its clips have been deleted successfully.'
+            'msg' => 'Game and its clips have been deleted successfully.'
         ]);
     }
 

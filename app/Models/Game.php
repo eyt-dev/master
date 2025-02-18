@@ -17,6 +17,7 @@ class Game extends Model
         'visibility',
         'display',
         'clips',
+        'image',
         'created_by'
     ];
 

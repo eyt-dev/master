@@ -53,8 +53,8 @@
         <div class="form-group" id="standard_image_upload" style="display: none;">
             <label for="standard_image">Standard Image Upload</label>
             <input type="file" name="standard_image" id="standard_image" class="form-control">
-            @if(isset($game->standard_image))
-                <img src="{{ asset('storage/' . $game->standard_image) }}" alt="Standard Image" style="max-width: 200px; margin-top:10px;">
+            @if(isset($game->image))
+                <img src="{{ asset('storage/' . $game->image) }}" alt="Standard Image" style="max-width: 200px; margin-top:10px;">
             @endif
         </div>
 

@@ -51,19 +51,25 @@ class GameController extends Controller
         return view('game.create', ['game' => new Game()]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    /*
     public function store(Request $request)
     {
+        if(!$request->display && $request->type!='Flixable'){
+            $request['display']='image';
+        }
+        if($request->type=='standard'){
+            $request['clips_count']=0;
+        }
+        // dd($request->all());
         // Validate the incoming request data
         $validated = $request->validate([
             'name'              => 'required|string|max:255',
             'type'              => 'required|in:Flixable,textable,standard',
             'visibility'        => 'required|in:private,global',
             'display'           => 'required|in:color,image',
-            'clips_count'       => 'required|integer|min:1|max:30',
+            'clips_count'       => 'required|integer',
             'created_by'        => 'required|integer',
+            'standard_image'    => 'sometimes|required',
             // Clip fields are arrays; each row must have these values:
             'text_length.*'     => 'required|integer|min:1|max:5',
             'text_orientation.*'=> 'required|in:H,V',
@@ -83,20 +89,93 @@ class GameController extends Controller
             'created_by' => auth()->user()->id,
         ]);
 
-        // Create the related game clip records.
-        $clipsCount = $validated['clips_count'];
-        for ($i = 0; $i < $clipsCount; $i++) {
-            $game->clipData()->create([
-                'text_length'     => $validated['text_length'][$i],
-                'text_orientation'=> $validated['text_orientation'][$i],
-                'color'           => $validated['color'][$i] ?? null,
-                'image'           => $validated['image'][$i] ?? null,
-            ]);
+        if($request->type!='standard'){
+            // Create the related game clip records.
+            $clipsCount = $validated['clips_count'];
+            for ($i = 0; $i < $clipsCount; $i++) {
+                $game->clipData()->create([
+                    'text_length'     => $validated['text_length'][$i],
+                    'text_orientation'=> $validated['text_orientation'][$i],
+                    'color'           => $validated['color'][$i] ?? null,
+                    'image'           => $validated['image'][$i] ?? null,
+                ]);
+            }
         }
 
         return redirect()->route('game.index')
                          ->with('success', 'Game created successfully.');
+    } */
+
+    public function store(Request $request)
+    {
+        // If display is not provided and type is not Flixable, force it to image.
+        if (!$request->display && $request->type != 'Flixable') {
+            $request['display'] = 'image';
+        }
+        if ($request->type == 'standard') {
+            $request['clips_count'] = 0;
+        }
+        
+        // Validate the incoming request data.
+        // You may want to add a file rule for standard_image and clip image uploads.
+        $validated = $request->validate([
+            'name'              => 'required|string|max:255',
+            'type'              => 'required|in:Flixable,textable,standard',
+            'visibility'        => 'required|in:private,global',
+            'display'           => 'required|in:color,image',
+            'clips_count'       => 'required|integer',
+            'created_by'        => 'required|integer',
+            'standard_image'    => 'sometimes|required|file',  // file upload for standard type.
+            // Clip fields are arrays; each row must have these values:
+            'text_length.*'     => 'required|integer|min:1|max:5',
+            'text_orientation.*'=> 'required|in:H,V',
+            'color.*'           => 'nullable|string',
+            'image.*'           => 'nullable|file',  // file upload for clip image.
+        ]);
+
+        // Create the game record.
+        // (Make sure your games table has a 'standard_image' column if needed.)
+        $game = Game::create([
+            'name'       => $validated['name'],
+            'type'       => $validated['type'],
+            // For example, we treat "global" as true and "private" as false.
+            'visibility' => $validated['visibility'] === 'global',
+            'display'    => $validated['display'],
+            'clips'      => $validated['clips_count'],
+            'created_by' => auth()->user()->id,
+        ]);
+
+        // If the game is standard, process the standard image upload.
+        if ($request->type == 'standard') {
+            if ($request->hasFile('standard_image')) {
+                $standardImagePath = $request->file('standard_image')->store('standardgames', 'public');
+                // Update game with the standard image path.
+                $game->update(['standard_image' => $standardImagePath]);
+            }
+        } else {
+            // Create the related game clip records.
+            $clipsCount = $validated['clips_count'];
+            for ($i = 0; $i < $clipsCount; $i++) {
+                // Process each clip's image upload if available.
+                $clipImagePath = null;
+                if ($request->hasFile("image.$i")) {
+                    // Store in 'games' folder on the public disk.
+                    $clipImagePath = $request->file('image')[$i]->store('games', 'public');
+                }
+                $game->clipData()->create([
+                    'text_length'      => $validated['text_length'][$i],
+                    'text_orientation' => $validated['text_orientation'][$i],
+                    'color'            => $validated['color'][$i] ?? null,
+                    // If there's an uploaded file, use its path; otherwise, fallback to any provided string.
+                    'image'            => $clipImagePath ?? ($validated['image'][$i] ?? null),
+                ]);
+            }
+        }
+
+        return redirect()->route('game.index')
+                        ->with('success', 'Game created successfully.');
     }
+
 
     /**
      * Show the edit form for a game.
@@ -108,18 +187,23 @@ class GameController extends Controller
         return view('game.edit', compact('game'));
     }
 
-    /**
-     * Update the specified game and its clips.
-     */
+    /*
     public function update(Request $request, $id)
     {
+        if(!$request->display && $request->type!='Flixable'){
+            $request['display']='image';
+        }
+        if($request->type=='standard'){
+            $request['clips_count']=0;
+        }
+
         // Validate incoming data.
         $validated = $request->validate([
             'name'               => 'required|string|max:255',
             'type'               => 'required|in:Flixable,textable,standard',
             'visibility'         => 'required|in:private,global',
             'display'            => 'required|in:color,image',
-            'clips_count'        => 'required|integer|min:1|max:30',
+            'clips_count'        => 'required|integer',
             'created_by'         => 'required|integer',
             'text_length.*'      => 'required|integer|min:1|max:5',
             'text_orientation.*' => 'required|in:H,V',
@@ -143,20 +227,118 @@ class GameController extends Controller
         // Remove existing clips (you could also update them individually if you prefer).
         $game->clipData()->delete();
 
-        // Create new clip records.
-        $clipsCount = $validated['clips_count'];
-        for ($i = 0; $i < $clipsCount; $i++) {
-            $game->clipData()->create([
-                'text_length'      => $validated['text_length'][$i],
-                'text_orientation' => $validated['text_orientation'][$i],
-                'color'            => $validated['color'][$i] ?? null,
-                'image'            => $validated['image'][$i] ?? null,
-            ]);
+        if($request->type!='standard'){
+            // Create new clip records.
+            $clipsCount = $validated['clips_count'];
+            for ($i = 0; $i < $clipsCount; $i++) {
+                $game->clipData()->create([
+                    'text_length'      => $validated['text_length'][$i],
+                    'text_orientation' => $validated['text_orientation'][$i],
+                    'color'            => $validated['color'][$i] ?? null,
+                    'image'            => $validated['image'][$i] ?? null,
+                ]);
+            }
         }
 
         return redirect()->route('game.index')
                          ->with('success', 'Game updated successfully.');
     }
+    */
+
+    public function update(Request $request, $id)
+    {
+        if (!$request->display && $request->type != 'Flixable') {
+            $request['display'] = 'image';
+        }
+        if ($request->type == 'standard') {
+            $request['clips_count'] = 0;
+        }
+
+        // Validate incoming data.
+        $validated = $request->validate([
+            'name'               => 'required|string|max:255',
+            'type'               => 'required|in:Flixable,textable,standard',
+            'visibility'         => 'required|in:private,global',
+            'display'            => 'required|in:color,image',
+            'clips_count'        => 'required|integer',
+            'created_by'         => 'required|integer',
+            'standard_image'     => 'sometimes|nullable|file',
+            'text_length.*'      => 'required_if:type,Flixable,textable|integer|min:1|max:5',
+            'text_orientation.*' => 'required_if:type,Flixable,textable|in:H,V',
+            'color.*'            => 'nullable|string',
+            'image.*'            => 'nullable|file',
+        ]);
+
+        $game = Game::findOrFail($id);
+
+        // Update game details.
+        $game->update([
+            'name'       => $validated['name'],
+            'type'       => $validated['type'],
+            'visibility' => $validated['visibility'] === 'global',
+            'display'    => $validated['display'],
+            'clips'      => $validated['clips_count'],
+            'created_by' => $validated['created_by'],
+        ]);
+
+        // Handle standard image upload.
+        if ($request->type == 'standard') {
+            if ($request->hasFile('standard_image')) {
+                $standardImagePath = $request->file('standard_image')->store('standardgames', 'public');
+                $game->update(['standard_image' => $standardImagePath]);
+            }
+        } else {
+            // Fetch existing clips
+            $existingClips = $game->clipData;
+            $existingCount = $existingClips->count();
+            $newCount = $validated['clips_count'];
+
+            // Loop through existing clips and update them.
+            
+            for ($i = 0; $i < $existingCount; $i++) {
+                if ($i < $newCount) {
+                    $clip = $existingClips[$i];
+                    // dump($validated['text_length'][3]);
+                    $clip->update([
+                        'text_length'      => $validated['text_length'][$i],
+                        'text_orientation' => $validated['text_orientation'][$i],
+                        'color'            => $validated['color'][$i] ?? $clip->color,
+                    ]);
+
+                    // Process clip image upload if a new image is provided.
+                    if ($request->hasFile("image.$i")) {
+                        $clipImagePath = $request->file('image')[$i]->store('games', 'public');
+                        $clip->update(['image' => $clipImagePath]);
+                    }
+                } else {
+                    // If the new count is lower than existing clips, remove the extra ones.
+                    $existingClips[$i]->delete();
+                }
+            }
+
+            // Append new clips if count increased.
+            for ($i = $existingCount; $i < $newCount; $i++) {
+                $clipData = [
+                    'text_length'      => $validated['text_length'][$i],
+                    'text_orientation' => $validated['text_orientation'][$i],
+                    'color'            => $validated['color'][$i] ?? null,
+                    'game_id'          => $game->id, // Ensure association with the game
+                ];
+
+                // Handle image upload for new clips.
+                if ($request->hasFile("image.$i")) {
+                    $clipImagePath = $request->file('image')[$i]->store('games', 'public');
+                    $clipData['image'] = $clipImagePath;
+                }
+
+                $game->clipData()->create($clipData);
+            }
+        }
+
+        return redirect()->route('game.index')->with('success', 'Game updated successfully.');
+    }
+
+
 
     public function destroy($id)
     {

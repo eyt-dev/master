@@ -150,7 +150,7 @@ class GameController extends Controller
             if ($request->hasFile('standard_image')) {
                 $standardImagePath = $request->file('standard_image')->store('standardgames', 'public');
                 // Update game with the standard image path.
-                $game->update(['standard_image' => $standardImagePath]);
+                $game->update(['image' => $standardImagePath]);
             }
         } else {
             // Create the related game clip records.
@@ -285,7 +285,7 @@ class GameController extends Controller
         if ($request->type == 'standard') {
             if ($request->hasFile('standard_image')) {
                 $standardImagePath = $request->file('standard_image')->store('standardgames', 'public');
-                $game->update(['standard_image' => $standardImagePath]);
+                $game->update(['image' => $standardImagePath]);
             }
         } else {
             // Fetch existing clips

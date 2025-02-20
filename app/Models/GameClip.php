@@ -26,4 +26,9 @@ class GameClip extends Model
     {
         return $this->belongsTo(Game::class, 'game_id');
     }
+
+    public function wheelClips()
+    {
+        return $this->hasMany(WheelClip::class, 'game_clip_id');
+    }
 }

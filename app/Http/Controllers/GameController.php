@@ -32,6 +32,10 @@ class GameController extends Controller
                     // Assuming 'visibility' is stored as boolean/integer:
                     return $row->visibility ? 'Global' : 'Private';
                 })
+                ->editColumn('created_by', function($row) {
+                    // Assuming 'visibility' is stored as boolean/integer:
+                    return $row->admin->name;
+                })
                 ->editColumn('display', function($row) {
                     // Adjust display formatting if needed
                     return ucfirst($row->display);

@@ -29,9 +29,9 @@ class Game extends Model
         return $this->hasMany(GameClip::class, 'game_id');
     }
 
-    public function user()
+    public function admin()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(Admin::class, 'created_by');
     }
 
      /**

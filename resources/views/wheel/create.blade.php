@@ -2,6 +2,15 @@
 
 @section('content')
 <div class="container">
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     <h2>Create Wheel</h2>
     <form action="{{ route('wheel.store') }}" method="POST" novalidate class="needs-validation">
         @csrf
@@ -55,10 +64,12 @@ $(document).ready(function() {
 
                     clips.forEach((clip, index) => {
                         let textLength = clip.text_length; // Fetch text_length from backend
+                        let clip_id = clip.id;
                         let row = `
                             <tr>
                                 <td>${index + 1}</td>
                                 <td>
+                                    <input type="hidden" name="clips[${index}][id]" value="${clip_id}">
                                     <input type="text" name="clips[${index}][text]" class="form-control text-input"
                                         data-maxlength="${textLength}" maxlength="${textLength}" required="">
                                 </td>

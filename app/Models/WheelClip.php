@@ -9,7 +9,7 @@ class WheelClip extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['wheel_id', 'text'];
+    protected $fillable = ['wheel_id', 'text', 'game_clip_id'];
 
     /**
      * Get the wheel that owns this clip.
@@ -25,5 +25,10 @@ class WheelClip extends Model
     public function game()
     {
         return $this->hasOneThrough(Game::class, Wheel::class, 'id', 'id', 'wheel_id', 'game_id');
+    }
+
+    public function gameClip()
+    {
+        return $this->belongsTo(GameClip::class, 'game_clip_id');
     }
 }

@@ -104,10 +104,12 @@ $(document).ready(function() {
 
                 clips.forEach((clip, index) => {
                     let textLength = clip.text_length;
+                    let clip_id = clip.id;
                     let row = `
                         <tr>
                             <td>${index + 1}</td>
                             <td>
+                                <input type="hidden" name="clips[${index}][id]" value="${clip_id}">
                                 <input type="text" name="clips[${index}][text]" class="form-control text-input"
                                     data-maxlength="${textLength}" maxlength="${textLength}" required>
                             </td>

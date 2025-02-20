@@ -29,11 +29,14 @@ class WheelController extends Controller
                     $btn .= '</a>';
                     return $btn;
                 })
-                ->addColumn('game', function($row) {
+                ->editColumn('game', function($row) {
                     return $row->game->name;
                 })
-                ->addColumn('clips_count', function($row) {
+                ->editColumn('clips_count', function($row) {
                     return $row->clips()->count();
+                })
+                ->editColumn('created_at', function($row) {
+                    return date('d-m-Y',strtotime($row->created_at));
                 })
                 ->addIndexColumn()
                 ->rawColumns(['action'])
@@ -67,7 +70,8 @@ class WheelController extends Controller
         foreach ($request->clips as $clip) {
             WheelClip::create([
                 'wheel_id' => $wheel->id,
-                'text' => $clip['text']
+                'text' => $clip['text'],
+                'game_clip_id' => $clip['id']
             ]);
         }
 
@@ -81,45 +85,88 @@ class WheelController extends Controller
     {
         $games = Game::all();
         // Eager load clips relation
-        $wheel->load('clips');
+        // $wheel->load('clips');
+        
+        $wheel = Wheel::with(['game','clips.gameClip'])->first();
+        // dd($wheel->clips[0]->gameClip->text_length);
         return view('wheel.edit', compact('wheel', 'games'));
     }
 
     /**
      * Update the specified wheel in storage.
      */
+    // public function update(Request $request, Wheel $wheel)
+    // {
+    //     $request->validate([
+    //         'game_id' => 'required|exists:games,id',
+    //         'clips.*.text' => 'required|string',
+    //     ]);
+
+    //     // Check if the game is changed
+    //     if ($wheel->game_id != $request->game_id) {
+    //         // If the game is changed, remove all old clips
+    //         $wheel->clips()->delete();
+    //     }
+
+    //     // Update Wheel Game Selection
+    //     $wheel->update(['game_id' => $request->game_id]);
+
+    //     // Insert New Clips (after deleting old ones if the game was changed)
+    //     $newClips = [];
+    //     foreach ($request->clips as $clipData) {
+    //         $newClips[] = [
+    //             'wheel_id' => $wheel->id,
+    //             'text' => substr($clipData['text'], 0, 255), // Limiting text length
+    //             'created_at' => now(),
+    //             'updated_at' => now(),
+    //         ];
+    //     }
+
+    //     // Insert new clips in bulk
+    //     WheelClip::insert($newClips);
+
+    //     return redirect()->route('wheel.index')->with('success', 'Wheel updated successfully.');
+    // }
+
     public function update(Request $request, Wheel $wheel)
     {
         $request->validate([
             'game_id' => 'required|exists:games,id',
-            'clips.*.text' => 'required|string',
+            'clips' => 'required|array',
+            'clips.*.text' => 'required|string|max:255',
         ]);
 
-        // Check if the game is changed
-        if ($wheel->game_id != $request->game_id) {
-            // If the game is changed, remove all old clips
-            $wheel->clips()->delete();
-        }
-
-        // Update Wheel Game Selection
+        // Update wheel details
         $wheel->update(['game_id' => $request->game_id]);
 
-        // Insert New Clips (after deleting old ones if the game was changed)
-        $newClips = [];
+        // Store existing clip IDs
+        $existingClipIds = $wheel->clips()->pluck('id')->toArray();
+        $newClipIds = [];
+
         foreach ($request->clips as $clipData) {
-            $newClips[] = [
-                'wheel_id' => $wheel->id,
-                'text' => substr($clipData['text'], 0, 255), // Limiting text length
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+            $clip = WheelClip::updateOrCreate(
+                [
+                    'wheel_id' => $wheel->id,
+                    'id' => $clipData['id'] ?? null // Check if ID exists, otherwise insert
+                ],
+                [
+                    'text' => substr($clipData['text'], 0, 255),
+                    'game_clip_id' => $clipData['id'],
+                    'updated_at' => now(),
+                ]
+            );
+
+            // Keep track of updated/created clips
+            $newClipIds[] = $clip->id;
         }
 
-        // Insert new clips in bulk
-        WheelClip::insert($newClips);
+        // Delete clips that were removed from the request
+        $clipsToDelete = array_diff($existingClipIds, $newClipIds);
+        WheelClip::whereIn('id', $clipsToDelete)->delete();
 
         return redirect()->route('wheel.index')->with('success', 'Wheel updated successfully.');
     }
+
 
     /**
      * Remove the specified wheel from storage.

@@ -278,7 +278,6 @@ class GameController extends Controller
             'visibility' => $validated['visibility'] === 'global',
             'display'    => $validated['display'],
             'clips'      => $validated['clips_count'],
-            'created_by' => $validated['created_by'],
         ]);
 
         // Handle standard image upload.

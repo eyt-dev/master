@@ -28,4 +28,17 @@ class Game extends Model
     {
         return $this->hasMany(GameClip::class, 'game_id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+     /**
+     * Get all clips related to this game via wheels.
+     */
+    public function wheelClips()
+    {
+        return $this->hasManyThrough(WheelClip::class, Wheel::class, 'game_id', 'wheel_id');
+    }
 }

@@ -67,10 +67,10 @@
             </select>
         </div>
 
-        <div class="form-group">
+        {{-- <div class="form-group">
             <label for="created_by">Created By (User ID)</label>
             <input type="number" name="created_by" id="created_by" class="form-control" value="{{ old('created_by', $game->created_by) }}" required>
-        </div>
+        </div> --}}
 
         <hr>
 

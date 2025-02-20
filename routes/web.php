@@ -76,14 +76,17 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('{game}', 'destroy')->name('game.destroy')->middleware('permission:delete.game');
         Route::get('permission', 'assignPermissionList')->name('game.permission.index');
     });
-    Route::controller(WheelController::class)->prefix('wheels')->group(function () {
-        Route::get('/', 'index')->name('wheels.index')->middleware('permission:view.wheels');
-        Route::get('create', 'create')->name('wheels.create')->middleware('permission:create.wheels');
-        Route::post('store', 'store')->name('wheels.store')->middleware('permission:create.wheels');
-        Route::get('{wheels}/edit', 'edit')->name('wheels.edit')->middleware('permission:edit.wheels');
-        Route::post('{wheels}', 'update')->name('wheels.update')->middleware('permission:edit.wheels');
-        Route::delete('{wheels}', 'destroy')->name('wheels.destroy')->middleware('permission:delete.wheels');
-        Route::get('permission', 'assignPermissionList')->name('wheels.permission.index');
+    Route::controller(WheelController::class)->prefix('wheel')->group(function () {
+        Route::get('/', 'index')->name('wheel.index')->middleware('permission:view.wheel');
+        Route::get('create', 'create')->name('wheel.create')->middleware('permission:create.wheel');
+        Route::post('store', 'store')->name('wheel.store')->middleware('permission:create.wheel');
+        Route::get('{wheel}/edit', 'edit')->name('wheel.edit')->middleware('permission:edit.wheel');
+        Route::post('{wheel}', 'update')->name('wheel.update')->middleware('permission:edit.wheel');
+        Route::delete('{wheel}', 'destroy')->name('wheel.destroy')->middleware('permission:delete.wheel');
+        Route::get('permission', 'assignPermissionList')->name('wheel.permission.index');
+
+        Route::get('/getClipsByGame', 'getClipsByGame')->name('getClipsByGame');
+
     });
 
     

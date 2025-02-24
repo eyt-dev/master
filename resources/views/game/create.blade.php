@@ -26,16 +26,16 @@
             <label for="type">Game Type</label>
             <select name="type" id="type" class="form-control" required>
                 <option value="Flixable">Flixable</option>
-                <option value="textable">textable</option>
-                <option value="standard">standard</option>
+                <option value="textable">Textable</option>
+                <option value="standard">Standard</option>
             </select>
         </div>
 
         <div class="form-group">
             <label for="visibility">Visibility</label>
             <select name="visibility" id="visibility" class="form-control" required>
-                <option value="private">private</option>
-                <option value="global">global</option>
+                <option value="private">Private</option>
+                <option value="global">Global</option>
             </select>
         </div>
 
@@ -107,7 +107,7 @@ $(document).ready(function(){
                     <td>${i+1}</td>
                     <td>
                         <select name="text_length[]" class="form-control" required>
-                            @for($j = 1; $j <= 5; $j++)
+                            @for($j = 1; $j <= 30; $j++)
                                 <option value="{{ $j }}">{{ $j }}</option>
                             @endfor
                         </select>
@@ -128,6 +128,7 @@ $(document).ready(function(){
                 tbody.append(row);
             }
         }
+        adjustClipTableColumns();
     }
 
     // Generate rows for the initial clips count selection.
@@ -137,56 +138,53 @@ $(document).ready(function(){
     $('#clips_count').on('change', function(){
         let count = $(this).val();
         generateClipRows(count);
-        adjustClipTableColumns();
         checkValidation();
     });
 
-    // When the game type changes, adjust the display dropdown, clips count, and show/hide the standard image field.
+    // When the game type changes, adjust the UI elements accordingly.
     $('#type').on('change', function(){
         let typeVal = $(this).val().toLowerCase();
         if(typeVal === 'standard'){
-            // Force display to image, disable it.
             $('#display').val('image').prop('disabled', true);
-            // Hide clips count dropdown and clips table.
             $('#clips-count-group, #clips_container').hide();
-            // Show standard image upload field.
             $('#standard_image_upload').show();
+            $('#display-container').show(); // Ensure the display dropdown is visible
             generateClipRows(0);
         } else if(typeVal === 'textable'){
-            // Force display to image, disable it.
-            $('#display').val('image').prop('disabled', true);
-            // Show clips count and clips table.
+            $('#display-container').hide(); // Hide display dropdown
             $('#clips-count-group, #clips_container').show();
-            // Hide standard image upload field.
-            $('#standard_image_upload').hide();
+            $('#standard_image_upload').show();
             generateClipRows($('#clips_count').val());
-        } else {
-            // For Flixable, enable the display dropdown.
+        } else { // Flixable
             $('#display').prop('disabled', false);
-            // Show clips count and clips table.
             $('#clips-count-group, #clips_container').show();
-            // Hide standard image upload field.
             $('#standard_image_upload').hide();
+            $('#display-container').show();
             generateClipRows($('#clips_count').val());
         }
-        adjustClipTableColumns();
     });
 
-    // When display dropdown changes (active only when enabled), adjust columns.
+    // When display dropdown changes (if enabled), adjust columns.
     $('#display').on('change', function(){
         adjustClipTableColumns();
     });
 
-    // Function to adjust which clip columns are visible based on display selection.
+    // Function to adjust column visibility based on game type and display value.
     function adjustClipTableColumns(){
+        let typeVal = $('#type').val().toLowerCase();
         let displayVal = $('#display').val();
+
         $('#clips_table tbody tr').each(function(){
-            if(displayVal === 'image'){
-                $('.clip-color').hide();
-                $('.clip-image').show();
-            } else if(displayVal === 'color'){
-                $('.clip-color').show();
-                $('.clip-image').hide();
+            if(typeVal === 'textable'){
+                $('.clip-color, .clip-image').hide();
+            } else {
+                if(displayVal === 'image'){
+                    $('.clip-color').hide();
+                    $('.clip-image').show();
+                } else if(displayVal === 'color'){
+                    $('.clip-color').show();
+                    $('.clip-image').hide();
+                }
             }
         });
     }
@@ -208,5 +206,6 @@ $(document).ready(function(){
         });
     }
 });
+
 </script>
 @endsection

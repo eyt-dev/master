@@ -128,7 +128,7 @@ class GameController extends Controller
             'visibility'        => 'required|in:private,global',
             'display'           => 'required|in:color,image',
             'clips_count'       => 'required|integer',
-            'created_by'        => 'required|integer',
+            // 'created_by'         => 'required|integer',
             'standard_image'    => 'sometimes|required|file',  // file upload for standard type.
             // Clip fields are arrays; each row must have these values:
             'text_length.*'     => 'required|integer|min:1|max:5',
@@ -265,7 +265,7 @@ class GameController extends Controller
             'visibility'         => 'required|in:private,global',
             'display'            => 'required|in:color,image',
             'clips_count'        => 'required|integer',
-            'created_by'         => 'required|integer',
+            // 'created_by'         => 'required|integer',
             'standard_image'     => 'sometimes|nullable|file',
             'text_length.*'      => 'required_if:type,Flixable,textable|integer|min:1|max:5',
             'text_orientation.*' => 'required_if:type,Flixable,textable|in:H,V',

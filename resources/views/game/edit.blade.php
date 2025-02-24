@@ -27,8 +27,8 @@
             <label for="type">Game Type</label>
             <select name="type" id="type" class="form-control" required>
                 <option value="Flixable" {{ $game->type == 'Flixable' ? 'selected' : '' }}>Flixable</option>
-                <option value="textable" {{ $game->type == 'textable' ? 'selected' : '' }}>textable</option>
-                <option value="standard" {{ $game->type == 'standard' ? 'selected' : '' }}>standard</option>
+                <option value="textable" {{ $game->type == 'textable' ? 'selected' : '' }}>Textable</option>
+                <option value="standard" {{ $game->type == 'standard' ? 'selected' : '' }}>Standard</option>
             </select>
         </div>
 
@@ -36,8 +36,8 @@
             <label for="visibility">Visibility</label>
             <select name="visibility" id="visibility" class="form-control" required>
                 <!-- Assuming stored visibility: global = true, private = false -->
-                <option value="private" {{ !$game->visibility ? 'selected' : '' }}>private</option>
-                <option value="global" {{ $game->visibility ? 'selected' : '' }}>global</option>
+                <option value="private" {{ !$game->visibility ? 'selected' : '' }}>Private</option>
+                <option value="global" {{ $game->visibility ? 'selected' : '' }}>Global</option>
             </select>
         </div>
 
@@ -130,20 +130,20 @@
 <script>
 $(document).ready(function(){
 
-    // When the clips_count dropdown changes, clear and generate blank rows only if no clip rows exist
-    $('#clips_count').on('change', function(){
+// When the clips_count dropdown changes, adjust the number of clip rows.
+$('#clips_count').on('change', function(){
     let newCount = parseInt($(this).val());
     let tbody = $('#clips_table tbody');
     let existingCount = tbody.find('tr').length;
 
-    // Append new rows if newCount is greater than existingCount.
+    // Append new rows if needed
     if(newCount > existingCount){
         for(let i = existingCount; i < newCount; i++){
             let row = `<tr>
                 <td>${i+1}</td>
                 <td>
                     <select name="text_length[]" class="form-control" required>
-                        @for($j = 1; $j <= 5; $j++)
+                        @for($j = 1; $j <= 30; $j++)
                             <option value="{{ $j }}">{{ $j }}</option>
                         @endfor
                     </select>
@@ -155,74 +155,69 @@ $(document).ready(function(){
                     </select>
                 </td>
                 <td class="clip-color">
-                    <input type="color" name="color[]" class="form-control" placeholder="Color">
+                    <input type="color" name="color[]" class="form-control">
                 </td>
                 <td class="clip-image">
-                    <input type="file" name="image[]" class="form-control" placeholder="Image">
+                    <input type="file" name="image[]" class="form-control">
                 </td>
             </tr>`;
             tbody.append(row);
         }
     }
-    // Remove extra rows if newCount is lower than existingCount.
+    // Remove extra rows if needed
     else if(newCount < existingCount){
         tbody.find('tr').slice(newCount).remove();
     }
 
-    // Update row numbering (optional)
-        tbody.find('tr').each(function(index){
-            $(this).find('td:first').text(index + 1);
-        });
-        
-        adjustClipTableColumns();
+    // Update row numbering
+    tbody.find('tr').each(function(index){
+        $(this).find('td:first').text(index + 1);
     });
 
-    // When the game type changes, adjust the form accordingly.
-    $('#type').on('change', function(){
-        console.log('type')
-        let typeVal = $(this).val().toLowerCase();
-        if(typeVal === 'standard'){
-            // Force display to image, disable it.
-            $('#display').val('image').prop('disabled', true);
-            // Hide clips count and clips table.
-            $('#clips-count-group, #clips_container').hide();
-            // Show standard image upload field.
-            $('#standard_image_upload').show();
-        } else if(typeVal === 'textable'){
-            // Force display to image, disable it.
-            $('#display').val('image').prop('disabled', true);
-            // Show clips count and clips table.
-            $('#clips-count-group, #clips_container').show();
-            // Hide standard image upload field.
-            $('#standard_image_upload').hide();
-            // Only trigger regeneration if there are no clip rows already.
-            if($('#clips_table tbody tr').length === 0){
-                $('#clips_count').trigger('change');
-            }
-        } else {
-            // For Flixable, enable display dropdown.
-            $('#display').prop('disabled', false);
-            // Show clips count and clips table.
-            $('#clips-count-group, #clips_container').show();
-            // Hide standard image upload field.
-            $('#standard_image_upload').hide();
-            // Only trigger regeneration if there are no clip rows already.
-            if($('#clips_table tbody tr').length === 0){
-                $('#clips_count').trigger('change');
-            }
+    adjustClipTableColumns();
+});
+
+// When the game type changes, adjust the form accordingly.
+$('#type').on('change', function(){
+    let typeVal = $(this).val().toLowerCase();
+    if(typeVal === 'standard'){
+        $('#display').val('image').prop('disabled', true);
+        $('#clips-count-group, #clips_container').hide();
+        $('#standard_image_upload').show();
+        $('#display-container').show(); // Ensure display dropdown is visible
+    } else if(typeVal === 'textable'){
+        $('#display-container').hide(); // Hide display dropdown
+        $('#clips-count-group, #clips_container').show();
+        $('#standard_image_upload').show();
+        if($('#clips_table tbody tr').length === 0){
+            $('#clips_count').trigger('change');
         }
-        adjustClipTableColumns();
-    });
+    } else { // Flixable
+        $('#display').prop('disabled', false);
+        $('#clips-count-group, #clips_container').show();
+        $('#standard_image_upload').hide();
+        $('#display-container').show();
+        if($('#clips_table tbody tr').length === 0){
+            $('#clips_count').trigger('change');
+        }
+    }
+    adjustClipTableColumns();
+});
 
-    // When the display dropdown changes (only active for Flixable), adjust columns.
-    $('#display').on('change', function(){
-        adjustClipTableColumns();
-    });
+// When display dropdown changes (if enabled), adjust columns.
+$('#display').on('change', function(){
+    adjustClipTableColumns();
+});
 
-    // Function to adjust which clip columns are visible based on display selection.
-    function adjustClipTableColumns(){
-        let displayVal = $('#display').val();
-        $('#clips_table tbody tr').each(function(){
+// Function to adjust column visibility based on game type and display value.
+function adjustClipTableColumns(){
+    let typeVal = $('#type').val().toLowerCase();
+    let displayVal = $('#display').val();
+
+    $('#clips_table tbody tr').each(function(){
+        if(typeVal === 'textable'){
+            $('.clip-color, .clip-image').hide();
+        } else {
             if(displayVal === 'image'){
                 $('.clip-color').hide();
                 $('.clip-image').show();
@@ -230,30 +225,32 @@ $(document).ready(function(){
                 $('.clip-color').show();
                 $('.clip-image').hide();
             }
-        });
-    }
+        }
+    });
+}
 
-    // Initialize state based on default values.
-    $('#type').trigger('change');
-    $('#display').trigger('change');
+// Initialize state based on default values.
+$('#type').trigger('change');
+$('#display').trigger('change');
 
-    // Basic client-side validation
-    (function() {
-      'use strict';
-      window.addEventListener('load', function() {
-          var forms = document.getElementsByClassName('needs-validation');
-          Array.prototype.filter.call(forms, function(form) {
-              form.addEventListener('submit', function(event) {
-                  if (form.checkValidity() === false) {
-                      event.preventDefault();
-                      event.stopPropagation();
-                  }
-                  form.classList.add('was-validated');
-              }, false);
-          });
-      }, false);
-    })();
+// Basic client-side validation
+(function() {
+  'use strict';
+  window.addEventListener('load', function() {
+      var forms = document.getElementsByClassName('needs-validation');
+      Array.prototype.filter.call(forms, function(form) {
+          form.addEventListener('submit', function(event) {
+              if (form.checkValidity() === false) {
+                  event.preventDefault();
+                  event.stopPropagation();
+              }
+              form.classList.add('was-validated');
+          }, false);
+      });
+  }, false);
+})();
 });
+
 </script>
 @endsection
 

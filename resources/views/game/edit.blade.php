@@ -41,7 +41,7 @@
             </select>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="display-container">
             <label for="display">Display</label>
             <select name="display" id="display" class="form-control" required>
                 <option value="color" {{ $game->display == 'color' ? 'selected' : '' }}>Color</option>
@@ -94,7 +94,7 @@
                                 <td>{{ $index + 1 }}</td>
                                 <td>
                                     <select name="text_length[]" class="form-control" required>
-                                        @for($j = 1; $j <= 5; $j++)
+                                        @for($j = 1; $j <= 30; $j++)
                                             <option value="{{ $j }}" {{ $clip->text_length == $j ? 'selected' : '' }}>{{ $j }}</option>
                                         @endfor
                                     </select>
@@ -184,9 +184,10 @@ $('#type').on('change', function(){
         $('#display').val('image').prop('disabled', true);
         $('#clips-count-group, #clips_container').hide();
         $('#standard_image_upload').show();
-        $('#display-container').show(); // Ensure display dropdown is visible
+        // $('#display-container').show(); // Ensure display dropdown is visible
     } else if(typeVal === 'textable'){
-        $('#display-container').hide(); // Hide display dropdown
+        $('#display').val('image').prop('disabled', true);
+        // $('#display-container').show(); // Hide display dropdown
         $('#clips-count-group, #clips_container').show();
         $('#standard_image_upload').show();
         if($('#clips_table tbody tr').length === 0){
@@ -196,7 +197,7 @@ $('#type').on('change', function(){
         $('#display').prop('disabled', false);
         $('#clips-count-group, #clips_container').show();
         $('#standard_image_upload').hide();
-        $('#display-container').show();
+        // $('#display-container').show();
         if($('#clips_table tbody tr').length === 0){
             $('#clips_count').trigger('change');
         }

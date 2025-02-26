@@ -39,7 +39,7 @@
             </select>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="display-container">
             <label for="display">Display</label>
             <select name="display" id="display" class="form-control" required>
                 <option value="color">Color</option>
@@ -148,10 +148,11 @@ $(document).ready(function(){
             $('#display').val('image').prop('disabled', true);
             $('#clips-count-group, #clips_container').hide();
             $('#standard_image_upload').show();
-            $('#display-container').show(); // Ensure the display dropdown is visible
+            // $('#display-container').show(); // Ensure the display dropdown is visible
             generateClipRows(0);
         } else if(typeVal === 'textable'){
-            $('#display-container').hide(); // Hide display dropdown
+            $('#display').val('image').prop('disabled', true);
+            // $('#display-container').hide(); // Hide display dropdown
             $('#clips-count-group, #clips_container').show();
             $('#standard_image_upload').show();
             generateClipRows($('#clips_count').val());
@@ -159,7 +160,7 @@ $(document).ready(function(){
             $('#display').prop('disabled', false);
             $('#clips-count-group, #clips_container').show();
             $('#standard_image_upload').hide();
-            $('#display-container').show();
+            // $('#display-container').show();
             generateClipRows($('#clips_count').val());
         }
     });

@@ -30,6 +30,7 @@ class CreatePermissionRoleSeeder extends Seeder
             ['name' => 'Permission', 'created_at' => $date, 'updated_at' => $date], //7
             ['name' => 'Game', 'created_at' => $date, 'updated_at' => $date], //8
             ['name' => 'Wheel', 'created_at' => $date, 'updated_at' => $date], //9
+            ['name' => 'Store View', 'created_at' => $date, 'updated_at' => $date], //10
         ];
 
         $permission = [
@@ -67,6 +68,11 @@ class CreatePermissionRoleSeeder extends Seeder
             ['name' => 'edit.wheel', 'guard_name' => 'web', 'module' => 9, 'created_at' => $date, 'updated_at' => $date],
             ['name' => 'delete.wheel', 'guard_name' => 'web', 'module' => 9, 'created_at' => $date, 'updated_at' => $date],
             ['name' => 'view.wheel', 'guard_name' => 'web', 'module' => 9, 'created_at' => $date, 'updated_at' => $date],
+
+            ['name' => 'create.store_view', 'guard_name' => 'web', 'module' => 10, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'edit.store_view', 'guard_name' => 'web', 'module' => 10, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'delete.store_view', 'guard_name' => 'web', 'module' => 10, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'view.store_view', 'guard_name' => 'web', 'module' => 10, 'created_at' => $date, 'updated_at' => $date],
         ];
 
         Module::insert($module);

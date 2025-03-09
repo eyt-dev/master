@@ -85,6 +85,7 @@
                     $(".modal-body").html(response);
                     $(".modal-title").html("Add Store View");
                     $("#store_view_form_modal").modal('show');
+                    checkValidation();
                 }
             });
         });
@@ -97,6 +98,7 @@
                     $(".modal-body").html(response);
                     $(".modal-title").html("Update Store View");
                     $("#store_view_form_modal").modal('show');
+                    checkValidation();
                 }
             });
         });
@@ -144,5 +146,18 @@
                 }
             });
         });
+
+        function checkValidation() {
+            var forms = document.getElementsByClassName('needs-validation');
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }
     </script>
 @endsection

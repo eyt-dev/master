@@ -84,10 +84,14 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{wheel}', 'update')->name('wheel.update')->middleware('permission:edit.wheel');
         Route::delete('{wheel}', 'destroy')->name('wheel.destroy')->middleware('permission:delete.wheel');
         Route::get('permission', 'assignPermissionList')->name('wheel.permission.index');
-
         Route::get('/getClipsByGame', 'getClipsByGame')->name('getClipsByGame');
-
     });
-
-    
+    Route::controller(StoreViewController::class)->prefix('store_view')->group(function () {
+        Route::get('/', 'index')->name('store_view.index'); //->middleware('permission:view.store_view');
+        Route::get('create', 'create')->name('store_view.create'); //->middleware('permission:create.store_view');
+        Route::post('store', 'store')->name('store_view.store'); //->middleware('permission:create.store_view');
+        Route::get('{store_view}/edit', 'edit')->name('store_view.edit'); //->middleware('permission:edit.store_view');
+        Route::post('{store_view}', 'update')->name('store_view.update'); //->middleware('permission:edit.store_view');
+        Route::get('destroy/{admin}', 'destroy')->name('store_view.destroy');
+    });
 });

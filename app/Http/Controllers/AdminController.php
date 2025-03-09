@@ -11,7 +11,6 @@ use App\Models\Permission;
 use Carbon\Carbon;
 use App\Models\Module;
 use Log;
-
 use Illuminate\Support\Facades\Session;
 
 class AdminController extends Controller

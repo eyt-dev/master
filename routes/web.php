@@ -67,24 +67,32 @@ Route::middleware(['auth'])->group(function () {
         Route::get('create', 'create')->name('module.create');
         Route::post('store', 'store')->name('module.store');
     });
-    Route::controller(GameController::class)->prefix('games')->group(function () {
-        Route::get('/', 'index')->name('games.index')->middleware('permission:view.games');
-        Route::get('create', 'create')->name('games.create')->middleware('permission:create.games');
-        Route::post('store', 'store')->name('games.store')->middleware('permission:create.games');
-        Route::get('{games}/edit', 'edit')->name('games.edit')->middleware('permission:edit.games');
-        Route::post('{games}', 'update')->name('games.update')->middleware('permission:edit.games');
-        Route::delete('{games}', 'destroy')->name('games.destroy')->middleware('permission:delete.games');
-        Route::get('permission', 'assignPermissionList')->name('games.permission.index');
+    Route::controller(GameController::class)->prefix('game')->group(function () {
+        Route::get('/', 'index')->name('game.index')->middleware('permission:view.game');
+        Route::get('create', 'create')->name('game.create')->middleware('permission:create.game');
+        Route::post('store', 'store')->name('game.store')->middleware('permission:create.game');
+        Route::get('{game}/edit', 'edit')->name('game.edit')->middleware('permission:edit.game');
+        Route::post('{game}', 'update')->name('game.update')->middleware('permission:edit.game');
+        Route::delete('{game}', 'destroy')->name('game.destroy')->middleware('permission:delete.game');
+        // Route::get('permission', 'assignPermissionList')->name('game.permission.index');
     });
-    Route::controller(WheelController::class)->prefix('wheels')->group(function () {
-        Route::get('/', 'index')->name('wheels.index')->middleware('permission:view.wheels');
-        Route::get('create', 'create')->name('wheels.create')->middleware('permission:create.wheels');
-        Route::post('store', 'store')->name('wheels.store')->middleware('permission:create.wheels');
-        Route::get('{wheels}/edit', 'edit')->name('wheels.edit')->middleware('permission:edit.wheels');
-        Route::post('{wheels}', 'update')->name('wheels.update')->middleware('permission:edit.wheels');
-        Route::delete('{wheels}', 'destroy')->name('wheels.destroy')->middleware('permission:delete.wheels');
-        Route::get('permission', 'assignPermissionList')->name('wheels.permission.index');
+    Route::controller(WheelController::class)->prefix('wheel')->group(function () {
+        Route::get('/', 'index')->name('wheel.index')->middleware('permission:view.wheel');
+        Route::get('create', 'create')->name('wheel.create')->middleware('permission:create.wheel');
+        Route::post('store', 'store')->name('wheel.store')->middleware('permission:create.wheel');
+        Route::get('{wheel}/edit', 'edit')->name('wheel.edit')->middleware('permission:edit.wheel');
+        Route::post('{wheel}', 'update')->name('wheel.update')->middleware('permission:edit.wheel');
+        Route::delete('{wheel}', 'destroy')->name('wheel.destroy')->middleware('permission:delete.wheel');
+        // Route::get('permission', 'assignPermissionList')->name('wheel.permission.index');
+        Route::get('/getClipsByGame', 'getClipsByGame')->name('getClipsByGame');
     });
-
-    
+    Route::controller(StoreViewController::class)->prefix('store_view')->group(function () {
+        Route::get('/', 'index')->name('store_view.index'); //->middleware('permission:view.store_view');
+        Route::get('create', 'create')->name('store_view.create'); //->middleware('permission:create.store_view');
+        Route::post('store', 'store')->name('store_view.store'); //->middleware('permission:create.store_view');
+        Route::get('{store_view}/edit', 'edit')->name('store_view.edit'); //->middleware('permission:edit.store_view');
+        Route::post('{store_view}', 'update')->name('store_view.update'); //->middleware('permission:edit.store_view');
+        // Route::delete('{store_view}', 'destroy')->name('store_view.destroy'); //->middleware('permission:delete.store_view');
+        Route::get('destroy/{admin}', 'destroy')->name('store_view.destroy');
+    });
 });

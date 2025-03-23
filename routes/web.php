@@ -94,4 +94,20 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{store_view}', 'update')->name('store_view.update')->middleware('permission:edit.store_view');
         Route::get('destroy/{admin}', 'destroy')->name('store_view.destroy')->middleware('permission:delete.store_view');
     });
+    Route::controller(CategoryController::class)->prefix('category')->group(function () {
+        Route::get('/', 'index')->name('category.index')->middleware('permission:view.category');
+        Route::get('create', 'create')->name('category.create')->middleware('permission:create.category');
+        Route::post('store', 'store')->name('category.store')->middleware('permission:create.category');
+        Route::get('{category}/edit', 'edit')->name('category.edit')->middleware('permission:edit.category');
+        Route::post('{category}', 'update')->name('category.update')->middleware('permission:edit.category');
+        Route::get('destroy/{admin}', 'destroy')->name('category.destroy')->middleware('permission:delete.category');
+    });
+    Route::controller(PageController::class)->prefix('page')->group(function () {
+        Route::get('/', 'index')->name('page.index')->middleware('permission:view.page');
+        Route::get('create', 'create')->name('page.create')->middleware('permission:create.page');
+        Route::post('store', 'store')->name('page.store')->middleware('permission:create.page');
+        Route::get('{page}/edit', 'edit')->name('page.edit')->middleware('permission:edit.page');
+        Route::post('{page}', 'update')->name('page.update')->middleware('permission:edit.page');
+        Route::get('destroy/{admin}', 'destroy')->name('page.destroy')->middleware('permission:delete.page');
+    });
 });

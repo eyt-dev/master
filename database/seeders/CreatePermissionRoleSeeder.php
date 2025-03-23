@@ -31,6 +31,8 @@ class CreatePermissionRoleSeeder extends Seeder
             ['name' => 'Game', 'created_at' => $date, 'updated_at' => $date], //8
             ['name' => 'Wheel', 'created_at' => $date, 'updated_at' => $date], //9
             ['name' => 'Store View', 'created_at' => $date, 'updated_at' => $date], //10
+            ['name' => 'Category', 'created_at' => $date, 'updated_at' => $date], //11
+            ['name' => 'Page', 'created_at' => $date, 'updated_at' => $date], //12
         ];
 
         $permission = [
@@ -73,6 +75,16 @@ class CreatePermissionRoleSeeder extends Seeder
             ['name' => 'edit.store_view', 'guard_name' => 'web', 'module' => 10, 'created_at' => $date, 'updated_at' => $date],
             ['name' => 'delete.store_view', 'guard_name' => 'web', 'module' => 10, 'created_at' => $date, 'updated_at' => $date],
             ['name' => 'view.store_view', 'guard_name' => 'web', 'module' => 10, 'created_at' => $date, 'updated_at' => $date],
+
+            ['name' => 'create.category', 'guard_name' => 'web', 'module' => 11, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'edit.category', 'guard_name' => 'web', 'module' => 11, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'delete.category', 'guard_name' => 'web', 'module' => 11, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'view.category', 'guard_name' => 'web', 'module' => 11, 'created_at' => $date, 'updated_at' => $date],
+
+            ['name' => 'create.page', 'guard_name' => 'web', 'module' => 12, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'edit.page', 'guard_name' => 'web', 'module' => 12, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'delete.page', 'guard_name' => 'web', 'module' => 12, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'view.page', 'guard_name' => 'web', 'module' => 12, 'created_at' => $date, 'updated_at' => $date],
         ];
 
         Module::insert($module);

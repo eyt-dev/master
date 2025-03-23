@@ -70,21 +70,6 @@ class StoreViewController extends Controller
         return redirect()->route('store_view.index');
     }
 
-    // public function show($id)
-    // {
-    //     $category = StoreView::find($id);
-    //     $countryRegion = CountryRegion::all()->mapWithKeys(function ($country) {
-    //         return [$country->id => "{$country->name} / {$country->region}"];
-    //     });
-    //     if (empty($category)) {
-    //         // Flash::error(__('models/store_view.messages.not_found', ['model' => __('models/store_view.singular')]));
-
-    //         return redirect(route('store_view.index'));
-    //     }
-
-    //     return view('store_view.show')->with('category', $category)->with('countryRegion', $countryRegion);
-    // }
-
     public function edit($id)
     {
         $store_view = StoreView::find($id);

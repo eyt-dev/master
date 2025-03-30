@@ -18,7 +18,8 @@ class StoreView extends Model
         'description',
         'meta_data',
         'meta_keywords',
-        'status'
+        'status',
+        'created_by'
     ];
 
     // protected $casts = [
@@ -49,4 +50,9 @@ class StoreView extends Model
     // {
     //     return $this->hasOne(User::class, 'id', 'updated_by');
     // }
+
+    public function creator()
+    {
+        return $this->belongsTo(Admin::class, 'created_by');
+    }
 }

@@ -15,9 +15,15 @@ class StoreViewController extends Controller
         });
 
         if ($request->ajax()) {
-            $data = StoreView::orderBy('created_at', 'desc')->get();
+            $data = StoreView::when(auth()->user()->role !== 'SuperAdmin', function ($query) {
+                $query->where('created_by', auth()->id());
+            })->orderBy('created_at', 'desc')->get();
             return datatables()
                 ->of($data)
+                ->addColumn('creator', function($row) {
+                    // dump($row->creator->name);
+                    return $row->creator->name ?? 'N/A';
+                })
                 ->addColumn('action', 'store_view.action')
                 ->addColumn('action', function($row){
                     $btn = '';

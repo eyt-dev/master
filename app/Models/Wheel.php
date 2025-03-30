@@ -10,7 +10,10 @@ class Wheel extends Model
     use HasFactory;
 
     // Define fillable fields if needed
-    protected $fillable = ['game_id', /* other fields */];
+    protected $fillable = [
+        'game_id',
+        'created_by'
+    ];
 
      /**
      * Get the game that owns the wheel.
@@ -26,5 +29,10 @@ class Wheel extends Model
     public function clips()
     {
         return $this->hasMany(WheelClip::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(Admin::class, 'created_by');
     }
 }

@@ -11,7 +11,11 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Category::with('storeView')->orderBy('created_at', 'desc')->get();
+            $data = Category::with('storeView')
+                ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
+                    $query->where('created_by', auth()->id());
+                })
+                ->orderBy('created_at', 'desc')->get();
             return datatables()->of($data)
                 ->addColumn('store_view', function($row) {
                     return ($row->storeView->region . ' - ' . $row->storeView->language) ?? 'N/A';

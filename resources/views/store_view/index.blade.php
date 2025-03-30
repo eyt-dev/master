@@ -48,6 +48,7 @@
                                     <th>Language</th>
                                     <th>Slug</th>
                                     <th>Status</th>
+                                    <th>Created By</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -114,6 +115,7 @@
                 { data: 'language', name: 'language' },
                 { data: 'slug', name: 'slug' },
                 { data: 'status', name: 'status' },
+                { data: 'creator' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]
         });

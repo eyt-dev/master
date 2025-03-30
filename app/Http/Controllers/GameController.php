@@ -14,7 +14,9 @@ class GameController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            return datatables()->of(\App\Models\Game::select('*'))
+            return datatables()->of(\App\Models\Game::select('*')->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
+                    $query->where('created_by', auth()->id());
+                }))
                 ->addColumn('action', function($row){
                     $btn  = '<a class="edit-game btn btn-sm btn-success btn-icon mr-1 white" ';
                     $btn .= 'href="' . route('game.edit', ['game' => $row->id]) . '" ';

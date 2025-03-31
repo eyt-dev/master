@@ -42,6 +42,7 @@
                                     <th>Game</th>
                                     <th>Clips Count</th>
                                     <th>Created At</th>
+                                    <th>Created By</th>
                                     <th width="300px">Action</th>
                                 </tr>
                             </thead>
@@ -72,6 +73,7 @@
                     {data: 'game', name: 'game'},
                     {data: 'clips_count', name: 'clips_count'},
                     {data: 'created_at', name: 'created_at'},
+                    { data: 'creator' },
                     {data: 'action', name: 'action', orderable: false, searchable: false}
                 ],
                 order: [[3, 'desc']]

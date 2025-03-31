@@ -12,7 +12,11 @@ class PageController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Page::with('category')->orderBy('created_at', 'desc')->get();
+            $data = Page::with('category')
+                ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
+                    $query->where('created_by', auth()->id());
+                })
+                ->orderBy('created_at', 'desc')->get();
             // dd($data);
             return datatables()->of($data)
                 ->addColumn('category', function($row) {

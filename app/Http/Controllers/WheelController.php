@@ -16,7 +16,9 @@ class WheelController extends Controller
     {
         // dd(Wheel::with('game')->first()->game->name);
         if (request()->ajax()) {
-            return datatables()->of(Wheel::with('game'))
+            return datatables()->of(Wheel::with('game')->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
+                $query->where('created_by', auth()->id());
+            }))
                 ->addColumn('action', function($row){
                     $btn  = '<a class="edit-wheel btn btn-sm btn-success btn-icon mr-1 white" ';
                     $btn .= 'href="' . route('wheel.edit', ['wheel' => $row->id]) . '" ';
@@ -28,6 +30,10 @@ class WheelController extends Controller
                     $btn .= '<i class="fa fa-trash fa-1x"></i>';
                     $btn .= '</a>';
                     return $btn;
+                })
+                ->addColumn('creator', function($row) {
+                    // dump($row->creator->name);
+                    return $row->creator->name ?? 'N/A';
                 })
                 ->editColumn('game', function($row) {
                     return $row->game->name;
@@ -65,13 +71,13 @@ class WheelController extends Controller
             'clips.*.text' => 'required|string'
         ]);
 
-        $wheel = Wheel::create(['game_id' => $request->game_id]);
+        $wheel = Wheel::create(['game_id' => $request->game_id, 'created_by' => auth()->id()]);
 
         foreach ($request->clips as $clip) {
             WheelClip::create([
                 'wheel_id' => $wheel->id,
                 'text' => $clip['text'],
-                'game_clip_id' => $clip['id']
+                'game_clip_id' => $clip['id'],
             ]);
         }
 

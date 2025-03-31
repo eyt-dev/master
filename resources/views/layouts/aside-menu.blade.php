@@ -1,4 +1,4 @@
-<aside class="app-sidebar">
+<aside class="app-sidebar ps ps--active-y">
 	<div class="app-sidebar__logo">
 		<a class="header-brand" href="{{url('/' . $page='index')}}">
 			<img src="{{URL::asset('assets/images/brand/logo.png')}}" class="header-brand-img desktop-lgo" alt="Admintro logo">

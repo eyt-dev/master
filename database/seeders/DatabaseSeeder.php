@@ -2,6 +2,7 @@
 
 use Database\Seeders\CreateSuperAdminSeeder;
 use Database\Seeders\CreatePermissionRoleSeeder;
+use Database\Seeders\CountriesRegionSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder

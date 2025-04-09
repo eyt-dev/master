@@ -110,4 +110,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{page}', 'update')->name('page.update')->middleware('permission:edit.page');
         Route::get('destroy/{admin}', 'destroy')->name('page.destroy')->middleware('permission:delete.page');
     });
+    Route::controller(SettingController::class)->prefix('setting')->group(function () {
+        Route::get('/', 'index')->name('setting.index')->middleware('permission:view.setting');
+        Route::get('create', 'create')->name('setting.create')->middleware('permission:create.setting');
+        Route::post('store', 'store')->name('setting.store')->middleware('permission:create.setting');
+        Route::get('{setting}/edit', 'edit')->name('setting.edit')->middleware('permission:edit.setting');
+        Route::post('{setting}', 'update')->name('setting.update')->middleware('permission:edit.setting');
+        Route::get('destroy/{admin}', 'destroy')->name('setting.destroy')->middleware('permission:delete.setting');
+    });
 });

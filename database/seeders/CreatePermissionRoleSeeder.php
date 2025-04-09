@@ -33,6 +33,7 @@ class CreatePermissionRoleSeeder extends Seeder
             ['name' => 'Store View', 'created_at' => $date, 'updated_at' => $date], //10
             ['name' => 'Category', 'created_at' => $date, 'updated_at' => $date], //11
             ['name' => 'Page', 'created_at' => $date, 'updated_at' => $date], //12
+            ['name' => 'Seting', 'created_at' => $date, 'updated_at' => $date], //13
         ];
 
         $permission = [
@@ -85,6 +86,11 @@ class CreatePermissionRoleSeeder extends Seeder
             ['name' => 'edit.page', 'guard_name' => 'web', 'module' => 12, 'created_at' => $date, 'updated_at' => $date],
             ['name' => 'delete.page', 'guard_name' => 'web', 'module' => 12, 'created_at' => $date, 'updated_at' => $date],
             ['name' => 'view.page', 'guard_name' => 'web', 'module' => 12, 'created_at' => $date, 'updated_at' => $date],
+
+            ['name' => 'create.setting', 'guard_name' => 'web', 'module' => 13, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'edit.setting', 'guard_name' => 'web', 'module' => 13, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'delete.setting', 'guard_name' => 'web', 'module' => 13, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'view.setting', 'guard_name' => 'web', 'module' => 13, 'created_at' => $date, 'updated_at' => $date],
         ];
 
         Module::insert($module);

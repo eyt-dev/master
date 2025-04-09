@@ -11,13 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('wheels', function (Blueprint $table) {
-            $table->foreignId('created_by')->constrained('admins')->onDelete('cascade');
-        });
+        if (!Schema::hasColumn('wheels', 'created_by')) {
+            Schema::table('wheels', function (Blueprint $table) {
+                $table->foreignId('created_by')->constrained('admins')->onDelete('cascade');
+            });
+        }
 
-        Schema::table('store_views', function (Blueprint $table) {
-            $table->foreignId('created_by')->constrained('admins')->onDelete('cascade');
-        });
+        if (!Schema::hasColumn('store_views', 'created_by')) {
+            Schema::table('store_views', function (Blueprint $table) {
+                $table->foreignId('created_by')->constrained('admins')->onDelete('cascade');
+            });
+        }
     }
 
     /**

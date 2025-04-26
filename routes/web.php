@@ -117,5 +117,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('{setting}/edit', 'edit')->name('setting.edit')->middleware('permission:edit.setting');
         Route::post('{setting}', 'update')->name('setting.update')->middleware('permission:edit.setting');
         Route::get('destroy/{admin}', 'destroy')->name('setting.destroy')->middleware('permission:delete.setting');
+        Route::get('/check-setting/{created_by}', 'checkSetting')->name('setting.checkSetting');
+
     });
 });

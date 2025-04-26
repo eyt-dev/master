@@ -24,7 +24,7 @@
         </div>
         <div class="page-rightheader">
             <div class="btn btn-list">
-                <a id="add_new" class="btn btn-info" data-toggle="tooltip" title="Add new">
+                <a href="{{route('setting.create')}}" id="add_new" class="btn btn-info" data-toggle="tooltip" title="Add new">
                     <i class="fe fe-plus mr-1"></i> Add new 
                 </a>
             </div>
@@ -54,12 +54,7 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Store View</th>
                                     <th>Domain</th>
-                                    <th>Logo</th>
-                                    <th>Title</th>
-                                    <th>Sub Title</th>
-                                    <th>Description</th>
                                     <th>Created By</th>
                                     <th>Action</th>
                                 </tr>
@@ -91,9 +86,9 @@
     <script src="{{ URL::asset('assets/plugins/datatable/js/jquery.dataTables.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/datatable/js/dataTables.bootstrap4.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/sweet-alert/sweetalert.min.js') }}"></script>
-    <script src="{{ URL::asset('assets/plugins/select2/select2.full.min.js') }}"></script>
+    {{-- <script src="{{ URL::asset('assets/plugins/select2/select2.full.min.js') }}"></script> --}}
     <script>
-        $(document).on('click', '#add_new', function() {
+        /* $(document).on('click', '#add_new', function() {
             $.ajax({
                 url: "{{ route('setting.create') }}",
                 type: "GET",
@@ -117,7 +112,20 @@
                     checkValidation();
                 }
             });
-        });
+        }); 
+        
+        function checkValidation() {
+            var forms = document.getElementsByClassName('needs-validation');
+            Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        } */
 
         var table = $('#setting_table').DataTable({
             processing: true,
@@ -125,13 +133,8 @@
             responsive: true,
             ajax: "{{ route('setting.index') }}",
             columns: [
-                { data: 'id', name: 'id' },
-                { data: 'store_view', name: 'store_view' },
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                 { data: 'domain', name: 'domain' },
-                { data: 'logo', name: 'logo', orderable: false, searchable: false },
-                { data: 'title', name: 'title' },
-                { data: 'sub_title', name: 'sub_title' },
-                { data: 'description', name: 'description' },
                 { data: 'created_by', name: 'created_by' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]
@@ -163,18 +166,5 @@
                 }
             });
         });
-
-        function checkValidation() {
-            var forms = document.getElementsByClassName('needs-validation');
-            Array.prototype.filter.call(forms, function(form) {
-                form.addEventListener('submit', function(event) {
-                    if (form.checkValidity() === false) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                }, false);
-            });
-        }
     </script>
 @endsection

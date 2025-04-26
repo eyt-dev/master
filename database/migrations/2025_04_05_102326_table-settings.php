@@ -13,27 +13,22 @@ return new class extends Migration
     {
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
-            $table->string('logo')->nullable();
-            $table->unsignedBigInteger('store_view_id');
+
+            $table->string('domain')->nullable();
+            $table->string('admin_domain')->nullable();
+
             $table->string('dark_logo')->nullable();
             $table->string('light_logo')->nullable();
             $table->string('footer_logo')->nullable();
             $table->string('favicon')->nullable();
 
             $table->string('primary_text_color')->nullable();
-            $table->string('secondary_text_color')->nullable();
-            
+            $table->string('secondary_text_color')->nullable();            
             $table->string('primary_button_background')->nullable();
             $table->string('secondary_button_background')->nullable();
             $table->string('primary_button_text_color')->nullable();
             $table->string('secondary_button_text_color')->nullable();
 
-            $table->string('title')->nullable();
-            $table->string('sub_title')->nullable();
-            $table->text('description')->nullable();
-
-            $table->string('domain')->nullable();
-            $table->foreign('store_view_id')->references('id')->on('store_views')->onDelete('cascade');
             $table->foreignId('created_by')->constrained('admins')->onDelete('cascade');
 
             $table->timestamps();

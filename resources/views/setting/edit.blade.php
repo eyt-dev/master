@@ -34,33 +34,18 @@
                     <div class="card-body">
                         @csrf
                         <div class="form-group">
-                            <label class="form-label"> Admin User: 
-                            @if($setting->created_by)
-                                @php
-                                    $admin = $admins->find($setting->created_by);
-                                @endphp
-                                {{ $admin->name.' ('.$admin->email.')' }}</label>
-                            @else 
-                                </label>
-                                <select 
-                                    class="form-control select2-show-search" 
-                                    data-placeholder="Choose one (with searchbox)" 
-                                    required=""
-                                    name="created_by"
-                                    disabled
-                                >
-                                    <option value="">Select</option>
-                                    @foreach($admins as $admin)
-                                        <option 
-                                            value="{{$admin->id}}"
-                                            {{ ($setting->created_by == $admin->id ? "selected" : "") }}
-                                        >
-                                            {{ $admin->name.' ('.$admin->email.')' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            @endif
-                            
+                            <label class="form-label"> Admin</label>
+                            <select 
+                                class="form-control select2-show-search" 
+                                data-placeholder="Choose one (with searchbox)" 
+                                required=""
+                                name="created_by"
+                            >
+                                <option value="">Select</option>
+                                @foreach($admins as $admin)
+                                    <option value="{{$admin->id}}">{{ $admin->name.' ('.$admin->email.')' }}</option>
+                                @endforeach
+                            </select>
                             @error('domain')
                                 <label id="domain-error" class="error" for="domain">{{ $message }}</label>
                             @enderror

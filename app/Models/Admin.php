@@ -112,4 +112,9 @@ class Admin extends Authenticatable
     //     return $this->hasMany( File::class );
     // }
 
+    public function getRoleAttribute()
+    {
+        return $this->roles()->first()?->name; // returns role name like "SuperAdmin"
+    }
+
 }

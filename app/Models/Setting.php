@@ -10,8 +10,8 @@ class Setting extends Model
     use HasFactory;
 
     protected $fillable = [
-        'store_view_id',
-        'logo',
+        'domain',
+        'admin_domain',
         'dark_logo',
         'light_logo',
         'footer_logo',
@@ -22,17 +22,8 @@ class Setting extends Model
         'secondary_button_background',
         'primary_button_text_color',
         'secondary_button_text_color',
-        'domain',
-        'title',
-        'sub_title',
-        'description',
         'created_by',
     ];
-
-    public function storeView()
-    {
-        return $this->belongsTo(StoreView::class, 'store_view_id');
-    }
 
     public function creator()
     {

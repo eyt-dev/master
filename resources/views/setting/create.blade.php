@@ -20,6 +20,15 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
+                @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
                 <form 
                     action="{{ isset($setting) && $setting->id ? route('setting.update', $setting->id) : route('setting.store') }}" 
                     method="POST" 
@@ -33,38 +42,39 @@
                     </div>
                     <div class="card-body">
                         @csrf
-                        <div class="form-group">
-                            <label class="form-label"> Admin User: 
-                            @if($setting->created_by)
-                                @php
-                                    $admin = $admins->find($setting->created_by);
-                                @endphp
-                                {{ $admin->name.' ('.$admin->email.')' }}</label>
-                            @else 
-                                </label>
-                                <select 
-                                    class="form-control select2-show-search" 
-                                    data-placeholder="Choose one (with searchbox)" 
-                                    required=""
-                                    name="created_by"
-                                    disabled
-                                >
-                                    <option value="">Select</option>
-                                    @foreach($admins as $admin)
-                                        <option 
-                                            value="{{$admin->id}}"
-                                            {{ ($setting->created_by == $admin->id ? "selected" : "") }}
-                                        >
-                                            {{ $admin->name.' ('.$admin->email.')' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            @endif
-                            
-                            @error('domain')
-                                <label id="domain-error" class="error" for="domain">{{ $message }}</label>
-                            @enderror
-                        </div>
+                        @if(auth()->user()->role === 'SuperAdmin')
+                            <div class="form-group">
+                                <label class="form-label"> Admin User: 
+                                @if($setting->created_by)
+                                    @php
+                                        $admin = $admins->find($setting->created_by);
+                                    @endphp
+                                    {{ $admin->name.' ('.$admin->email.')' }}</label>
+                                @else 
+                                    </label>
+                                    <select 
+                                        class="form-control select2-show-search" 
+                                        data-placeholder="Choose one (with searchbox)" 
+                                        required=""
+                                        name="created_by"
+                                    >
+                                        <option value="">Select</option>
+                                        @foreach($admins as $admin)
+                                            <option 
+                                                value="{{$admin->id}}"
+                                                {{ ($setting->created_by == $admin->id ? "selected" : "") }}
+                                            >
+                                                {{ $admin->name.' ('.$admin->email.')' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @endif
+                                
+                                @error('domain')
+                                    <label id="domain-error" class="error" for="domain">{{ $message }}</label>
+                                @enderror
+                            </div>
+                        @endif
                         <div aria-multiselectable="true" class="accordion" id="accordion" role="tablist">
                             <div class="acc-card">
                                 <div class="acc-header" id="headingOne" role="tab">

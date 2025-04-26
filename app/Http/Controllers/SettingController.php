@@ -53,8 +53,16 @@ class SettingController extends Controller
 
     public function create()
     {
-        $setting = new Setting(); // Or just pass `null` if you want a blank form
-        $admins = Admin::get(); //where('id','!=',auth()->user()->id)->
+        if (auth()->user()->role !== 'SuperAdmin') {
+            $created_by = auth()->user()->id;
+            $setting = Setting::where('created_by', $created_by)->first();
+            if ($setting) {
+                return redirect()->route('setting.edit', $setting->getKey());
+            }
+        }
+        
+        $setting = new Setting(); 
+        $admins = Admin::get(); 
         return view('setting.create', compact('setting','admins'));
     }
 
@@ -67,12 +75,16 @@ class SettingController extends Controller
 
     public function store(Request $request)
     {
-        // dd($request->all());
+       
+        if (auth()->user()->role !== 'SuperAdmin') {
+            $request['created_by'] = auth()->user()->id;
+        } 
+        
         $data = Setting::where("created_by", $request->created_by)->count();
 
         if($data){
             return redirect()->back()->with('error', 'Settings already exists.');
-        }
+        }        
 
         $request->validate([
             'domain' => 'required|nullable|url',
@@ -101,7 +113,6 @@ class SettingController extends Controller
         }
 
         Setting::create($data);
-
         Session::flash('successMsg', 'Settings saved successfully.');
         return redirect()->route('setting.index');
     }    

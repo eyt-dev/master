@@ -127,4 +127,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{slide}', 'update')->name('slide.update')->middleware('permission:edit.slide');
         Route::get('destroy/{admin}', 'destroy')->name('slide.destroy')->middleware('permission:delete.slide');
     });
+    Route::controller(TestimonialController::class)->prefix('testimonial')->group(function () {
+        Route::get('/', 'index')->name('testimonial.index')->middleware('permission:view.testimonial');
+        Route::get('create', 'create')->name('testimonial.create')->middleware('permission:create.testimonial');
+        Route::post('store', 'store')->name('testimonial.store')->middleware('permission:create.testimonial');
+        Route::get('{testimonial}/edit', 'edit')->name('testimonial.edit')->middleware('permission:edit.testimonial');
+        Route::post('{testimonial}', 'update')->name('testimonial.update')->middleware('permission:edit.testimonial');
+        Route::get('destroy/{admin}', 'destroy')->name('testimonial.destroy')->middleware('permission:delete.testimonial');
+    });
 });

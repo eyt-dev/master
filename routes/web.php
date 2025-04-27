@@ -118,6 +118,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{setting}', 'update')->name('setting.update')->middleware('permission:edit.setting');
         Route::get('destroy/{admin}', 'destroy')->name('setting.destroy')->middleware('permission:delete.setting');
         Route::get('/check-setting/{created_by}', 'checkSetting')->name('setting.checkSetting');
-
+    });
+    Route::controller(SlideController::class)->prefix('slide')->group(function () {
+        Route::get('/', 'index')->name('slide.index')->middleware('permission:view.slide');
+        Route::get('create', 'create')->name('slide.create')->middleware('permission:create.slide');
+        Route::post('store', 'store')->name('slide.store')->middleware('permission:create.slide');
+        Route::get('{slide}/edit', 'edit')->name('slide.edit')->middleware('permission:edit.slide');
+        Route::post('{slide}', 'update')->name('slide.update')->middleware('permission:edit.slide');
+        Route::get('destroy/{admin}', 'destroy')->name('slide.destroy')->middleware('permission:delete.slide');
     });
 });

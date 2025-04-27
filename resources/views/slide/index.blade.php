@@ -1,23 +1,23 @@
 @extends('layouts.master')
+
 @section('css')
     <link href="{{ URL::asset('assets/plugins/datatable/css/dataTables.bootstrap4.min.css') }}" rel="stylesheet" />
     <link href="{{ URL::asset('assets/plugins/select2/select2.min.css') }}" rel="stylesheet" />
     <link href="{{ URL::asset('assets/plugins/sweet-alert/jquery.sweet-modal.min.css') }}" rel="stylesheet" />
     <link href="{{ URL::asset('assets/plugins/sweet-alert/sweetalert.css') }}" rel="stylesheet" />
     <style>
-        .hide{display: none;}
-        label.error{font-size: 87.5%; color: #dc0441;}
+        .hide { display: none; }
+        label.error { font-size: 87.5%; color: #dc0441; }
     </style>
 @endsection
+
 @section('page-header')
     <div class="page-header">
         <div class="page-leftheader">
-            <h4 class="page-title mb-0">Pages</h4>
+            <h4 class="page-title mb-0">Slides</h4>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a href="#">
-                        <i class="fe fe-layout mr-2 fs-14"></i>Pages
-                    </a>
+                    <a href="#"><i class="fe fe-layout mr-2 fs-14"></i>Slides</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page"><a href="#">Listing</a></li>
             </ol>
@@ -31,12 +31,13 @@
         </div>
     </div>
 @endsection
+
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Pages</div>
+                    <div class="card-title">Slides Data</div>
                 </div>
                 @if ($errors->any())
                     <div class="alert alert-danger">
@@ -49,15 +50,17 @@
                 @endif
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered" id="page_table">
+                        <table class="table table-bordered text-nowrap" id="slide_table">
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Category</th>
-                                    <th>Title</th>
-                                    <th>Path</th>
+                                    <th>Store View</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Web Image</th>
+                                    <th>Mobile Image</th>
                                     <th>Created By</th>
-                                    <th>Actions</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -68,12 +71,12 @@
         </div>
     </div>
 
-    <div class="modal fade bd-example-modal-lg" id="page_form_modal">
+    <div class="modal fade bd-example-modal-lg" id="slide_form_modal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Add Page</h4>
-                    <button type="button" class="close" data-dismiss="modal">×</button>
+                    <h4 class="modal-title">Add Slide</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">×</span> </button>
                 </div>
                 <div class="modal-body"></div>
             </div>
@@ -82,56 +85,60 @@
 @endsection
 
 @section('js')
-<script src="{{ URL::asset('assets/plugins/datatable/js/jquery.dataTables.js') }}"></script>
-<script src="{{ URL::asset('assets/plugins/datatable/js/dataTables.bootstrap4.js') }}"></script>
-<script src="{{ URL::asset('assets/plugins/sweet-alert/sweetalert.min.js') }}"></script>
-<script src="{{ URL::asset('assets/plugins/select2/select2.full.min.js') }}"></script>
-<script>
-    $(document).on('click', '#add_new', function() {
-        $.ajax({
-            url: "{{ route('page.create') }}",
-            type: "GET",
-            success: function(response) {
-                $(".modal-body").html(response);
-                $(".modal-title").html("Add Page");
-                $("#page_form_modal").modal('show');
-                checkValidation();
-            }
-        });
-    });
+    <script src="{{ URL::asset('assets/plugins/datatable/js/jquery.dataTables.js') }}"></script>
+    <script src="{{ URL::asset('assets/plugins/datatable/js/dataTables.bootstrap4.js') }}"></script>
+    <script src="{{ URL::asset('assets/plugins/sweet-alert/sweetalert.min.js') }}"></script>
+    <script src="{{ URL::asset('assets/plugins/select2/select2.full.min.js') }}"></script>
 
-    $(document).on('click', '.edit-page', function() {
-            var id = $(this).data('id');
+    <script>
+        $(document).on('click', '#add_new', function() {
             $.ajax({
-                url: $(this).data('path'),
+                url: "{{ route('slide.create') }}",
+                type: "GET",
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Update Page");
-                    $("#page_form_modal").modal('show');
+                    $(".modal-title").html("Add Slide");
+                    $("#slide_form_modal").modal('show');
                     checkValidation();
                 }
             });
         });
 
-    var table = $('#page_table').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: "{{ route('page.index') }}",
-        columns: [
-            { data: 'id' },
-            { data: 'category' },
-            { data: 'title' },
-            { data: 'path' },
-            { data: 'creator' },
-            { data: 'action', orderable: false, searchable: false }
-        ]
-    });
+        $(document).on('click', '.edit-slide', function() {
+            var id = $(this).data('id');
+            $.ajax({
+                url: $(this).data('path'),
+                success: function(response) {
+                    $(".modal-body").html(response);
+                    $(".modal-title").html("Update Slide");
+                    $("#slide_form_modal").modal('show');
+                    checkValidation();
+                }
+            });
+        });
 
-    $(document).on('click', '.delete-page', function() {
+        var table = $('#slide_table').DataTable({
+            processing: true,
+            serverSide: true,
+            responsive: true,
+            ajax: "{{ route('slide.index') }}",
+            columns: [
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                { data: 'store_view', name: 'store_view' },
+                { data: 'name', name: 'name' },
+                { data: 'description', name: 'description' },
+                { data: 'web_image', name: 'web_image', orderable: false, searchable: false },
+                { data: 'mobile_image', name: 'mobile_image', orderable: false, searchable: false },
+                { data: 'creator', name: 'creator' },
+                { data: 'action', name: 'action', orderable: false, searchable: false }
+            ]
+        });
+
+        $(document).on('click', '.delete-slide', function() {
             var id = $(this).attr("data-id");
             swal({
                 title: "Are you sure?",
-                text: "Once deleted, you will not be able to recover this page!",
+                text: "Once deleted, you will not be able to recover this slide!",
                 icon: "warning",
                 buttons: true,
                 dangerMode: true,
@@ -141,9 +148,9 @@
             }, function(willDelete) {
                 if (willDelete) {
                     $.ajax({
-                        type: "get",
+                        type: "GET",
                         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        url: "{{ route('page.destroy', ':id') }}".replace(':id', id),
+                        url: "{{ route('slide.destroy', ':id') }}".replace(':id', id),
                         success: function(response) {
                             swal({
                                 title: response.msg
@@ -168,5 +175,5 @@
                 }, false);
             });
         }
-</script>
+    </script>
 @endsection

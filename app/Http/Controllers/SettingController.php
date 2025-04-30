@@ -12,7 +12,7 @@ class SettingController extends Controller
 {
     public function index(Request $request)
     {
-        if (auth()->user()->role !== 'SuperAdmin') {
+        // if (auth()->user()->role !== 'SuperAdmin') {
             // Redirect to create view with their setting (or a blank form if none exists)
             $setting = Setting::where('created_by', auth()->id())->first();
 
@@ -23,7 +23,7 @@ class SettingController extends Controller
 
             // Else send to create
             return redirect()->route('setting.create');
-        }
+        // }
 
         if ($request->ajax()) {
             $data = Setting::orderBy('created_at', 'desc')->get();
@@ -51,7 +51,7 @@ class SettingController extends Controller
         return view('setting.index');
     }
 
-    public function create()
+    public function create($admin = '')
     {
         if (auth()->user()->role !== 'SuperAdmin') {
             $created_by = auth()->user()->id;
@@ -63,6 +63,9 @@ class SettingController extends Controller
         
         $setting = new Setting(); 
         $admins = Admin::get(); 
+        if($admin) {
+            $setting->created_by = $admin;
+        }
         return view('setting.create', compact('setting','admins'));
     }
 
@@ -187,6 +190,7 @@ class SettingController extends Controller
         } else {
             return response()->json([
                 'exists' => false,
+                'admin' => $created_by,
             ]);
         }
     }

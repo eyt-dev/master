@@ -45,12 +45,12 @@
                         @if(auth()->user()->role === 'SuperAdmin')
                             <div class="form-group">
                                 <label class="form-label"> Admin User: 
-                                @if($setting->created_by)
+                                {{-- @if($setting->created_by)
                                     @php
                                         $admin = $admins->find($setting->created_by);
                                     @endphp
                                     {{ $admin->name.' ('.$admin->email.')' }}</label>
-                                @else 
+                                @else  --}}
                                     </label>
                                     <select 
                                         class="form-control select2-show-search" 
@@ -68,7 +68,7 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                @endif
+                                {{-- @endif --}}
                                 
                                 @error('domain')
                                     <label id="domain-error" class="error" for="domain">{{ $message }}</label>
@@ -326,6 +326,12 @@
                                     var editUrl = "{{ route('setting.edit', ':id') }}";
                                     editUrl = editUrl.replace(':id', data.setting_id);
                                     window.location.href = editUrl;
+                                } else {
+                                    if(data.admin) {
+                                        var createUrl = "{{ route('setting.create', ':id') }}";
+                                        createUrl = createUrl.replace(':id', data.admin);
+                                        window.location.href = createUrl;
+                                    }
                                 }
                                 // else do nothing
                             },

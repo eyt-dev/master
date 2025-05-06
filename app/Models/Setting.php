@@ -29,4 +29,9 @@ class Setting extends Model
     {
         return $this->belongsTo(Admin::class, 'created_by');
     }
+
+    public function themes()
+    {
+        return $this->belongsTo(Theme::class, 'theme');
+    }
 }

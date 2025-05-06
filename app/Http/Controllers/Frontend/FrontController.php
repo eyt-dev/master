@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Setting;
 
 class FrontController extends Controller
 {
@@ -11,13 +12,13 @@ class FrontController extends Controller
         // $data = array();
         // return view('frontend.home', ['data' => $data]);
 
-        $domain = $request->getHost();
-        $setting = Setting::where('domain', $domain)->first();//admin_domain
+        $domain = request()->getHost();
+        $setting = Setting::where('domain', $domain)->with('themes')->first();//admin_domain
         $admin = $setting->creator;
 
         // Load appropriate theme (stored in DB or config)
-        $theme = $admin->theme ?? '';
+        $theme = $setting->themes ? $setting->themes->name : '';
 
-        return view("themes.$theme.homepage", compact('admin'));
+        return view("frontend.$theme.home", compact('admin'));
     }
 }

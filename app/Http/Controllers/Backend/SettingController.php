@@ -1,6 +1,7 @@
 <?php
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Backend;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Setting;
 use App\Models\Admin;
@@ -114,6 +115,7 @@ class SettingController extends Controller
                 $data[$field] = $request->file($field)->store('settings', 'public');
             }
         }
+        $data["domain"] = parse_url($request->domain, PHP_URL_HOST);
 
         Setting::create($data);
         Session::flash('successMsg', 'Settings saved successfully.');

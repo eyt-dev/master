@@ -18,8 +18,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CreatePermissionRoleSeeder::class,
             CreateSuperAdminSeeder::class,
-            CountriesRegionSeeder::class
-
+            CountriesRegionSeeder::class,
+            ThemeSeeder::class
         ]);
     }
 }

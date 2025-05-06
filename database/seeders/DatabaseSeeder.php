@@ -3,6 +3,7 @@
 use Database\Seeders\CreateSuperAdminSeeder;
 use Database\Seeders\CreatePermissionRoleSeeder;
 use Database\Seeders\CountriesRegionSeeder;
+use Database\Seeders\GlobalDataSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -18,8 +19,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CreatePermissionRoleSeeder::class,
             CreateSuperAdminSeeder::class,
-            CountriesRegionSeeder::class
-
+            CountriesRegionSeeder::class,
+            GlobalDataSeeder::class
         ]);
     }
 }

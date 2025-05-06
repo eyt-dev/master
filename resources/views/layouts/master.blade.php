@@ -17,12 +17,17 @@
 		</div>
 		<!--- End Global-loader-->
 		<!-- Page -->
-		<div class="page">
+        <div class="page">
 			<div class="page-main">
 				@include('layouts.aside-menu')
-				<!-- App-Content -->			
+				<!-- App-Content -->
 				<div class="app-content main-content">
 					<div class="side-app">
+                        @if (session('successMsg'))
+                            <div class="alert alert-success">
+                                {{ session('successMsg') }}
+                            </div>
+                        @endif
 						@include('layouts.header')
 						@yield('page-header')
 						@yield('content')
@@ -31,4 +36,3 @@
 			@include('layouts.footer-scripts')
 	</body>
 </html>
-		

@@ -33,9 +33,12 @@ class CreatePermissionRoleSeeder extends Seeder
             ['name' => 'Store View', 'created_at' => $date, 'updated_at' => $date], //10
             ['name' => 'Category', 'created_at' => $date, 'updated_at' => $date], //11
             ['name' => 'Page', 'created_at' => $date, 'updated_at' => $date], //12
-            ['name' => 'Seting', 'created_at' => $date, 'updated_at' => $date], //13            
+            ['name' => 'Seting', 'created_at' => $date, 'updated_at' => $date], //13
             ['name' => 'Slide', 'created_at' => $date, 'updated_at' => $date], //14
             ['name' => 'Testimonial', 'created_at' => $date, 'updated_at' => $date], //15
+            ['name' => 'Country', 'created_at' => $date, 'updated_at' => $date], //16
+            ['name' => 'Unit', 'created_at' => $date, 'updated_at' => $date], //17
+            ['name' => 'Element', 'created_at' => $date, 'updated_at' => $date], //18
         ];
 
         $permission = [
@@ -103,6 +106,21 @@ class CreatePermissionRoleSeeder extends Seeder
             ['name' => 'edit.testimonial', 'guard_name' => 'web', 'module' => 15, 'created_at' => $date, 'updated_at' => $date],
             ['name' => 'delete.testimonial', 'guard_name' => 'web', 'module' => 15, 'created_at' => $date, 'updated_at' => $date],
             ['name' => 'view.testimonial', 'guard_name' => 'web', 'module' => 15, 'created_at' => $date, 'updated_at' => $date],
+
+            ['name' => 'create.country', 'guard_name' => 'web', 'module' => 16, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'edit.country', 'guard_name' => 'web', 'module' => 16, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'delete.country', 'guard_name' => 'web', 'module' => 16, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'view.country', 'guard_name' => 'web', 'module' => 16, 'created_at' => $date, 'updated_at' => $date],
+
+            ['name' => 'create.unit', 'guard_name' => 'web', 'module' => 17, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'edit.unit', 'guard_name' => 'web', 'module' => 17, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'delete.unit', 'guard_name' => 'web', 'module' => 17, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'view.unit', 'guard_name' => 'web', 'module' => 17, 'created_at' => $date, 'updated_at' => $date],
+
+            ['name' => 'create.element', 'guard_name' => 'web', 'module' => 18, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'edit.element', 'guard_name' => 'web', 'module' => 18, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'delete.element', 'guard_name' => 'web', 'module' => 18, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'view.element', 'guard_name' => 'web', 'module' => 18, 'created_at' => $date, 'updated_at' => $date],
         ];
 
         Module::insert($module);

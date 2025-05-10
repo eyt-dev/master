@@ -1,0 +1,35 @@
+/*============================
+48. Blog Pages Style Css
+=============================*/
+
+.pagination-wrap{
+  margin-top: 60px;
+
+  @media #{$sm-device} {
+    margin-top: 40px;
+  }
+}
+.pagination{
+  li{
+    margin-right: 10px;
+
+    &:last-child{
+      margin-right: 0;
+    }
+
+    a{
+      background-color: $white;
+      border: 1px solid #eee;
+      color: $headingColor;
+      display: block;
+      text-align: center;
+      line-height: 45px;
+      height: 45px;
+      width: 45px;
+
+      &.active,&:hover{
+         border-color: $brandColor;
+      }
+    }
+  }
+}

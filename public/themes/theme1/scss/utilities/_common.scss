@@ -1,0 +1,751 @@
+/*============================
+03. Common Style CSS
+==============================*/
+
+/*------------------
+3.1 - Buttons Style
+--------------------*/
+.btn-group {
+  .btn {
+    margin-right: 15px;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}
+
+.btn {
+  border-radius: 0;
+  color: $secondaryColor;
+  display: inline-block;
+  padding: 0;
+  font-size: 18px;
+  transition: 0.4s ease-in;
+  outline: none;
+  position: relative;
+
+  &:focus, &:active {
+    outline: none;
+    box-shadow: none;
+  }
+
+  &-bottom {
+    &:before {
+      background-color: $brandColor;
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      transition: 0.4s;
+      height: 1px;
+      width: 100%;
+    }
+
+    &:hover {
+      &:before {
+        bottom: -10px;
+      }
+    }
+  }
+  &-bordered {
+    border: 3px solid $brandColor;
+    border-radius: 50px;
+    color: $secondaryColor;
+    display: inline-block;
+    @include font-size(14px);
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    padding: 20px 40px;
+    letter-spacing: 1.75px;
+
+    @media #{$sm-device} {
+      padding: 15px 25px;
+    }
+
+    &:hover {
+      background-color: $brandColor;
+      color: $white;
+    }
+  }
+
+  &-secondary {
+    border: 3px solid $secondaryColor;
+    background-color: $secondaryColor;
+    border-radius: 50px;
+    color: $brandColor;
+    display: inline-block;
+    @include font-size(14px);
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    padding: 20px 40px;
+    letter-spacing: 1.75px;
+
+    @media #{$sm-device} {
+      padding: 15px 25px;
+    }
+
+    &:hover {
+      background-color: transparent;
+      border-color: $brandColor;
+      color: $secondaryColor;
+    }
+  }
+
+  &-brand {
+    background-color: $brandColor;
+    border: 3px solid $brandColor;
+    border-radius: 50px;
+    color: $secondaryColor;
+    display: inline-block;
+    @include font-size(14px);
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    padding: 20px 40px;
+    letter-spacing: 1.75px;
+
+    @media #{$sm-device} {
+      padding: 15px 25px;
+    }
+
+    &:hover {
+      background-color: transparent;
+      color: $brandColor;
+    }
+  }
+
+  // Buttons sizes
+  &-xs{
+    padding: 8px 15px;
+    font-size: 13px;
+  }
+
+  &-md{
+    padding: 15px 25px;
+  }
+
+  &-lg{
+    padding: 18px 30px;
+  }
+}
+.btn {
+  &.btn-bordered {
+    &:hover {
+      background-color: $brandColor;
+      color: $white;
+    }
+  }
+}
+/*----------------------
+3.2 - Background Image
+-----------------------*/
+.bg-img {
+  background: no-repeat center center;
+  background-size: cover;
+
+  &-tr {
+    background: no-repeat top right;
+  }
+
+  &-tl {
+    background: no-repeat top left;
+  }
+
+  &-br {
+    background: no-repeat bottom right;
+  }
+
+  &-bl {
+    background: no-repeat bottom left;
+  }
+
+  &-nr {
+    background: no-repeat center center;
+    background-size: contain;
+  }
+}
+
+/*-----------------
+3.3 - Overflow
+-------------------*/
+.fix {
+  overflow: hidden;
+
+  &-x {
+    overflow-x: hidden;
+  }
+
+  &-y {
+    overflow-y: hidden;
+  }
+}
+
+/*-------------------------
+3.4 - Section title Style
+--------------------------*/
+.section-title {
+  margin-bottom: 75px;
+
+  @media #{$md-device} {
+    margin-bottom: 48px;
+  }
+
+  @media #{$sm-device} {
+    margin-bottom: 32px;
+  }
+
+  h5 {
+    color: $brandColor;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+
+    @media #{$sm-device} {
+      margin-bottom: 18px;
+    }
+  }
+
+  h2 {
+    margin-bottom: 0;
+  }
+
+  p {
+    margin-top: 27px;
+    margin-bottom: 0;
+
+    @media #{$sm-device} {
+      margin-top: 14px;
+    }
+  }
+
+  .btn {
+    margin-top: 25px;
+
+    @media #{$sm-device} {
+      margin-top: 20px;
+    }
+  }
+
+  // White Layout
+  &--white {
+    h2 {
+      color: $white;
+    }
+  }
+
+  // Brand Color Layout
+  &--brand {
+    h2 {
+      color: $brandColor;
+    }
+  }
+
+  // Section title with description (Paragraph)
+  &--wp {
+    @media #{$lg-device, $xl-device} {
+      margin-bottom: 83px;
+    }
+
+    @media #{$md-device} {
+      margin-bottom: 52px;
+    }
+  }
+
+  &--last-btn {
+    @media #{$md-device} {
+      margin-bottom: 60px;
+    }
+    @media #{$sm-device} {
+      margin-bottom: 40px;
+    }
+  }
+}
+
+/*-------------------------
+3.5 - List Style
+--------------------------*/
+.ht-list {
+  li {
+    position: relative;
+    padding-left: 30px;
+    margin-bottom: 15px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    &:before {
+      content: '\f00c';
+      font-family: $fa-icon;
+      color: $secondaryColor;
+      position: absolute;
+      font-weight: 300;
+      font-size: 14px;
+      top: 2px;
+      left: 0;
+    }
+  }
+
+  &-brand {
+    li {
+      &:before {
+        color: $brandColor;
+      }
+    }
+  }
+
+  &-number{
+    margin-left: 15px;
+    li{
+      list-style: decimal;
+      padding-left: 10px;
+
+      &:before{
+        display: none;
+      }
+    }
+  }
+}
+
+/*--------------------------------
+3.6 - Site Content Wrapper
+----------------------------------*/
+.site-wrapper {
+  background-color: $white;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+
+  &--left-header {
+    .container-fluid {
+      @media #{$xl-device} {
+        padding: 0 100px;
+      }
+    }
+  }
+}
+
+.container {
+  @media screen and (min-width: 1200px) {
+    max-width: 1200px;
+  }
+
+  &-fluid {
+    padding: 0 15px;
+
+    @media screen and (min-width: 1201px) {
+      padding: 0 100px;
+    }
+
+    @media #{$md-device} {
+      max-width: 720px;
+      margin: auto;
+    }
+  }
+}
+
+/*--------------------------------
+3.7 - Scroll Top Button
+----------------------------------*/
+.btn-scroll-top {
+  background-color: $secondaryColor;
+  border-radius: 50%;
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 1px 5px 0 rgba(0, 0, 0, .12), 0 3px 1px -2px rgba(0, 0, 0, .2);
+  color: $white;
+  cursor: pointer;
+  @include font-size(25px);
+  display: block;
+  text-align: center;
+  line-height: 60px;
+  position: fixed;
+  bottom: -60px;
+  right: 30px;
+  height: 60px;
+  width: 60px;
+  z-index: 999;
+  @include hide;
+
+  @media #{$sm-device} {
+    line-height: 50px;
+    height: 50px;
+    width: 50px;
+  }
+
+  &:hover {
+    background-color: $brandColor;
+  }
+
+  &.show {
+    bottom: 30px;
+    @include show;
+  }
+}
+
+/*--------------------------------
+3.8 - LightSlider Customization
+----------------------------------*/
+.lSSlideOuter {
+  .lSAction {
+    a {
+      background-color: $white;
+      border-radius: 50%;
+      border: 1px solid $offWhite;
+      cursor: pointer;
+      @include font-size(25px);
+      line-height: 70px;
+      height: 70px;
+      width: 70px;
+      opacity: 1;
+      position: absolute;
+      left: -80px;
+      top: 50%;
+      text-align: center;
+      transform: translateY(-50%);
+      margin-top: auto;
+
+      @media #{$xlmax-device} {
+        line-height: 50px;
+        height: 50px;
+        width: 50px;
+        left: -50px;
+      }
+
+      &.lSNext {
+        left: auto;
+        right: -80px;
+
+        @media #{$xlmax-device} {
+          right: -50px;
+        }
+      }
+
+      &:hover {
+        background-color: $secondaryColor;
+        border-color: $secondaryColor;
+        color: $white;
+      }
+    }
+  }
+
+  .lSPager {
+    &.lSpg {
+      margin: 47px 0 0;
+      line-height: 1;
+
+      @media #{$sm-device} {
+        margin: 38px 0 0;
+      }
+
+      li {
+        margin-right: 10px;
+
+        &:last-child {
+          margin-right: 0;
+        }
+
+        a {
+          background-color: $secondaryColor;
+          box-shadow: none;
+          opacity: 1;
+          outline: none;
+          height: 10px;
+          width: 10px;
+        }
+
+        &.active {
+          a {
+            background-color: $brandColor;
+          }
+        }
+      }
+    }
+
+    &-2 {
+      li {
+        a {
+          background-color: transparent;
+          border: 3px solid #e6e8ee;
+          height: 15px;
+          width: 15px;
+        }
+
+        &.active, &:hover {
+          a {
+            background-color: transparent;
+            border-color: $brandColor;
+          }
+        }
+      }
+    }
+  }
+
+  // Arrow Style Two
+  &.lightArrows-2 {
+    .lSAction {
+      a {
+        background-color: transparent;
+        border: none;
+        color: $blackSoft;
+        @include font-size(55px);
+        line-height: 1;
+        height: auto;
+        width: auto;
+
+        &:hover {
+          color: $brandColor;
+        }
+      }
+    }
+  }
+}
+
+/*--------------------------------
+3.9 - Tippy Customization
+----------------------------------*/
+.tippy-popper {
+  .tippy-tooltip {
+    background-color: $secondaryColor;
+    border-radius: 3px;
+    @include font-size(14px);
+    font-weight: 400;
+    line-height: 1;
+    padding: 7px 13px;
+  }
+
+  &[x-placement^='top'] {
+    .tippy-arrow {
+      border-top-color: $secondaryColor !important;
+    }
+  }
+
+  &[x-placement^='bottom'] {
+    .tippy-arrow {
+      border-bottom-color: $secondaryColor !important;
+    }
+  }
+
+  &[x-placement^='left'] {
+    .tippy-arrow {
+      border-left-color: $secondaryColor !important;
+    }
+  }
+
+  &[x-placement^='right'] {
+    .tippy-arrow {
+      border-right-color: $secondaryColor !important;
+    }
+  }
+}
+
+/*--------------------------------
+3.10 - Magnific JS Customization
+----------------------------------*/
+.ht-mfp {
+  transition: 0.4s;
+
+  &.mfp-bg {
+    background: $secondaryColor;
+    transition: 0.4s;
+  }
+
+  .mfp-content {
+    transition: 0.3s;
+
+    @media #{$xl-device} {
+      max-width: 70%;
+    }
+
+
+    .mfp-close {
+      display: none;
+    }
+  }
+
+  .mfp-close {
+    background-color: $brandColor;
+    color: $white;
+    padding: 0;
+    text-align: center;
+    opacity: 1;
+    top: 50px;
+    right: 50px;
+    height: 50px;
+    width: 50px;
+    line-height: 50px;
+
+    @media #{$sm-device} {
+      top: 30px;
+      right: 30px;
+      height: 40px;
+      width: 40px;
+      line-height: 40px;
+    }
+
+    &:hover {
+      background-color: $secondaryColor;
+    }
+  }
+
+  .mfp-arrow {
+    background-color: $brandColor;
+    opacity: 1;
+    margin-left: 15px;
+    height: 55px;
+    width: 55px;
+
+    &:before {
+      display: none;
+    }
+
+    &:after {
+      content: '\f104';
+      color: $white;
+      font-family: $fa-icon;
+      @include font-size(25px);
+      line-height: 40px;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+
+    &-right {
+      margin-left: auto;
+      margin-right: 15px;
+
+      &:after {
+        content: '\f105';
+      }
+    }
+
+    &:hover {
+      background-color: darken($secondaryColor, 10%);
+    }
+  }
+
+  &.zoom-animate {
+    &.mfp-bg {
+      opacity: 0;
+    }
+
+    .mfp-content {
+      transform: scale(1.2);
+      opacity: 0;
+    }
+
+    // Animate In
+    &.mfp-ready {
+      &.mfp-bg {
+        opacity: 0.9;
+      }
+
+      .mfp-content {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    // Animate Out
+    &.mfp-removing {
+      .mfp-content {
+        transform: scale(1.2);
+        opacity: 0;
+      }
+
+      &.mfp-bg {
+        opacity: 0;
+      }
+
+      .mfp-close {
+        opacity: 0;
+      }
+    }
+  }
+}
+
+/*--------------------------------
+3.11 - Blockquote Style
+----------------------------------*/
+blockquote, .blockquote {
+  background-color: $blackSoft;
+  color: $white;
+  @include font-size(26px);
+  line-height: 1.4;
+  padding: 42px 44px 80px;
+  position: relative;
+
+  @media #{$sm-device} {
+    padding: 20px 22px 60px;
+  }
+
+  &:before {
+    content: '\f10e';
+    font-family: $fa-icon;
+    position: absolute;
+    right: 40px;
+    bottom: 40px;
+
+    @media #{$sm-device} {
+      right: 30px;
+      bottom: 20px;
+    }
+  }
+
+  &-title {
+    color: $brandColor;
+    text-transform: uppercase;
+    @include font-size(14px);
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    line-height: 1;
+  }
+}
+
+/*--------------------------------
+3.12 - Nice Select Customization
+----------------------------------*/
+.nice-select {
+  background-color: transparent;
+  border-radius: 0;
+  border: none;
+  border-bottom: 2px solid $brandColor;
+  color: $secondaryColor;
+  float: inherit;
+  @include font-size(24px);
+  padding-left: 0;
+
+  &:hover, &:focus {
+    border-bottom-color: $brandColor;
+  }
+
+  &:after {
+    border-right-color: $secondaryColor;
+    border-bottom-color: $secondaryColor;
+    height: 7px;
+    width: 7px;
+  }
+
+  .list {
+    border-radius: 0;
+    color: $secondaryColor;
+    @include font-size(16px);
+    width: 100%;
+  }
+}
+
+.button-item{
+  .btn-xl{
+    @media #{$sm-device} {
+      padding: 20px 40px;
+    }
+  }
+}

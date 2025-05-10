@@ -1,0 +1,178 @@
+/*======================
+10. Service Style CSS
+========================*/
+
+.service {
+  &-business-classic {
+    margin-top: -80px;
+
+    @media #{$md-device, $sm-device} {
+      margin-top: -30px;
+    }
+
+    .icon-box-item {
+      @media #{$xl-device, $lg-device} {
+        margin-top: 80px;
+      }
+    }
+  }
+
+  // Home Graphics Design
+  &-area-gd {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: 7% 50%;
+  }
+
+  &-content-gd {
+    .list-box {
+      &__info {
+        h6 {
+          @include font-size(16px);
+          font-weight: 700;
+        }
+      }
+    }
+  }
+
+  // Home Left Multipurpose
+
+  &-item {
+    &__txt {
+      margin-top: 35px;
+
+      h2 {
+        margin-top: 0;
+      }
+    }
+  }
+}
+
+
+// Service Page 2 Service Style
+.service-2-content-wrap {
+  margin-top: -75px;
+
+  @media #{$md-device} {
+    margin-top: -55px;
+  }
+
+  @media #{$sm-device} {
+    margin-top: -35px;
+  }
+
+  .icon-box-item {
+    margin-top: 75px;
+
+    @media #{$md-device} {
+      margin-top: 55px;
+    }
+
+    @media #{$sm-device} {
+      margin-top: 35px;
+    }
+  }
+}
+
+.architecture-service-wrap {
+  .list-box-item {
+    @media #{$lg-device} {
+      margin-top: 45px;
+    }
+  }
+}
+
+
+/*================================
+Start Baber Service Area Wrapper
+==================================*/
+.baber-service-title-area {
+  padding: 120px 0;
+  position: relative;
+
+  @media #{$md-device} {
+    padding: 80px 0 175px;
+  }
+
+  @media #{$sm-device} {
+    padding: 60px 0 166px;
+  }
+
+  &:before {
+    @include overlay($black, 0.3);
+  }
+}
+
+.baber-service-content-inner {
+  background-color: $white;
+  border: 15px solid $brandColor;
+  padding: 56px 70px 85px;
+  margin-top: -120px;
+  position: relative;
+  z-index: 1;
+
+  @media #{$md-device} {
+    padding: 31px 30px 60px;
+  }
+
+  @media #{$md-device, $sm-device} {
+    padding: 16px 15px 40px;
+    border-width: 5px;
+  }
+}
+
+.service-list-wrap {
+  text-align: center;
+  .btn {
+    padding: 15px 30px;
+    margin-top: 60px;
+
+    @media #{$md-device, $sm-device} {
+      margin-top: 30px;
+    }
+
+    &-bordered {
+      &:hover {
+        background-color: $brandColor;
+        color: $blackSoft;
+      }
+    }
+  }
+}
+
+.service-list {
+  overflow: hidden;
+  margin: 0 -15px;
+  text-align: left;
+
+  &-item {
+    border-bottom: 1px solid $brandColor;
+    float: left;
+    width: calc(50% - 30px);
+    padding: 25px 0;
+    margin: 0 15px;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+
+    @media #{$sm-device} {
+      width: calc(100% - 30px);
+    }
+
+    @media #{$md-device, $sm-device} {
+      font-size: 14px;
+    }
+
+    &-title {
+      color: $blackSoft;
+    }
+
+    &-price {
+      color: $brandColor;
+      margin-left: 10px;
+    }
+  }
+}

@@ -1,0 +1,435 @@
+/*==========================
+04. Header Area Style CSS
+===========================*/
+
+.header-area {
+  padding: 50px 0;
+
+  @media #{$sm-device} {
+    padding: 25px 0;
+  }
+
+  // Sticky Header
+  &.sticky-header {
+    transition: 0.4s;
+
+    &.sticky {
+      background-color: $white;
+      box-shadow: 0 8px 20px 0 rgba(0, 0, 0, 0.1);
+      border: 0 !important;
+      position: fixed;
+      left: 0;
+      top: 0;
+      padding: 20px 0;
+      width: 100%;
+      z-index: 99;
+
+      .main-menu {
+        & > li {
+
+          a {
+            &:before {
+              color: $secondaryColor;
+            }
+          }
+
+          & > .submenu-nav {
+            margin-top: 24px;
+
+            &:before {
+              height: 24px;
+            }
+          }
+        }
+      }
+
+      .header-action-area {
+        button, a {
+          color: $secondaryColor;
+
+          &.btn-menu {
+            span {
+              background-color: $secondaryColor;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Transparent Header Style
+  &.transparent:not(.sticky) {
+    color: $white;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    z-index: 9;
+
+    .header-logo-area {
+      .logo {
+        &-main {
+          display: none;
+        }
+
+        &-light {
+          display: block;
+        }
+      }
+    }
+
+    .main-menu {
+      & > li {
+
+        & > a {
+          color: $white;
+
+          &:before {
+            color: $white;
+          }
+        }
+      }
+    }
+
+    .header-action-area {
+      button, a {
+        color: $white;
+      }
+
+      .btn-menu {
+        span {
+          background-color: $white;
+        }
+      }
+    }
+  }
+
+  // Transparent Black Header Style
+  &.christmas:not(.sticky) {
+    background-color: rgba(255, 255, 255, 0.5);
+    padding: 30px 0;
+
+    .header-logo-area {
+      .logo-main {
+        display: block;
+      }
+
+      .logo-light {
+        display: none;
+      }
+    }
+
+    .main-menu {
+      & > li {
+
+        & > a {
+          color: $black;
+
+          &:before {
+            color: $black;
+          }
+        }
+      }
+
+      .has-submenu .submenu-nav {
+        margin-top: 34px;
+
+        &:before {
+          height: 34px;
+        }
+      }
+    }
+
+    .header-action-area {
+      button, a {
+        color: $black;
+      }
+
+      .btn-menu {
+        span {
+          background-color: $black;
+        }
+      }
+    }
+  }
+
+  // Header Left Fixed
+  &.fixed-left {
+    background-color: $white;
+    box-shadow: 3px 1px 29px rgba(0, 0, 0, .12);
+    padding: 100px 60px;
+    position: fixed;
+    height: 100vh;
+    max-width: 300px;
+    width: 100%;
+    z-index: 99999;
+
+    @media #{$xlmax-device, $lg-device} {
+      padding: 60px;
+    }
+
+    @media #{$lg-device, $md-device, $sm-device} {
+      position: static;
+      height: auto;
+      margin: auto;
+      padding: 25px 15px;
+      box-shadow: none;
+    }
+
+    @media #{$lg-device} {
+      max-width: 960px;
+    }
+
+    @media #{$md-device} {
+      max-width: 720px;
+    }
+
+    @media #{$sm-device} {
+      max-width: 540px;
+    }
+
+    .header-left-fix-inner {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+
+      @media #{$lg-device, $md-device, $sm-device} {
+        flex-direction: row;
+      }
+    }
+
+    .header-logo-area {
+      max-width: 100%;
+
+      a {
+        max-width: 120px;
+        display: block;
+      }
+    }
+
+    .header-navigation-area {
+      margin: 0 -60px;
+
+      .nav {
+        display: block;
+
+        & > li {
+          margin-right: 0;
+          margin-bottom: 20px;
+          padding-right: 60px;
+          padding-left: 60px;
+          cursor: pointer;
+          position: relative;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          a {
+            display: inline-block;
+          }
+
+          .submenu-nav {
+            left: 100%;
+            margin-top: -20px;
+            top: 0;
+
+
+            &:before {
+              display: none;
+            }
+
+            &-mega {
+              margin-left: 0;
+
+              @media screen and (min-width: 1200px) and (max-width: 1399px) {
+                width: 860px;
+              }
+
+              @media screen and (min-width: 1400px) {
+                width: 1050px;
+              }
+
+              .mega-menu-item {
+                @media #{$xlmax-device} {
+                  padding: 25px !important;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .header-widget-area {
+      @include font-size(14px);
+
+      .copyright-content {
+        margin-top: 40px;
+      }
+    }
+  }
+
+  // Home construction
+  &-construction {
+    @media #{$md-device, $lg-device, $xl-device} {
+      padding: 40px 0;
+    }
+
+    .main-menu {
+      .submenu-nav {
+        margin-top: 44px;
+      }
+    }
+  }
+
+  // Header Right Align
+
+  &.header-right-align {
+    .header-right {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+
+      @media only screen and (min-width: 1200px) and (max-width: 1240px) {
+        justify-content: space-between;
+      }
+
+      .header-action-area {
+        margin-left: 80px;
+      }
+
+      .header-navigation-area {
+        .has-submenu {
+          .submenu-nav {
+            min-width: 220px;
+            left: -35px;
+
+            .submenu-nav {
+              left: 100%;
+
+              @media #{$lg-device} {
+                left: auto;
+                right: 100%;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    &.header-area.sticky-header.sticky .main-menu > li > .submenu-nav {
+      margin-top: 21px;
+    }
+  }
+}
+
+// Logo Style
+.header-logo-area {
+  max-width: 120px;
+
+  .logo {
+    &-light {
+      display: none;
+    }
+  }
+}
+
+// Header Action Style
+.header-action-area {
+  button, a {
+    color: $secondaryColor;
+    font-size: 20px;
+    line-height: 1;
+    margin-left: 15px;
+    vertical-align: middle;
+
+    &:first-child {
+      margin-left: 0;
+    }
+
+    &.btn-menu {
+      margin-top: -3px;
+      position: relative;
+      height: 18px;
+      width: 22px;
+
+      span {
+        background-color: $secondaryColor;
+        border-radius: 2px;
+        left: 0;
+        display: block;
+        position: absolute;
+        transition: 0.4s;
+        height: 2px;
+        width: 100%;
+
+        &:first-child {
+          top: 0;
+        }
+
+        &:nth-child(2) {
+          top: 50%;
+          transform: translateY(-50%);
+        }
+
+        &:last-child {
+          bottom: 0;
+        }
+      }
+
+      &:hover {
+        span {
+          &:first-child, &:last-child {
+            width: 80%;
+          }
+        }
+      }
+    }
+  }
+}
+
+
+// Header Top Style
+.header-top {
+  padding: 15px 0;
+
+  a {
+    color: $paragraph;
+    @include font-size(16px);
+    line-height: 1;
+    margin-right: 20px;
+
+    @media #{$xxs-device} {
+      margin-right: 10px;
+    }
+
+    &:last-child {
+      margin-right: 0;
+
+    }
+
+    &.hide-a {
+      @media #{$xxs-device} {
+        display: none;
+      }
+    }
+  }
+
+  .header-icons {
+    a {
+      &:hover {
+        color: $brandColor;
+      }
+    }
+  }
+}
+
+
+// Fixed To Header
+.header-area.fixed-top.sticky-header {
+  background-color: transparent;
+  box-shadow: none;
+  padding: 50px 0;
+}

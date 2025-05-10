@@ -1,0 +1,297 @@
+/*======================================
+51. Portfolio Details Page Style Css
+=======================================*/
+.portfolio-details {
+  &-info {
+    h4 {
+      margin-bottom: 24px;
+
+      @media #{$sm-device} {
+        margin-bottom: 14px;
+      }
+    }
+
+    .btn {
+      margin-top: 10px;
+    }
+  }
+
+  &-meta {
+    border-top: 1px solid $borderColor;
+    border-bottom: 1px solid $borderColor;
+    padding: 50px 0;
+    margin-top: 60px;
+
+    .portfolio-meta-list {
+      display: flex;
+      flex-wrap: wrap;
+      margin-top: -30px;
+
+      li {
+        flex-basis: 50%;
+        max-width: 50%;
+        margin-top: 30px;
+
+        label {
+          color: $secondaryColor;
+          display: block;
+          font-size: 20px;
+          line-height: 1;
+        }
+
+        a {
+          color: $paragraph;
+
+          &:hover {
+            color: $brandColor;
+          }
+        }
+      }
+    }
+  }
+
+  &-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 25px;
+
+    .social-icons {
+      a {
+        color: $paragraph;
+        font-size: 16px;
+        line-height: 1;
+
+        &:hover {
+          color: $brandColor;
+        }
+      }
+    }
+
+    .portfolio-like-view {
+      span {
+        margin-right: 10px;
+        display: inline-block;
+
+        &:last-child {
+          margin-right: 0;
+        }
+      }
+
+      i {
+        margin-right: 5px;
+        color: $secondaryColor;
+
+        &.fa-heart-o {
+          font-size: 16px;
+          color: $red;
+        }
+      }
+    }
+  }
+
+  &-thumb {
+    @media #{$xl-device} {
+      padding-left: 30px;
+    }
+
+    @media #{$md-device, $sm-device} {
+      margin-bottom: 40px;
+    }
+
+    &--left {
+      @media #{$xl-device} {
+        padding-left: 0;
+        padding-right: 30px;
+      }
+    }
+
+    &-item {
+      margin-bottom: 30px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    .gallery-item {
+      @media #{$xs-device} {
+        margin-bottom: 30px;
+      }
+    }
+  }
+
+  &-img-slider {
+    .portfolio-details-thumb {
+      margin-bottom: 60px;
+      position: relative;
+
+      @media #{$sm-device} {
+        margin-bottom: 35px;
+      }
+
+      .lSSlideOuter {
+
+        .lSAction {
+          a {
+            left: 50px;
+            @media #{$sm-device} {
+              line-height: 50px;
+              height: 50px;
+              width: 50px;
+              left: 20px;
+            }
+
+            &.lSNext {
+              left: auto;
+              right: 50px;
+
+              @media #{$sm-device} {
+                right: 20px;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .portfolio-details-info {
+      @media #{$xl-device} {
+        padding-right: 30px;
+      }
+    }
+
+    .portfolio-details-meta {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+
+      @media #{$sm-device} {
+        margin-top: 50px;
+      }
+    }
+  }
+
+  &-creative-wrap {
+    .port-details-creative-item {
+      height: 100vh;
+    }
+
+    .lSSlideOuter {
+      .lSAction {
+        display: flex;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+
+        a {
+          border: none;
+          border-radius: 0;
+          border-right: 1px solid $borderColor;
+          display: block;
+          font-size: 30px;
+          position: static;
+          transform: none;
+
+          &:last-child {
+            border-right: 0;
+          }
+        }
+      }
+    }
+
+    .portfolio-details-creative-content {
+      background-color: $white;
+      position: fixed;
+      left: -50%;
+      top: 0;
+      transition: 0.4s;
+      height: 100%;
+      width: 50%;
+
+      @media #{$md-device, $sm-device} {
+        width: 100%;
+        left: -100%;
+      }
+
+      &.show {
+        left: 0;
+        overflow-y: auto;
+
+        .portfolio-details-creative-action {
+          right: 0;
+          left: calc(50% - 90px);
+          box-shadow: none;
+
+          @media #{$lg-device} {
+            left: calc(50% - 70px);
+          }
+
+          @media #{$md-device, $sm-device} {
+            left: calc(100% - 70px);
+          }
+
+          .btn-content {
+            i {
+              &.close-icon {
+                display: inline-block;
+              }
+
+              &.open-icon {
+                display: none;
+              }
+            }
+          }
+        }
+      }
+
+      &-inner {
+        padding: 120px 110px;
+
+        @media #{$lg-device, $md-device} {
+          padding: 90px 50px;
+        }
+
+        @media #{$sm-device} {
+          padding: 50px 15px;
+        }
+      }
+
+      .portfolio-details-creative-action {
+        background-color: $white;
+        box-shadow: 1px 1px 5px rgba(0, 0, 0, .1);
+        cursor: pointer;
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
+        transition: 0.4s;
+        left: 0;
+        height: 270px;
+        width: 90px;
+
+        @media #{$lg-device, $md-device, $sm-device} {
+          width: 70px;
+          height: 200px;
+        }
+
+        .btn-content {
+          color: $secondaryColor;
+          font-size: 20px;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          white-space: nowrap;
+          transform: translateX(-50%) translateY(-50%) rotate(90deg);
+
+          i {
+            margin-right: 5px;
+
+            &.close-icon {
+              display: none;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

@@ -1,0 +1,47 @@
+/*====================================
+29. Home Modern Shop Style CSS
+=====================================*/
+
+.category-item {
+  margin-top: 30px;
+  overflow: hidden;
+  position: relative;
+
+  img {
+    transition: 0.4s;
+    width: 100%;
+  }
+
+  &:hover {
+    img {
+      transform: scale(1.1);
+    }
+  }
+
+  &__text {
+    @include font-size(40px);
+    font-weight: 700;
+    text-transform: uppercase;
+    color: $white;
+    position: absolute;
+    left: 50px;
+    bottom: 50px;
+    margin-bottom: 0;
+    width: 100%;
+
+    @media #{$sm-device} {
+      left: 20px;
+    }
+  }
+}
+
+
+.feature-product-area {
+  .lSSlideOuter {
+    .lSPager {
+      li {
+        padding: 0;
+      }
+    }
+  }
+}

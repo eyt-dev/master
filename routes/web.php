@@ -176,6 +176,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('{component}/edit', 'edit')->name('component.edit')->middleware('permission:edit.component');
         Route::post('{component}', 'update')->name('component.update')->middleware('permission:edit.component');
         Route::get('destroy/{component}', 'destroy')->name('component.destroy')->middleware('permission:delete.component');
-        Route::get('/get-unit-by-form/{form}','getUnitByForm');
+        Route::get('/getUnitByForm/{form}','getUnitByForm');
     });
 });

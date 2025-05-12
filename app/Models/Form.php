@@ -14,7 +14,7 @@ class Form extends Model
         return $this->hasMany(Component::class);
     }
 
-    public function unit(){
-        return $this->belongsTo(Unit::class);
+    public function units(){
+        return $this->belongsToMany(Unit::class);
     }
 }

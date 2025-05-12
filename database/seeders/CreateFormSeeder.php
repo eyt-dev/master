@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Form;
-use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
 class CreateFormSeeder extends Seeder
@@ -14,17 +13,18 @@ class CreateFormSeeder extends Seeder
     public function run(): void
     {
         $forms = [
-            ['name' => 'powder', 'unit_id' => 3],
-            ['name' => 'liquid', 'unit_id' => 6],
+            'Powder' => [3, 4],
+            'Liquid' => [5, 6],
         ];
 
-        foreach ($forms as $form) {
-            Form::updateOrCreate(
-                ['name' => $form['name']],
-                ['unit_id' => $form['unit_id'], 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()]
+        foreach ($forms as $formName => $unitIds) {
+            $form = Form::firstOrCreate(
+                ['name' => $formName],
+                ['created_at' => now(), 'updated_at' => now()]
             );
-        }
 
+            $form->units()->syncWithoutDetaching($unitIds);
+        }
     }
 
 }

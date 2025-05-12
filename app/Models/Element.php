@@ -14,6 +14,6 @@ class Element extends Model
     public function components()
     {
         return $this->belongsToMany(Component::class)
-            ->withPivot('amount');
+            ->withPivot(['amount','element_unit_id']);
     }
 }

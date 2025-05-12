@@ -45,9 +45,9 @@
                         <table class="table table-bordered text-nowrap" id="component_table">
                             <thead>
                                 <tr>
-                                    <th>#</th>
                                     <th>{{__('Code')}}</th>
                                     <th>{{__('Name')}}</th>
+                                    <th>{{__('Description')}}</th>
                                     <th>{{__('Form')}}</th>
                                     <th>{{__('Type')}}</th>
                                     <th>{{__('Unit')}}</th>
@@ -112,9 +112,9 @@
             responsive: true,
             ajax: "{{ route('component.index') }}",
             columns: [
-                { data: 'id', name: 'id' },
                 { data: 'code', name: 'code' },
                 { data: 'name', name: 'name' },
+                { data: 'description', name: 'description' },
                 { data: 'form', name: 'form' },
                 { data: 'type', name: 'type' },
                 { data: 'unit', name: 'unit' },

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Constants\NutritionType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,18 +16,16 @@ class Component extends Model
         return $this->belongsTo(Form::class);
     }
 
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
     public function elements()
     {
         return $this->belongsToMany(Element::class)
-            ->withPivot('amount');
+            ->withPivot(['amount','element_unit_id']);
     }
-
- /*   public function getTypeAttribute($value)
-    {
-        $type = NutritionType::getNutritionType();
-
-        return $type[$value] ?? '-';
-    }*/
 
 
 }

@@ -41,7 +41,7 @@
                 <label for="description" class="form-label">{{__('Description')}}</label>
                 <input type="text" class="form-control" name="description" id="description"
                        placeholder="{{__('Enter Description')}}"
-                       value="{{ old('description', $component->description ?? '') }}" />
+                       value="{{ old('description', $component->description ?? '') }}"/>
 
                 @error('description')
                 <label id="description-error" class="error" for="description">{{ $message }}</label>
@@ -116,7 +116,7 @@
     <!-- Element Template (hidden) -->
     <div id="element-template" class="d-none">
         <div class="element-group-wrapper row mb-3">
-            <div class="col-md-5">
+            <div class="col-md-4">
                 <label class="form-label">{{ __('Element') }}</label>
                 <select name="elements[__index__][element_id]" class="form-control select2-template">
                     <option value="" disabled selected>{{ __('Select Element') }}</option>
@@ -126,12 +126,26 @@
                 </select>
             </div>
 
-            <div class="col-md-5">
+            <div class="col-md-4">
                 <label class="form-label">{{ __('Amount') }}</label>
-                <input type="text" name="elements[__index__][amount]" class="form-control" placeholder="{{ __('Enter Amount') }}">
+                <input type="text" name="elements[__index__][amount]" class="form-control"
+                       placeholder="{{ __('Enter Amount') }}">
             </div>
 
-            <div class="col-md-2 d-flex align-items-end mb-1">
+            <div class="col-md-3">
+                <label class="form-label">{{ __('Unit') }}</label>
+                <select name="elements[__index__][element_unit_id]" class="form-control select2-template">
+                    <option value="" disabled selected>{{ __('Unit') }}</option>
+                    @foreach($units as $unit)
+                        <option
+                            value="{{$unit->id}}" {{ old('unit', $component->unit_id ?? '') == $unit->id ? 'selected' : '' }}>
+                            {{ $unit->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-md-1 d-flex align-items-end mb-1">
                 <button type="button" class="btn btn-outline-danger btn-sm btn-remove">X</button>
             </div>
         </div>
@@ -193,7 +207,7 @@
         // Add error class to Select2 elements that have validation errors
         function applyErrorsToSelect2() {
             // For each error on a select2 field
-            $('.select2.is-invalid').each(function() {
+            $('.select2.is-invalid').each(function () {
                 const selectId = $(this).attr('id');
                 // Add error class to the Select2 container
                 $(`#${selectId}`).next('.select2-container').addClass('is-invalid');
@@ -206,12 +220,12 @@
         applyErrorsToSelect2();
 
         // Apply custom validation styling to Select2
-        $('.select2').on('select2:close', function() {
+        $('.select2').on('select2:close', function () {
             $(this).valid && $(this).valid();
         });
 
         // Form validation
-        $('#component_form').on('submit', function(e) {
+        $('#component_form').on('submit', function (e) {
             const form = $(this)[0];
 
             if (!form.checkValidity()) {
@@ -222,7 +236,7 @@
             $(form).addClass('was-validated');
 
             // Check Select2 fields manually
-            $('.select2.required').each(function() {
+            $('.select2.required').each(function () {
                 validateSelect2Field($(this));
             });
 
@@ -231,7 +245,7 @@
         });
 
         // Mark required Select2 fields
-        $('.select2').each(function() {
+        $('.select2').each(function () {
             const $select = $(this);
             const $label = $('label[for="' + $select.attr('id') + '"]');
 
@@ -241,6 +255,8 @@
         });
 
         // ===== Display unit based on form select =====
+        $('#unit').prop('disabled', true);
+
         $('#form').on('change', function () {
             const selectedForm = $(this).val();
 
@@ -252,10 +268,16 @@
             $('#unit').prop('disabled', true).empty().append('<option disabled selected>Loading...</option>');
 
             $.ajax({
-                url: `/component/get-unit-by-form/${selectedForm}`,
+                url: `/component/getUnitByForm/${selectedForm}`,
                 type: 'GET',
-                success: function (unit) {
-                    $('#unit').prop('disabled', false).empty().append(`<option value="${unit.id}" selected>${unit.name}</option>`);
+                success: function (units) {
+                    console.log(units);
+                    $('#unit').prop('disabled', false).empty();
+
+                    units.forEach(unit => {
+                        $('#unit').append(`<option value="${unit.id}" selected>${unit.name}</option>`);
+
+                    });
                 },
                 error: function () {
                     $('#unit').prop('disabled', true).empty().append('<option disabled selected>Error loading unit</option>');
@@ -279,6 +301,7 @@
             if (elementData) {
                 $row.find('select[name^="elements"][name$="[element_id]"]').val(elementData.element_id);
                 $row.find('input[name^="elements"][name$="[amount]"]').val(elementData.amount);
+                $row.find('input[name^="elements"][name$="[element_unit_id]"]').val(elementData.element_unit_id);
             }
 
             return $row;
@@ -308,6 +331,7 @@
             elementIndex++;
             return $newRow;
         }
+
         // ===== Display inputs based on type =====
         function handleTypeChange() {
             const type = $('#type').val();
@@ -340,11 +364,10 @@
                     // Hide remove button for Individual type
                     $row.find('.btn-remove').addClass('d-none');
                 }
-            }
-            else if (type == 2) { // Complex
+            } else if (type == 2 || type == 3) { // Complex
                 if (hasExistingElements) {
                     // Add rows for each existing element
-                    componentElements.forEach(function(element) {
+                    componentElements.forEach(function (element) {
                         addElementRow({
                             element_id: element.id,
                             amount: element.pivot.amount
@@ -366,12 +389,12 @@
         $('#type').on('change', handleTypeChange);
 
         // ===== Add new element button =====
-        $('#add-element').on('click', function() {
+        $('#add-element').on('click', function () {
             addElementRow();
         });
 
         // ===== Remove element button (delegated event) =====
-        $(document).on('click', '.btn-remove', function() {
+        $(document).on('click', '.btn-remove', function () {
             $(this).closest('.element-group-wrapper').remove();
         });
         // Trigger change manually if type is pre-selected

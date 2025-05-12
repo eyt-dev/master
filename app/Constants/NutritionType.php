@@ -8,12 +8,14 @@ class NutritionType
 {
     const INDIVIDUAL = 1;
     const COMPLEX = 2;
+    const CARRIER_MATERIAL = 3;
 
     public static function getNutritionType()
     {
         return[
-            self::INDIVIDUAL => 'individual',
-            self::COMPLEX => 'complex'
+            self::INDIVIDUAL => 'Individual',
+            self::COMPLEX => 'Complex',
+            self::CARRIER_MATERIAL => 'Carrier Material',
         ];
     }
 
@@ -21,7 +23,8 @@ class NutritionType
     {
         return[
             self::INDIVIDUAL => 'primary',
-            self::COMPLEX => 'warning'
+            self::COMPLEX => 'secondary',
+            self::CARRIER_MATERIAL => 'warning',
         ];
     }
 }

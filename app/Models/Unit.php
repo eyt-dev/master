@@ -12,7 +12,7 @@ class Unit extends Model
     protected $fillable = ['name', 'symbol'];
 
     public function forms(){
-        return $this->hasMany(Form::class);
+        return $this->belongsToMany(Form::class);
     }
 
 }

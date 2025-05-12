@@ -9,7 +9,6 @@ use App\Models\Component;
 use App\Models\Element;
 use App\Models\Form;
 use App\Models\Unit;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 
 class ComponentController extends Controller
@@ -34,7 +33,7 @@ class ComponentController extends Controller
                     return '<span class="text-white badge bg-' . $badge . '">' . $label . '</span>';
                 })
                 ->addColumn('unit', function ($row) {
-                    return $row->form?->unit->name;
+                    return $row->unit->name;
                 })
                 ->addColumn('action', function ($row) {
                     return '<a class="edit-component btn btn-sm btn-success" data-path="' . route('component.edit', $row->id) . '" title="Edit" style="margin-right: 5px;">
@@ -43,7 +42,7 @@ class ComponentController extends Controller
                     <i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action','form','type'])
+                ->rawColumns(['action', 'form', 'type','unit','description'])
                 ->make(true);
         }
 
@@ -58,7 +57,7 @@ class ComponentController extends Controller
     public function create()
     {
         return view('component.create', ['component' => null, 'forms' => Form::all(), 'units' => Unit::all(), 'elements' => Element::all()
-        ,'elementsUnit' => Unit::all()]);
+            , 'elementsUnit' => Unit::all()]);
     }
 
     /**
@@ -86,7 +85,8 @@ class ComponentController extends Controller
 
         foreach ($elements as $element) {
             if (isset($element['element_id'])) {
-                $syncData[$element['element_id']] = ['amount' => $element['amount'] ?? 1];
+                $syncData[$element['element_id']] = ['amount' => $element['amount'],
+                    'element_unit_id' => $element['element_unit_id']];
             }
         }
 
@@ -106,7 +106,7 @@ class ComponentController extends Controller
         $units = Unit::all();
         $elements = Element::all();
 
-        $componentElementsJson = $component->elements->map(function($element) {
+        $componentElementsJson = $component->elements->map(function ($element) {
             return [
                 'id' => $element->id,
                 'pivot' => [
@@ -139,7 +139,8 @@ class ComponentController extends Controller
         $syncData = [];
         foreach ($elements as $element) {
             if (isset($element['element_id']) && $element['element_id']) {
-                $syncData[$element['element_id']] = ['amount' => $element['amount'] ?? 1];
+                $syncData[$element['element_id']] = ['amount' => $element['amount'] ?? 1,
+                    'element_unit_id' => $element['element_unit_id']];
             }
         }
 
@@ -151,11 +152,11 @@ class ComponentController extends Controller
 
     public function getUnitByForm($formId)
     {
-        $form = Form::firstWhere('id', $formId);
+        $form = Form::findOrFail($formId);
 
-        $unit = Unit::firstWhere('id', $form->unit_id);
+        $units = $form->units;
 
-        return response()->json($unit);
+        return response()->json($units);
     }
 
     /**

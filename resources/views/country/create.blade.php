@@ -77,10 +77,8 @@
                 @enderror
             </div>
         </div>
-
-        <div class="col-sm-6 col-md-6">
-        </div>
     </div>
+
     <div class="card-footer">
         <button class="btn btn-primary" type="submit">Save</button>
         <a href="{{ route('country.index') }}" class="btn btn-secondary">Cancel</a>

@@ -21,7 +21,7 @@ class RegisterController extends Controller
     |
     */
 
-    use Registersadmins;
+  //  use Registersadmins;
 
     /**
      * Where to redirect admins after registration.

@@ -9,5 +9,11 @@ class Element extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name','eu_code','synonym','attachment'];
+    protected $fillable = ['name', 'eu_code', 'synonym', 'attachment'];
+
+    public function components()
+    {
+        return $this->belongsToMany(Component::class)
+            ->withPivot('amount');
+    }
 }

@@ -39,6 +39,7 @@ class CreatePermissionRoleSeeder extends Seeder
             ['name' => 'Country', 'created_at' => $date, 'updated_at' => $date], //16
             ['name' => 'Unit', 'created_at' => $date, 'updated_at' => $date], //17
             ['name' => 'Element', 'created_at' => $date, 'updated_at' => $date], //18
+            ['name' => 'Component', 'created_at' => $date, 'updated_at' => $date], //19
         ];
 
         $permission = [
@@ -121,6 +122,11 @@ class CreatePermissionRoleSeeder extends Seeder
             ['name' => 'edit.element', 'guard_name' => 'web', 'module' => 18, 'created_at' => $date, 'updated_at' => $date],
             ['name' => 'delete.element', 'guard_name' => 'web', 'module' => 18, 'created_at' => $date, 'updated_at' => $date],
             ['name' => 'view.element', 'guard_name' => 'web', 'module' => 18, 'created_at' => $date, 'updated_at' => $date],
+
+            ['name' => 'create.component', 'guard_name' => 'web', 'module' => 19, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'edit.component', 'guard_name' => 'web', 'module' => 19, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'delete.component', 'guard_name' => 'web', 'module' => 19, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'view.component', 'guard_name' => 'web', 'module' => 19, 'created_at' => $date, 'updated_at' => $date],
         ];
 
         Module::insert($module);

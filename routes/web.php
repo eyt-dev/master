@@ -17,6 +17,7 @@ use App\Http\Controllers\TestimonialController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\ElementController;
+use App\Http\Controllers\ComponentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -167,5 +168,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('{element}/edit', 'edit')->name('element.edit')->middleware('permission:edit.element');
         Route::post('{element}', 'update')->name('element.update')->middleware('permission:edit.element');
         Route::get('destroy/{element}', 'destroy')->name('element.destroy')->middleware('permission:delete.element');
+    });
+    Route::controller(ComponentController::class)->prefix('component')->group(function () {
+        Route::get('/', 'index')->name('component.index')->middleware('permission:view.component');
+        Route::get('create', 'create')->name('component.create')->middleware('permission:create.component');
+        Route::post('store', 'store')->name('component.store')->middleware('permission:create.component');
+        Route::get('{component}/edit', 'edit')->name('component.edit')->middleware('permission:edit.component');
+        Route::post('{component}', 'update')->name('component.update')->middleware('permission:edit.component');
+        Route::get('destroy/{component}', 'destroy')->name('component.destroy')->middleware('permission:delete.component');
+        Route::get('/get-unit-by-form/{form}','getUnitByForm');
     });
 });

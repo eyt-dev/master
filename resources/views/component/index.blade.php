@@ -13,17 +13,16 @@
 @section('page-header')
     <div class="page-header">
         <div class="page-leftheader">
-            <h4 class="page-title mb-0">{{__('Countries')}}</h4>
+            <h4 class="page-title mb-0">{{__('Components')}}</h4>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
                     <a href="#">
-                        <i class="fe fe-layout mr-2 fs-14"></i>{{__('Countries')}}
+                        <i class="fe fe-layout mr-2 fs-14"></i>{{__('Components')}}
                     </a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page"><a href="#">{{__('Listing')}}</a></li>
             </ol>
         </div>
-
         <div class="page-rightheader">
             <div class="btn btn-list">
                 <a id="add_new" class="btn btn-info" data-toggle="tooltip" title="{{__('Add new')}}">
@@ -31,7 +30,6 @@
                 </a>
             </div>
         </div>
-
     </div>
 @endsection
 
@@ -40,19 +38,19 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">{{__('Countries Data')}}</div>
+                    <div class="card-title">{{__('Components Data')}}</div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered text-nowrap" id="country_table">
+                        <table class="table table-bordered text-nowrap" id="component_table">
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>{{__('Image')}}</th>
+                                    <th>{{__('Code')}}</th>
                                     <th>{{__('Name')}}</th>
-                                    <th>{{__('Alpha-2 Code')}}</th>
-                                    <th>{{__('Alpha-3 Code')}}</th>
-                                    <th>{{__('Dial Code')}}</th>
+                                    <th>{{__('Form')}}</th>
+                                    <th>{{__('Type')}}</th>
+                                    <th>{{__('Unit')}}</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -64,11 +62,11 @@
         </div>
     </div>
 
-    <div class="modal fade bd-example-modal-lg" id="country_form_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal fade bd-example-modal-lg" id="component_form_modal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">{{__('Add Country')}}</h4>
+                    <h4 class="modal-title">{{__('Add Component')}}</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">×</span> </button>
                 </div>
                 <div class="modal-body"></div>
@@ -84,51 +82,51 @@
     <script>
         $(document).on('click', '#add_new', function() {
             $.ajax({
-                url: "{{ route('country.create') }}",
+                url: "{{ route('component.create') }}",
                 type: "GET",
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Add Country");
-                    $("#country_form_modal").modal('show');
+                    $(".modal-title").html("Add Component");
+                    $("#component_form_modal").modal('show');
                     checkValidation();
                 }
             });
         });
 
-        $(document).on('click', '.edit-country', function() {
+        $(document).on('click', '.edit-component', function() {
             var id = $(this).data('id');
             $.ajax({
                 url: $(this).data('path'),
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Update Country");
-                    $("#country_form_modal").modal('show');
+                    $(".modal-title").html("Update Component");
+                    $("#component_form_modal").modal('show');
                     checkValidation();
                 }
             });
         });
 
-        var table = $('#country_table').DataTable({
+        var table = $('#component_table').DataTable({
             processing: true,
             serverSide: true,
             responsive: true,
-            ajax: "{{ route('country.index') }}",
+            ajax: "{{ route('component.index') }}",
             columns: [
                 { data: 'id', name: 'id' },
-                { data: 'image', name: 'image' },
+                { data: 'code', name: 'code' },
                 { data: 'name', name: 'name' },
-                { data: 'alpha_2_code', name: 'alpha_2_code' },
-                { data: 'alpha_3_code', name: 'alpha_3_code' },
-                { data: 'dial_code', name: 'dial_code' },
+                { data: 'form', name: 'form' },
+                { data: 'type', name: 'type' },
+                { data: 'unit', name: 'unit' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]
         });
 
-        $(document).on('click', '.delete-country', function() {
+        $(document).on('click', '.delete-element', function() {
             var id = $(this).attr("data-id");
             swal({
                 title: "Are you sure?",
-                text: "Once deleted, you will not be able to recover this country!",
+                text: "Once deleted, you will not be able to recover this element!",
                 icon: "warning",
                 buttons: true,
                 dangerMode: true,
@@ -140,7 +138,7 @@
                     $.ajax({
                         type: "get",
                         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        url: "{{ route('country.destroy', ':id') }}".replace(':id', id),
+                        url: "{{ route('element.destroy', ':id') }}".replace(':id', id),
                         success: function(response) {
                             swal({
                                 title: response.msg

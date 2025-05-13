@@ -1,0 +1,95 @@
+/*==========================
+06. Search Box Style CSS
+===========================*/
+.search-box-wrapper {
+  background-color: rgba($secondaryColor, 0.9);
+  position: fixed;
+  display: none;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 100vw;
+  z-index: 9999;
+
+  .search-box-content-inner {
+    width: 70%;
+    height: 100%;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: scale(0.8);
+    transition: transform 0.4s;
+    opacity: 0;
+    visibility: hidden;
+
+    @media #{$xs-device} {
+      width: 100%;
+      padding: 0 20px;
+    }
+  }
+
+  &.show {
+    .search-box-content-inner {
+      transform: scale(1);
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+
+  .search-close {
+    color: $white;
+    font-size: 70px;
+    line-height: 1;
+    position: absolute;
+    top: 50px;
+    right: 100px;
+
+    @media #{$sm-device} {
+      top: 20px;
+      right: 20px;
+    }
+
+    @media #{$md-device} {
+      top: 30px;
+      right: 30px;
+    }
+
+    &:hover {
+      color: $brandColor;
+      transform: rotate(90deg);
+    }
+  }
+}
+
+// Search Box Form Style
+.search-box-form-wrap {
+  width: 100%;
+
+  input[type="search"] {
+    background-color: transparent;
+    border: none;
+    border-bottom: 5px solid $brandColor;
+    color: $brandColor;
+    display: block;
+    font-size: 120px;
+    line-height: 1;
+    padding: 20px 0;
+    width: 100%;
+
+    @media #{$md-device} {
+      font-size: 60px;
+    }
+
+    @media #{$sm-device} {
+      font-size: 40px;
+    }
+  }
+
+  .search-note {
+    color: $brandColor;
+    font-weight: 700;
+    text-align: right;
+    margin-top: 20px;
+  }
+}

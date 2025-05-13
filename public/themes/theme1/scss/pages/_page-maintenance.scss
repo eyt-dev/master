@@ -1,0 +1,66 @@
+/*============================
+45. Maintenance Page Style Css
+==============================*/
+
+.maintenance {
+
+  &-content-wrap{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 0;
+
+    @media screen and (min-height: 500px) {
+      height: 100vh;
+      padding: 0;
+    }
+  }
+
+  &-header {
+    .logo {
+      max-width: 120px;
+      display: inline-block;
+    }
+  }
+
+  &-body {
+    .maintenance-txt {
+      margin-top: 90px;
+      color: $white;
+
+      @media #{$lg-device} {
+        margin-top: 60px;
+      }
+
+      @media #{$sm-device} {
+        margin-top: 40px;
+      }
+
+      h3 {
+        color: $brandColor;
+        margin-bottom: 21px;
+      }
+    }
+  }
+
+  &-footer{
+    .social-icons{
+      a{
+        color: $white;
+
+        &:hover{
+          color: $brandColor;
+        }
+      }
+    }
+  }
+
+  &-progress{
+    .progress-info{
+      color: $white;
+      font-size: 20px;
+      line-height: 1;
+    }
+  }
+}

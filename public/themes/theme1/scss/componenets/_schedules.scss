@@ -1,0 +1,86 @@
+/*==========================
+37. Schedules Style Css
+===========================*/
+
+.schedules-nav {
+  border-bottom: 2px solid $borderColor;
+  margin-bottom: 40px;
+  padding-bottom: 5px;
+
+  li {
+    margin-right: 40px;
+
+    &:last-child {
+      margin-right: 0;
+    }
+
+    a {
+      color: $paragraph;
+      @include font-size(20px);
+      line-height: 1;
+      position: relative;
+
+      &.active {
+        &:before {
+          background-color: $brandColor;
+          content: '';
+          position: absolute;
+          left: 0;
+          bottom: -10px;
+          height: 2px;
+          width: 100%;
+        }
+      }
+    }
+  }
+}
+
+.schedules-content {
+  overflow: hidden;
+
+  .tab-pane {
+    &.show {
+      h4,h6{
+        animation: slideInLeft 0.4s forwards;
+      }
+    }
+  }
+
+  &-item {
+    h4 {
+      color: $brandColor;
+      margin-bottom: 33px;
+    }
+  }
+}
+
+.schedules-timetable {
+  &-item {
+    margin-bottom: 30px;
+
+    @media #{$sm-device} {
+      margin-bottom: 25px;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.pd-text{
+    span{
+      font-family: $font-pd;
+      font-style: italic;
+    }
+}
+
+.achieve-list-area{
+  .list-box-item{
+    margin-top: 60px;
+
+    @media #{$sm-device} {
+      margin-top: 30px;
+    }
+  }
+}

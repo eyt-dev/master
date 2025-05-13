@@ -1,0 +1,73 @@
+/*===========================
+22. Newsletter Style CSS
+=============================*/
+
+.newsletter-content {
+  @media #{$md-device} {
+    margin-bottom: 40px;
+  }
+
+  @media #{$sm-device} {
+    margin-bottom: 35px;
+  }
+
+  h4 {
+    color: $white;
+  }
+
+  &--light {
+    h4 {
+      color: $secondaryColor;
+    }
+  }
+}
+
+.newsletter-form-content {
+  .form-input-item {
+    margin: 0;
+
+    input {
+      color: $white;
+      width: 100%;
+
+      &:focus {
+        border-bottom-color: $white;
+      }
+
+      &::placeholder {
+        color: $brandColor;
+      }
+    }
+
+    .btn-bordered {
+      color: $white;
+      min-width: 170px;
+      width: 100%;
+
+      @media #{$xs-device} {
+        margin-top: 30px;
+      }
+    }
+  }
+
+  &--light {
+    .form-input-item {
+      input {
+        color: $secondaryColor;
+        border-bottom-color: $secondaryColor;
+
+        &:focus,&:active{
+          border-bottom-color: $secondaryColor;
+        }
+
+        &::placeholder{
+          color: $secondaryColor;
+        }
+      }
+
+      .btn{
+        color: $secondaryColor;
+      }
+    }
+  }
+}

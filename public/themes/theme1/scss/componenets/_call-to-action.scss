@@ -1,0 +1,381 @@
+/*===============================
+13. Call to Action Style CSS
+=================================*/
+
+.call-to-action {
+  &-wrapper {
+    position: relative;
+
+    &:before {
+      @include overlay($secondaryColor, 0.8);
+    }
+  }
+
+  &-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 550px;
+
+    @media #{$md-device} {
+      height: 400px;
+    }
+
+    @media #{$sm-device} {
+      height: 300px;
+    }
+
+    h2 {
+      color: $white;
+      @include font-size(75px);
+      margin-bottom: 40px;
+
+      @media #{$sm-device} {
+        margin-bottom: 20px;
+      }
+    }
+
+    .btn-bordered {
+      color: $white;
+    }
+
+    // Home Modern Agency Call to action
+    &--modern {
+      @media #{$sm-device} {
+        height: 400px;
+      }
+
+      .contact-content-wrap {
+        h2 {
+          color: $secondaryColor;
+        }
+
+        .call-to-contact {
+          margin-top: 60px;
+
+          @media #{$md-device} {
+            margin-top: 45px;
+          }
+
+          @media #{$sm-device} {
+            margin-top: 30px;
+          }
+        }
+      }
+    }
+
+    // Home Business Classic Call to action
+    &--business {
+      height: 200px;
+      justify-content: space-between;
+
+      @media #{$xs-device} {
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      h4 {
+        color: $white;
+        margin-bottom: 0;
+      }
+
+      .btn-bordered {
+        border-color: $white;
+
+        @media #{$xs-device} {
+          margin-top: 25px;
+        }
+
+        &:hover {
+          background-color: $white;
+          color: $brandColor;
+        }
+      }
+    }
+
+    // Home Business Modern Call to action
+    &.business-modern {
+      height: 580px;
+
+      h4 {
+        color: $white;
+        margin-bottom: 34px;
+      }
+    }
+
+    // Home Personal Portfolio Call to action
+    &--personal {
+      height: 350px;
+      justify-content: flex-start;
+      padding-top: 60px;
+
+      @media #{$sm-device} {
+        height: 220px;
+        padding-top: 35px;
+      }
+
+      h5 {
+        color: $brandColor;
+        @include font-size(16px);
+        font-weight: 700;
+        letter-spacing: 1.5px;
+      }
+
+      h2 {
+        color: $secondaryColor;
+        margin-bottom: 10px;
+        @include font-size(56px);
+
+        @media #{$xs-device} {
+          font-size: 26px;
+        }
+      }
+    }
+
+    // Home Design Studio Call to action
+    &--design {
+      height: 500px;
+
+      @media #{$md-device, $sm-device} {
+        height: 300px;
+      }
+
+      h2 {
+        font-weight: 700;
+        @include font-size(80px);
+      }
+
+      &-light {
+        height: 200px;
+        justify-content: space-between;
+
+        @media #{$xs-device} {
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        h4 {
+          //color: $white;
+          margin-bottom: 0;
+        }
+
+        .btn-bordered {
+          color: $secondaryColor;
+
+          @media #{$xs-device} {
+            margin-top: 25px;
+          }
+
+          &:hover {
+            background-color: $brandColor;
+            color: $white;
+          }
+        }
+      }
+    }
+
+    // Home Minimal Call to action
+    &--minimal {
+      height: 450px;
+
+      @media #{$md-device, $sm-device} {
+        height: 300px;
+      }
+
+      h3 {
+        @include font-size(56px);
+      }
+
+      .btn-bordered {
+        color: $secondaryColor;
+        margin-top: 40px;
+
+        @media #{$sm-device} {
+          margin-top: 20px;
+        }
+      }
+    }
+
+    // Home Startup Call to action
+    &--startup {
+      @media #{$lg-device, $xl-device} {
+        height: 400px;
+      }
+
+      h2 {
+        color: $brandColor;
+        @include font-size(56px);
+      }
+
+      .btn-bordered {
+        &:not(:hover) {
+          color: $brandColor;
+        }
+      }
+    }
+  }
+
+  // Home Architecture Call to action
+  &-architecture {
+    position: relative;
+
+    &:before {
+      @include overlay($secondaryColor, 0.9);
+    }
+  }
+
+  // Home Restaurant Call to action
+  &-restaurant {
+    position: relative;
+    padding: 150px 0;
+
+    @media #{$sm-device} {
+      padding: 80px 0;
+    }
+
+    &:before {
+      @include overlay($black, 0.7);
+    }
+
+    .restaurant-contact-content {
+      h2 {
+        color: $white;
+        font-family: $font-pd;
+      }
+    }
+
+    .restaurant-hours {
+
+      @media #{$sm-device} {
+        margin-top: 35px;
+      }
+
+      &__item {
+        margin-bottom: 40px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        h6 {
+          color: $brandColor;
+          @include font-size(16px);
+          font-weight: 700;
+          text-transform: uppercase;
+        }
+      }
+
+      .btn-bordered {
+        color: $white;
+      }
+    }
+  }
+
+  // Home Classic Shop Call to action
+  &-classic-shop {
+    border-bottom: 1px solid $borderColor;
+    padding: 60px 0;
+
+    .icon-box-item {
+      @media #{$md-device, $sm-device} {
+        display: block;
+      }
+
+      .icon-box__icon {
+        @media #{$md-device, $sm-device} {
+          margin-bottom: 13px;
+        }
+      }
+    }
+  }
+
+  // Home Events Call to action
+  &-events {
+    .call-to-action-content {
+      @media #{$sm-device} {
+        flex-direction: column;
+        justify-content: center;
+
+        .btn {
+          margin-top: 25px;
+        }
+      }
+    }
+  }
+
+  // Home Finance Call to action
+  &-finance{
+    .finance-call-to-content{
+      background-color: $secondaryColor;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: -60px;
+      padding: 30px 70px;
+      position: relative;
+      z-index: 1;
+
+      @media #{$md-device, $sm-device} {
+        padding: 30px;
+      }
+
+      @media #{$xs-device} {
+        padding: 40px 30px;
+      }
+
+      @media #{$xs-device} {
+        display: block;
+        text-align: center;
+      }
+
+      h2{
+        color: $white;
+        @include font-size(24px);
+        margin-bottom: 0;
+        font-weight: 700;
+
+        @media #{$sm-device} {
+          @include font-size(20px);
+        }
+      }
+
+      .btn-bordered{
+        color: $white;
+
+        @media #{$xs-device} {
+          margin-top: 20px;
+        }
+      }
+    }
+  }
+}
+
+
+.video-popup {
+  &-thumb {
+    position: relative;
+
+    &:before {
+      @include overlay($secondaryColor, 0.4);
+    }
+  }
+
+  &-txt {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 99;
+
+    .btn-video-popup {
+      color: $white;
+      @include font-size(80px);
+      line-height: 1;
+
+      &:hover {
+        color: $brandColor;
+      }
+    }
+  }
+}

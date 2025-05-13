@@ -1,0 +1,45 @@
+/*==========================================
+31. Home Justified Gallery Style CSS
+===========================================*/
+
+.gallery-item {
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+
+  &:before {
+    @include overlay($secondaryColor, 0.8);
+    @include hide;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  &:after {
+    content: '+';
+    color: $white;
+    @include font-size(35px);
+    line-height: 1;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    @include hide;
+    transition: 0.4s;
+    z-index: 3;
+  }
+
+  &:hover {
+    &:before {
+      @include show;
+    }
+
+    &:after {
+      transform: translate(-50%, -50%);
+      @include show;
+    }
+  }
+
+  img{
+    width: 100%;
+  }
+}

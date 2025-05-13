@@ -1,0 +1,261 @@
+/*==========================
+14. Blog Post Style CSS
+===========================*/
+
+// Blog Post Item Style
+.post {
+  &-item {
+    background-color: $white;
+    border: 1px solid $offWhite;
+    padding: 53px 40px 60px;
+    margin-top: 30px;
+    position: relative;
+
+    @media #{$sm-device} {
+      padding: 35px 30px 40px;
+    }
+
+    iframe {
+      border: none;
+      width: 100%;
+    }
+
+    &:hover {
+      .post {
+        &-thumb {
+          background-position: center center;
+          @include show();
+        }
+
+        &-info {
+          &__title, &__action {
+            a {
+              color: $white;
+
+              &:hover {
+                color: $brandColor;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Blog Post Item Style two
+    &--2 {
+      padding: 0;
+      border: none;
+
+      .post {
+        &-thumb {
+          background-size: cover;
+          background-position: center center;
+          position: static;
+          height: 250px;
+          @include show;
+          display: block;
+
+          &:before {
+            display: none;
+          }
+        }
+
+        &-info {
+          margin-top: 20px;
+
+          &__meta {
+            margin-bottom: 0;
+          }
+        }
+      }
+
+      &:hover {
+        .post-info__title {
+          a {
+            color: inherit;
+          }
+        }
+      }
+
+      .blockquote {
+        @include font-size(30px);
+        margin-bottom: 0;
+      }
+    }
+
+    // Blog Post Item Style Three
+    &--3 {
+      border: none;
+      padding: 0;
+
+      .post {
+        &-thumb {
+          background-size: cover;
+          background-position: center center;
+          position: static;
+          @include show;
+          display: block;
+
+          &:before {
+            display: none;
+          }
+        }
+
+        &-info {
+          border: 1px solid #eee;
+          padding: 41px 40px 50px;
+
+          @media #{$sm-device} {
+            padding: 30px 20px 40px;
+          }
+
+          &__meta{
+            @media #{$sm-device} {
+              margin-bottom: 15px;
+            }
+          }
+        }
+      }
+
+      &:hover {
+        .post-info__title, .post-info__action {
+          a {
+            color: $headingColor;
+          }
+        }
+      }
+
+      .blockquote {
+        background-color: $secondaryColor;
+        @include font-size(24px);
+        margin-bottom: 0;
+      }
+    }
+
+    //  Blog Post Item Style Four
+    &--4 {
+      padding: 0;
+      border: none;
+
+      .post {
+        &-thumb {
+          background-size: cover;
+          background-position: center center;
+          position: static;
+          @include show;
+          display: block;
+          height: auto;
+
+          &:before {
+            display: none;
+          }
+        }
+
+        &-info {
+          padding: 40px 30px 48px;
+
+          &__meta {
+            margin-bottom: 0;
+          }
+        }
+      }
+
+      &:hover {
+        .post-info__title {
+          a {
+            color: inherit;
+          }
+        }
+      }
+
+      .blockquote {
+        background-color: $secondaryColor;
+        @include font-size(22px);
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  &-day {
+    position: absolute;
+    top: 0;
+    right: 24px;
+    z-index: 0;
+    @include font-size(150px);
+    line-height: 1;
+    opacity: .07;
+  }
+
+  &-thumb {
+    background-repeat: no-repeat;
+    background-position: 10px center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    @include hide();
+
+    &:before {
+      @include overlay($secondaryColor, 0.9);
+    }
+  }
+
+  &-info {
+    position: relative;
+    z-index: 1;
+
+    &__cate {
+      color: $brandColor;
+      display: inline-block;
+      @include font-size(14px);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 1.75px;
+      text-transform: uppercase;
+      margin-bottom: 17px;
+
+      &:hover {
+        color: $brandColor;
+      }
+    }
+
+    &__title {
+      @include font-size(30px);
+
+      a {
+        color: $secondaryColor;
+
+        &:hover {
+          color: $brandColor;
+        }
+      }
+    }
+
+    &__meta {
+      margin-bottom: 25px;
+
+      a {
+        color: $paragraph;
+        line-height: 1;
+      }
+    }
+
+    &__action {
+      margin-top: 25px;
+    }
+  }
+
+  &-link {
+    background-color: $brandColor;
+    color: $white;
+    padding: 40px 35px;
+    @include font-size(24px);
+    display: block;
+    word-break: break-word;
+
+    a {
+      color: $white;
+    }
+  }
+}

@@ -1,0 +1,362 @@
+/*=====================
+07. About Style CSS
+======================*/
+.about {
+  &-content {
+    h3 {
+      color: $white;
+      @include font-size(36);
+      line-height: 1.5;
+    }
+
+    & > .btn {
+      margin-top: 10px;
+    }
+
+    &-icon {
+      background: url('../img/icons/ruller.png') no-repeat top right;
+      padding: 50px 0;
+      margin-left: 50px;
+
+      @media #{$md-device, $sm-device} {
+        margin-left: 0;
+        padding: 0;
+      }
+
+      .about-txt {
+        @media #{$xl-device} {
+          max-width: 400px;
+        }
+      }
+    }
+
+    .about-txt {
+      span {
+        color: $brandColor;
+      }
+    }
+
+    .ht-list {
+      li {
+        &:before {
+          content: '\e006';
+          font-family: $linea-icon;
+        }
+      }
+    }
+
+    .section-title {
+      .about-txt {
+        .btn-bordered {
+          margin-top: 50px;
+
+          @media #{$sm-device} {
+            margin-top: 30px;
+          }
+        }
+      }
+    }
+
+    &.onepage {
+      padding: 200px 0;
+
+      @media #{$md-device, $sm-device} {
+        padding: 30px 0 0;
+      }
+
+      h4 {
+        @include font-size(40px);
+        font-weight: 700;
+        margin-bottom: 0;
+      }
+    }
+
+    &.construction {
+      h4 {
+        @include font-size(44px);
+        font-weight: 700;
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  &-thumb {
+    position: relative;
+
+    @media #{$md-device, $sm-device} {
+      margin-bottom: 40px;
+    }
+
+    img {
+      width: 100%;
+    }
+
+    &-ml {
+      margin-left: -100px;
+
+      @media #{$lg-device, $md-device, $sm-device} {
+        margin-left: 0;
+      }
+    }
+
+    &-left-align {
+      margin-left: -550px;
+
+      @media #{$md-device, $sm-device} {
+        margin-left: auto;
+      }
+    }
+
+    &-right-align {
+      margin-right: -550px;
+
+      @media #{$md-device, $sm-device} {
+        margin-right: auto;
+      }
+    }
+  }
+
+  // Home Creative Agency
+  &-creative {
+    background-color: $secondaryColor;
+    color: $white;
+    padding: 160px 0 135px;
+    position: relative;
+    margin-bottom: 30px;
+
+    @media #{$md-device} {
+      padding: 80px 0 60px;
+    }
+
+    @media #{$sm-device} {
+      padding: 60px 0 40px;
+    }
+
+    &:before {
+      background: url('../img/icons/letter_a.png') no-repeat center center;
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0.02;
+      height: 100%;
+      width: 100%;
+    }
+  }
+
+  // Home Modern Agency
+  &-modern {
+    .about {
+      &-content {
+        z-index: 2;
+        position: relative;
+      }
+
+      &-txt {
+        max-width: 370px;
+
+        @media #{$lg-device, $md-device, $sm-device} {
+          max-width: 100%;
+        }
+      }
+    }
+  }
+
+  // Home Business Classic
+  &-business {
+    &-bottom {
+      .about-content {
+        @media #{$lg-device, $xl-device} {
+          margin-top: 60px;
+        }
+      }
+    }
+  }
+
+  // Home Business Modern
+  &-business-item {
+    height: 650px;
+    @include center;
+
+    @media #{$md-device} {
+      height: 500px;
+    }
+
+    @media #{$sm-device} {
+      height: 400px;
+    }
+
+    .about-content {
+      max-width: 500px;
+      margin: auto;
+      padding: 0 15px;
+    }
+
+    &.bg {
+      &-img {
+        .section-title {
+          h2 {
+            color: $brandColor;
+          }
+        }
+      }
+
+      &-brand {
+        .section-title {
+          color: $secondaryColor;
+
+          h5 {
+            color: $secondaryColor;
+          }
+        }
+      }
+    }
+  }
+
+  // Home Personal Portfolio
+  &-personal {
+    &-item {
+      margin-bottom: 40px;
+
+      @media #{$sm-device} {
+        margin-bottom: 25px;
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      h5 {
+        @include font-size(16px);
+        font-weight: 700;
+        color: $brandColor;
+        margin-bottom: 10px;
+      }
+    }
+  }
+
+  // Home Graphic Design About
+  &-graphic {
+    .about {
+      &-content {
+        @include font-size(24px);
+
+        h2 {
+          margin-bottom: 35px;
+
+          @media #{$md-device} {
+            margin-bottom: 15px;
+          }
+
+          @media #{$sm-device} {
+            margin-bottom: 10px;
+          }
+        }
+      }
+
+      &-thumb {
+        &-right-align {
+          @media #{$lg-device, $xl-device} {
+            margin-right: -400px;
+          }
+        }
+      }
+    }
+  }
+
+  // Home Minimalism About
+  &-content-minimal {
+    @include font-size(24px);
+
+    @media #{$sm-device} {
+      @include font-size(18px);
+    }
+
+    h6 {
+      color: $brandColor;
+      font-weight: 700;
+      @include font-size(16px);
+      line-height: 1;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+
+      @media #{$xl-device} {
+        max-width: 800px;
+      }
+
+      #typed {
+        color: $brandColor;
+        font-style: italic;
+        font-family: $font-pd;
+      }
+    }
+  }
+
+  // Home Onepage About
+  &-onepage {
+    .counter-item {
+      .counter-number {
+        @media #{$xs-device} {
+          @include font-size(24px);
+        }
+      }
+
+      .counter-txt {
+        @media #{$xs-device} {
+          @include font-size(14px);
+        }
+      }
+    }
+  }
+}
+
+.img-h-w-wrap {
+  position: relative;
+
+  .img-half-width {
+    position: absolute;
+    height: 100%;
+    top: 0;
+    width: 50%;
+
+    &.right {
+      right: 0;
+    }
+
+    @media #{$md-device, $sm-device} {
+      position: relative;
+      width: 100%;
+      height: 300px;
+      margin: auto;
+    }
+  }
+}
+
+.fresh-ideas-area {
+  @media #{$sm-device} {
+    padding-bottom: 60px;
+  }
+  @media #{$md-device} {
+    padding-bottom: 90px;
+  }
+}
+
+.startup-mission-area {
+  @media #{$xl-device} {
+    padding: 80px 0;
+  }
+
+  .service-area-gd {
+    @media #{$sm-device, $md-device, $lg-device} {
+      background-image: none !important;
+    }
+
+    @media #{$xlmax-device} {
+      background-size: 25%;
+    }
+  }
+}

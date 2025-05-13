@@ -36,12 +36,12 @@ class PageController extends Controller
                 ->make(true);
         }
         
-        return view('page.index', ['categories' => Category::all()]);
+        return view('backend.page.index', ['categories' => Category::all()]);
     }
 
     public function create()
     {
-        return view('page.create', ['categories' => Category::all()]);
+        return view('backend.page.create', ['categories' => Category::all()]);
     }
 
     public function store(Request $request)
@@ -71,7 +71,7 @@ class PageController extends Controller
     public function edit($id)
     {
         $page = Page::findOrFail($id);
-        return view('page.create', ['page' => $page, 'categories' => Category::all()]);
+        return view('backend.page.create', ['page' => $page, 'categories' => Category::all()]);
     }
 
     public function update(Request $request, $id)

@@ -32,7 +32,7 @@ class RoleController extends Controller
         $allPermission = Permission::all();
         $groupPermission = $allPermission->groupBy('module');
        
-        return view('role.index', ['role' => new Role(), 'allPermission' => $allPermission, 'groupPermission' => $groupPermission]);
+        return view('backend.role.index', ['role' => new Role(), 'allPermission' => $allPermission, 'groupPermission' => $groupPermission]);
     }
     /**
      * Show the form for creating a new resource.
@@ -44,7 +44,7 @@ class RoleController extends Controller
         $allPermission = Permission::get();
         $groupPermission = $allPermission->groupBy('module');
         // dd($groupPermission[2][0]->permissionModule->name);
-        return view('role.create', ['role' => new Role(), 'allPermission' => $allPermission, 'groupPermission' => $groupPermission]);
+        return view('backend.role.create', ['role' => new Role(), 'allPermission' => $allPermission, 'groupPermission' => $groupPermission]);
     }
     /**
      * Store a newly created resource in storage.
@@ -89,12 +89,12 @@ class RoleController extends Controller
     public function edit(Role $role)
     {
         if(empty($role)){
-            return view('role.index');
+            return view('backend.role.index');
         }
         $allPermission = Permission::all();
         // dd($allPermission);
         $groupPermission = $allPermission->groupBy('module');
-        return view('role.create', ['role' => $role, 'allPermission' => $allPermission, 'groupPermission' => $groupPermission]);
+        return view('backend.role.create', ['role' => $role, 'allPermission' => $allPermission, 'groupPermission' => $groupPermission]);
     }
     /**
      * Update the specified resource in storage.

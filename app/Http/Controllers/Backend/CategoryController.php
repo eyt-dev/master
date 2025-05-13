@@ -39,13 +39,13 @@ class CategoryController extends Controller
                 ->rawColumns(['image', 'action'])   
                 ->make(true);
         }
-        return view('category.index');
+        return view('backend.category.index');
     }
 
     public function create()
     {
         $store_views = StoreView::get();
-        return view('category.create', compact('store_views'));
+        return view('backend.category.create', compact('store_views'));
     }
 
     public function store(Request $request)
@@ -78,7 +78,7 @@ class CategoryController extends Controller
     {
         $category = Category::findOrFail($id);
         $store_views = StoreView::get();
-        return view('category.create', compact('category', 'store_views'));
+        return view('backend.category.create', compact('category', 'store_views'));
     }
 
     public function update(Request $request, $id)

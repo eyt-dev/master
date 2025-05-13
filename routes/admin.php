@@ -16,7 +16,7 @@ use App\Http\Controllers\Backend\SettingController;
 use App\Http\Controllers\Backend\SlideController;
 use App\Http\Controllers\Backend\TestimonialController;
 
-Route::middleware(['web','auth','admin.domain.access'])->group(function () {    
+Route::middleware(['web','auth','admin.domain.access'])->prefix('{site}')->group(function () {    
     Route::get('/dashboard', function () {
         return view('index');
     })->name('dashboard');    

@@ -19,7 +19,7 @@ class SettingController extends Controller
 
             // If setting exists, send to edit
             if ($setting) {
-                return redirect()->route('setting.edit', $setting->id);
+                return redirect()->route('setting.edit', ['site' => $request->route('site'), 'setting' => $setting->id]);
             }
 
             // Else send to create
@@ -49,7 +49,7 @@ class SettingController extends Controller
                 ->rawColumns(['action'])
                 ->make(true);
         }
-        return view('setting.index');
+        return view('backend.setting.index');
     }
 
     public function create($admin = '')
@@ -67,14 +67,15 @@ class SettingController extends Controller
         if($admin) {
             $setting->created_by = $admin;
         }
-        return view('setting.create', compact('setting','admins'));
+        return view('backend.setting.create', compact('setting','admins'));
     }
 
-    public function edit($id)
+    public function edit($site, $id)
     {
+        // dd($id);
         $setting = Setting::find($id);
         $admins = Admin::get(); 
-        return view('setting.create', compact('setting','admins'));
+        return view('backend.setting.create', compact('setting','admins'));
     }
 
     public function store(Request $request)
@@ -116,7 +117,7 @@ class SettingController extends Controller
             }
         }
         $data["domain"] = parse_url($request->domain, PHP_URL_HOST);
-
+        $data["admin_domain"] = parse_url($request->admin_domain, PHP_URL_HOST);
         Setting::create($data);
         Session::flash('successMsg', 'Settings saved successfully.');
         return redirect()->route('setting.index');
@@ -159,7 +160,8 @@ class SettingController extends Controller
                 $data[$field] = $setting->$field;
             }
         }
-
+        $data["domain"] = parse_url($request->domain, PHP_URL_HOST);
+        $data["admin_domain"] = parse_url($request->admin_domain, PHP_URL_HOST);
         $setting->update($data);
 
         Session::flash('successMsg', 'Settings updated successfully.');

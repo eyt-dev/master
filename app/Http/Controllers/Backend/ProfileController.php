@@ -17,7 +17,7 @@ class ProfileController extends Controller
         $admin_id = $id == null ? Auth::id() : $id;
         $admin = Admin::find( $admin_id );
 
-        return view('profile.index', compact('admin'));
+        return view('backend.profile.index', compact('admin'));
     }
 
     public function update(Request $request, $id = null)

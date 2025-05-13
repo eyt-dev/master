@@ -49,7 +49,7 @@ class WheelController extends Controller
                 ->rawColumns(['action'])
                 ->make(true);
         }
-        return view('wheel.index', ['wheel' => new Wheel()]);
+        return view('backend.wheel.index', ['wheel' => new Wheel()]);
     }
 
     /**
@@ -58,7 +58,7 @@ class WheelController extends Controller
     public function create()
     {
         $games = Game::all(); // Assumes a Game model exists
-        return view('wheel.create', compact('games'));
+        return view('backend.wheel.create', compact('games'));
     }
 
     /**
@@ -96,7 +96,7 @@ class WheelController extends Controller
         
         $wheel = Wheel::with(['game','clips.gameClip'])->first();
         // dd($wheel->clips[0]->gameClip->text_length);
-        return view('wheel.edit', compact('wheel', 'games'));
+        return view('backend.wheel.edit', compact('wheel', 'games'));
     }
 
     /**

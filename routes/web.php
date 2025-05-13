@@ -10,7 +10,7 @@ use App\Http\Controllers\Frontend\FrontController;
 
 Auth::routes();
 
-$domains = ['arden1.local', 'admin.eyt.app', 'add2care.eyt.app'];
+$domains = ['arden.local', 'eytmaster.local', 'admin.eyt.app', 'add2care.eyt.app', 'eyt.app'];
 
 foreach ($domains as $domain) {
     Route::group(['domain' => $domain], function () {

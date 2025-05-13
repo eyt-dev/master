@@ -1,0 +1,22 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Block access to sensitive folders
+    RedirectMatch 403 ^/(app|bootstrap|config|database|resources|routes|storage|tests)/
+
+    # Block .env access
+    <FilesMatch "^\.env">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+
+    # ✅ Internally rewrite /site1/... to /public/backend/...
+    RewriteCond %{REQUEST_URI} ^/site1(/.*)?$ [NC]
+    RewriteRule ^site1(/.*)?$ public/backend$1 [L]
+
+    # Fallback for all other requests → public/index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ public/index.php [L]
+</IfModule>

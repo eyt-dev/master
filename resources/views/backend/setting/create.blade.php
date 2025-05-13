@@ -9,7 +9,7 @@
         <div class="page-leftheader">
             <h4 class="page-title mb-0">Settings</h4>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{url('/')}}"><i class="fe fe-home mr-2 fs-14"></i>Home</a></li>
+                <li class="breadcrumb-item"><a href="{{url('/backend')}}"><i class="fe fe-home mr-2 fs-14"></i>Home</a></li>
                 <li class="breadcrumb-item active" aria-current="page"><a href="#">Settings</a></li>
             </ol>
         </div>
@@ -21,16 +21,16 @@
         <div class="col-md-12">
             <div class="card">
                 @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+                    <div class="alert alert-danger">
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
                 <form 
-                    action="{{ isset($setting) && $setting->id ? route('setting.update', $setting->id) : route('setting.store') }}" 
+                    action="{{ isset($setting) && $setting->id ? route('setting.update', ['site' => $siteSlug, 'setting' => $setting->id]) : route('setting.store', ['site' => $siteSlug]) }}"
                     method="POST" 
                     id="setting_form"
                     novalidate=""
@@ -297,7 +297,7 @@
                     </div>
                     <div class="card-footer">
                         <button class="btn btn-primary" type="submit">Save</button>
-                        <a href="{{ route('setting.index') }}" class="btn btn-secondary">Cancel</a>
+                        <a href="{{ route('setting.index', ['site' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
                     </div>
                 </form>
             </div>
@@ -314,22 +314,25 @@
         <script>
             $(document).ready(function(){
                 checkValidation();
+                var siteSlug = "{{ request()->route('site') }}";
                 $('select[name="created_by"]').on('change', function () {
                     var selectedId = $(this).val();
                     if (selectedId) {
                         $.ajax({
-                            url: "{{ url('setting/check-setting/') }}" + "/" + selectedId, 
+                            url: "{{ url('backend/setting/check-setting/') }}" + "/" + selectedId, 
                             type: 'GET',
                             dataType: 'json',
                             success: function (data) {
                                 if (data.exists) {
-                                    var editUrl = "{{ route('setting.edit', ':id') }}";
-                                    editUrl = editUrl.replace(':id', data.setting_id);
+                                    var editUrl = "{{ route('setting.edit', ['site' => 'SITE_SLUG', 'setting' => ':id']) }}";
+
+                                    editUrl = editUrl.replace('SITE_SLUG', siteSlug).replace(':id', data.setting_id);
+
                                     window.location.href = editUrl;
                                 } else {
                                     if(data.admin) {
-                                        var createUrl = "{{ route('setting.create', ':id') }}";
-                                        createUrl = createUrl.replace(':id', data.admin);
+                                        var createUrl = "{{ route('setting.edit', ['site' => 'SITE_SLUG', 'setting' => ':id']) }}";
+                                        createUrl = createUrl.replace('SITE_SLUG', siteSlug).replace(':id', data.admin);
                                         window.location.href = createUrl;
                                     }
                                 }

@@ -28,7 +28,7 @@ class ModuleController extends Controller
 
     public function create()
     {
-        return view('permission.module');
+        return view('backend.permission.module');
     }
 }
 

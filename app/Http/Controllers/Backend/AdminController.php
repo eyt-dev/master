@@ -93,7 +93,7 @@ class AdminController extends Controller
                 ->make(true);
         }
        
-        return view('admins.index', compact('type'));
+        return view('backend.admins.index', compact('type'));
     }
 
     /**
@@ -103,7 +103,7 @@ class AdminController extends Controller
      */
     public function create($type = null)
     {       
-        return view('admins.create', ['admin' => new Admin(), 'type' => $type]);
+        return view('backend.admins.create', ['admin' => new Admin(), 'type' => $type]);
     }
 
     /**
@@ -143,7 +143,7 @@ class AdminController extends Controller
         if(empty($admin)) {
             Session::flash('errorMSg', 'Somethig went wrong.');
         
-            return redirect()->url("/admins/{$request->type}");
+            return redirect()->url("/backend/admins/{$request->type}");
         }
 
         $role = Role::where(['name' => $prefix])->first();
@@ -169,7 +169,7 @@ class AdminController extends Controller
         }
 
         $roles = Role::all();
-        return view('admins.create', ['admin' => $admin, 'roles' => $roles]);
+        return view('backend.admins.create', ['admin' => $admin, 'roles' => $roles]);
     }
 
     /**

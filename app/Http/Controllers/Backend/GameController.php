@@ -46,7 +46,7 @@ class GameController extends Controller
                 ->rawColumns(['action'])
                 ->make(true);
         }
-        return view('game.index', ['game' => new Game()]);
+        return view('backend.game.index', ['game' => new Game()]);
     }
 
     /**
@@ -54,7 +54,7 @@ class GameController extends Controller
      */
     public function create()
     {
-        return view('game.create', ['game' => new Game()]);
+        return view('backend.game.create', ['game' => new Game()]);
     }
 
     public function store(Request $request)
@@ -136,7 +136,7 @@ class GameController extends Controller
     {
         // Load the game with its related clips.
         $game = Game::with('clipData')->findOrFail($id);
-        return view('game.edit', compact('game'));
+        return view('backend.game.edit', compact('game'));
     }
 
     public function update(Request $request, $id)

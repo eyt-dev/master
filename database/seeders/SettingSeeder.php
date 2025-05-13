@@ -22,8 +22,8 @@ class SettingSeeder extends Seeder
             ]
         );
         Setting::create([
-            'domain' => 'admin.eyt.app',
-            'admin_domain' => 'https://admin.eyt.app/admin',
+            'domain' => 'eyt.app',
+            'admin_domain' => 'admin.eyt.app',
 
             'dark_logo' => 'dark-logo.png',
             'light_logo' => 'light-logo.png',
@@ -44,7 +44,7 @@ class SettingSeeder extends Seeder
 
         Setting::create([
             'domain' => 'add2care.eyt.app',
-            'admin_domain' => 'https://add2care.eyt.app/admin',
+            'admin_domain' => 'add2care.eyt.app/admin',
 
             'dark_logo' => 'dark-logo.png',
             'light_logo' => 'light-logo.png',

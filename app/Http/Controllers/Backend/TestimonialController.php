@@ -43,13 +43,13 @@ class TestimonialController extends Controller
                 ->make(true);
         }
 
-        return view('testimonial.index');
+        return view('backend.testimonial.index');
     }
 
     public function create()
     {
         $store_views = StoreView::all();
-        return view('testimonial.create', compact('store_views'));
+        return view('backend.testimonial.create', compact('store_views'));
     }
 
     public function store(Request $request)
@@ -81,7 +81,7 @@ class TestimonialController extends Controller
     {
         $testimonial = Testimonial::findOrFail($id);
         $store_views = StoreView::all();
-        return view('testimonial.create', compact('testimonial', 'store_views'));
+        return view('backend.testimonial.create', compact('testimonial', 'store_views'));
     }
 
     public function update(Request $request, $id)

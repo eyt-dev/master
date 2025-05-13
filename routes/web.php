@@ -16,10 +16,10 @@ use App\Http\Controllers\Frontend\FrontController;
 */
 Auth::routes();
 
-Route::controller(FrontController::class)->group(function () {
-    Route::get('/', 'index')->name('home');
-});
+$domains = array('arden1.local', 'admin.eyt.app', 'add2care.eyt.app');
 
-Route::group(['domain' => '{arden1.local}'], function () {
-    Route::get('/', [FrontController::class, 'index']);
-});
+foreach ($domains as $domain) {
+    Route::group(['domain' => $domain], function () {
+        Route::get('/', [\App\Http\Controllers\FrontController::class, 'index']);
+    });
+}

@@ -3,6 +3,7 @@
 use Database\Seeders\CreateSuperAdminSeeder;
 use Database\Seeders\CreatePermissionRoleSeeder;
 use Database\Seeders\CountriesRegionSeeder;
+use Database\Seeders\ThemeSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder

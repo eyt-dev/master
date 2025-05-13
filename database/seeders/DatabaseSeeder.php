@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             CreatePermissionRoleSeeder::class,
             CreateSuperAdminSeeder::class,
             CountriesRegionSeeder::class,
+            SettingSeeder::class,
             ThemeSeeder::class
         ]);
     }

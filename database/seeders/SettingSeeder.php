@@ -13,7 +13,7 @@ class SettingSeeder extends Seeder
      */
     public function run(): void
     {
-        Setting::create([
+        Setting::insert([
             'domain' => 'admin.eyt.app',
             'admin_domain' => 'https://admin.eyt.app/admin',
 

@@ -15,6 +15,7 @@
                 <label for="code" class="form-label">{{__('Code')}} <span class="text-red">*</span></label>
                 <input type="text" class="form-control" name="code" id="code" placeholder="{{__('Enter Code')}}"
                        value="{{ old('code', $component->code ?? '') }}" required=""/>
+                <div id="code-error" class="text-danger"></div>
 
                 @error('code')
                 <label id="code-error" class="error" for="code">{{ $message }}</label>
@@ -79,7 +80,7 @@
                 @foreach($units as $unit)
                     <option
                         value="{{$unit->id}}" {{ old('unit', $component->unit_id ?? '') == $unit->id ? 'selected' : '' }}>
-                        {{ $unit->name }}
+                        {{ $unit->symbol }}
                     </option>
                 @endforeach
             </select>
@@ -139,7 +140,7 @@
                     @foreach($units as $unit)
                         <option
                             value="{{$unit->id}}" {{ old('unit', $component->unit_id ?? '') == $unit->id ? 'selected' : '' }}>
-                            {{ $unit->name }}
+                            {{ $unit->symbol }}
                         </option>
                     @endforeach
                 </select>
@@ -275,7 +276,7 @@
                     $('#unit').prop('disabled', false).empty();
 
                     units.forEach(unit => {
-                        $('#unit').append(`<option value="${unit.id}" selected>${unit.name}</option>`);
+                        $('#unit').append(`<option value="${unit.id}" selected>${unit.symbol}</option>`);
 
                     });
                 },
@@ -401,5 +402,22 @@
         if ($('#type').val()) {
             $('#type').trigger('change');
         }
+
+        $('#code').on('blur', function () {
+            const code = $(this).val();
+            const id = '{{ $component->id ?? "" }}';
+
+            $.post("{{ route('components.check-code') }}", {
+                code,
+                id,
+                _token: '{{ csrf_token() }}'
+            }, function (data) {
+                if (!data.unique) {
+                    $('#code-error').text('Code Must Be Unique');
+                } else {
+                    $('#code-error').text('');
+                }
+            });
+        });
     });
 </script>

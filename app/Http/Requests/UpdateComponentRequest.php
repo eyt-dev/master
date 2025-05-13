@@ -21,8 +21,10 @@ class UpdateComponentRequest extends FormRequest
      */
     public function rules(): array
     {
+        $componentId = $this->route('component');
+
         return [
-            'code' => ['required', 'string', 'max:255'],
+            'code' => ['required', 'string', 'max:255','unique:component,code'.$componentId],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'form' => ['required', 'exists:forms,id'],

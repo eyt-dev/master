@@ -3,18 +3,12 @@
   <component name="ChangeListManager">
     <list default="true" id="7889e186-370a-4583-8d4f-7122f8f20607" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Constants/NutritionType.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Constants/NutritionType.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/Http/Controllers/ComponentController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/ComponentController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/Http/Requests/StoreComponentRequest.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Requests/StoreComponentRequest.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Models/Component.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/Component.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Models/Element.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/Element.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Models/Form.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/Form.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Models/Unit.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/Unit.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/migrations/2025_05_08_133423_create_forms_table.php" beforeDir="false" afterPath="$PROJECT_DIR$/database/migrations/2025_05_08_133423_create_forms_table.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/migrations/2025_05_10_120732_create_component_element_table.php" beforeDir="false" afterPath="$PROJECT_DIR$/database/migrations/2025_05_10_120732_create_component_element_table.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/seeders/CreateFormSeeder.php" beforeDir="false" afterPath="$PROJECT_DIR$/database/seeders/CreateFormSeeder.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Http/Requests/UpdateComponentRequest.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Requests/UpdateComponentRequest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/migrations/2025_05_05_220459_create_elements_table.php" beforeDir="false" afterPath="$PROJECT_DIR$/database/migrations/2025_05_05_220459_create_elements_table.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/migrations/2025_05_08_133436_create_components_table.php" beforeDir="false" afterPath="$PROJECT_DIR$/database/migrations/2025_05_08_133436_create_components_table.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/resources/views/component/create.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/component/create.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/component/index.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/component/index.blade.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/web.php" beforeDir="false" afterPath="$PROJECT_DIR$/routes/web.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -182,7 +176,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../../xampp1/htdocs/Marketplace-app" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
@@ -215,7 +209,8 @@
       <workItem from="1746739528072" duration="24363000" />
       <workItem from="1746876969683" duration="26313000" />
       <workItem from="1746965524156" duration="30479000" />
-      <workItem from="1747059850622" duration="11056000" />
+      <workItem from="1747059850622" duration="12700000" />
+      <workItem from="1747084098932" duration="5621000" />
     </task>
     <servers />
   </component>
@@ -238,19 +233,9 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="php">
-          <url>file://$PROJECT_DIR$/database/migrations/2025_05_12_152323_form_unit_table.php</url>
-          <line>11</line>
-          <option name="timeStamp" value="3" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="php">
           <url>file://$PROJECT_DIR$/app/Http/Controllers/ComponentController.php</url>
-          <line>85</line>
+          <line>87</line>
           <option name="timeStamp" value="4" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="php">
-          <url>file://$PROJECT_DIR$/app/Http/Controllers/ComponentController.php</url>
-          <line>67</line>
-          <option name="timeStamp" value="5" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

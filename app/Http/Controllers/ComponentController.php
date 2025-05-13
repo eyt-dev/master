@@ -9,6 +9,7 @@ use App\Models\Component;
 use App\Models\Element;
 use App\Models\Form;
 use App\Models\Unit;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Session;
 
 class ComponentController extends Controller
@@ -33,7 +34,7 @@ class ComponentController extends Controller
                     return '<span class="text-white badge bg-' . $badge . '">' . $label . '</span>';
                 })
                 ->addColumn('unit', function ($row) {
-                    return $row->unit->name;
+                    return $row->unit->symbol;
                 })
                 ->addColumn('action', function ($row) {
                     return '<a class="edit-component btn btn-sm btn-success" data-path="' . route('component.edit', $row->id) . '" title="Edit" style="margin-right: 5px;">
@@ -56,7 +57,8 @@ class ComponentController extends Controller
      */
     public function create()
     {
-        return view('component.create', ['component' => null, 'forms' => Form::all(), 'units' => Unit::all(), 'elements' => Element::all()
+        return view('component.create', ['component' => null, 'forms' => Form::all(), 'units' => Unit::all()
+            , 'elements' => Element::where('is_selected',false)->get()
             , 'elementsUnit' => Unit::all()]);
     }
 
@@ -85,6 +87,14 @@ class ComponentController extends Controller
 
         foreach ($elements as $element) {
             if (isset($element['element_id'])) {
+
+                $elementModel = Element::find($element['element_id']);
+
+                if ($elementModel) {
+                    $elementModel->is_selected = true;
+                    $elementModel->save();
+                }
+
                 $syncData[$element['element_id']] = ['amount' => $element['amount'],
                     'element_unit_id' => $element['element_unit_id']];
             }
@@ -104,7 +114,7 @@ class ComponentController extends Controller
 
         $forms = Form::all();
         $units = Unit::all();
-        $elements = Element::all();
+        $elements = Element::where('is_selected',false)->get();
 
         $componentElementsJson = $component->elements->map(function ($element) {
             return [
@@ -157,6 +167,23 @@ class ComponentController extends Controller
         $units = $form->units;
 
         return response()->json($units);
+    }
+
+    public function checkCode(Request $request)
+    {
+        $code = $request->input('code');
+        $id = $request->input('id');
+
+        if ($id) {
+            $component = Component::find($id);
+            if ($component && $component->code == $code) {
+                return response()->json(false);
+            }
+        }
+
+        $exists = Component::where('code', $code)->exists();
+
+        return response()->json(!$exists);
     }
 
     /**

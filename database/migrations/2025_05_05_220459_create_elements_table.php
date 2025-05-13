@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('eu_code')->nullable();
             $table->string('synonym')->nullable();
             $table->string('attachment')->nullable();
+            $table->string('is_selected')->default(false);
             $table->timestamps();
         });
     }

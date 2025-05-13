@@ -170,12 +170,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('destroy/{element}', 'destroy')->name('element.destroy')->middleware('permission:delete.element');
     });
     Route::controller(ComponentController::class)->prefix('component')->group(function () {
+        Route::get('/getUnitByForm/{form}','getUnitByForm');
         Route::get('/', 'index')->name('component.index')->middleware('permission:view.component');
         Route::get('create', 'create')->name('component.create')->middleware('permission:create.component');
         Route::post('store', 'store')->name('component.store')->middleware('permission:create.component');
         Route::get('{component}/edit', 'edit')->name('component.edit')->middleware('permission:edit.component');
         Route::post('{component}', 'update')->name('component.update')->middleware('permission:edit.component');
         Route::get('destroy/{component}', 'destroy')->name('component.destroy')->middleware('permission:delete.component');
-        Route::get('/getUnitByForm/{form}','getUnitByForm');
+        Route::post('/check-code', [ComponentController::class, 'checkCode'])->name('components.check-code');
+
     });
 });

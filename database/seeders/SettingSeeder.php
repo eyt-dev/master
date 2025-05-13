@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Setting;
+use App\Models\Theme;
 
 class SettingSeeder extends Seeder
 {
@@ -13,7 +14,14 @@ class SettingSeeder extends Seeder
      */
     public function run(): void
     {
-        Setting::insert([
+        Theme::firstOrCreate(
+            ['id' => 1],
+            [
+                'name' => 'theme1',
+                'created_by' => 1
+            ]
+        );
+        Setting::create([
             'domain' => 'admin.eyt.app',
             'admin_domain' => 'https://admin.eyt.app/admin',
 
@@ -31,10 +39,12 @@ class SettingSeeder extends Seeder
             'secondary_button_text_color' => '#ffffff',
 
             'created_by' => 1,
-        ],
-        [
+            'theme' => 1,
+        ]);
+
+        Setting::create([
             'domain' => 'add2care.eyt.app',
-            'admin_domain' => 'http://add2care.eyt.app/admin',
+            'admin_domain' => 'https://add2care.eyt.app/admin',
 
             'dark_logo' => 'dark-logo.png',
             'light_logo' => 'light-logo.png',
@@ -49,7 +59,8 @@ class SettingSeeder extends Seeder
             'primary_button_text_color' => '#ffffff',
             'secondary_button_text_color' => '#ffffff',
 
-            'created_by' => 2,
+            'created_by' => 1,
+            'theme' => 1,
         ]);
     }
 }

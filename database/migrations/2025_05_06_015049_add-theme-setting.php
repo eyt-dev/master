@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Schema::create('themes', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->string('name');
-        //     $table->text('description')->nullable();
-        //     $table->foreignId('created_by')->constrained('admins')->onDelete('cascade');
-        //     $table->timestamps();
-        // });
+        Schema::create('themes', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->foreignId('created_by')->constrained('admins')->onDelete('cascade');
+            $table->timestamps();
+        });
 
         Schema::table('settings', function (Blueprint $table1) {
             // Add the theme column with default value 1

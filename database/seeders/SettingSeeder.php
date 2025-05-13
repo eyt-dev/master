@@ -59,7 +59,7 @@ class SettingSeeder extends Seeder
             'primary_button_text_color' => '#ffffff',
             'secondary_button_text_color' => '#ffffff',
 
-            'created_by' => 1,
+            'created_by' => 2,
             'theme' => 1,
         ]);
     }

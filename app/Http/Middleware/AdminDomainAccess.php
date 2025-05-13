@@ -18,7 +18,7 @@ class AdminDomainAccess
         $admin = $setting->creator;
         
         if (!$admin || (Auth::check() && Auth::id() !== $admin->id)) {
-             Auth::logout(); Auth::logout();
+            Auth::logout();
 
             //  // Invalidate session
             $request->session()->invalidate();

@@ -115,7 +115,7 @@ class CreatePermissionRoleSeeder extends Seeder
         $adminRole = Role::create(
             ['guard_name' => 'web', 'name' => 'Admin'],
         );
-        $adminRole->givePermissionTo(Permission::where("module",5)->get());
+        $adminRole->givePermissionTo(Permission::whereIn("module",[5,13])->get());
 
         Role::insert([
             ['guard_name' => 'web', 'name' => 'PublicVendor'],

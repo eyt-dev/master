@@ -22,7 +22,7 @@ class StoreComponentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => ['required','string', 'max:255','unique:components,code'],
+            'code' => ['required', 'string', 'max:255', 'unique:components,code'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'form' => ['required', 'exists:forms,id'],
@@ -31,8 +31,8 @@ class StoreComponentRequest extends FormRequest
 
             // elements array validation
             'elements' => ['required', 'array', 'min:1'],
-            //  'elements.*.element_id' => ['required', 'exists:elements,id'],
-            // 'elements.*.amount' => ['required', 'numeric'],
+           // 'elements.*.element_id' => ['required', 'exists:elements,id'],
+           // 'elements.*.amount' => ['required', 'numeric'],
         ];
     }
 }

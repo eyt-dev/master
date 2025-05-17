@@ -18,6 +18,7 @@ use App\Http\Controllers\CountryController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\ElementController;
 use App\Http\Controllers\ComponentController;
+use App\Http\Controllers\CompoPriceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +45,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('update/{id?}', [ProfileController::class, 'update'])->name('profile.update');
         Route::post('change-password/{id?}', [ProfileController::class, 'changePassword'])->name('profile.change-password');
     });
+
     Route::controller(AdminController::class)->prefix('admins')->group(function () {
         Route::get('/1', 'index')->name('admins.index')->middleware('permission:view.admin');
         Route::get('/2', 'index')->name('admins.index')->middleware('permission:view.public_vendor');;
@@ -54,6 +56,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{admin}', 'update')->name('admins.update');
         Route::get('destroy/{admin}', 'destroy')->name('admins.destroy');
     });
+
     Route::controller(RoleController::class)->prefix('role')->group(function () {
         Route::get('/', 'index')->name('role.index')->middleware('permission:view.role');
         Route::get('create', 'create')->name('role.create')->middleware('permission:create.role');
@@ -63,6 +66,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('{role}', 'destroy')->name('role.destroy')->middleware('permission:delete.role');
         Route::get('permission', 'assignPermissionList')->name('role.permission.index');
     });
+
     Route::controller(PermissionController::class)->prefix('permission')->group(function () {
         Route::get('/', 'index')->name('permission.index')->middleware('permission:view.permission');
         Route::get('create', 'create')->name('permission.create')->middleware('permission:create.permission');
@@ -73,10 +77,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('permission/delete', 'deleteSinglePermission')->name('permission.delete')->middleware('permission:delete.permission');
         Route::post('module/store', 'moduleStore')->name('permission.module');
     });
+
     Route::controller(ModuleController::class)->prefix('module')->group(function () {
         Route::get('create', 'create')->name('module.create');
         Route::post('store', 'store')->name('module.store');
     });
+
     Route::controller(GameController::class)->prefix('game')->group(function () {
         Route::get('/', 'index')->name('game.index')->middleware('permission:view.game');
         Route::get('create', 'create')->name('game.create')->middleware('permission:create.game');
@@ -86,6 +92,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('{game}', 'destroy')->name('game.destroy')->middleware('permission:delete.game');
         Route::get('permission', 'assignPermissionList')->name('game.permission.index');
     });
+
     Route::controller(WheelController::class)->prefix('wheel')->group(function () {
         Route::get('/', 'index')->name('wheel.index')->middleware('permission:view.wheel');
         Route::get('create', 'create')->name('wheel.create')->middleware('permission:create.wheel');
@@ -96,6 +103,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('permission', 'assignPermissionList')->name('wheel.permission.index');
         Route::get('/getClipsByGame', 'getClipsByGame')->name('getClipsByGame');
     });
+
     Route::controller(StoreViewController::class)->prefix('store_view')->group(function () {
         Route::get('/', 'index')->name('store_view.index')->middleware('permission:view.store_view');
         Route::get('create', 'create')->name('store_view.create')->middleware('permission:create.store_view');
@@ -104,6 +112,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{store_view}', 'update')->name('store_view.update')->middleware('permission:edit.store_view');
         Route::get('destroy/{admin}', 'destroy')->name('store_view.destroy')->middleware('permission:delete.store_view');
     });
+
     Route::controller(CategoryController::class)->prefix('category')->group(function () {
         Route::get('/', 'index')->name('category.index')->middleware('permission:view.category');
         Route::get('create', 'create')->name('category.create')->middleware('permission:create.category');
@@ -112,6 +121,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{category}', 'update')->name('category.update')->middleware('permission:edit.category');
         Route::get('destroy/{admin}', 'destroy')->name('category.destroy')->middleware('permission:delete.category');
     });
+
     Route::controller(PageController::class)->prefix('page')->group(function () {
         Route::get('/', 'index')->name('page.index')->middleware('permission:view.page');
         Route::get('create', 'create')->name('page.create')->middleware('permission:create.page');
@@ -120,6 +130,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{page}', 'update')->name('page.update')->middleware('permission:edit.page');
         Route::get('destroy/{admin}', 'destroy')->name('page.destroy')->middleware('permission:delete.page');
     });
+
     Route::controller(SettingController::class)->prefix('setting')->group(function () {
         Route::get('/', 'index')->name('setting.index')->middleware('permission:view.setting');
         Route::get('create/{admin?}', 'create')->name('setting.create')->middleware('permission:create.setting');
@@ -129,6 +140,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('destroy/{admin}', 'destroy')->name('setting.destroy')->middleware('permission:delete.setting');
         Route::get('/check-setting/{created_by}', 'checkSetting')->name('setting.checkSetting');
     });
+
     Route::controller(SlideController::class)->prefix('slide')->group(function () {
         Route::get('/', 'index')->name('slide.index')->middleware('permission:view.slide');
         Route::get('create', 'create')->name('slide.create')->middleware('permission:create.slide');
@@ -137,6 +149,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{slide}', 'update')->name('slide.update')->middleware('permission:edit.slide');
         Route::get('destroy/{admin}', 'destroy')->name('slide.destroy')->middleware('permission:delete.slide');
     });
+
     Route::controller(TestimonialController::class)->prefix('testimonial')->group(function () {
         Route::get('/', 'index')->name('testimonial.index')->middleware('permission:view.testimonial');
         Route::get('create', 'create')->name('testimonial.create')->middleware('permission:create.testimonial');
@@ -145,6 +158,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{testimonial}', 'update')->name('testimonial.update')->middleware('permission:edit.testimonial');
         Route::get('destroy/{admin}', 'destroy')->name('testimonial.destroy')->middleware('permission:delete.testimonial');
     });
+
     Route::controller(CountryController::class)->prefix('country')->group(function () {
         Route::get('/', 'index')->name('country.index')->middleware('permission:view.country');
         Route::get('create', 'create')->name('country.create')->middleware('permission:create.country');
@@ -153,6 +167,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{country}', 'update')->name('country.update')->middleware('permission:edit.country');
         Route::get('destroy/{country}', 'destroy')->name('country.destroy')->middleware('permission:delete.country');
     });
+
     Route::controller(UnitController::class)->prefix('unit')->group(function () {
         Route::get('/', 'index')->name('unit.index')->middleware('permission:view.unit');
         Route::get('create', 'create')->name('unit.create')->middleware('permission:create.unit');
@@ -161,6 +176,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{unit}', 'update')->name('unit.update')->middleware('permission:edit.unit');
         Route::get('destroy/{unit}', 'destroy')->name('unit.destroy')->middleware('permission:delete.unit');
     });
+
     Route::controller(ElementController::class)->prefix('element')->group(function () {
         Route::get('/', 'index')->name('element.index')->middleware('permission:view.element');
         Route::get('create', 'create')->name('element.create')->middleware('permission:create.element');
@@ -169,6 +185,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{element}', 'update')->name('element.update')->middleware('permission:edit.element');
         Route::get('destroy/{element}', 'destroy')->name('element.destroy')->middleware('permission:delete.element');
     });
+
     Route::controller(ComponentController::class)->prefix('component')->group(function () {
         Route::get('/getUnitByForm/{form}','getUnitByForm');
         Route::get('/', 'index')->name('component.index')->middleware('permission:view.component');
@@ -178,6 +195,17 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{component}', 'update')->name('component.update')->middleware('permission:edit.component');
         Route::get('destroy/{component}', 'destroy')->name('component.destroy')->middleware('permission:delete.component');
         Route::post('/check-code', [ComponentController::class, 'checkCode'])->name('components.check-code');
-
     });
+
+    Route::controller(CompoPriceController::class)->prefix('compo_price')->group(function () {
+        Route::get('/', 'index')->name('compo_price.index')->middleware('permission:view.compo_price');
+        Route::get('/getCompoPrices', 'getCompoPrices')->name('compo_price.get');
+        Route::get('create', 'create')->name('compo_price.create')->middleware('permission:create.compo_price');
+        Route::post('store', 'store')->name('compo_price.store')->middleware('permission:create.compo_price');
+        Route::get('{compo_price}/edit', 'edit')->name('compo_price.edit')->middleware('permission:edit.compo_price');
+        Route::post('{compo_price}', 'update')->name('compo_price.update')->middleware('permission:edit.compo_price');
+        Route::get('destroy/{compo_price}', 'destroy')->name('compo_price.destroy')->middleware('permission:delete.compo_price');
+        Route::get('/check-compo-price-unique', [CompoPriceController::class, 'checkUnique']);
+    });
+
 });

@@ -33,3 +33,5 @@
 
 		<script src="{{URL::asset('assets/js/select2.min.js')}}"></script>
 
+		<script src="{{asset('assets/js/bootstrap-datepicker.min.js')}}"></script>
+

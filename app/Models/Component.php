@@ -24,8 +24,12 @@ class Component extends Model
     public function elements()
     {
         return $this->belongsToMany(Element::class)
-            ->withPivot(['amount','element_unit_id']);
+            ->withPivot(['amount', 'element_unit_id']);
     }
 
+    public function compoPrices()
+    {
+        return $this->hasMany(CompoPrice::class);
+    }
 
 }

@@ -3,12 +3,12 @@
   <component name="ChangeListManager">
     <list default="true" id="7889e186-370a-4583-8d4f-7122f8f20607" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/ComponentController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/ComponentController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/Http/Requests/StoreComponentRequest.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Requests/StoreComponentRequest.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Http/Requests/UpdateComponentRequest.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Requests/UpdateComponentRequest.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/migrations/2025_05_05_220459_create_elements_table.php" beforeDir="false" afterPath="$PROJECT_DIR$/database/migrations/2025_05_05_220459_create_elements_table.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/migrations/2025_05_08_133436_create_components_table.php" beforeDir="false" afterPath="$PROJECT_DIR$/database/migrations/2025_05_08_133436_create_components_table.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/component/create.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/component/create.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Models/Component.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/Component.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/seeders/CreatePermissionRoleSeeder.php" beforeDir="false" afterPath="$PROJECT_DIR$/database/seeders/CreatePermissionRoleSeeder.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/layouts/aside-menu.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/layouts/aside-menu.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/layouts/footer-scripts.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/layouts/footer-scripts.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/layouts/head.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/layouts/head.blade.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/web.php" beforeDir="false" afterPath="$PROJECT_DIR$/routes/web.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -182,11 +182,11 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\xampp\htdocs\master1\master\public\assets\css" />
+      <recent name="C:\xampp\htdocs\master1\master\public\assets\js" />
+      <recent name="C:\xampp\htdocs\master1\master\resources\views\compo_price" />
       <recent name="C:\xampp\htdocs\master1\master\resources\views\animal_nutritions" />
       <recent name="C:\xampp\htdocs\master\database\seeders" />
-      <recent name="C:\xampp\htdocs\master\resources\views\element" />
-      <recent name="C:\xampp\htdocs\master\resources\views\unit" />
-      <recent name="C:\xampp\htdocs\master\resources\views\country" />
     </key>
   </component>
   <component name="RunManager">
@@ -210,7 +210,11 @@
       <workItem from="1746876969683" duration="26313000" />
       <workItem from="1746965524156" duration="30479000" />
       <workItem from="1747059850622" duration="12700000" />
-      <workItem from="1747084098932" duration="5621000" />
+      <workItem from="1747084098932" duration="7191000" />
+      <workItem from="1747142333155" duration="25672000" />
+      <workItem from="1747324259050" duration="9421000" />
+      <workItem from="1747384674211" duration="530000" />
+      <workItem from="1747385945551" duration="15541000" />
     </task>
     <servers />
   </component>
@@ -233,9 +237,34 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/resources/views/compo_price/edit.blade.php</url>
+          <line>10</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
           <url>file://$PROJECT_DIR$/app/Http/Controllers/ComponentController.php</url>
-          <line>87</line>
-          <option name="timeStamp" value="4" />
+          <line>69</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/app/Http/Controllers/CompoPriceController.php</url>
+          <line>146</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/app/Http/Controllers/CompoPriceController.php</url>
+          <line>61</line>
+          <option name="timeStamp" value="6" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/app/Http/Controllers/CompoPriceController.php</url>
+          <line>59</line>
+          <option name="timeStamp" value="7" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/app/Http/Controllers/CompoPriceController.php</url>
+          <line>63</line>
+          <option name="timeStamp" value="8" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

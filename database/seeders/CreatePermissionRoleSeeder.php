@@ -127,6 +127,11 @@ class CreatePermissionRoleSeeder extends Seeder
             ['name' => 'edit.component', 'guard_name' => 'web', 'module' => 19, 'created_at' => $date, 'updated_at' => $date],
             ['name' => 'delete.component', 'guard_name' => 'web', 'module' => 19, 'created_at' => $date, 'updated_at' => $date],
             ['name' => 'view.component', 'guard_name' => 'web', 'module' => 19, 'created_at' => $date, 'updated_at' => $date],
+
+            ['name' => 'create.compo_price', 'guard_name' => 'web', 'module' => 20, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'edit.compo_price', 'guard_name' => 'web', 'module' => 20, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'delete.compo_price', 'guard_name' => 'web', 'module' => 20, 'created_at' => $date, 'updated_at' => $date],
+            ['name' => 'view.compo_price', 'guard_name' => 'web', 'module' => 20, 'created_at' => $date, 'updated_at' => $date],
         ];
 
         Module::insert($module);

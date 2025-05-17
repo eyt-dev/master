@@ -32,4 +32,6 @@
 
 <link id="theme" href="{{asset('assets/css/select2.min.css')}}" rel="stylesheet" type="text/css"/>
 
+<link id="theme" href="{{asset('assets/css/bootstrap-datepicker.min.css')}}" rel="stylesheet" type="text/css"/>
+
 @yield('css')

@@ -18,7 +18,7 @@ class AdminDomainAccess
         $setting = Setting::where('domain', $domain)
             ->orWhere('admin_domain', $domain)
             ->first();
-
+        
         if (!$setting) {
             return redirect()->away(config('app.url'))->with('error', 'Unauthorized domain.');
         }
@@ -34,9 +34,10 @@ class AdminDomainAccess
             return redirect()->away(config('app.url'))->with('error', 'Unauthorized domain access.');
         }
 
-        // Get the first segment from URL (site1 in /site1/dashboard)
+        // Get the first segment from URL (site1 in /site1/backend/dashboard)
         $siteSlug = $request->segment(1);
 
+        //TODO: pending to test this scenario
         if($siteSlug != 'backend') {
             // Check if this is a valid admin username
             $siteIsValidAdmin = Admin::where('username', $siteSlug)->exists();

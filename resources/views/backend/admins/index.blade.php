@@ -126,7 +126,7 @@
         $(document).on('click', '#add_new', function() {
             var adminType1 = @json(request('type') ?? 1);
             $.ajax({
-                url: "{{ route('admins.create') }}/" + adminType1,
+                url: "{{ route('admins.create', ['site' => request()->get('site', $siteSlug)]) }}/" + adminType1,
                 type: "GET",
                 success: function(response) {
                     console.log(response);
@@ -156,7 +156,7 @@
             serverSide: true,
             responsive: true,
             ajax: {
-                url: "{{ route('admins.index') }}",
+                url: "{{ route('admins.index', ['site' => request()->get('site', $siteSlug)]) }}",
                 data: function (d) {
                     d.type = adminType; // Pass type dynamically
                 }
@@ -198,6 +198,13 @@
         
         $(document).on('click', '.delete-admin', function() {
             var id = $(this).attr("data-id");
+          
+            const siteSlug = "{{ request()->get('site', $siteSlug) }}";
+            const destroyUrlTemplate = "{{ route('admins.destroy', ['site' => '__SITE__', 'admin' => '__ID__']) }}";
+            const destroyUrl = destroyUrlTemplate
+                .replace('__SITE__', siteSlug)
+                .replace('__ID__', id);
+
             swal({
                 title: "Are you sure?",
                 text: "Once deleted, you will not be able to recover this admin!",
@@ -212,7 +219,7 @@
                     $.ajax({
                         type: "get",
                         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        url: "{{ route('admins.destroy', ':id') }}".replace(':id', id),
+                        url: destroyUrl,
                         success: function(response) {
                             swal({
                                 title: response.msg

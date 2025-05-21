@@ -12,12 +12,11 @@ use Illuminate\Support\Facades\Validator;
 
 class ProfileController extends Controller
 {
-    public function index($id = null)
+    public function index($siteUrl, $id = null)
     {
-        $admin_id = $id == null ? Auth::id() : $id;
+        $admin_id = $id ?? Auth::id();
         $admin = Admin::find( $admin_id );
-
-        return view('profile.index', compact('admin'));
+        return view('backend.profile.index', compact('admin'));
     }
 
     public function update(Request $request, $id = null)

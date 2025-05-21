@@ -48,13 +48,13 @@ class SlideController extends Controller
                 ->make(true);
         }
 
-        return view('slide.index');
+        return view('backend.slide.index');
     }
 
     public function create()
     {
         $store_views = StoreView::all();
-        return view('slide.create', compact('store_views'));
+        return view('backend.slide.create', compact('store_views'));
     }
 
     public function store(Request $request)
@@ -96,7 +96,7 @@ class SlideController extends Controller
     {
         $slide = Slide::findOrFail($id);
         $store_views = StoreView::all();
-        return view('slide.create', compact('slide', 'store_views'));
+        return view('backend.slide.create', compact('slide', 'store_views'));
     }
 
     public function update(Request $request, $id)

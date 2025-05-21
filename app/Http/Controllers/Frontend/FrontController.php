@@ -13,7 +13,9 @@ class FrontController extends Controller
         // return view('frontend.home', ['data' => $data]);
 
         $domain = request()->getHost();
-        $setting = Setting::where('domain', $domain)->with('themes')->first();//admin_domain
+        $setting = Setting::where('domain', $domain)
+            ->orWhere('admin_domain', $domain)    
+            ->with('themes')->first();//admin_domain
         $admin = $setting->creator;
 
         // Load appropriate theme (stored in DB or config)

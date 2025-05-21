@@ -37,7 +37,7 @@ class StoreViewController extends Controller
                 ->make(true);
         }
 
-        return view('store_view.index', ['regions' => $regions]);
+        return view('backend.store_view.index', ['regions' => $regions]);
     }
 
     public function create()
@@ -46,7 +46,7 @@ class StoreViewController extends Controller
             return [$country->id => "{$country->name} / {$country->region}"];
         });
 
-        return view('store_view.create', ['regions' => $regions]);
+        return view('backend.store_view.create', ['regions' => $regions]);
     }
 
     public function store(Request $request)
@@ -90,7 +90,7 @@ class StoreViewController extends Controller
             return redirect()->route('store_view.index');
         }
        
-        return view('store_view.create', ['store_view' => $store_view, 'regions' => $regions]);
+        return view('backend.store_view.create', ['store_view' => $store_view, 'regions' => $regions]);
     }
 
     public function update(Request $request, $id)

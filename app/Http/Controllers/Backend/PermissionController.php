@@ -31,7 +31,7 @@ class PermissionController extends Controller
             ->addIndexColumn()
             ->make(true);
         }
-        return view('permission.index');
+        return view('backend.permission.index');
     }
     /**
      * Show the form for creating a new resource.
@@ -43,7 +43,7 @@ class PermissionController extends Controller
         $moduleList = Module::all();
         $permission = Permission::whereNull('id')->get();
        
-        return view('permission.create', ['permission' => $permission, 'moduleList' => $moduleList]);
+        return view('backend.permission.create', ['permission' => $permission, 'moduleList' => $moduleList]);
     }
     /**
      * Store a newly created resource in storage.
@@ -103,10 +103,10 @@ class PermissionController extends Controller
     {
         $moduleList = Module::all();
         if(empty($permission)){
-            return view('permission.index');
+            return view('backend.permission.index');
         }
         $permission = Permission::where('module',$permission->module)->get();
-        return view('permission.edit', ['permission' => $permission, 'moduleList' => $moduleList]);
+        return view('backend.permission.edit', ['permission' => $permission, 'moduleList' => $moduleList]);
     }
     /**
      * Update the specified resource in storage.

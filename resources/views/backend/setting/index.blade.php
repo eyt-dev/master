@@ -24,7 +24,7 @@
         </div>
         <div class="page-rightheader">
             <div class="btn btn-list">
-                <a href="{{route('setting.create')}}" id="add_new" class="btn btn-info" data-toggle="tooltip" title="Add new">
+                <a href="{{route('setting.create', ['site' => $siteSlug])}}" id="add_new" class="btn btn-info" data-toggle="tooltip" title="Add new">
                     <i class="fe fe-plus mr-1"></i> Add new 
                 </a>
             </div>
@@ -131,7 +131,7 @@
             processing: true,
             serverSide: true,
             responsive: true,
-            ajax: "{{ route('setting.index') }}",
+            ajax: "{{ route('setting.index', ['site' => $siteSlug]) }}",
             columns: [
                 { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                 { data: 'domain', name: 'domain' },
@@ -156,7 +156,7 @@
                     $.ajax({
                         type: "GET",
                         headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                        url: "{{ route('setting.destroy', ':id') }}".replace(':id', id),
+                        url: "{{ route('setting.destroy', ['site' => $siteSlug, 'setting' => ':id']) }}".replace(':id', id),
                         success: function(response) {
                             swal({ title: response.msg }, function(result) {
                                 location.reload();

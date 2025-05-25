@@ -13,7 +13,7 @@
     @endif
 
     <h1>Create Game</h1>
-    <form action="{{ route('game.store') }}" method="POST" enctype="multipart/form-data" novalidate class="needs-validation">
+    <form action="{{ route('game.store', ['site' => $siteSlug]) }}" method="POST" enctype="multipart/form-data" novalidate class="needs-validation">
         @csrf
 
         <!-- Game Information -->

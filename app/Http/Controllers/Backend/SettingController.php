@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 
 class SettingController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, $siteUrl)
     {
         // if (auth()->user()->role !== 'SuperAdmin') {
             // Redirect to create view with their setting (or a blank form if none exists)
@@ -58,7 +58,7 @@ class SettingController extends Controller
             $created_by = auth()->user()->id;
             $setting = Setting::where('created_by', $created_by)->first();
             if ($setting) {
-                return redirect()->route('setting.edit', $setting->getKey());
+                return redirect()->route('setting.edit', ['site' => request()->segment(1), 'setting' => $setting->getKey()]);
             }
         }
         
@@ -92,8 +92,8 @@ class SettingController extends Controller
         }        
 
         $request->validate([
-            'domain' => 'required|nullable|url',
-            'admin_domain' => 'required|nullable|url',
+            'domain' => 'required|nullable',
+            'admin_domain' => 'required|nullable',
             'created_by' => 'required',
 
             'dark_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
@@ -120,16 +120,16 @@ class SettingController extends Controller
         $data["admin_domain"] = parse_url($request->admin_domain, PHP_URL_HOST);
         Setting::create($data);
         Session::flash('successMsg', 'Settings saved successfully.');
-        return redirect()->route('setting.index');
+        return redirect()->route('setting.index', ['site' => request()->segment(1)]);
     }    
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $siteUrl, $id)
     {
         $setting = Setting::find($id);
 
         $request->validate([
-            'domain' => 'required|nullable|url',
-            'admin_domain' => 'required|nullable|url',
+            'domain' => 'required|nullable',
+            'admin_domain' => 'required|nullable',
 
             'dark_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'light_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
@@ -160,12 +160,10 @@ class SettingController extends Controller
                 $data[$field] = $setting->$field;
             }
         }
-        $data["domain"] = parse_url($request->domain, PHP_URL_HOST);
-        $data["admin_domain"] = parse_url($request->admin_domain, PHP_URL_HOST);
         $setting->update($data);
 
         Session::flash('successMsg', 'Settings updated successfully.');
-        return redirect()->route('setting.index');
+        return redirect()->route('setting.index', ['site' => request()->segment(1)]);
     }
 
     public function destroy()

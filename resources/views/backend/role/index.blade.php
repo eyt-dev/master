@@ -79,7 +79,7 @@
             var table = $('#role-tabel').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('role.index') }}",
+                ajax: "{{ route('role.index', ['site' => $siteSlug]) }}",
                 columns: [
                     {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
                     {data: 'name', name: 'name'},
@@ -91,7 +91,7 @@
 
             $('#add_new').on('click', function () {
                 $.ajax({
-                    url: "{{ route('role.create') }}",
+                    url: "{{ route('role.create', ['site' => $siteSlug]) }}",
                     success: function (response) {
                         $(".modal-body").html(response);
                         $(".modal-title").html("Add Role");
@@ -147,7 +147,7 @@
                     if (willDelete) {
                         $.ajax({
                             type: "DELETE",
-                            url: "{{ route('role.destroy', ':id') }}".replace(':id', id),
+                            url: "{{ route('role.destroy', ['site' => $siteSlug, 'role' => ':id']) }}".replace(':id', id),
                             headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                             success: function(response) {
                                 swal({

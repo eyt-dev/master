@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Session;
 
 class SlideController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, $siteUrl)
     {
         if ($request->ajax()) {
             $data = Slide::with('storeView')
@@ -40,7 +40,7 @@ class SlideController extends Controller
                     }
                 })
                 ->addColumn('action', function($row) {
-                    return '<a class="edit-slide btn btn-sm btn-success" data-path="'.route('slide.edit', $row->id).'" title="Edit"><i class="fa fa-edit"></i></a>'
+                    return '<a class="edit-slide btn btn-sm btn-success" data-path="'.route('slide.edit', ['site' => request()->segment(1), 'slide' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
                          .'<a class="delete-slide btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
@@ -51,13 +51,13 @@ class SlideController extends Controller
         return view('backend.slide.index');
     }
 
-    public function create()
+    public function create($siteUrl)
     {
         $store_views = StoreView::all();
         return view('backend.slide.create', compact('store_views'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, $siteUrl)
     {
         $request->validate([
             'store_view_id' => 'required',
@@ -89,17 +89,17 @@ class SlideController extends Controller
         Slide::create($slideData);
 
         Session::flash('successMsg', 'Slide created successfully.');
-        return redirect()->route('slide.index');
+        return redirect()->route('slide.index', ['site' => request()->segment(1)]);
     }
 
-    public function edit($id)
+    public function edit($siteUrl, $id)
     {
         $slide = Slide::findOrFail($id);
         $store_views = StoreView::all();
         return view('backend.slide.create', compact('slide', 'store_views'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $siteUrl, $id)
     {
         $request->validate([
             'store_view_id' => 'required',
@@ -141,10 +141,10 @@ class SlideController extends Controller
         ]);
 
         Session::flash('successMsg', 'Slide updated successfully.');
-        return redirect()->route('slide.index');
+        return redirect()->route('slide.index', ['site' => request()->segment(1)]);
     }
 
-    public function destroy($id)
+    public function destroy($siteUrl, $id)
     {
         $slide = Slide::findOrFail($id);
         $slide->delete();

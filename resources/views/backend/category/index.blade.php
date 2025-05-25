@@ -89,7 +89,7 @@
     <script>
         $(document).on('click', '#add_new', function() {
             $.ajax({
-                url: "{{ route('category.create') }}",
+                url: "{{ route('category.create', ['site' => $siteSlug]) }}",
                 type: "GET",
                 success: function(response) {
                     $(".modal-body").html(response);
@@ -117,7 +117,7 @@
             processing: true,
             serverSide: true,
             responsive: true,
-            ajax: "{{ route('category.index') }}",
+            ajax: "{{ route('category.index', ['site' => $siteSlug]) }}",
             columns: [
                 { data: 'id', name: 'id' },
                 { data: 'store_view', name: 'store_view' },
@@ -145,7 +145,7 @@
                     $.ajax({
                         type: "get",
                         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        url: "{{ route('category.destroy', ':id') }}".replace(':id', id),
+                        url: "{{ route('category.destroy', ['site' => $siteSlug, 'category' => ':id']) }}".replace(':id', id),
                         success: function(response) {
                             swal({
                                 title: response.msg

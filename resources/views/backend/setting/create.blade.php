@@ -88,7 +88,7 @@
                                             <div class="col-sm-6 col-md-6">
                                                 <div class="form-group">
                                                     <label for="domain" class="form-label">Domain <span class="text-red">*</span></label>
-                                                    <input type="url" class="form-control" name="domain" id="domain" placeholder="Website Domain"
+                                                    <input type="text" class="form-control" name="domain" id="domain" placeholder="Website Domain"
                                                         value="{{ old('domain', $setting->domain ?? '') }}" required="" />
                                                     @error('domain')
                                                         <label id="domain-error" class="error" for="domain">{{ $message }}</label>
@@ -98,7 +98,7 @@
                                             <div class="col-sm-6 col-md-6">
                                                 <div class="form-group">
                                                     <label for="admin_domain" class="form-label">Admin Domain <span class="text-red">*</span></label>
-                                                    <input type="url" class="form-control" name="admin_domain" id="admin_domain" placeholder="Website Admin Domain"
+                                                    <input type="text" class="form-control" name="admin_domain" id="admin_domain" placeholder="Website Admin Domain"
                                                         value="{{ old('admin_domain', $setting->admin_domain ?? '') }}" required="" />
                                                     @error('admin_domain')
                                                         <label id="admin_domain-error" class="error" for="admin_domain">{{ $message }}</label>

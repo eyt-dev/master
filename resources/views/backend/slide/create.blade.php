@@ -1,5 +1,5 @@
 <form 
-    action="{{ isset($slide) && $slide->id ? route('slide.update', $slide->id) : route('slide.store') }}" 
+    action="{{ isset($slide) && $slide->id ? route('slide.update', ['site' => $siteSlug, 'slide'=> $slide->id]) : route('slide.store', ['site' => $siteSlug]) }}" 
     method="POST" 
     id="slide_form"
     novalidate=""
@@ -142,6 +142,6 @@
 
     <div class="card-footer">
         <button class="btn btn-primary" type="submit">Save</button>
-        <a href="{{ route('slide.index') }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('slide.index', ['site' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>

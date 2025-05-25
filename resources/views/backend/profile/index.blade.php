@@ -25,7 +25,7 @@
                 <div class="tab-content">
                     <div class="tab-pane active" id="myProfile">
                         <div class="card">
-                            <form action="{{ route('profile.update', $admin->id) }}" method="POST" id="editProfile">
+                            <form action="{{ route('profile.update', ['site' => $siteSlug, 'id' => $admin->id]) }}" method="POST" id="editProfile">
                                 @csrf
                                 <div class="card-header">
                                     <div class="card-title">Edit Profile</div>
@@ -67,7 +67,7 @@
                             </form>
                         </div>
                         <div class="card">
-                            <form action="{{ route('profile.change-password', $admin->id) }}" method="POST"
+                            <form action="{{ route('profile.change-password', ['site' => $siteSlug, 'id' => $admin->id]) }}" method="POST"
                                 id="changePasswordForm">
                                 @csrf
                                 <div class="card-header">

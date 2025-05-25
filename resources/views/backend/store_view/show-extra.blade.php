@@ -12,7 +12,7 @@
                         Back
                     </a>
                     @can('store_view.edit')
-                        <a class="btn btn-primary float-right" href="{{ route('store_view.edit', $category->id) }}">
+                        <a class="btn btn-primary float-right" href="{{ route('store_view.edit', ['site' => $siteSlug, 'category' => $category->id]) }}">
                             Edit
                         </a>
                     @endcan

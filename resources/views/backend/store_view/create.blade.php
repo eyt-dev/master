@@ -1,5 +1,5 @@
 <form 
-    action="{{ isset($store_view) && $store_view->id ? route('store_view.update', $store_view->id) : route('store_view.store') }}" 
+    action="{{ isset($store_view) && $store_view->id ? route('store_view.update', ['site' => $siteSlug, 'store_view' => $store_view->id]) : route('store_view.store', ['site' => $siteSlug]) }}" 
     method="POST" 
     id="store_view_form"
     novalidate=""
@@ -101,6 +101,6 @@
 
     <div class="card-footer">
         <button class="btn btn-primary" type="submit">Save</button>
-        <a href="{{ route('store_view.index') }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('store_view.index', ['site' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>

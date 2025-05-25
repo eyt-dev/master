@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 class ModuleController extends Controller
 {
     // Store a new module
-    public function store(Request $request)
+    public function store(Request $request, $siteUrl)
     {
         // Validate the request
         $request->validate([
@@ -26,7 +26,7 @@ class ModuleController extends Controller
         ]);
     }
 
-    public function create()
+    public function create($siteUrl)
     {
         return view('backend.permission.module');
     }

@@ -12,7 +12,7 @@
         </div>
     @endif
     <h1>Edit Game</h1>
-    <form action="{{ route('game.update', $game->id) }}" method="POST" enctype="multipart/form-data" novalidate class="needs-validation">
+    <form action="{{ route('game.update', ['site' => $siteSlug, 'game' => $game->id]) }}" method="POST" enctype="multipart/form-data" novalidate class="needs-validation">
         @csrf
         {{-- Uncomment if you are using PUT method via hidden _method field --}}
         {{-- @method('PUT') --}}

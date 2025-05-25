@@ -18,40 +18,45 @@ class AdminDomainAccess
         $setting = Setting::where('domain', $domain)
             ->orWhere('admin_domain', $domain)
             ->first();
-        
+        // dump($setting);
+
         if (!$setting) {
             return redirect()->away(config('app.url'))->with('error', 'Unauthorized domain.');
         }
 
         $admin = $setting->creator;
+        $siteSlug = $request->segment(1);
+        // dump($siteSlug);
+
+        $notValid = 0;
+        View::share('siteSlug', $siteSlug);
+        $request->attributes->set('site', $siteSlug);
+        $siteIsValidAdmin = Admin::where('username', $siteSlug)->first();
+        // dd($siteIsValidAdmin->id, $admin);
+
+        if($siteSlug != 'backend') {
+
+            if($admin->getRoleNames()->first() == 'SuperAdmin' && !$siteIsValidAdmin && $siteIsValidAdmin->id != $admin) {
+                $notValid = 1;
+            } 
+            // elseif($admin->getRoleNames()->first() != 'SuperAdmin') {
+                // setting-> domain --- if not superadmin domain and the request parameter of any username condition
+            // }
+        }
 
         // Ensure current user matches the creator/admin
-        if (!$admin || (Auth::check() && Auth::id() !== $admin->id)) {
+        if (
+            !$admin 
+            || (Auth::check() && Auth::id() !== $admin->id) 
+            || $notValid == 1
+        ) {
+            // dd('go  to home');
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
             return redirect()->away(config('app.url'))->with('error', 'Unauthorized domain access.');
-        }
-
-        // Get the first segment from URL (site1 in /site1/backend/dashboard)
-        $siteSlug = $request->segment(1);
-
-        //TODO: pending to test this scenario
-        if($siteSlug != 'backend') {
-            // Check if this is a valid admin username
-            $siteIsValidAdmin = Admin::where('username', $siteSlug)->exists();
-
-            // If not a valid admin username, redirect to /backend/... but preserve the rest of the path
-            if (!$siteIsValidAdmin) {
-                $pathAfterSite = implode('/', array_slice($request->segments(), 1)); // skip siteSlug
-                return redirect("/backend/" . $pathAfterSite);
-            }
-        }
-
-        // Share site with views if needed
-        View::share('siteSlug', $siteSlug);
-        $request->attributes->set('site', $siteSlug);
+        }                
 
         return $next($request);
     }

@@ -1,5 +1,5 @@
 <form 
-    action="{{ isset($page) ? route('page.update', $page->id) : route('page.store') }}" 
+    action="{{ isset($page) ? route('page.update', ['site' => $siteSlug, 'page' => $page->id]) : route('page.store', ['site' => $siteSlug]) }}" 
     method="POST" 
     id="page_form"
     class="needs-validation" 
@@ -82,6 +82,6 @@
 
     <div class="card-footer">
         <button class="btn btn-primary" type="submit">Save</button>
-        <a href="{{ route('page.index') }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('page.index', ['site' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class PageController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, $siteUrl)
     {
         if ($request->ajax()) {
             $data = Page::with('category')
@@ -29,7 +29,7 @@ class PageController extends Controller
                     return $row->creator->name ?? 'N/A';
                 })
                 ->addColumn('action', function($row) {
-                    return '<a class="edit-page btn btn-sm btn-success" data-path="'.route('page.edit', $row->id).'" title="Edit"><i class="fa fa-edit"></i></a>'
+                    return '<a class="edit-page btn btn-sm btn-success" data-path="'.route('page.edit', ['site' => request()->segment(1), 'page' =>  $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
                          .'<a class="delete-page btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
@@ -39,12 +39,12 @@ class PageController extends Controller
         return view('backend.page.index', ['categories' => Category::all()]);
     }
 
-    public function create()
+    public function create($siteUrl)
     {
         return view('backend.page.create', ['categories' => Category::all()]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, $siteUrl)
     {
         $request->validate([
             'category_id' => 'required',
@@ -65,16 +65,16 @@ class PageController extends Controller
         ]);
 
         Session::flash('successMsg', 'Page created successfully.');
-        return redirect()->route('page.index');
+        return redirect()->route('page.index', ['site' => request()->segment(1)]);
     }
 
-    public function edit($id)
+    public function edit($siteUrl, $id)
     {
         $page = Page::findOrFail($id);
         return view('backend.page.create', ['page' => $page, 'categories' => Category::all()]);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $siteUrl, $id)
     {
         $request->validate([
             'category_id' => 'required',
@@ -88,10 +88,10 @@ class PageController extends Controller
         $page->update($request->all());
 
         Session::flash('successMsg', 'Page updated successfully.');
-        return redirect()->route('page.index');
+        return redirect()->route('page.index', ['site' => request()->segment(1)]);
     }
 
-    public function destroy($id)
+    public function destroy($siteUrl, $id)
     {
         Page::findOrFail($id)->delete();
         return response()->json(['msg' => 'Deleted successfully!']);

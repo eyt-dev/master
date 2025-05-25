@@ -17,7 +17,7 @@
         </div>
     @endif
     <h2>Edit Wheel</h2>
-    <form action="{{ route('wheel.update', $wheel->id) }}" method="POST" novalidate class="needs-validation">
+    <form action="{{ route('wheel.update', ['site' => $siteSlug, 'wheel' => $wheel->id]) }}" method="POST" novalidate class="needs-validation">
         @csrf
        
         <!-- Game Selection Dropdown -->
@@ -94,7 +94,7 @@ $(document).ready(function() {
 
     function fetchClips(gameId) {
         $.ajax({
-            url: "{{ route('getClipsByGame') }}",
+            url: "{{ route('getClipsByGame', ['site' => $siteSlug]) }}",
             type: "GET",
             data: { game_id: gameId },
             success: function(response) {

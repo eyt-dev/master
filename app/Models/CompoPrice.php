@@ -9,7 +9,7 @@ class CompoPrice extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['component_id','element_id','pricing_date','price'];
+    protected $fillable = ['component_id','element_id','pricing_date','price','description'];
 
     public function component()
     {

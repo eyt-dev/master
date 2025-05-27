@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateComponentRequest extends FormRequest
 {
@@ -22,18 +23,23 @@ class UpdateComponentRequest extends FormRequest
     public function rules(): array
     {
         $componentId = $this->route('component');
+        if ($componentId instanceof \App\Models\Component) {
+            $componentId = $componentId->id;
+        }
 
         return [
-            'code' => ['required', 'string', 'max:255','unique:component,code'.$componentId],
+            'code' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('components', 'code')->ignore($componentId),
+            ],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'form' => ['required', 'exists:forms,id'],
             'unit' => ['required', 'exists:units,id'],
             'type' => ['required', 'in:1,2'],
-            // Make elements optional in the request rules, as we'll handle it in the controller
             'elements' => ['sometimes', 'array'],
-          //  'elements.*.element_id' => ['required_with:elements', 'exists:elements,id'],
-          //  'elements.*.amount' => ['required_with:elements.*.element_id', 'numeric'],
         ];
     }
 }

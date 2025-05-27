@@ -187,14 +187,14 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::controller(ComponentController::class)->prefix('component')->group(function () {
+        Route::post('check-code', 'checkCode')->name('component.check-code');
         Route::get('/getUnitByForm/{form}','getUnitByForm');
         Route::get('/', 'index')->name('component.index')->middleware('permission:view.component');
         Route::get('create', 'create')->name('component.create')->middleware('permission:create.component');
         Route::post('store', 'store')->name('component.store')->middleware('permission:create.component');
         Route::get('{component}/edit', 'edit')->name('component.edit')->middleware('permission:edit.component');
-        Route::post('{component}', 'update')->name('component.update')->middleware('permission:edit.component');
+        Route::put('{component}', 'update')->name('component.update')->middleware('permission:edit.component');
         Route::get('destroy/{component}', 'destroy')->name('component.destroy')->middleware('permission:delete.component');
-        Route::post('/check-code', [ComponentController::class, 'checkCode'])->name('components.check-code');
     });
 
     Route::controller(CompoPriceController::class)->prefix('compo_price')->group(function () {

@@ -9,7 +9,8 @@ use App\Models\Component;
 use App\Models\Element;
 use App\Models\Form;
 use App\Models\Unit;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
 class ComponentController extends Controller
@@ -43,7 +44,7 @@ class ComponentController extends Controller
                     <i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action', 'form', 'type','unit','description'])
+                ->rawColumns(['action', 'form', 'type', 'unit', 'description'])
                 ->make(true);
         }
 
@@ -57,9 +58,13 @@ class ComponentController extends Controller
      */
     public function create()
     {
-        return view('component.create', ['component' => null, 'forms' => Form::all(), 'units' => Unit::all()
-            , 'elements' => Element::where('is_selected',false)->get()
-            , 'elementsUnit' => Unit::all()]);
+        return view('component.create', [
+            'component' => null,
+            'forms' => Form::all(),
+            'units' => Unit::all(),
+            'elements' => Element::all(), // Show all elements, we'll handle selection in JS
+            'elementsUnit' => Unit::all()
+        ]);
     }
 
     /**
@@ -69,121 +74,166 @@ class ComponentController extends Controller
     {
         $data = $request->validated();
 
+        // Clean elements data (remove template placeholder)
         $elements = collect($data['elements'])
             ->reject(function ($item, $key) {
-                return $key === '__index__';
+                return $key === '__index__' || empty($item['element_id']);
             });
 
-        $component = Component::create([
-            'code' => $data['code'],
-            'name' => $data['name'],
-            'description' => $data['description'] ?? null,
-            'form_id' => $data['form'],
-            'unit_id' => $data['unit'],
-            'type' => $data['type'],
-        ]);
-
-        $syncData = [];
-
-        foreach ($elements as $element) {
-            if (isset($element['element_id'])) {
-
-                $elementModel = Element::find($element['element_id']);
-
-                if ($elementModel) {
-                    $elementModel->is_selected = true;
-                    $elementModel->save();
-                }
-
-                $syncData[$element['element_id']] = ['amount' => $element['amount'],
-                    'element_unit_id' => $element['element_unit_id']];
-            }
+        // Check for duplicate elements
+        $elementIds = $elements->pluck('element_id');
+        if ($elementIds->count() !== $elementIds->unique()->count()) {
+            return back()->withErrors(['elements' => 'Each element can only be selected once per component.'])->withInput();
         }
 
-        $component->elements()->sync($syncData);
+        DB::beginTransaction();
 
-        Session::flash('successMsg', 'Component created successfully.');
+        try {
+            $component = Component::create([
+                'code' => $data['code'],
+                'name' => $data['name'],
+                'description' => $data['description'] ?? null,
+                'form_id' => $data['form'],
+                'unit_id' => $data['unit'],
+                'type' => $data['type'],
+                'created_by' => auth()->id(),
+            ]);
 
-        return redirect()->route('component.index');
+            $syncData = [];
+
+            foreach ($elements as $element) {
+                if (isset($element['element_id']) && $element['element_id']) {
+                    $syncData[$element['element_id']] = [
+                        'amount' => $element['amount'],
+                        'element_unit_id' => $element['element_unit_id']
+                    ];
+                }
+            }
+
+            $component->elements()->sync($syncData);
+
+            DB::commit();
+
+            Session::flash('successMsg', 'Component created successfully.');
+            return redirect()->route('component.index');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Failed to create component. Please try again.'])->withInput();
+        }
     }
+
 
     public function edit(Component $component)
     {
-        // Load necessary relationships
-        $component->load('elements');
+        // Load the component with its elements and pivot data
+        $component->load(['elements' => function ($query) {
+            $query->withPivot('amount', 'element_unit_id');
+        }]);
 
+        // Get other required data
         $forms = Form::all();
         $units = Unit::all();
-        $elements = Element::where('is_selected',false)->get();
+        $elements = Element::all();
 
-        $componentElementsJson = $component->elements->map(function ($element) {
-            return [
-                'id' => $element->id,
-                'pivot' => [
-                    'amount' => $element->pivot->amount
-                ]
-            ];
-        });
+        // Convert elements to JSON for JavaScript
+        $componentElementsJson = $component->elements->toJson();
 
-        return view('component.create', compact('component', 'forms', 'units', 'elements', 'componentElementsJson'));
+        return view('component.create', compact(
+            'component',
+            'forms',
+            'units',
+            'elements',
+            'componentElementsJson'
+        ));
     }
 
     public function update(UpdateComponentRequest $request, Component $component)
     {
         $data = $request->validated();
 
+        // Clean elements data
         $elements = collect($data['elements'] ?? [])
             ->reject(function ($item, $key) {
-                return $key === '__index__';
+                return $key === '__index__' || empty($item['element_id']);
             });
 
-        $component->update([
-            'code' => $data['code'],
-            'name' => $data['name'],
-            'description' => $data['description'] ?? null,
-            'form_id' => $data['form'],
-            'unit_id' => $data['unit'],
-            'type' => $data['type'],
-        ]);
-
-        $syncData = [];
-        foreach ($elements as $element) {
-            if (isset($element['element_id']) && $element['element_id']) {
-                $syncData[$element['element_id']] = ['amount' => $element['amount'] ?? 1,
-                    'element_unit_id' => $element['element_unit_id']];
-            }
+        // Check for duplicate elements
+        $elementIds = $elements->pluck('element_id');
+        if ($elementIds->count() !== $elementIds->unique()->count()) {
+            return back()->withErrors(['elements' => 'Each element can only be selected once per component.'])->withInput();
         }
 
-        $component->elements()->sync($syncData);
+        DB::beginTransaction();
 
-        Session::flash('successMsg', 'Component updated successfully.');
-        return redirect()->route('component.index');
+        try {
+            $component->update([
+                'code' => $data['code'],
+                'name' => $data['name'],
+                'description' => $data['description'] ?? null,
+                'form_id' => $data['form'],
+                'unit_id' => $data['unit'],
+                'type' => $data['type'],
+            ]);
+
+            $syncData = [];
+            foreach ($elements as $element) {
+                if (isset($element['element_id']) && $element['element_id']) {
+                    $syncData[$element['element_id']] = [
+                        'amount' => $element['amount'] ?? 1,
+                        'element_unit_id' => $element['element_unit_id']
+                    ];
+                }
+            }
+
+            $component->elements()->sync($syncData);
+
+            DB::commit();
+
+            Session::flash('successMsg', 'Component updated successfully.');
+            return redirect()->route('component.index');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Failed to update component. Please try again.'])->withInput();
+        }
     }
 
     public function getUnitByForm($formId)
     {
-        $form = Form::findOrFail($formId);
-
-        $units = $form->units;
-
-        return response()->json($units);
+        try {
+            $form = Form::findOrFail($formId);
+            $units = $form->units;
+            return response()->json($units);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to fetch units'], 500);
+        }
     }
 
     public function checkCode(Request $request)
     {
-        $code = $request->input('code');
-        $id = $request->input('id');
+        $request->validate([
+            'code' => 'required|string|max:255',
+            'id' => 'nullable|integer|exists:components,id'
+        ]);
 
-        if ($id) {
-            $component = Component::find($id);
-            if ($component && $component->code == $code) {
-                return response()->json(false);
-            }
+        $code = $request->input('code');
+        $componentId = $request->input('id');
+
+        // Build query to check if code exists
+        $query = Component::where('code', $code);
+
+        // If we're updating an existing component, exclude it from the check
+        if ($componentId) {
+            $query->where('id', '!=', $componentId);
         }
 
-        $exists = Component::where('code', $code)->exists();
+        $exists = $query->exists();
 
-        return response()->json(!$exists);
+        return response()->json([
+            'available' => !$exists,
+            'message' => $exists ? 'This code is already taken by another component.' : 'Code is available.'
+        ]);
     }
 
     /**
@@ -191,8 +241,14 @@ class ComponentController extends Controller
      */
     public function destroy($id)
     {
-        Component::findOrFail($id)->delete();
+        try {
+            $component = Component::findOrFail($id);
+            $component->elements()->detach(); // Remove element relationships
+            $component->delete();
 
-        return response()->json(['msg' => 'Component deleted successfully.']);
+            return response()->json(['msg' => 'Component deleted successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to delete component.'], 500);
+        }
     }
 }

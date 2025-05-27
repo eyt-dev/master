@@ -3,11 +3,10 @@
   <component name="ChangeListManager">
     <list default="true" id="7889e186-370a-4583-8d4f-7122f8f20607" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Http/Requests/StoreComponentRequest.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Requests/StoreComponentRequest.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Models/Component.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/Component.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/seeders/CreatePermissionRoleSeeder.php" beforeDir="false" afterPath="$PROJECT_DIR$/database/seeders/CreatePermissionRoleSeeder.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/layouts/aside-menu.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/layouts/aside-menu.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/layouts/footer-scripts.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/layouts/footer-scripts.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/ComponentController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/ComponentController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Http/Requests/UpdateComponentRequest.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Requests/UpdateComponentRequest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Models/CompoPrice.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/CompoPrice.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/component/create.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/component/create.blade.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/resources/views/layouts/head.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/layouts/head.blade.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/web.php" beforeDir="false" afterPath="$PROJECT_DIR$/routes/web.php" afterDir="false" />
     </list>
@@ -176,7 +175,8 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="JavaScript" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../elvefa" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
@@ -214,7 +214,7 @@
       <workItem from="1747142333155" duration="25672000" />
       <workItem from="1747324259050" duration="9421000" />
       <workItem from="1747384674211" duration="530000" />
-      <workItem from="1747385945551" duration="15541000" />
+      <workItem from="1747385945551" duration="63738000" />
     </task>
     <servers />
   </component>
@@ -242,11 +242,6 @@
           <option name="timeStamp" value="1" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="php">
-          <url>file://$PROJECT_DIR$/app/Http/Controllers/ComponentController.php</url>
-          <line>69</line>
-          <option name="timeStamp" value="2" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="php">
           <url>file://$PROJECT_DIR$/app/Http/Controllers/CompoPriceController.php</url>
           <line>146</line>
           <option name="timeStamp" value="5" />
@@ -265,6 +260,16 @@
           <url>file://$PROJECT_DIR$/app/Http/Controllers/CompoPriceController.php</url>
           <line>63</line>
           <option name="timeStamp" value="8" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/app/Http/Controllers/ComponentController.php</url>
+          <line>74</line>
+          <option name="timeStamp" value="14" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/app/Http/Controllers/ComponentController.php</url>
+          <line>152</line>
+          <option name="timeStamp" value="15" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

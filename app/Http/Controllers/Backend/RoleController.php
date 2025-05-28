@@ -14,7 +14,7 @@ class RoleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index($siteUrl)
     {
         
         if(request()->ajax()) {
@@ -22,7 +22,7 @@ class RoleController extends Controller
             ->addColumn('action', 'company-action')
             ->addColumn('action', function($row){
                 $btn = '';
-                    $btn = $btn.'<a class="edit-role edit_form btn btn-sm btn-success btn-icon mr-1 white" data-path="'.route('role.edit', ['role' => $row->id]).'" data-name="'.$row->name.'" data-id='.$row->id.' title="Edit"> <i class="fa fa-edit fa-1x"></i> </a>';
+                    $btn = $btn.'<a class="edit-role edit_form btn btn-sm btn-success btn-icon mr-1 white" data-path="'.route('role.edit', ['site' => request()->segment(1), 'role' => $row->id]).'" data-name="'.$row->name.'" data-id='.$row->id.' title="Edit"> <i class="fa fa-edit fa-1x"></i> </a>';
                     $btn = $btn.'<a class="btn btn-sm btn-icon btn-danger mr-1 white delete-role" data-id="'.$row->id.'" title="Delete"> <i class="fa fa-trash fa-1x"></i> </a>';
                 return $btn;
             })
@@ -32,19 +32,19 @@ class RoleController extends Controller
         $allPermission = Permission::all();
         $groupPermission = $allPermission->groupBy('module');
        
-        return view('role.index', ['role' => new Role(), 'allPermission' => $allPermission, 'groupPermission' => $groupPermission]);
+        return view('backend.role.index', ['role' => new Role(), 'allPermission' => $allPermission, 'groupPermission' => $groupPermission]);
     }
     /**
      * Show the form for creating a new resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create($siteUrl)
     {
         $allPermission = Permission::get();
         $groupPermission = $allPermission->groupBy('module');
         // dd($groupPermission[2][0]->permissionModule->name);
-        return view('role.create', ['role' => new Role(), 'allPermission' => $allPermission, 'groupPermission' => $groupPermission]);
+        return view('backend.role.create', ['role' => new Role(), 'allPermission' => $allPermission, 'groupPermission' => $groupPermission]);
     }
     /**
      * Store a newly created resource in storage.
@@ -52,7 +52,7 @@ class RoleController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, $siteUrl)
     {
         $inputData = $request->all();
         // dd($inputData);
@@ -70,14 +70,14 @@ class RoleController extends Controller
         // dd($createRoleData,$permission_data);
         $role = Role::create($createRoleData);
         if(empty($role)){
-            return redirect()->route('role.index');
+            return redirect()->route('role.index', ['site' => request()->segment(1)]);
         }
         if($request->has('permission_data') && $role){
             $permissions = Permission::whereIn('id', $permission_data)->get();
             // dd($permission_data);
             $role->syncPermissions($permissions);
         }
-        return redirect()->route('role.index');
+        return redirect()->route('role.index', ['site' => request()->segment(1)]);
     }
 
     /**
@@ -86,15 +86,15 @@ class RoleController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(Role $role)
+    public function edit($siteUrl, Role $role)
     {
         if(empty($role)){
-            return view('role.index');
+            return view('backend.role.index');
         }
         $allPermission = Permission::all();
         // dd($allPermission);
         $groupPermission = $allPermission->groupBy('module');
-        return view('role.create', ['role' => $role, 'allPermission' => $allPermission, 'groupPermission' => $groupPermission]);
+        return view('backend.role.create', ['role' => $role, 'allPermission' => $allPermission, 'groupPermission' => $groupPermission]);
     }
     /**
      * Update the specified resource in storage.
@@ -103,11 +103,11 @@ class RoleController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $siteUrl, $id)
     {
         $role = Role::find($id);
         if(empty($role)){
-            return redirect()->route('role.index');
+            return redirect()->route('role.index', ['site' => request()->segment(1)]);
         }
         $inputData = $request->all();
         $permission_data=$request->permission_data ?? [];
@@ -128,7 +128,7 @@ class RoleController extends Controller
             $permissions = Permission::whereIn('id', $permission_data)->get(); // Fetch permission objects
         }
         $role->syncPermissions($permissions);
-        return redirect()->route('role.index');
+        return redirect()->route('role.index', ['site' => request()->segment(1)]);
     }
     /**
      * Remove the specified resource from storage.
@@ -136,7 +136,7 @@ class RoleController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($siteUrl, $id)
     {
         $roleDelete = Role::find($id)->delete();
         if($roleDelete)

@@ -12,35 +12,36 @@ use Illuminate\Support\Facades\Validator;
 
 class ProfileController extends Controller
 {
-    public function index($id = null)
+    public function index($siteUrl, $id = null)
     {
-        $admin_id = $id == null ? Auth::id() : $id;
+        $admin_id = $id ?? Auth::id();
         $admin = Admin::find( $admin_id );
-
-        return view('profile.index', compact('admin'));
+        return view('backend.profile.index', compact('admin'));
     }
 
-    public function update(Request $request, $id = null)
+    public function update(Request $request, $siteUrl, $id = null)
     {
         $admin_id = $id == null ? Auth::id() : $id;
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'email' => 'required|unique:admins,email,' . $admin_id,
+            'username' => 'required'
         ]);
         if (count($validator->errors()) > 0) {
-            return redirect()->route('profile.index')->withErrors($validator->errors());
+            return redirect()->route('profile.index', ['site' => request()->segment(1)])->withErrors($validator->errors());
         }
 
         $admin = Admin::where('id', $admin_id)->first();
         $admin->name = $request->name;
         $admin->email = $request->email;
+        $admin->username = $request->username;
         $admin->save();
 
         Session::flash('success', 'Profile updated successfully.');
         return redirect()->back();
     }
 
-    public function changePassword(Request $request, $id = null)
+    public function changePassword(Request $request, $siteUrl, $id = null)
     {
         $admin_id = $id == null ? Auth::id() : $id;
         $validator = Validator::make($request->all(), [
@@ -48,7 +49,7 @@ class ProfileController extends Controller
             'password' => 'required|confirmed|min:8',
         ]);
         if (count($validator->errors()) > 0) {
-            return redirect()->route('profile.index')->withErrors($validator->errors());
+            return redirect()->route('profile.index', ['site' => request()->segment(1)])->withErrors($validator->errors());
         }
 
         $admin = Admin::where('id', $admin_id)->first();
@@ -56,6 +57,6 @@ class ProfileController extends Controller
         $admin->save();
 
         Session::flash('success', 'Password has been changed successfully.');
-        return redirect()->route('profile.index');
+        return redirect()->route('profile.index', ['site' => request()->segment(1)]);
     }
 }

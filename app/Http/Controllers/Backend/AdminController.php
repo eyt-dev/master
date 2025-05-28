@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use App\Models\Module;
 use Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
@@ -62,7 +63,7 @@ class AdminController extends Controller
                     // Super Admin can edit and delete Admins & Public Vendors
                     if ($admin->type == 0 && in_array($row->type, [1, 2])) {
                         $btn .= '<a class="edit-admin edit_form btn btn-icon btn-success mr-1 white" 
-                                    data-path="' . route('admins.edit', ['admin' => $row->id]) . '" 
+                                    data-path="' . route('admins.edit', ['site' => request()->get('site', request()->segment(1)), 'admin' => $row->id]) . '" 
                                     data-name="' . $row->name . '" 
                                     data-id=' . $row->id . ' title="Edit"> 
                                     <i class="fa fa-edit"></i> 
@@ -76,7 +77,7 @@ class AdminController extends Controller
                     // Admin can edit & delete only Private Vendors they created
                     if ($admin->type == 1 && $row->type == 3 && $row->created_by == $admin->id) {
                         $btn .= '<a class="edit-admin edit_form btn btn-icon btn-success mr-1 white" 
-                                    data-path="' . route('admins.edit', ['admin' => $row->id]) . '" 
+                                    data-path="' . route('admins.edit', ['site' => request()->get('site', request()->segment(1)), 'admin' => $row->id]) . '" 
                                     data-name="' . $row->name . '" 
                                     data-id=' . $row->id . ' title="Edit"> 
                                     <i class="fa fa-edit"></i> 
@@ -93,7 +94,7 @@ class AdminController extends Controller
                 ->make(true);
         }
        
-        return view('admins.index', compact('type'));
+        return view('backend.admins.index', compact('type'));
     }
 
     /**
@@ -103,7 +104,7 @@ class AdminController extends Controller
      */
     public function create($type = null)
     {       
-        return view('admins.create', ['admin' => new Admin(), 'type' => $type]);
+        return view('backend.admins.create', ['admin' => new Admin(), 'type' => $type]);
     }
 
     /**
@@ -143,7 +144,7 @@ class AdminController extends Controller
         if(empty($admin)) {
             Session::flash('errorMSg', 'Somethig went wrong.');
         
-            return redirect()->url("/admins/{$request->type}");
+            return redirect()->url("/backend/admins/{$request->type}");
         }
 
         $role = Role::where(['name' => $prefix])->first();
@@ -151,7 +152,7 @@ class AdminController extends Controller
 
         Session::flash('successMsg', '{$prefix} inserted successfully.');
         
-        return redirect()->route('admins.index', ['type' => $adminType]);
+        return redirect()->route('admins.index', ['site' => request()->get('site', request()->segment(1)), 'type' => $adminType]);
     }
 
     /**
@@ -160,16 +161,16 @@ class AdminController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit($siteUrl, $id)
     {
         $admin = Admin::findOrFail($id);     
      
        if(empty($admin)){
-            return redirect()->route('admins.index');
+            return redirect()->route('admins.index', ['site' => request()->get('site', request()->segment(1))]);
         }
 
         $roles = Role::all();
-        return view('admins.create', ['admin' => $admin, 'roles' => $roles]);
+        return view('backend.admins.create', ['admin' => $admin, 'roles' => $roles]);
     }
 
     /**
@@ -179,30 +180,28 @@ class AdminController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $siteUrl, $id)
     {
         $request->validate([
             'name' => 'required',
             'username' => 'required',
-            'email' => 'required|unique:admins,email,'.$id,
         ]);
 
         $admin = Admin::find($id);
 
         if(empty($admin)){
-            return redirect()->route('admins.index');
+            return redirect()->route('admins.index', ['site' => request()->get('site', request()->segment(1))]);
         }
 
         // Update the admin's name and email
         $admin->update([
             'name' => $request->name,
             'username' => $request->username,
-            'email' => $request->email,
             'password' => $request->filled('password') ? Hash::make($request->password) : $admin->password,
         ]);
         // $admin->assignRole($request->role);
         
-        return redirect()->route('admins.index');
+        return redirect()->route('admins.index', ['site' => request()->get('site', request()->segment(1))]);
     }
 
     /**
@@ -211,7 +210,7 @@ class AdminController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Request $request,$id)
+    public function destroy(Request $request, $siteUrl, $id)
     {
         $adminDelete = Admin::find($id)->delete();
         if($adminDelete)

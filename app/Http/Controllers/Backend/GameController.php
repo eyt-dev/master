@@ -19,7 +19,7 @@ class GameController extends Controller
                 }))
                 ->addColumn('action', function($row){
                     $btn  = '<a class="edit-game btn btn-sm btn-success btn-icon mr-1 white" ';
-                    $btn .= 'href="' . route('game.edit', ['game' => $row->id]) . '" ';
+                    $btn .= 'href="' . route('game.edit', ['site' => request()->segment(1), 'game' => $row->id]) . '" ';
                     $btn .= 'data-name="' . $row->name . '" ';
                     $btn .= 'data-id="' . $row->id . '" title="Edit">';
                     $btn .= '<i class="fa fa-edit fa-1x"></i>';
@@ -46,18 +46,18 @@ class GameController extends Controller
                 ->rawColumns(['action'])
                 ->make(true);
         }
-        return view('game.index', ['game' => new Game()]);
+        return view('backend.game.index', ['game' => new Game()]);
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create($siteUrl)
     {
-        return view('game.create', ['game' => new Game()]);
+        return view('backend.game.create', ['game' => new Game()]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, $siteUrl)
     {
         // If display is not provided and type is not Flixable, force it to image.
         if (!$request->display && $request->type != 'Flixable') {
@@ -124,7 +124,7 @@ class GameController extends Controller
             }
         }
 
-        return redirect()->route('game.index')
+        return redirect()->route('game.index', ['site' => request()->segment(1)])
                         ->with('success', 'Game created successfully.');
     }
 
@@ -132,14 +132,14 @@ class GameController extends Controller
     /**
      * Show the edit form for a game.
      */
-    public function edit($id)
+    public function edit($siteUrl, $id)
     {
         // Load the game with its related clips.
         $game = Game::with('clipData')->findOrFail($id);
-        return view('game.edit', compact('game'));
+        return view('backend.game.edit', compact('game'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $siteUrl, $id)
     {
         if (!$request->display && $request->type != 'Flixable') {
             $request['display'] = 'image';
@@ -229,10 +229,11 @@ class GameController extends Controller
             }
         }
 
-        return redirect()->route('game.index')->with('success', 'Game updated successfully.');
+        return redirect()->route('game.index', ['site' => request()->segment(1)])
+            ->with('success', 'Game updated successfully.');
     }
 
-    public function destroy($id)
+    public function destroy($siteUrl, $id)
     {
         // Retrieve the game along with its clips
         $game = Game::with('clipData')

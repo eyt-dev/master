@@ -13,7 +13,7 @@ class WheelController extends Controller
     /**
      * Display a listing of the wheel.
      */
-    public function index()
+    public function index($siteUrl)
     {
         // dd(Wheel::with('game')->first()->game->name);
         if (request()->ajax()) {
@@ -22,7 +22,7 @@ class WheelController extends Controller
             }))
                 ->addColumn('action', function($row){
                     $btn  = '<a class="edit-wheel btn btn-sm btn-success btn-icon mr-1 white" ';
-                    $btn .= 'href="' . route('wheel.edit', ['wheel' => $row->id]) . '" ';
+                    $btn .= 'href="' . route('wheel.edit', ['site' => request()->segment(1), 'wheel' => $row->id]) . '" ';
                     $btn .= 'data-id="' . $row->id . '" title="Edit">';
                     $btn .= '<i class="fa fa-edit fa-1x"></i>';
                     $btn .= '</a>';
@@ -49,22 +49,22 @@ class WheelController extends Controller
                 ->rawColumns(['action'])
                 ->make(true);
         }
-        return view('wheel.index', ['wheel' => new Wheel()]);
+        return view('backend.wheel.index', ['wheel' => new Wheel()]);
     }
 
     /**
      * Show the form for creating a new wheel.
      */
-    public function create()
+    public function create($siteUrl)
     {
         $games = Game::all(); // Assumes a Game model exists
-        return view('wheel.create', compact('games'));
+        return view('backend.wheel.create', compact('games'));
     }
 
     /**
      * Store a newly created wheel in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, $siteUrl)
     {
         $request->validate([
             'game_id' => 'required|exists:games,id',
@@ -82,13 +82,13 @@ class WheelController extends Controller
             ]);
         }
 
-        return redirect()->route('wheel.index')->with('success', 'Wheel created successfully!');
+        return redirect()->route('wheel.index', ['site' => request()->segment(1)])->with('success', 'Wheel created successfully!');
     }
 
     /**
      * Show the form for editing the specified wheel.
      */
-    public function edit(Wheel $wheel)
+    public function edit(Wheel $wheel, $siteUrl)
     {
         $games = Game::all();
         // Eager load clips relation
@@ -96,7 +96,7 @@ class WheelController extends Controller
         
         $wheel = Wheel::with(['game','clips.gameClip'])->first();
         // dd($wheel->clips[0]->gameClip->text_length);
-        return view('wheel.edit', compact('wheel', 'games'));
+        return view('backend.wheel.edit', compact('wheel', 'games'));
     }
 
     /**
@@ -135,7 +135,7 @@ class WheelController extends Controller
     //     return redirect()->route('wheel.index')->with('success', 'Wheel updated successfully.');
     // }
 
-    public function update(Request $request, Wheel $wheel)
+    public function update(Request $request, Wheel $wheel, $siteUrl)
     {
         $request->validate([
             'game_id' => 'required|exists:games,id',
@@ -171,14 +171,14 @@ class WheelController extends Controller
         $clipsToDelete = array_diff($existingClipIds, $newClipIds);
         WheelClip::whereIn('id', $clipsToDelete)->delete();
 
-        return redirect()->route('wheel.index')->with('success', 'Wheel updated successfully.');
+        return redirect()->route('wheel.index', ['site' => request()->segment(1)])->with('success', 'Wheel updated successfully.');
     }
 
 
     /**
      * Remove the specified wheel from storage.
      */
-    public function destroy(Wheel $wheel)
+    public function destroy(Wheel $wheel, $siteUrl)
     {
        // Delete the wheel along with its associated clips
        $wheel->clips()->delete(); // Delete related clips first
@@ -187,7 +187,7 @@ class WheelController extends Controller
        return response()->json(['msg' => 'Wheel deleted successfully!'], 200);
     }
 
-    public function getClipsByGame(Request $request)
+    public function getClipsByGame(Request $request, $siteUrl)
     {
         $gameId = $request->game_id;
         $game = Game::with('clipData')->find($gameId);

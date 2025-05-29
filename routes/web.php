@@ -203,7 +203,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('create', 'create')->name('compo_price.create')->middleware('permission:create.compo_price');
         Route::post('store', 'store')->name('compo_price.store')->middleware('permission:create.compo_price');
         Route::get('{compo_price}/edit', 'edit')->name('compo_price.edit')->middleware('permission:edit.compo_price');
-        Route::post('{compo_price}', 'update')->name('compo_price.update')->middleware('permission:edit.compo_price');
+        Route::put('{compo_price}', 'update')->name('compo_price.update')->middleware('permission:edit.compo_price');
         Route::get('destroy/{compo_price}', 'destroy')->name('compo_price.destroy')->middleware('permission:delete.compo_price');
         Route::get('/check-compo-price-unique', [CompoPriceController::class, 'checkUnique']);
     });

@@ -51,7 +51,7 @@
                                     @foreach($component->elements as $element)
                                         <option value="{{ $component->id }}_{{ $element->id }}"
                                             {{ old('component') }}>
-                                            {{ $component->name }} - {{ $element->name }}
+                                            {{ $component->code }} - {{ $element->name }}
                                         </option>
                                     @endforeach
                                 @endforeach
@@ -67,8 +67,16 @@
                                     class="text-danger">*</span></label>
                             <input type="text" name="pricing_date" id="pricing_date"
                                    class="form-control datepicker @error('pricing_date') is-invalid @enderror"
-                                   value="{{ old('pricing_date') }}"
-                                   required="">
+                                   value="{{ old('pricing_date') }}">
+                            <div class="form-check mt-1 d-flex align-items-center">
+                                <input type="checkbox" id="set_last_date" name="set_last_date" class="form-check-input @error('set_last_date') is-invalid @enderror">
+                                <label class="form-check-label text-black-50 mt-1" for="set_last_date">
+                                    {{__('Set Last Used As Default')}}
+                                </label>
+                            </div>
+                            @error('set_last_date')
+                            <div class="text-danger small">{{ $message }}</div>
+                            @enderror
                             @error('pricing_date')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -88,14 +96,30 @@
                             @enderror
                         </div>
 
-                        <!-- Description -->
+                        <!-- Unit -->
                         <div class="col">
-                            <label for="description" class="form-label fw-bold">{{ __('Description') }}</label>
-                            <input type="text" name="description" id="description"
-                                   class="form-control @error('description') is-invalid @enderror"
-                                   placeholder="{{ __('Enter Description') }}"
-                                   value="{{ old('description') }}">
-                            @error('description')
+                            <label for="unit" class="form-label fw-bold">{{ __('Unit') }} <span
+                                    class="text-danger">*</span></label>
+                            <select name="unit" id="unit"
+                                    class="form-select select2 @error('unit') is-invalid @enderror" >
+                                <option value="">{{ __('Select an option') }}</option>
+                                @foreach(\App\Constants\Unit::getUnit() as $key => $value)
+                                    <option value="{{ $key }}">
+                                        {{$value}}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="form-check mt-1 d-flex align-items-center">
+                                <input type="checkbox" id="set_last_unit" name="set_last_unit" class="form-check-input @error('set_last_unit') is-invalid @enderror">
+                                <label class="form-check-label text-black-50 mt-1" for="set_last_unit">
+                                    {{__('Set Last Used As Default')}}
+                                </label>
+                            </div>
+                            @error('set_last_unit')
+                            <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+
+                            @error('unit')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -125,7 +149,7 @@
                                 <th>{{__('Name')}}</th>
                                 <th>{{__('Price')}}</th>
                                 <th>{{__('Pricing Date')}}</th>
-                                <th>{{__('Description')}}</th>
+                                <th>{{__('Unit')}}</th>
                                 <th>Action</th>
                             </tr>
                             </thead>
@@ -180,13 +204,40 @@
                 todayHighlight: true
             });
 
+            $('#set_last_date').on('change', function () {
+                if ($(this).is(':checked')) {
+                    // Clear the manual input and disable it
+                    $('#pricing_date').val('').prop('disabled', true);
+                    $('#pricing_date').closest('.col').find('label .text-danger').hide();
+                } else {
+                    // Enable manual input
+                    $('#pricing_date').prop('disabled', false);
+                    $('#pricing_date').closest('.col').find('label .text-danger').show();
+                }
+            });
+
+            // Handle unit interactions
+            $('#set_last_unit').on('change', function () {
+                if ($(this).is(':checked')) {
+                    // Clear the manual selection and disable it
+                    $('#unit').val('').trigger('change').prop('disabled', true);
+                    $('#unit').prop('required', false);
+                } else {
+                    // Enable manual selection
+                    $('#unit').prop('disabled', false).prop('required', true);
+                }
+            });
+
+
             function checkValidation() {
                 $("#compo_price_form").validate({
-                    ignore: ":hidden:not(.select2-hidden-accessible)",
+                    ignore: ":hidden:not(.select2-hidden-accessible), :disabled",
                     rules: {
                         component: {required: true},
                         pricing_date: {
-                            required: true,
+                            required: function() {
+                                return !$('#set_last_date').is(':checked');
+                            },
                             remote: {
                                 url: "/compo_price/check-compo-price-unique",
                                 type: "GET",
@@ -203,7 +254,12 @@
                                 }
                             }
                         },
-                        price: {required: true}
+                        price: {required: true},
+                        unit: {
+                            required: function() {
+                                return !$('#set_last_unit').is(':checked');
+                            }
+                        }
                     },
                     messages: {
                         component: {required: "The Component is required"},
@@ -211,7 +267,8 @@
                             required: "The Pricing Date is required",
                             remote: "This Component already has a price on this date"
                         },
-                        price: {required: "The Price is required"}
+                        price: {required: "The Price is required"},
+                        unit: {required: "The Unit is required"}
                     },
                     errorPlacement: function (error, element) {
                         if (element.hasClass('select2-hidden-accessible')) {
@@ -241,10 +298,68 @@
                     success: function (response) {
                         $('#compo_price_form')[0].reset();
                         $('.select2').val(null).trigger('change');
+
+                        // Re-enable fields that might have been disabled
+                        $('#pricing_date').prop('disabled', false);
+                        $('#unit').prop('disabled', false);
+
+                        // Show required asterisks again
+                        $('#pricing_date').closest('.col').find('label .text-danger').show();
+
                         table.ajax.reload();
+
+                        // Show success message
+                        swal({
+                            title: "Success!",
+                            text: "Compo Price created successfully.",
+                            icon: "success",
+                        });
+                    },
+                    error: function (xhr) {
+                        // Handle validation errors
+                        if (xhr.status === 422) {
+                            var errors = xhr.responseJSON.errors;
+
+                            // Clear previous error messages
+                            $('.invalid-feedback, .text-danger.small').remove();
+                            $('.is-invalid').removeClass('is-invalid');
+
+                            // Display each error
+                            $.each(errors, function (field, messages) {
+                                var input = $('#' + field);
+                                var errorHtml = '<div class="invalid-feedback d-block">' + messages[0] + '</div>';
+
+                                if (field === 'set_last_date') {
+                                    // Special handling for set_last_date checkbox error
+                                    errorHtml = '<div class="text-danger small">' + messages[0] + '</div>';
+                                    input.closest('.form-check').after(errorHtml);
+                                    input.addClass('is-invalid');
+                                } else if (field === 'set_last_unit') {
+                                    // Special handling for set_last_unit checkbox error
+                                    errorHtml = '<div class="text-danger small">' + messages[0] + '</div>';
+                                    input.closest('.form-check').after(errorHtml);
+                                    input.addClass('is-invalid');
+                                } else if (field === 'component' || field === 'unit') {
+                                    // Handle select2 fields
+                                    input.addClass('is-invalid');
+                                    input.next('.select2').after(errorHtml);
+                                } else {
+                                    // Handle regular input fields
+                                    input.addClass('is-invalid');
+                                    input.after(errorHtml);
+                                }
+                            });
+                        } else {
+                            // Handle other errors
+                            swal({
+                                title: "Error!",
+                                text: "Something went wrong. Please try again.",
+                                icon: "error",
+                            });
+                        }
                     }
-                })
-            })
+                });
+            });
 
             $(document).on('click', '.edit-compo-price', function () {
                 var id = $(this).data('id');
@@ -272,7 +387,7 @@
                 {data: 'name', name: 'name'},
                 {data: 'price', name: 'price'},
                 {data: 'pricing_date', name: 'pricing_date'},
-                {data: 'description', name: 'description'},
+                {data: 'unit', name: 'unit'},
                 {data: 'action', name: 'action', ordertable: false, searchable: false}
             ]
         });
@@ -304,6 +419,22 @@
                     });
                 }
             });
+        });
+
+        $('#set_last_date').on('change', function () {
+            if ($(this).is(':checked')) {
+                $('#pricing_date').closest('.col').find('label .text-danger').hide();
+            } else {
+                $('#pricing_date').closest('.col').find('label .text-danger').show();
+            }
+        });
+
+        $('#set_last_unit').on('change', function () {
+            if ($(this).is(':checked')) {
+                $('#unit').prop('required', false);
+            } else {
+                $('#unit').prop('required', true);
+            }
         });
 
     </script>

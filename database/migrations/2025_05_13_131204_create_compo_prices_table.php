@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->foreignId('component_id')->constrained();
             $table->foreignId('element_id')->nullable()->constrained();
 
-            $table->date('pricing_date');
+            $table->date('pricing_date')->nullable();
             $table->decimal('price');
             $table->text('description')->nullable();
             $table->timestamps();

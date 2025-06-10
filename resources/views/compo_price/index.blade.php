@@ -138,7 +138,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">{{__('Comp Price Data')}}</div>
+                    <div class="card-title">{{__('Compo Price Data')}}</div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">

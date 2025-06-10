@@ -3,12 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="7889e186-370a-4583-8d4f-7122f8f20607" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/CompoPriceController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/CompoPriceController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Http/Requests/StoreCompoPriceRequest.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Requests/StoreCompoPriceRequest.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Http/Requests/UpdateCompoPriceRequest.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Requests/UpdateCompoPriceRequest.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Models/CompoPrice.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/CompoPrice.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/migrations/2025_05_13_131204_create_compo_prices_table.php" beforeDir="false" afterPath="$PROJECT_DIR$/database/migrations/2025_05_13_131204_create_compo_prices_table.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/compo_price/edit.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/compo_price/edit.blade.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/resources/views/compo_price/index.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/compo_price/index.blade.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -31,7 +25,6 @@
       <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
     </file-type-list>
   </component>
-  <component name="PhpDebugGeneral" listening_started="true" />
   <component name="PhpServers">
     <servers>
       <server host="127.0.0.1" id="f46a192c-3ae7-469f-9fe9-ae2680c931c0" name="127.0.0.1" port="8000" />
@@ -217,7 +210,8 @@
       <workItem from="1747324259050" duration="9421000" />
       <workItem from="1747384674211" duration="530000" />
       <workItem from="1747385945551" duration="64578000" />
-      <workItem from="1748415967978" duration="19669000" />
+      <workItem from="1748415967978" duration="25088000" />
+      <workItem from="1748974868786" duration="876000" />
     </task>
     <servers />
   </component>

@@ -22,7 +22,7 @@ class WheelController extends Controller
             }))
                 ->addColumn('action', function($row){
                     $btn  = '<a class="edit-wheel btn btn-sm btn-success btn-icon mr-1 white" ';
-                    $btn .= 'href="' . route('wheel.edit', ['site' => request()->segment(1), 'wheel' => $row->id]) . '" ';
+                    $btn .= 'href="' . route('wheel.edit', ['username' => request()->segment(1), 'wheel' => $row->id]) . '" ';
                     $btn .= 'data-id="' . $row->id . '" title="Edit">';
                     $btn .= '<i class="fa fa-edit fa-1x"></i>';
                     $btn .= '</a>';
@@ -82,7 +82,7 @@ class WheelController extends Controller
             ]);
         }
 
-        return redirect()->route('wheel.index', ['site' => request()->segment(1)])->with('success', 'Wheel created successfully!');
+        return redirect()->route('wheel.index', ['username' => request()->segment(1)])->with('success', 'Wheel created successfully!');
     }
 
     /**
@@ -171,7 +171,7 @@ class WheelController extends Controller
         $clipsToDelete = array_diff($existingClipIds, $newClipIds);
         WheelClip::whereIn('id', $clipsToDelete)->delete();
 
-        return redirect()->route('wheel.index', ['site' => request()->segment(1)])->with('success', 'Wheel updated successfully.');
+        return redirect()->route('wheel.index', ['username' => request()->segment(1)])->with('success', 'Wheel updated successfully.');
     }
 
 

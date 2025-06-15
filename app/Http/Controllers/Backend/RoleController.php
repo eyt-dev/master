@@ -22,7 +22,7 @@ class RoleController extends Controller
             ->addColumn('action', 'company-action')
             ->addColumn('action', function($row){
                 $btn = '';
-                    $btn = $btn.'<a class="edit-role edit_form btn btn-sm btn-success btn-icon mr-1 white" data-path="'.route('role.edit', ['site' => request()->segment(1), 'role' => $row->id]).'" data-name="'.$row->name.'" data-id='.$row->id.' title="Edit"> <i class="fa fa-edit fa-1x"></i> </a>';
+                    $btn = $btn.'<a class="edit-role edit_form btn btn-sm btn-success btn-icon mr-1 white" data-path="'.route('role.edit', ['username' => request()->segment(1), 'role' => $row->id]).'" data-name="'.$row->name.'" data-id='.$row->id.' title="Edit"> <i class="fa fa-edit fa-1x"></i> </a>';
                     $btn = $btn.'<a class="btn btn-sm btn-icon btn-danger mr-1 white delete-role" data-id="'.$row->id.'" title="Delete"> <i class="fa fa-trash fa-1x"></i> </a>';
                 return $btn;
             })
@@ -70,14 +70,14 @@ class RoleController extends Controller
         // dd($createRoleData,$permission_data);
         $role = Role::create($createRoleData);
         if(empty($role)){
-            return redirect()->route('role.index', ['site' => request()->segment(1)]);
+            return redirect()->route('role.index', ['username' => request()->segment(1)]);
         }
         if($request->has('permission_data') && $role){
             $permissions = Permission::whereIn('id', $permission_data)->get();
             // dd($permission_data);
             $role->syncPermissions($permissions);
         }
-        return redirect()->route('role.index', ['site' => request()->segment(1)]);
+        return redirect()->route('role.index', ['username' => request()->segment(1)]);
     }
 
     /**
@@ -107,7 +107,7 @@ class RoleController extends Controller
     {
         $role = Role::find($id);
         if(empty($role)){
-            return redirect()->route('role.index', ['site' => request()->segment(1)]);
+            return redirect()->route('role.index', ['username' => request()->segment(1)]);
         }
         $inputData = $request->all();
         $permission_data=$request->permission_data ?? [];
@@ -128,7 +128,7 @@ class RoleController extends Controller
             $permissions = Permission::whereIn('id', $permission_data)->get(); // Fetch permission objects
         }
         $role->syncPermissions($permissions);
-        return redirect()->route('role.index', ['site' => request()->segment(1)]);
+        return redirect()->route('role.index', ['username' => request()->segment(1)]);
     }
     /**
      * Remove the specified resource from storage.

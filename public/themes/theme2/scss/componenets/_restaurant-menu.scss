@@ -1,0 +1,79 @@
+/*=================================
+35. Restaurant Menu Style Css
+===================================*/
+.restaurant-menu-area {
+  @media #{$md-device} {
+    padding: 90px 0;
+  }
+  @media #{$sm-device} {
+    padding: 60px 0;
+  }
+
+  .restaurant-menu-inner {
+    margin-top: -150px;
+    padding: 100px;
+    position: relative;
+    z-index: 1;
+
+    @media #{$md-device} {
+      margin-top: 0;
+    }
+
+    @media #{$sm-device} {
+      padding: 50px 15px;
+      margin-top: 0;
+    }
+  }
+}
+
+.menu-item {
+  margin-top: 50px;
+
+  &__heading {
+    margin-bottom: 45px;
+
+    @media #{$sm-device} {
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      @include font-size(40px);
+      line-height: 1;
+      margin-bottom: 0;
+      font-family: $font-pd;
+    }
+  }
+
+  .menu-list {
+    &__item {
+      margin-bottom: 40px;
+
+      @media #{$sm-device} {
+        margin-bottom: 20px;
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .menu {
+        &-title {
+          @include font-size(20px);
+          margin-bottom: 10px;
+        }
+
+        &-text {
+          @include font-size(15px);
+          font-family: $font-pd;
+          font-style: italic;
+        }
+
+        &-price {
+          @include font-size(20px);
+          color: $brandColor;
+          line-height: 1;
+        }
+      }
+    }
+  }
+}

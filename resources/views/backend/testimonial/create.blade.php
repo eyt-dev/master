@@ -1,5 +1,5 @@
 <form 
-    action="{{ isset($testimonial) ? route('testimonial.update', ['site' => $siteSlug, 'testimonial' => $testimonial->id]) : route('testimonial.store', ['site' => $siteSlug]) }}" 
+    action="{{ isset($testimonial) ? route('testimonial.update', ['username' => $siteSlug, 'testimonial' => $testimonial->id]) : route('testimonial.store', ['username' => $siteSlug]) }}" 
     method="POST" 
     id="testimonial_form" 
     enctype="multipart/form-data" 
@@ -67,6 +67,6 @@
 
     <div class="card-footer">
         <button class="btn btn-primary" type="submit">Save</button>
-        <a href="{{ route('testimonial.index', ['site' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('testimonial.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>

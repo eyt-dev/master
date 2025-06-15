@@ -1,4 +1,4 @@
-<form action="{{ $role->id == null ? route('role.store', ['site' => $siteSlug]) : route('role.update', ['site' => $siteSlug, 'role' => $role->id]) }}" method="POST"
+<form action="{{ $role->id == null ? route('role.store', ['username' => $siteSlug]) : route('role.update', ['username' => $siteSlug, 'role' => $role->id]) }}" method="POST"
     id="role_form" novalidate="" class="needs-validation">
     <div class="card-body">
         @csrf
@@ -51,6 +51,6 @@
     </div>
     <div class="modal-footer">
         <button class="btn btn-primary" type="submit">{{ $role->id == null ? 'Save' : 'Update' }}</button>
-        <a href="{{ route('role.index', ['site' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('role.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>

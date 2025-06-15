@@ -40,7 +40,7 @@ class SlideController extends Controller
                     }
                 })
                 ->addColumn('action', function($row) {
-                    return '<a class="edit-slide btn btn-sm btn-success" data-path="'.route('slide.edit', ['site' => request()->segment(1), 'slide' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
+                    return '<a class="edit-slide btn btn-sm btn-success" data-path="'.route('slide.edit', ['username' => request()->segment(1), 'slide' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
                          .'<a class="delete-slide btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
@@ -89,7 +89,7 @@ class SlideController extends Controller
         Slide::create($slideData);
 
         Session::flash('successMsg', 'Slide created successfully.');
-        return redirect()->route('slide.index', ['site' => request()->segment(1)]);
+        return redirect()->route('slide.index', ['username' => request()->segment(1)]);
     }
 
     public function edit($siteUrl, $id)
@@ -141,7 +141,7 @@ class SlideController extends Controller
         ]);
 
         Session::flash('successMsg', 'Slide updated successfully.');
-        return redirect()->route('slide.index', ['site' => request()->segment(1)]);
+        return redirect()->route('slide.index', ['username' => request()->segment(1)]);
     }
 
     public function destroy($siteUrl, $id)

@@ -28,7 +28,7 @@ class ProfileController extends Controller
             'username' => 'required'
         ]);
         if (count($validator->errors()) > 0) {
-            return redirect()->route('profile.index', ['site' => request()->segment(1)])->withErrors($validator->errors());
+            return redirect()->route('profile.index', ['username' => request()->segment(1)])->withErrors($validator->errors());
         }
 
         $admin = Admin::where('id', $admin_id)->first();
@@ -49,7 +49,7 @@ class ProfileController extends Controller
             'password' => 'required|confirmed|min:8',
         ]);
         if (count($validator->errors()) > 0) {
-            return redirect()->route('profile.index', ['site' => request()->segment(1)])->withErrors($validator->errors());
+            return redirect()->route('profile.index', ['username' => request()->segment(1)])->withErrors($validator->errors());
         }
 
         $admin = Admin::where('id', $admin_id)->first();
@@ -57,6 +57,6 @@ class ProfileController extends Controller
         $admin->save();
 
         Session::flash('success', 'Password has been changed successfully.');
-        return redirect()->route('profile.index', ['site' => request()->segment(1)]);
+        return redirect()->route('profile.index', ['username' => request()->segment(1)]);
     }
 }

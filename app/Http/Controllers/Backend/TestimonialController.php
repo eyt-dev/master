@@ -35,7 +35,7 @@ class TestimonialController extends Controller
                     return $row->creator->name ?? 'N/A';
                 })
                 ->addColumn('action', function ($row) {
-                    return '<a class="edit-testimonial btn btn-sm btn-success" data-path="' . route('testimonial.edit', ['site' => request()->segment(1), 'testimonial' => $row->id]) . '" title="Edit"><i class="fa fa-edit"></i></a>'
+                    return '<a class="edit-testimonial btn btn-sm btn-success" data-path="' . route('testimonial.edit', ['username' => request()->segment(1), 'testimonial' => $row->id]) . '" title="Edit"><i class="fa fa-edit"></i></a>'
                          . '<a class="delete-testimonial btn btn-sm btn-danger" data-id="' . $row->id . '" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
@@ -74,7 +74,7 @@ class TestimonialController extends Controller
         ]);
 
         Session::flash('successMsg', 'Testimonial created successfully.');
-        return redirect()->route('testimonial.index', ['site' => request()->segment(1)]);
+        return redirect()->route('testimonial.index', ['username' => request()->segment(1)]);
     }
 
     public function edit($siteUrl, $id)
@@ -112,7 +112,7 @@ class TestimonialController extends Controller
         ]);
 
         Session::flash('successMsg', 'Testimonial updated successfully.');
-        return redirect()->route('testimonial.index', ['site' => request()->segment(1)]);
+        return redirect()->route('testimonial.index', ['username' => request()->segment(1)]);
     }
 
     public function destroy($siteUrl, $id)

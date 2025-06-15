@@ -27,7 +27,7 @@ class IdentifyTenant
 
         $notValid = 0;
         View::share('siteSlug', $siteSlug);
-        $request->attributes->set('site', $siteSlug);
+        $request->attributes->set('username', $siteSlug);
 
         // Check admin-domain match
         if ($setting && $setting->admin_domain === $host) {

@@ -19,7 +19,7 @@
         </div>
         <div class="page-rightheader">
             <div class="btn btn-list">
-                <a id="add_new_game" class="btn btn-info" href="{{route('game.create', ['site' => $siteSlug])}}" data-toggle="tooltip" title="Add new">
+                <a id="add_new_game" class="btn btn-info" href="{{route('game.create', ['username' => $siteSlug])}}" data-toggle="tooltip" title="Add new">
                     <i class="fe fe-plus mr-1"></i> Add new 
                 </a>
             </div>
@@ -87,7 +87,7 @@
             var table = $('#game-table').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('game.index', ['site' => $siteSlug]) }}",
+                ajax: "{{ route('game.index', ['username' => $siteSlug]) }}",
                 columns: [
                     {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
                     {data: 'name', name: 'name'},
@@ -116,7 +116,7 @@
                     if (willDelete) {
                         $.ajax({
                             type: "DELETE",
-                            url: "{{ route('game.destroy', ['site' => $siteSlug, 'game' => ':id']) }}".replace(':id', id),
+                            url: "{{ route('game.destroy', ['username' => $siteSlug, 'game' => ':id']) }}".replace(':id', id),
                             headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                             success: function(response) {
                                 swal({

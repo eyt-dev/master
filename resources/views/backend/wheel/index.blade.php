@@ -18,7 +18,7 @@
         </div>
         <div class="page-rightheader">
             <div class="btn btn-list">
-                <a id="add_new_wheel" class="btn btn-info" href="{{ route('wheel.create', ['site' => $siteSlug]) }}" data-toggle="tooltip" title="Add new">
+                <a id="add_new_wheel" class="btn btn-info" href="{{ route('wheel.create', ['username' => $siteSlug]) }}" data-toggle="tooltip" title="Add new">
                     <i class="fe fe-plus mr-1"></i> Add new 
                 </a>
             </div>
@@ -67,7 +67,7 @@
             var table = $('#wheel-table').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('wheel.index', ['site' => $siteSlug]) }}",
+                ajax: "{{ route('wheel.index', ['username' => $siteSlug]) }}",
                 columns: [
                     {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
                     {data: 'game', name: 'game'},
@@ -94,7 +94,7 @@
                     if (willDelete) {
                         $.ajax({
                             type: "DELETE",
-                            url: "{{ route('wheel.destroy', ['site' => $siteSlug, 'wheel' => ':id']) }}".replace(':id', id),
+                            url: "{{ route('wheel.destroy', ['username' => $siteSlug, 'wheel' => ':id']) }}".replace(':id', id),
                             headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                             success: function(response) {
                                 swal({

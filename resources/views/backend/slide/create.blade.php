@@ -1,5 +1,5 @@
 <form 
-    action="{{ isset($slide) && $slide->id ? route('slide.update', ['site' => $siteSlug, 'slide'=> $slide->id]) : route('slide.store', ['site' => $siteSlug]) }}" 
+    action="{{ isset($slide) && $slide->id ? route('slide.update', ['username' => $siteSlug, 'slide'=> $slide->id]) : route('slide.store', ['username' => $siteSlug]) }}" 
     method="POST" 
     id="slide_form"
     novalidate=""
@@ -111,7 +111,7 @@
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="web_image" class="form-label">Web Image <span class="text-red">*</span></label>
-                <input type="file" class="form-control" name="web_image" id="web_image" accept="image/*" {{($slide ? "" : "required")}} />
+                <input type="file" class="form-control" name="web_image" id="web_image" accept="image/*" {{(isset($slide) ? "" : "required")}} />
                 @error('web_image')
                     <label id="web_image-error" class="error" for="web_image">{{ $message }}</label>
                 @enderror
@@ -127,7 +127,7 @@
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="mobile_image" class="form-label">Mobile Image <span class="text-red">*</span></label>
-                <input type="file" class="form-control" name="mobile_image" id="mobile_image" accept="image/*" {{($slide ? "" : "required")}} />
+                <input type="file" class="form-control" name="mobile_image" id="mobile_image" accept="image/*" {{(isset($slide) ? "" : "required")}} />
                 @error('mobile_image')
                     <label id="mobile_image-error" class="error" for="mobile_image">{{ $message }}</label>
                 @enderror
@@ -142,6 +142,6 @@
 
     <div class="card-footer">
         <button class="btn btn-primary" type="submit">Save</button>
-        <a href="{{ route('slide.index', ['site' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('slide.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>

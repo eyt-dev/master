@@ -30,7 +30,7 @@
                     </div>
                 @endif
                 <form 
-                    action="{{ isset($setting) && $setting->id ? route('setting.update', ['site' => $siteSlug, 'setting' => $setting->id]) : route('setting.store', ['site' => $siteSlug]) }}"
+                    action="{{ isset($setting) && $setting->id ? route('setting.update', ['username' => $siteSlug, 'setting' => $setting->id]) : route('setting.store', ['username' => $siteSlug]) }}"
                     method="POST" 
                     id="setting_form"
                     novalidate=""
@@ -297,7 +297,7 @@
                     </div>
                     <div class="card-footer">
                         <button class="btn btn-primary" type="submit">Save</button>
-                        <a href="{{ route('setting.index', ['site' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
+                        <a href="{{ route('setting.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
                     </div>
                 </form>
             </div>
@@ -314,7 +314,7 @@
         <script>
             $(document).ready(function(){
                 checkValidation();
-                var siteSlug = "{{ request()->route('site') }}";
+                var siteSlug = "{{ request()->route('username') }}";
                 $('select[name="created_by"]').on('change', function () {
                     var selectedId = $(this).val();
                     if (selectedId) {
@@ -324,14 +324,14 @@
                             dataType: 'json',
                             success: function (data) {
                                 if (data.exists) {
-                                    var editUrl = "{{ route('setting.edit', ['site' => 'SITE_SLUG', 'setting' => ':id']) }}";
+                                    var editUrl = "{{ route('setting.edit', ['username' => 'SITE_SLUG', 'setting' => ':id']) }}";
 
                                     editUrl = editUrl.replace('SITE_SLUG', siteSlug).replace(':id', data.setting_id);
 
                                     window.location.href = editUrl;
                                 } else {
                                     if(data.admin) {
-                                        var createUrl = "{{ route('setting.edit', ['site' => 'SITE_SLUG', 'setting' => ':id']) }}";
+                                        var createUrl = "{{ route('setting.edit', ['username' => 'SITE_SLUG', 'setting' => ':id']) }}";
                                         createUrl = createUrl.replace('SITE_SLUG', siteSlug).replace(':id', data.admin);
                                         window.location.href = createUrl;
                                     }

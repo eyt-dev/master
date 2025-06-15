@@ -1,0 +1,79 @@
+/*=============================
+52. Shop Pages Style Css
+==============================*/
+
+// Shop Page Category
+.category-single-item {
+  position: relative;
+  margin-top: 20px;
+
+  .category-info {
+    background-color: hsla(0, 0%, 100%, .65);
+    position: absolute;
+    left: 0;
+    bottom: 30px;
+    padding: 15px;
+    text-transform: uppercase;
+    transition: 0.4s;
+    width: 100%;
+
+    h6 {
+      margin-bottom: 5px;
+    }
+
+    .prod-count {
+      color: $secondaryColor;
+      font-size: 12px;
+      line-height: 1;
+      margin-bottom: 0;
+    }
+  }
+
+  &:hover {
+    .category-info {
+      background-color: $secondaryColor;
+
+      * {
+        color: $white;
+      }
+    }
+  }
+}
+
+.shop-content-shorting {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 50px 0 45px;
+
+  @media #{$xs-device} {
+    display: block;
+  }
+
+  .product-sorting {
+    @media #{$xs-device} {
+      margin-top: 15px;
+    }
+
+    .nice-select {
+      color: $paragraph;
+      border: 1px solid $borderColor;
+      font-size: 16px;
+      padding-left: 50px;
+      padding-right: 60px;
+      height: 50px;
+      line-height: 46px;
+
+      &:after{
+        border-right-color: $paragraph;
+        border-bottom-color: $paragraph;
+      }
+    }
+  }
+}
+
+.shop-content-products{
+  .product-item{
+    margin-top: 30px;
+  }
+}

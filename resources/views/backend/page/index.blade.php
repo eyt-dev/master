@@ -89,7 +89,7 @@
 <script>
     $(document).on('click', '#add_new', function() {
         $.ajax({
-            url: "{{ route('page.create', 'site' => $siteSlug) }}",
+            url: "{{ route('page.create', ['username' => $siteSlug]) }}",
             type: "GET",
             success: function(response) {
                 $(".modal-body").html(response);
@@ -116,7 +116,7 @@
     var table = $('#page_table').DataTable({
         processing: true,
         serverSide: true,
-        ajax: "{{ route('page.index', 'site' => $siteSlug) }}",
+        ajax: "{{ route('page.index', ['username' => $siteSlug]) }}",
         columns: [
             { data: 'id' },
             { data: 'category' },
@@ -143,7 +143,7 @@
                     $.ajax({
                         type: "get",
                         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        url: "{{ route('page.destroy', ['site' => $siteSlug, 'page' => ':id']) }}".replace(':id', id),
+                        url: "{{ route('page.destroy', ['username' => $siteSlug, 'page' => ':id']) }}".replace(':id', id),
                         success: function(response) {
                             swal({
                                 title: response.msg

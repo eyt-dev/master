@@ -32,7 +32,7 @@ class CategoryController extends Controller
                     return $row->creator->name ?? 'N/A';
                 })
                 ->addColumn('action', function($row) {
-                    return '<a class="edit-category btn btn-sm btn-success" data-path="'.route('category.edit', ['site' => $siteSlug,  'category' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
+                    return '<a class="edit-category btn btn-sm btn-success" data-path="'.route('category.edit', ['username' => request()->segment(1),  'category' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
                          .'<a class="delete-category btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
@@ -71,7 +71,7 @@ class CategoryController extends Controller
         Category::create($createData);
 
         Session::flash('successMsg', 'Category created successfully.');
-        return redirect()->route('category.index', ['site' => request()->segment(1)]);
+        return redirect()->route('category.index', ['username' => request()->segment(1)]);
     }
 
     public function edit($siteUrl, $id)
@@ -106,7 +106,7 @@ class CategoryController extends Controller
         ]);
 
         Session::flash('successMsg', 'Category updated successfully.');
-        return redirect()->route('category.index', ['site' => request()->segment(1)]);
+        return redirect()->route('category.index', ['username' => request()->segment(1)]);
     }
 
     public function destroy($siteUrl, $id)

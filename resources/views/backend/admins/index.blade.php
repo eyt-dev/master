@@ -126,7 +126,7 @@
         $(document).on('click', '#add_new', function() {
             var adminType1 = @json(request('type') ?? 1);
             $.ajax({
-                url: "{{ route('admins.create', ['site' => request()->get('site', $siteSlug)]) }}/" + adminType1,
+                url: "{{ route('admins.create', ['username' => request()->get('username', $siteSlug)]) }}/" + adminType1,
                 type: "GET",
                 success: function(response) {
                     console.log(response);
@@ -156,7 +156,7 @@
             serverSide: true,
             responsive: true,
             ajax: {
-                url: "{{ route('admins.index', ['site' => request()->get('site', $siteSlug)]) }}",
+                url: "{{ route('admins.index', ['username' => request()->get('username', $siteSlug)]) }}",
                 data: function (d) {
                     d.type = adminType; // Pass type dynamically
                 }
@@ -199,8 +199,8 @@
         $(document).on('click', '.delete-admin', function() {
             var id = $(this).attr("data-id");
           
-            const siteSlug = "{{ request()->get('site', $siteSlug) }}";
-            const destroyUrlTemplate = "{{ route('admins.destroy', ['site' => '__SITE__', 'admin' => '__ID__']) }}";
+            const siteSlug = "{{ request()->get('username', $siteSlug) }}";
+            const destroyUrlTemplate = "{{ route('admins.destroy', ['username' => '__SITE__', 'admin' => '__ID__']) }}";
             const destroyUrl = destroyUrlTemplate
                 .replace('__SITE__', siteSlug)
                 .replace('__ID__', id);

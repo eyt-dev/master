@@ -24,7 +24,7 @@ class PermissionController extends Controller
                 return ($row->permissionModule->name ?? $row->module);
             })
             ->addColumn('action', function($row){
-                $btn = '<a data-path="'.route('permission.edit', ['site' => request()->segment(1), 'permission' => $row->id]).'" data-name="'.$row->name.'" data-id='.$row->id.' class="btn btn-sm btn-success btn-icon edit-permission edit_form" data-name="'.$row->name.'" data-id='.$row->id.'> <i class="fa fa-edit fa-1x"></i> </a>';
+                $btn = '<a data-path="'.route('permission.edit', ['username' => request()->segment(1), 'permission' => $row->id]).'" data-name="'.$row->name.'" data-id='.$row->id.' class="btn btn-sm btn-success btn-icon edit-permission edit_form" data-name="'.$row->name.'" data-id='.$row->id.'> <i class="fa fa-edit fa-1x"></i> </a>';
                 $btn = $btn.'<a class="btn btn-sm btn-danger btn-icon ml-1 white delete-permission" data-id="'.$row->id.'" title="Delete"> <i class="fa fa-trash fa-1x"></i> </a>';
                 return $btn;
             })
@@ -81,7 +81,7 @@ class PermissionController extends Controller
             ];
         }
         $permission = Permission::insert($permissionData);
-        return redirect()->route('permission.index', ['site' => request()->segment(1)]);
+        return redirect()->route('permission.index', ['username' => request()->segment(1)]);
     }
     /**
      * Display the specified resource.
@@ -99,7 +99,7 @@ class PermissionController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(Permission $permission, $siteUrl)
+    public function edit($siteUrl, Permission $permission)
     {
         $moduleList = Module::all();
         if(empty($permission)){
@@ -165,7 +165,7 @@ class PermissionController extends Controller
                     $model->update($permissionData[$i]);
                 }
             }
-            return redirect()->route('permission.index', ['site' => request()->segment(1)]);
+            return redirect()->route('permission.index', ['username' => request()->segment(1)]);
         }
     }
     /**
@@ -216,7 +216,7 @@ class PermissionController extends Controller
         }
         $permission = Permission::insert($permissionData);
         if(empty($permission)){
-            return redirect()->route('permission.index', ['site' => request()->segment(1)]);
+            return redirect()->route('permission.index', ['username' => request()->segment(1)]);
         }
         if($group){
             return response($group);

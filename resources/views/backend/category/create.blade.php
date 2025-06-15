@@ -1,5 +1,5 @@
 <form 
-    action="{{ isset($category) && $category->id ? route('category.update', ['site' => $siteSlug, 'category' => $category->id]) : route('category.store', ['site' => $siteSlug]) }}" 
+    action="{{ isset($category) && $category->id ? route('category.update', ['username' => $siteSlug, 'category' => $category->id]) : route('category.store', ['username' => $siteSlug]) }}" 
     method="POST" 
     id="category_form"
     novalidate=""
@@ -73,6 +73,6 @@
 
     <div class="card-footer">
         <button class="btn btn-primary" type="submit">Save</button>
-        <a href="{{ route('category.index', ['site' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('category.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>

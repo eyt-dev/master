@@ -1,0 +1,222 @@
+/*========================
+08. Portfolio Style CSS
+=========================*/
+.portfolio-wrapper {
+  .container-fluid {
+    padding: 0 30px;
+
+    @media #{$md-device, $sm-device} {
+      padding: 0 15px;
+    }
+  }
+}
+
+// Portfolio Carousel
+.portfolio-carousel-wrap {
+  .lSPager {
+    &.lSpg {
+      li {
+        a {
+          background-color: transparent;
+          border: 3px solid #e6e8ee;
+          height: 15px;
+          width: 15px;
+        }
+
+        &.active, &:hover {
+          a {
+            background-color: transparent;
+            border-color: $brandColor;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Portfolio Home Style
+.portfolio-home-wrapper{
+  .portfolio-home-title{
+    @media #{$sm-device} {
+      margin-bottom: 30px;
+    }
+
+    h1{
+      font-family: $font-pd;
+      @include font-size(90px);
+      line-height: 1;
+      margin-bottom: 0;
+
+      @media #{$xlmax-device} {
+        @include font-size(60px);
+      }
+
+      @media #{$md-device} {
+        font-size: 55px;
+      }
+    }
+  }
+}
+
+// Portfolio Filter Menu
+.filter-menu {
+  li {
+    outline: none;
+    box-shadow: none;
+    color: $secondaryColor;
+    cursor: pointer;
+    margin-left: 40px;
+    position: relative;
+    transition: 0.4s;
+
+    @media #{$sm-device} {
+      margin-left: 20px;
+    }
+
+    &:first-child {
+      margin-left: 0;
+    }
+
+    &:before {
+      background-color: $brandColor;
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -10px;
+      height: 1px;
+      width: 100%;
+      @include hide;
+    }
+
+    &:hover, &.active {
+      &:before {
+        @include show;
+        bottom: 0;
+      }
+    }
+  }
+}
+
+// Portfolio Item Style
+.portfolio-item {
+  position: relative;
+  margin-top: 30px;
+
+  &:before {
+    background-color: rgba($secondaryColor, 0.95);
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    height: 100%;
+    width: 100%;
+    @include hide();
+  }
+
+  &__info {
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    @include hide();
+
+    .title {
+      font-size: 16px;
+      line-height: 1;
+      font-weight: 700;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      transition: 0.4s;
+      transform: translateY(-20px);
+
+      a {
+        color: $brandColor;
+      }
+    }
+
+    .category {
+      color: $white;
+      font-size: 18px;
+      line-height: 1;
+      text-transform: capitalize;
+      display: inline-block;
+      transition: 0.4s;
+      transform: translateY(20px);
+    }
+  }
+
+  // After Hover Effects
+  &:hover {
+    &:before {
+      @include show();
+    }
+
+    .portfolio-item__info {
+      @include show();
+
+      .title, .category {
+        transform: none;
+      }
+    }
+  }
+
+  // Portfolio Item Style Two
+  &--2 {
+    &:before {
+      display: none;
+    }
+
+    .portfolio-item {
+      &__info {
+        position: static;
+        @include show;
+        transform: none;
+        margin-top: 25px;
+
+        * {
+          transform: none;
+        }
+
+        .title {
+          margin-top: 0;
+          @include font-size(24px);
+          text-transform: capitalize;
+          font-weight: 400;
+
+          a {
+            color: $secondaryColor;
+
+            &:hover {
+              color: $brandColor;
+            }
+          }
+        }
+
+        .category {
+          color: $paragraph;
+        }
+      }
+    }
+  }
+}
+
+
+// Portfolio No Gutters
+.no-gutters,.portfolio-carousel-content{
+  .portfolio-item{
+    margin-top: 0;
+  }
+}
+
+// Five Columns Grid
+.columns-5{
+  .col{
+    @media #{$xl-device} {
+      flex-basis: 20%;
+      max-width: 20%;
+    }
+  }
+}

@@ -29,7 +29,7 @@ class PageController extends Controller
                     return $row->creator->name ?? 'N/A';
                 })
                 ->addColumn('action', function($row) {
-                    return '<a class="edit-page btn btn-sm btn-success" data-path="'.route('page.edit', ['site' => request()->segment(1), 'page' =>  $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
+                    return '<a class="edit-page btn btn-sm btn-success" data-path="'.route('page.edit', ['username' => request()->segment(1), 'page' =>  $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
                          .'<a class="delete-page btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
@@ -65,7 +65,7 @@ class PageController extends Controller
         ]);
 
         Session::flash('successMsg', 'Page created successfully.');
-        return redirect()->route('page.index', ['site' => request()->segment(1)]);
+        return redirect()->route('page.index', ['username' => request()->segment(1)]);
     }
 
     public function edit($siteUrl, $id)
@@ -88,7 +88,7 @@ class PageController extends Controller
         $page->update($request->all());
 
         Session::flash('successMsg', 'Page updated successfully.');
-        return redirect()->route('page.index', ['site' => request()->segment(1)]);
+        return redirect()->route('page.index', ['username' => request()->segment(1)]);
     }
 
     public function destroy($siteUrl, $id)

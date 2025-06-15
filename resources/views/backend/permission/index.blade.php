@@ -85,7 +85,7 @@
     </div>
 @endsection
 <script>
-    var moduleCreateUrl = "{{ route('module.create', ['site' => $siteSlug]) }}";
+    var moduleCreateUrl = "{{ route('module.create', ['username' => $siteSlug]) }}";
 </script>
 @section('js')
     <script src="{{ URL::asset('assets/plugins/datatable/js/jquery.dataTables.js') }}"></script>
@@ -104,7 +104,7 @@
             var table = $('#permission-tabel').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('permission.index', ['site' => $siteSlug]) }}",
+                ajax: "{{ route('permission.index', ['username' => $siteSlug]) }}",
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -121,7 +121,7 @@
 
             $(document).on('click', '#add_new', function () {
                 $.ajax({
-                    url: "{{ route('permission.create', ['site' => $siteSlug]) }}",
+                    url: "{{ route('permission.create', ['username' => $siteSlug]) }}",
                     success: function (response) {
                         $(".modal-body").html(response);
                         $(".modal-title").html("Add Permission");
@@ -174,7 +174,7 @@
                     if (willDelete) {
                         $.ajax({
                             type: "DELETE",
-                            url: "{{ route('permission.destroy', ['site' => $siteSlug, 'permissions' => :id]'') }}".replace(':id', id),
+                            url: "{{ route('permission.destroy', ['username' => $siteSlug, 'permission' => 'PERMISSION_ID']) }}".replace('PERMISSION_ID', id),
                             headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                             success: function(response) {
                                 swal({
@@ -265,7 +265,7 @@
                 let id = $(this).data("id");
                 $.ajax({
                     type:'POST',
-                    url:"{{ route('permission.delete', ['site' => $siteSlug]) }}",
+                    url:"{{ route('permission.delete', ['username' => $siteSlug]) }}",
                     headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                     data: {'id': id},
                     success: function(data) {

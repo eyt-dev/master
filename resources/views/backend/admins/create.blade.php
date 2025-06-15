@@ -1,7 +1,7 @@
 <form 
     action="{{ isset($admin) && $admin->id
-        ? route('admins.update', ['site' => $siteSlug, 'admin' => $admin->id])
-        : route('admins.store', ['site' => $siteSlug]) }}"
+        ? route('admins.update', ['username' => $siteSlug, 'admin' => $admin->id])
+        : route('admins.store', ['username' => $siteSlug]) }}"
     method="POST" 
     id="admin_form"
     novalidate=""
@@ -56,6 +56,6 @@
     </div>
     <div class="card-footer">
         <button class="btn btn-primary" type="submit">Save</button>
-        <a href="{{ route('admins.index', ['site' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('admins.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>

@@ -19,7 +19,7 @@ class SettingController extends Controller
 
             // If setting exists, send to edit
             if ($setting) {
-                return redirect()->route('setting.edit', ['site' => $request->route('site'), 'setting' => $setting->id]);
+                return redirect()->route('setting.edit', ['username' => $request->route('username'), 'setting' => $setting->id]);
             }
 
             // Else send to create
@@ -58,7 +58,7 @@ class SettingController extends Controller
             $created_by = auth()->user()->id;
             $setting = Setting::where('created_by', $created_by)->first();
             if ($setting) {
-                return redirect()->route('setting.edit', ['site' => request()->segment(1), 'setting' => $setting->getKey()]);
+                return redirect()->route('setting.edit', ['username' => request()->segment(1), 'setting' => $setting->getKey()]);
             }
         }
         
@@ -120,7 +120,7 @@ class SettingController extends Controller
         $data["admin_domain"] = parse_url($request->admin_domain, PHP_URL_HOST);
         Setting::create($data);
         Session::flash('successMsg', 'Settings saved successfully.');
-        return redirect()->route('setting.index', ['site' => request()->segment(1)]);
+        return redirect()->route('setting.index', ['username' => request()->segment(1)]);
     }    
 
     public function update(Request $request, $siteUrl, $id)
@@ -163,7 +163,7 @@ class SettingController extends Controller
         $setting->update($data);
 
         Session::flash('successMsg', 'Settings updated successfully.');
-        return redirect()->route('setting.index', ['site' => request()->segment(1)]);
+        return redirect()->route('setting.index', ['username' => request()->segment(1)]);
     }
 
     public function destroy()

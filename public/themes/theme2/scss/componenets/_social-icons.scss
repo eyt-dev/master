@@ -1,0 +1,97 @@
+/*============================
+24. Social Icons Style CSS
+==============================*/
+.social-icons-wrapper {
+  padding: 180px 0;
+
+  @media #{$md-device} {
+    padding: 90px 0;
+  }
+
+  @media #{$sm-device} {
+    padding: 60px 0;
+  }
+}
+
+
+.social-icons {
+  a {
+    color: $secondaryColor;
+    @include font-size(36px);
+    line-height: 1;
+    margin-right: 50px;
+
+    &:last-child {
+      margin-right: 0;
+    }
+
+    @media #{$sm-device} {
+      margin-right: 20px;
+    }
+
+    &:hover {
+      color: $brandColor;
+    }
+  }
+
+  &--2{
+    padding: 85px 0;
+
+    @media #{$sm-device} {
+      padding: 30px 0;
+    }
+
+    a{
+      color: #dddddd;
+      @include font-size(24px);
+      margin-right: 25px;
+    }
+  }
+
+  &--3{
+    a{
+      @include font-size(18px);
+      margin-right: 15px;
+    }
+  }
+
+  &--4{
+    a{
+      @include font-size(20px);
+
+      @media #{$md-device} {
+        margin-right: 30px;
+      }
+    }
+  }
+
+  &--5{
+    a{
+      color: $white;
+      margin-right: 20px;
+      @include font-size(18px);
+    }
+  }
+}
+
+.social-button{
+  .btn-bottom{
+    margin-right: 20px;
+
+    &:before{
+      bottom: -5px;
+      @include hide;
+    }
+
+    &:last-child{
+      margin-right: 0;
+    }
+
+    &:hover{
+      &:before{
+        bottom: 0;
+        @include show;
+      }
+    }
+  }
+}

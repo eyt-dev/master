@@ -21,9 +21,16 @@ class SettingSeeder extends Seeder
                 'created_by' => 1
             ]
         );
+        Theme::firstOrCreate(
+            ['id' => 2],
+            [
+                'name' => 'theme2',
+                'created_by' => 2
+            ]
+        );
         Setting::create([
-            'domain' => 'eyt.app',
-            'admin_domain' => 'admin.eyt.app',
+            'domain' => config('domains.main_domain'),
+            'admin_domain' => config('domains.admin_subdomain'),
 
             'dark_logo' => 'dark-logo.png',
             'light_logo' => 'light-logo.png',
@@ -43,8 +50,8 @@ class SettingSeeder extends Seeder
         ]);
 
         Setting::create([
-            'domain' => 'add2care.eyt.app',
-            'admin_domain' => 'add2care.eyt.app/admin',
+            'domain' => 'eyt.li',
+            'admin_domain' => 'admin.eyt.li',
 
             'dark_logo' => 'dark-logo.png',
             'light_logo' => 'light-logo.png',
@@ -60,7 +67,7 @@ class SettingSeeder extends Seeder
             'secondary_button_text_color' => '#ffffff',
 
             'created_by' => 2,
-            'theme' => 1,
+            'theme' => 2,
         ]);
     }
 }

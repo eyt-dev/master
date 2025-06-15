@@ -29,7 +29,7 @@ class StoreViewController extends Controller
                 ->addColumn('action', 'store_view.action')
                 ->addColumn('action', function($row){
                     $btn = '';
-                        $btn = $btn.'<a class="edit-store_view edit_form btn btn-sm btn-success btn-icon mr-1 white" data-path="'.route('store_view.edit', ['site' => request()->segment(1), 'store_view' => $row->id]).'" data-name="'.$row->name.'" data-id='.$row->id.' title="Edit"> <i class="fa fa-edit fa-1x"></i> </a>';
+                        $btn = $btn.'<a class="edit-store_view edit_form btn btn-sm btn-success btn-icon mr-1 white" data-path="'.route('store_view.edit', ['username' => request()->segment(1), 'store_view' => $row->id]).'" data-name="'.$row->name.'" data-id='.$row->id.' title="Edit"> <i class="fa fa-edit fa-1x"></i> </a>';
                         $btn = $btn.'<a class="btn btn-sm btn-icon btn-danger mr-1 white delete-store_view" data-id="'.$row->id.'" title="Delete"> <i class="fa fa-trash fa-1x"></i> </a>';
                     return $btn;
                 })
@@ -71,11 +71,11 @@ class StoreViewController extends Controller
 
         if(!$storeView) {
             Session::flash('errorMsg', 'Something went wrong.');
-            return redirect()->route('store_view.index', ['site' => request()->segment(1)]);
+            return redirect()->route('store_view.index', ['username' => request()->segment(1)]);
         }
 
         Session::flash('successMsg', 'Store View inserted successfully.');
-        return redirect()->route('store_view.index', ['site' => request()->segment(1)]);
+        return redirect()->route('store_view.index', ['username' => request()->segment(1)]);
     }
 
     public function edit($siteUrl, $id)
@@ -87,7 +87,7 @@ class StoreViewController extends Controller
         });
 
         if (empty($store_view)) {
-            return redirect()->route('store_view.index', ['site' => request()->segment(1)]);
+            return redirect()->route('store_view.index', ['username' => request()->segment(1)]);
         }
        
         return view('backend.store_view.create', ['store_view' => $store_view, 'regions' => $regions]);
@@ -116,7 +116,7 @@ class StoreViewController extends Controller
         ]);
 
         Session::flash('successMsg', 'Store View updated successfully.');
-        return redirect()->route('store_view.index', ['site' => request()->segment(1)]);
+        return redirect()->route('store_view.index', ['username' => request()->segment(1)]);
     }
 
     public function destroy($siteUrl, $id)

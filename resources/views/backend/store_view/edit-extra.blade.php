@@ -37,7 +37,7 @@
 
             <div class="card-footer">
                 {!! Form::submit('Save', ['class' => 'btn btn-primary']) !!}
-                <a href="{{ route('store_view.index', ['site' => $siteSlug]) }}" class="btn btn-default">
+                <a href="{{ route('store_view.index', ['username' => $siteSlug]) }}" class="btn btn-default">
                     @lang('crud.cancel')
                 </a>
             </div>

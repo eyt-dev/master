@@ -96,9 +96,9 @@ class Admin extends Authenticatable
     // public function admin(){
     //     return $this->belongsTo( User::class, 'user_id' );
     // }
-    // public function settings(){
-    //     return $this->hasOne( Setting::class, 'created_by' );
-    // }
+    public function setting(){
+        return $this->hasOne( Setting::class, 'created_by' );
+    }
 
     // public function groups(){
     //     return $this->hasMany( UCGroup::class, 'user_id' );

@@ -19,7 +19,7 @@ class GameController extends Controller
                 }))
                 ->addColumn('action', function($row){
                     $btn  = '<a class="edit-game btn btn-sm btn-success btn-icon mr-1 white" ';
-                    $btn .= 'href="' . route('game.edit', ['site' => request()->segment(1), 'game' => $row->id]) . '" ';
+                    $btn .= 'href="' . route('game.edit', ['username' => request()->segment(1), 'game' => $row->id]) . '" ';
                     $btn .= 'data-name="' . $row->name . '" ';
                     $btn .= 'data-id="' . $row->id . '" title="Edit">';
                     $btn .= '<i class="fa fa-edit fa-1x"></i>';
@@ -124,7 +124,7 @@ class GameController extends Controller
             }
         }
 
-        return redirect()->route('game.index', ['site' => request()->segment(1)])
+        return redirect()->route('game.index', ['username' => request()->segment(1)])
                         ->with('success', 'Game created successfully.');
     }
 
@@ -229,7 +229,7 @@ class GameController extends Controller
             }
         }
 
-        return redirect()->route('game.index', ['site' => request()->segment(1)])
+        return redirect()->route('game.index', ['username' => request()->segment(1)])
             ->with('success', 'Game updated successfully.');
     }
 

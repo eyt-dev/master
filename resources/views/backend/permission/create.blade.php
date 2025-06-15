@@ -1,5 +1,5 @@
 <form
-    action="{{ route('permission.store', ['site' => $siteSlug]) }}"
+    action="{{ route('permission.store', ['username' => $siteSlug]) }}"
     method="POST" id="permission_form" novalidate="" class="needs-validation">
     <div class="card-body">
         @csrf
@@ -42,6 +42,6 @@
     </div>
     <div class="modal-footer">
         <input class="btn btn-primary" type="submit" value="Save">
-        <a href="{{ route('permission.index', ['site' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('permission.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>

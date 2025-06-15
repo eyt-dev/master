@@ -63,7 +63,7 @@ class AdminController extends Controller
                     // Super Admin can edit and delete Admins & Public Vendors
                     if ($admin->type == 0 && in_array($row->type, [1, 2])) {
                         $btn .= '<a class="edit-admin edit_form btn btn-icon btn-success mr-1 white" 
-                                    data-path="' . route('admins.edit', ['site' => request()->get('site', request()->segment(1)), 'admin' => $row->id]) . '" 
+                                    data-path="' . route('admins.edit', ['username' => request()->get('username', request()->segment(1)), 'admin' => $row->id]) . '" 
                                     data-name="' . $row->name . '" 
                                     data-id=' . $row->id . ' title="Edit"> 
                                     <i class="fa fa-edit"></i> 
@@ -77,7 +77,7 @@ class AdminController extends Controller
                     // Admin can edit & delete only Private Vendors they created
                     if ($admin->type == 1 && $row->type == 3 && $row->created_by == $admin->id) {
                         $btn .= '<a class="edit-admin edit_form btn btn-icon btn-success mr-1 white" 
-                                    data-path="' . route('admins.edit', ['site' => request()->get('site', request()->segment(1)), 'admin' => $row->id]) . '" 
+                                    data-path="' . route('admins.edit', ['username' => request()->get('username', request()->segment(1)), 'admin' => $row->id]) . '" 
                                     data-name="' . $row->name . '" 
                                     data-id=' . $row->id . ' title="Edit"> 
                                     <i class="fa fa-edit"></i> 
@@ -144,7 +144,7 @@ class AdminController extends Controller
         if(empty($admin)) {
             Session::flash('errorMSg', 'Somethig went wrong.');
         
-            return redirect()->url("/backend/admins/{$request->type}");
+            return redirect()->url("/e/admins/{$request->type}");
         }
 
         $role = Role::where(['name' => $prefix])->first();
@@ -152,7 +152,7 @@ class AdminController extends Controller
 
         Session::flash('successMsg', '{$prefix} inserted successfully.');
         
-        return redirect()->route('admins.index', ['site' => request()->get('site', request()->segment(1)), 'type' => $adminType]);
+        return redirect()->route('admins.index', ['username' => request()->get('username', request()->segment(1)), 'type' => $adminType]);
     }
 
     /**
@@ -166,7 +166,7 @@ class AdminController extends Controller
         $admin = Admin::findOrFail($id);     
      
        if(empty($admin)){
-            return redirect()->route('admins.index', ['site' => request()->get('site', request()->segment(1))]);
+            return redirect()->route('admins.index', ['username' => request()->get('username', request()->segment(1))]);
         }
 
         $roles = Role::all();
@@ -190,7 +190,7 @@ class AdminController extends Controller
         $admin = Admin::find($id);
 
         if(empty($admin)){
-            return redirect()->route('admins.index', ['site' => request()->get('site', request()->segment(1))]);
+            return redirect()->route('admins.index', ['username' => request()->get('username', request()->segment(1))]);
         }
 
         // Update the admin's name and email
@@ -201,7 +201,7 @@ class AdminController extends Controller
         ]);
         // $admin->assignRole($request->role);
         
-        return redirect()->route('admins.index', ['site' => request()->get('site', request()->segment(1))]);
+        return redirect()->route('admins.index', ['username' => request()->get('username', request()->segment(1))]);
     }
 
     /**

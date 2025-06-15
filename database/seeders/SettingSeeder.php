@@ -23,7 +23,7 @@ class SettingSeeder extends Seeder
         );
         Setting::create([
             'domain' => 'eyt.app',
-            'admin_domain' => 'admin.eyt.app',
+            'admin_domain' => config('domains.admin_subdomain'),
 
             'dark_logo' => 'dark-logo.png',
             'light_logo' => 'light-logo.png',

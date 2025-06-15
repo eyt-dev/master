@@ -11,9 +11,9 @@
         Deny from all
     </FilesMatch>
 
-    # ✅ Internally rewrite /site1/... to /public/backend/...
+    # ✅ Internally rewrite /site1/... to /public/e/...
     RewriteCond %{REQUEST_URI} ^/site1(/.*)?$ [NC]
-    RewriteRule ^site1(/.*)?$ public/backend$1 [L]
+    RewriteRule ^site1(/.*)?$ public/e$1 [L]
 
     # Fallback for all other requests → public/index.php
     RewriteCond %{REQUEST_FILENAME} !-f

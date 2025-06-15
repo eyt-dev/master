@@ -9,7 +9,7 @@
         <div class="page-leftheader">
             <h4 class="page-title mb-0">Settings</h4>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{url('/backend')}}"><i class="fe fe-home mr-2 fs-14"></i>Home</a></li>
+                <li class="breadcrumb-item"><a href="{{url('/e')}}"><i class="fe fe-home mr-2 fs-14"></i>Home</a></li>
                 <li class="breadcrumb-item active" aria-current="page"><a href="#">Settings</a></li>
             </ol>
         </div>
@@ -62,7 +62,7 @@
                                         @foreach($admins as $admin)
                                             <option 
                                                 value="{{$admin->id}}"
-                                                {{ ($setting->created_by == $admin->id ? "selected" : "") }}
+                                                {{ (isset($setting) && $setting->created_by == $admin->id ? "selected" : "") }}
                                             >
                                                 {{ $admin->name.' ('.$admin->email.')' }}
                                             </option>
@@ -319,7 +319,7 @@
                     var selectedId = $(this).val();
                     if (selectedId) {
                         $.ajax({
-                            url: "{{ url('backend/setting/check-setting/') }}" + "/" + selectedId, 
+                            url: "{{ url('e/setting/check-setting/') }}" + "/" + selectedId, 
                             type: 'GET',
                             dataType: 'json',
                             success: function (data) {

@@ -1,21 +1,76 @@
 <?php
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Frontend\FrontController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Models\Admin;
+use App\Models\Setting;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-*/
+*/  
+$adminDomains = Setting::pluck('admin_domain')->toArray();
+$currentHost = request()->getHost();
 
-Auth::routes();
+if (request()->getHost() === config('domains.admin_subdomain')) {
+    Route::domain(config('domains.admin_subdomain'))->group(function () {
+        Auth::routes([
+            'register' => false,
+            'login' => false,
+        ]);
+        Route::get('/', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
+        Route::post('/', [App\Http\Controllers\Auth\LoginController::class, 'login']);
 
+        if (request()->segment(1)) {
+            Route::group(['prefix' => '{username}'], function () {
+                Auth::routes([
+                    'register' => false,
+                    'login' => false,
+                ]);
+                Route::get('/', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
+                Route::post('/', [App\Http\Controllers\Auth\LoginController::class, 'login']);
+
+                Route::middleware(['auth', 'identify.tenant'])->group(function () {
+                    Route::get('/dashboard', function () {
+                        return view('index');
+                    })->name('dashboard'); 
+                    // Add tenant modules here
+                });
+            });
+        }
+
+    });
+} elseif (in_array($currentHost, $adminDomains)) {
+    
+    Route::domain($currentHost)->group(function () {    
+        Auth::routes([
+            'register' => false,
+            'login' => false,
+        ]);
+        Route::get('/', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
+        Route::post('/', [App\Http\Controllers\Auth\LoginController::class, 'login']);
+        Route::group(['prefix' => '{username}'], function () {
+            Route::middleware(['auth', 'identify.tenant'])->group(function () {
+                Route::get('/dashboard', function () {
+                    return view('index');
+                })->name('dashboard'); 
+                // other modules here
+            });
+        });
+    });
+}
+
+
+
+
+
+/*
 $domains = [
-    'arden.local', 
-    'eytmaster.local', 
-    'admin.arden.local', 
-    'admin.eytmaster.local',
+    'add2care.test', 
+    'eyt.test', 
+    'admin.add2care.test', 
+    'admin.eyt.test',
 
     'admin.eyt.app', 
     'add2care.eyt.app', 
@@ -34,24 +89,24 @@ Route::group(['prefix' => '{username}'], function () {
 
     // Optional: redirect /username/ to dashboard or home
     Route::get('/', function () {
-        return redirect()->route('dashboard');
+        return redirect()->route('dashboard',  ['site' => request()->segment(1)]);
     });
 });
 
-
+*/
 
 // $siteSlug = request()->segment(1);
-// if($siteSlug != 'backend') {
+// if($siteSlug != 'e') {
 //     // Check if this is a valid admin username
 //     $siteIsValidAdmin = Admin::where('username', $siteSlug)->exists();
 
-//     // If not a valid admin username, redirect to /backend/... but preserve the rest of the path
+//     // If not a valid admin username, redirect to /e/... but preserve the rest of the path
 //     if (!$siteIsValidAdmin) {
 //         if (request()->is('*login*')) {
 //             return redirect("/login");
 //         }
 //         $pathAfterSite = implode('/', array_slice($request->segments(), 1)); // skip siteSlug
-//         return redirect("/backend/" . $pathAfterSite);
+//         return redirect("/e/" . $pathAfterSite);
 //     }
 // }
 // Route::get($siteSlug.'/{any?}', function () use ($siteSlug) {

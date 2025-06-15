@@ -144,7 +144,7 @@ class AdminController extends Controller
         if(empty($admin)) {
             Session::flash('errorMSg', 'Somethig went wrong.');
         
-            return redirect()->url("/backend/admins/{$request->type}");
+            return redirect()->url("/e/admins/{$request->type}");
         }
 
         $role = Role::where(['name' => $prefix])->first();

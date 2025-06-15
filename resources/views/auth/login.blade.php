@@ -61,9 +61,9 @@
                                             </div>
                                         </div>
                                     </form>
-                                    <div class="text-center pt-4">
+                                    {{-- <div class="text-center pt-4">
                                         <div class="font-weight-normal fs-16">You Don't have an account <a class="btn-link font-weight-normal" href="{{ route('register', ['username' => request()->segment(1)]) }}">Register Here</a></div>
-                                    </div>
+                                    </div> --}}
                                 </div>
                             </div>
                         </div>

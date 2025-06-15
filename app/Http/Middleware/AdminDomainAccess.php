@@ -34,7 +34,7 @@ class AdminDomainAccess
         $siteIsValidAdmin = Admin::where('username', $siteSlug)->first();
         // dd($siteIsValidAdmin->id, $admin);
 
-        if($siteSlug != 'backend') {
+        if($siteSlug != 'e') {
 
             if($admin->getRoleNames()->first() == 'SuperAdmin' && !$siteIsValidAdmin && $siteIsValidAdmin->id != $admin) {
                 $notValid = 1;

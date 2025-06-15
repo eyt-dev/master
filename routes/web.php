@@ -32,17 +32,17 @@ if ($currentHost === config('domains.main_domain')) {
         Route::get('/', [FrontController::class, 'index']);
         if (request()->segment(1)) {
             Route::group(['prefix' => '{username}'], function () {
-                // Route::middleware(['identify.tenant'])->group(function () {
+                Route::middleware(['identify.tenant.front'])->group(function () {
                     Route::get('/', [FrontController::class, 'index']);
-                // });
+                });
             });
         } 
     });
 } elseif (in_array($currentHost, $domains)) {
     Route::domain($currentHost)->group(function () {
-        // Route::middleware(['identify.tenant'])->group(function () {
+        Route::middleware(['identify.tenant.front'])->group(function () {
             Route::get('/', [FrontController::class, 'index']);
-        // });
+        });
     });
 }
 

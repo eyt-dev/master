@@ -37,7 +37,6 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \App\Http\Middleware\IdentifyTenantFront::class,
             // \App\Http\Middleware\CheckDomain::class,
         ],
 
@@ -69,6 +68,7 @@ class Kernel extends HttpKernel
         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
         'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         'identify.tenant' => \App\Http\Middleware\IdentifyTenant::class,
+        'identify.tenant.front' => \App\Http\Middleware\IdentifyTenantFront::class,
         // 'admin.domain.access' => \App\Http\Middleware\AdminDomainAccess::class,
     ];
 }

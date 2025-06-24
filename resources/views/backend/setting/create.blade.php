@@ -313,13 +313,17 @@
         <script src="{{ URL::asset('assets/plugins/select2/select2.full.min.js') }}"></script>
         <script>
             $(document).ready(function(){
-                checkValidation();
+                checkValidation(); 
                 var siteSlug = "{{ request()->route('username') }}";
+                let url = "{{ route('setting.checkSetting', ['username' => 'SITE_SLUG', 'created_by' => 'CREATED_BY']) }}";
+                
                 $('select[name="created_by"]').on('change', function () {
                     var selectedId = $(this).val();
+                    url = url.replace('SITE_SLUG', siteSlug).replace('CREATED_BY', selectedId);
+                    // console.log(url);
                     if (selectedId) {
                         $.ajax({
-                            url: "{{ url('e/setting/check-setting/') }}" + "/" + selectedId, 
+                            url: url, 
                             type: 'GET',
                             dataType: 'json',
                             success: function (data) {

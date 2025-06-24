@@ -180,7 +180,7 @@ class SettingController extends Controller
         return response()->json(['msg' => 'Settings deleted successfully.']);
     }
 
-    public function checkSetting($created_by)
+    public function checkSetting($siteUrl, $created_by)
     {
         $setting = Setting::where('created_by', $created_by)->first();
 

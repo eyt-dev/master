@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Permission;
 use Carbon\Carbon;
 use App\Models\Module;
+use App\Models\Setting;
 use Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
@@ -149,6 +150,28 @@ class AdminController extends Controller
 
         $role = Role::where(['name' => $prefix])->first();
         $admin->assignRole([$role->id]);
+
+        $createData = [
+            'domain' => config('domains.main_domain') . "/" . $request->username,
+            'admin_domain' => config('domains.admin_subdomain') . "/" . $request->username,
+
+            'dark_logo' => 'dark-logo.png',
+            'light_logo' => 'light-logo.png',
+            'footer_logo' => 'footer-logo.png',
+            'favicon' => 'favicon.ico',
+
+            'primary_text_color' => '#000000',
+            'secondary_text_color' => '#666666',
+
+            'primary_button_background' => '#007bff',
+            'secondary_button_background' => '#6c757d',
+            'primary_button_text_color' => '#ffffff',
+            'secondary_button_text_color' => '#ffffff',
+
+            'created_by' => $admin->id,
+            'theme' => 2,
+        ];
+        Setting::create($createData);
 
         Session::flash('successMsg', '{$prefix} inserted successfully.');
         

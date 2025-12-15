@@ -4,6 +4,7 @@ use App\Http\Controllers\Frontend\FrontController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Models\Admin;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\Backend\ProfileController;
 use App\Http\Controllers\Backend\AdminController;
 use App\Http\Controllers\Backend\RoleController;
@@ -22,8 +23,8 @@ use App\Http\Controllers\Backend\TestimonialController;
 | Web Routes
 |--------------------------------------------------------------------------
 */  
-$domains = Setting::pluck('domain')->toArray();
-$adminDomains = Setting::pluck('admin_domain')->toArray();
+$domains = Schema::hasTable('settings') ? Setting::pluck('domain')->toArray() : [];
+$adminDomains = Schema::hasTable('settings') ? Setting::pluck('admin_domain')->toArray() : [];
 $currentHost = request()->getHost();
 $allowRoute = 0;
 
@@ -158,6 +159,15 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::post('{setting}', 'update')->name('setting.update')->middleware('permission:edit.setting');
                         Route::get('destroy/{admin}', 'destroy')->name('setting.destroy')->middleware('permission:delete.setting');
                         Route::get('/check-setting/{created_by}', 'checkSetting')->name('setting.checkSetting');
+                    }); 
+                    // Contacts module
+                    Route::controller(\App\Http\Controllers\Backend\ContactController::class)->prefix('contact')->group(function () {
+                        Route::get('/', 'index')->name('contact.index')->middleware('permission:view.contact');
+                        Route::get('create', 'create')->name('contact.create')->middleware('permission:create.contact');
+                        Route::post('store', 'store')->name('contact.store')->middleware('permission:create.contact');
+                        Route::get('{contact}/edit', 'edit')->name('contact.edit')->middleware('permission:edit.contact');
+                        Route::post('{contact}', 'update')->name('contact.update')->middleware('permission:edit.contact');
+                        Route::get('destroy/{contact}', 'destroy')->name('contact.destroy')->middleware('permission:delete.contact');
                     });
                     Route::controller(SlideController::class)->prefix('slide')->group(function () {
                         Route::get('/', 'index')->name('slide.index')->middleware('permission:view.slide');

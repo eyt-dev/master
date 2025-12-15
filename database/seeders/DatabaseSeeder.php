@@ -1,10 +1,7 @@
 <?php
 
-use Database\Seeders\CreateSuperAdminSeeder;
-use Database\Seeders\CreatePermissionRoleSeeder;
-use Database\Seeders\CountriesRegionSeeder;
-use Database\Seeders\SettingSeeder;
-use Database\Seeders\ThemeSeeder;
+namespace Database\Seeders;
+
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -21,7 +18,8 @@ class DatabaseSeeder extends Seeder
             CreatePermissionRoleSeeder::class,
             CreateSuperAdminSeeder::class,
             CountriesRegionSeeder::class,
-            SettingSeeder::class
+            SettingSeeder::class,
+            ContactSeeder::class
         ]);
     }
 }

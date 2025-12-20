@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Contact;
 use App\Models\CountryRegion;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class ContactController extends Controller
 {
@@ -21,6 +22,12 @@ class ContactController extends Controller
                 ->get();
 
             return datatables()->of($data)
+                ->addColumn('image', function ($row) {
+                    if ($row->image) {
+                        return '<img src="' . asset('storage/contacts/' . $row->image) . '" style="max-height:50px;" />';
+                    }
+                    return '';
+                })
                 ->addColumn('vat', function ($row) {
                     return ($row->vat_country_code || $row->vat_number) ? trim($row->vat_country_code . ' ' . $row->vat_number) : '-';
                 })
@@ -28,11 +35,14 @@ class ContactController extends Controller
                     return $row->creator->name ?? 'N/A';
                 })
                 ->addColumn('action', function ($row) {
-                    return '<a class="edit-contact btn btn-sm btn-success" data-path="' . route('contact.edit', ['username' => request()->segment(1), 'contact' => $row->id]) . '" title="Edit"><i class="fa fa-edit"></i></a>'
-                         . '<a class="delete-contact btn btn-sm btn-danger" data-id="' . $row->id . '" title="Delete"><i class="fa fa-trash"></i></a>';
+                    return '<a class="edit-contact btn btn-sm btn-success"
+                                data-path="' . route('gcontact.edit', ['username' => request()->segment(1), 'contact' => $row->id]) . '"
+                                title="Edit"><i class="fa fa-edit"></i></a>'
+                        . '<a class="delete-contact btn btn-sm btn-danger"
+                                data-id="' . $row->id . '" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action'])
+                ->rawColumns(['action','image'])
                 ->make(true);
         }
 
@@ -60,9 +70,10 @@ class ContactController extends Controller
             'address2' => 'nullable|string|max:255',
             'postal_code' => 'nullable|string|max:32',
             'city' => 'nullable|string|max:191',
+            'image' => 'nullable|image|max:2048',
         ]);
 
-        Contact::create([
+        $data = [
             'name' => $request->name,
             'formal_name' => $request->formal_name,
             'vat_country_code' => $request->vat_country_code,
@@ -74,10 +85,17 @@ class ContactController extends Controller
             'postal_code' => $request->postal_code,
             'city' => $request->city,
             'created_by' => auth()->id(),
-        ]);
+        ];
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('contacts', 'public');
+            $data['image'] = basename($path);
+        }
+
+        Contact::create($data);
 
         Session::flash('successMsg', 'Contact created successfully.');
-        return redirect()->route('contact.index', ['username' => request()->segment(1)]);
+        return redirect()->route('gcontact.index', ['username' => request()->segment(1)]);
     }
 
     public function edit($siteUrl, $id)
@@ -100,10 +118,12 @@ class ContactController extends Controller
             'address2' => 'nullable|string|max:255',
             'postal_code' => 'nullable|string|max:32',
             'city' => 'nullable|string|max:191',
+            'image' => 'nullable|image|max:2048',
         ]);
 
         $contact = Contact::findOrFail($id);
-        $contact->update([
+
+        $data = [
             'name' => $request->name,
             'formal_name' => $request->formal_name,
             'vat_country_code' => $request->vat_country_code,
@@ -114,15 +134,30 @@ class ContactController extends Controller
             'address2' => $request->address2,
             'postal_code' => $request->postal_code,
             'city' => $request->city,
-        ]);
+        ];
+
+        if ($request->hasFile('image')) {
+            // delete old image
+            if ($contact->image) {
+                Storage::disk('public')->delete('contacts/' . $contact->image);
+            }
+            $path = $request->file('image')->store('contacts', 'public');
+            $data['image'] = basename($path);
+        }
+
+        $contact->update($data);
 
         Session::flash('successMsg', 'Contact updated successfully.');
-        return redirect()->route('contact.index', ['username' => request()->segment(1)]);
+        return redirect()->route('gcontact.index', ['username' => request()->segment(1)]);
     }
 
     public function destroy($siteUrl, $id)
     {
-        Contact::findOrFail($id)->delete();
+        $contact = Contact::findOrFail($id);
+        if ($contact->image) {
+            Storage::disk('public')->delete('contacts/' . $contact->image);
+        }
+        $contact->delete();
         return response()->json(['msg' => 'Contact deleted successfully.']);
     }
 }

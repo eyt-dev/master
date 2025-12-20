@@ -20,6 +20,7 @@ class Contact extends Model
         'address2',
         'postal_code',
         'city',
+        'image',
         'created_by',
     ];
 

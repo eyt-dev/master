@@ -4,19 +4,19 @@
 <div class="container-fluid">
     <div class="row mb-3">
         <div class="col-md-6">
-            <h1>@if($contact->exists) Edit Contact @else Create Contact @endif</h1>
+            <h1>@if($contact->exists) Edit Global Contact @else Create Global Contact @endif</h1>
         </div>
         <div class="col-md-6 text-right">
-            <a href="{{ route('contact.index') }}" class="btn btn-secondary">Back</a>
+            <a href="{{ route('gcontact.index') }}" class="btn btn-secondary">Back</a>
         </div>
     </div>
 
     <div class="card">
         <div class="card-body">
             @if ($contact->exists)
-                <form method="POST" action="{{ route('contact.update', $contact->id) }}">
+                <form method="POST" action="{{ route('gcontact.update', $contact->id) }}" enctype="multipart/form-data">
             @else
-                <form method="POST" action="{{ route('contact.store') }}">
+                <form method="POST" action="{{ route('gcontact.store') }}" enctype="multipart/form-data">
             @endif
                 @csrf
 
@@ -62,6 +62,14 @@
                         <div class="form-group">
                             <label for="phone">Phone</label>
                             <input name="phone" value="{{ old('phone', $contact->phone) }}" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="image">Image</label>
+                            <input type="file" name="image" class="form-control-file">
+                            @if($contact->image)
+                                <div class="mt-2"><img src="{{ asset('storage/contacts/' . $contact->image) }}" alt="image" style="max-height:70px"></div>
+                            @endif
                         </div>
                     </div>
 

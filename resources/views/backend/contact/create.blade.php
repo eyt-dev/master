@@ -1,12 +1,18 @@
 <form 
-    action="{{ isset($contact) && $contact->id ? route('contact.update', ['username' => $siteSlug, 'contact' => $contact->id]) : route('contact.store', ['username' => $siteSlug]) }}" 
-    method="POST" 
+    method="POST"
+    action="{{ isset($contact) && $contact->id 
+        ? route('gcontact.update', ['username' => $siteSlug, 'contact' => $contact->id]) 
+        : route('gcontact.store', ['username' => $siteSlug]) }}" 
     id="contact_form" 
     enctype="multipart/form-data" 
-    novalidate="" 
+    novalidate 
     class="needs-validation">
 
     @csrf
+
+    @if(isset($contact) && $contact->id)
+        @method('PUT')
+    @endif
 
     <div class="row">
         <div class="col-sm-6">
@@ -75,12 +81,35 @@
         </div>
     </div>
 
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="form-group">
+                <label>Image</label>
+                <input type="file" name="image" class="form-control-file">
+                @if(!empty($contact->image))
+                    <div class="mt-2"><img src="{{ asset('storage/contacts/' . $contact->image) }}" alt="image" style="max-height:70px"></div>
+                @endif
+                @error('image')
+                    <label class="error">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
+    </div>
+
     <script>
         function updateVatCode() {
             const select = document.getElementById('vat_country_select');
             const codeInput = document.getElementById('vat_code_input');
-            codeInput.value = select.value;
+            if (!select || !codeInput) return;
+            codeInput.value = select.value || '';
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // auto-set code on load if selection exists
+            updateVatCode();
+            const select = document.getElementById('vat_country_select');
+            if (select) select.addEventListener('change', updateVatCode);
+        });
     </script>
 
     <div class="row">
@@ -159,6 +188,6 @@
 
     <div class="card-footer">
         <button class="btn btn-primary" type="submit">Save</button>
-        <a href="{{ route('contact.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('gcontact.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>

@@ -33,9 +33,9 @@
 		</li>
 		@endcan
 		<li class="slide">
-			<a class="side-menu__item" href="{{route('contact.index', ['username' => $siteSlug])}}">
+			<a class="side-menu__item" href="{{route('gcontact.index', ['username' => $siteSlug])}}">
 			<svg class="side-menu__icon" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none"></path><path d="M20 0H4v2h16V0zM4 24h16v-2H4v2zM20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 12.5c-2.49 0-4.5-2.01-4.5-4.5s2.01-4.5 4.5-4.5 4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5z"></path></svg>
-			<span class="side-menu__label">Contacts</span></a>
+			<span class="side-menu__label">Global Contacts</span></a>
 		</li>
 		@canany(['view.role', 'view.permission'])
 		<li class="slide">

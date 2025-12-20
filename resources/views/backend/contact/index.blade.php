@@ -12,7 +12,7 @@
 @section('page-header')
     <div class="page-header">
         <div class="page-leftheader">
-            <h4 class="page-title mb-0">Contacts</h4>
+            <h4 class="page-title mb-0">Global Contacts</h4>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="#"><i class="fe fe-users mr-2 fs-14"></i>Contacts</a></li>
                 <li class="breadcrumb-item active" aria-current="page"><a href="#">Listing</a></li>
@@ -49,6 +49,7 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
+                                    <th>Image</th>
                                     <th>Name</th>
                                     <th>Formal Name</th>
                                     <th>VAT</th>
@@ -87,7 +88,7 @@
     <script>
         $(document).on('click', '#add_new', function() {
             $.ajax({
-                url: "{{ route('contact.create', ['username' => $siteSlug]) }}",
+                url: "{{ route('gcontact.create', ['username' => $siteSlug]) }}",
                 type: "GET",
                 success: function(response) {
                     $("#contact_form_modal .modal-body").html(response);
@@ -99,7 +100,6 @@
         });
 
         $(document).on('click', '.edit-contact', function() {
-            var id = $(this).data('id');
             $.ajax({
                 url: $(this).data('path'),
                 success: function(response) {
@@ -111,13 +111,14 @@
             });
         });
 
+
         var table = $('#contact_table').DataTable({
             processing: true,
             serverSide: true,
-            responsive: true,
-            ajax: "{{ route('contact.index', ['username' => $siteSlug]) }}",
+                ajax: "{{ route('gcontact.index', ['username' => $siteSlug]) }}",
             columns: [
                 { data: 'id', name: 'id' },
+                { data: 'image', name: 'image', orderable: false, searchable: false },
                 { data: 'name', name: 'name' },
                 { data: 'formal_name', name: 'formal_name' },
                 { data: 'vat', name: 'vat', orderable: false, searchable: false },
@@ -129,34 +130,34 @@
             ]
         });
 
-        $(document).on('click', '.delete-contact', function() {
+        $(document).on('click', '.delete-contact', function () {
             var id = $(this).attr("data-id");
+
             swal({
                 title: "Are you sure?",
                 text: "Once deleted, you will not be able to recover this contact!",
-                icon: "warning",
-                buttons: true,
-                dangerMode: true,
+                type: "warning",
                 showCancelButton: true,
                 confirmButtonText: "Yes, delete it!",
-                cancelButtonText: "Cancel"
-            }, function(willDelete) {
-                if (willDelete) {
-                    $.ajax({
-                        type: "get",
-                        headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        url: "{{ route('contact.destroy', ['username' => $siteSlug, 'contact' => ':id']) }}".replace(':id', id),
-                        success: function(response) {
-                            swal({
-                                title: response.msg
-                            }, function(result) {
-                                location.reload();
-                            });
-                        }
-                    });
-                }
+                cancelButtonText: "Cancel",
+                closeOnConfirm: false
+            }, function () {
+
+                $.ajax({
+                    type: "DELETE",
+                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                    url: "{{ route('gcontact.destroy', ['username' => $siteSlug, 'contact' => ':id']) }}"
+                            .replace(':id', id),
+
+                    success: function (response) {
+                        swal("Deleted!", response.msg, "success");
+                        table.ajax.reload();
+                    }
+                });
+
             });
         });
+
 
         function checkValidation() {
             var forms = document.getElementsByClassName('needs-validation');

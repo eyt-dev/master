@@ -46,7 +46,8 @@
                     <option value="">Select Country</option>
                     @if(isset($countries) && $countries)
                         @foreach ($countries as $country)
-                            <option value="{{ $country->iso2 }}" data-iso2="{{ $country->iso2 }}" {{ old('vat_country_code', $contact->vat_country_code ?? '') == $country->iso2 ? 'selected' : '' }}>
+                            @php $iso = $country->iso2 ?? strtoupper(substr($country->name,0,2)); @endphp
+                            <option value="{{ $iso }}" data-iso2="{{ $iso }}" {{ old('vat_country_code', $contact->vat_country_code ?? '') == $iso ? 'selected' : '' }}>
                                 {{ $country->name }}
                             </option>
                         @endforeach
@@ -101,7 +102,9 @@
             const select = document.getElementById('vat_country_select');
             const codeInput = document.getElementById('vat_code_input');
             if (!select || !codeInput) return;
-            codeInput.value = select.value || '';
+            const selectedOption = select.options[select.selectedIndex];
+            const vatCode = (selectedOption && selectedOption.dataset && selectedOption.dataset.iso2) ? selectedOption.dataset.iso2 : select.value;
+            codeInput.value = vatCode || '';
         }
 
         document.addEventListener('DOMContentLoaded', function() {

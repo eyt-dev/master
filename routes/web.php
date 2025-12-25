@@ -19,6 +19,7 @@ use App\Http\Controllers\Backend\SettingController;
 use App\Http\Controllers\Backend\SlideController;
 use App\Http\Controllers\Backend\TestimonialController;
 use App\Http\Controllers\Backend\ContactController;
+use App\Http\Controllers\Backend\MyContactController;
 
 /*
 |--------------------------------------------------------------------------
@@ -180,6 +181,10 @@ if ($currentHost === config('domains.admin_subdomain')) {
                                 ->name('store')
                                 ->middleware('permission:create.contact');
 
+                            Route::get('/search', 'search')
+                                ->name('search')
+                                ->middleware('permission:view.contact');
+
                             Route::get('/{contact}/edit', 'edit')
                                 ->name('edit')
                                 ->middleware('permission:edit.contact');
@@ -189,6 +194,36 @@ if ($currentHost === config('domains.admin_subdomain')) {
                                 ->middleware('permission:edit.contact');
 
                             Route::delete('/{contact}', 'destroy')
+                                ->name('destroy')
+                                ->middleware('permission:delete.contact');
+                        });
+
+                    Route::prefix('gmycontact')
+                        ->name('gmycontact.')
+                        ->controller(MyContactController::class)
+                        ->group(function () {
+
+                            Route::get('/', 'index')
+                                ->name('index')
+                                ->middleware('permission:view.contact');
+
+                            Route::get('/create', 'create')
+                                ->name('create')
+                                ->middleware('permission:create.contact');
+
+                            Route::post('/', 'store')
+                                ->name('store')
+                                ->middleware('permission:create.contact');
+
+                            Route::get('/{mycontact}/edit', 'edit')
+                                ->name('edit')
+                                ->middleware('permission:edit.contact');
+
+                            Route::put('/{mycontact}', 'update')
+                                ->name('update')
+                                ->middleware('permission:edit.contact');
+
+                            Route::delete('/{mycontact}', 'destroy')
                                 ->name('destroy')
                                 ->middleware('permission:delete.contact');
                         });

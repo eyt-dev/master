@@ -4,17 +4,17 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Contact;
+use App\Models\MyContact;
 use App\Models\CountryRegion;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 
-class ContactController extends Controller
+class MyContactController extends Controller
 {
     public function index(Request $request, $siteUrl)
     {
         if ($request->ajax()) {
-            $data = Contact::with('creator')
+            $data = MyContact::with('creator')
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                     $query->where('created_by', auth()->id());
                 })
@@ -24,7 +24,7 @@ class ContactController extends Controller
             return datatables()->of($data)
                 ->addColumn('image', function ($row) {
                     if ($row->image) {
-                        return '<img src="' . asset('storage/contacts/' . $row->image) . '" style="max-height:50px;" />';
+                        return '<img src="' . asset('storage/my_contacts/' . $row->image) . '" style="max-height:50px;" />';
                     }
                     return '';
                 })
@@ -35,11 +35,9 @@ class ContactController extends Controller
                     return $row->creator->name ?? 'N/A';
                 })
                 ->addColumn('action', function ($row) {
-                    return '<a class="edit-contact btn btn-sm btn-success"
-                                data-path="' . route('gcontact.edit', ['username' => request()->segment(1), 'contact' => $row->id]) . '"
-                                title="Edit"><i class="fa fa-edit"></i></a>'
-                        . '<a class="delete-contact btn btn-sm btn-danger"
-                                data-id="' . $row->id . '" title="Delete"><i class="fa fa-trash"></i></a>';
+                    return '<a class="edit-mycontact btn btn-sm btn-success"'
+                        . ' data-path="' . route('gmycontact.edit', ['username' => request()->segment(1), 'mycontact' => $row->id]) . '" title="Edit"><i class="fa fa-edit"></i></a>'
+                        . '<a class="delete-mycontact btn btn-sm btn-danger" data-id="' . $row->id . '" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
                 ->rawColumns(['action','image'])
@@ -47,14 +45,14 @@ class ContactController extends Controller
         }
 
         $countries = CountryRegion::orderBy('name')->get();
-        return view('backend.contact.index', compact('countries'));
+        return view('backend.mycontact.index', compact('countries'));
     }
 
     public function create($siteUrl)
     {
-        $contact = new Contact();
+        $contact = new MyContact();
         $countries = CountryRegion::orderBy('name')->get();
-        return view('backend.contact.create', compact('contact', 'countries'));
+        return view('backend.mycontact.create', compact('contact', 'countries'));
     }
 
     public function store(Request $request, $siteUrl)
@@ -88,21 +86,21 @@ class ContactController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('contacts', 'public');
+            $path = $request->file('image')->store('my_contacts', 'public');
             $data['image'] = basename($path);
         }
 
-        Contact::create($data);
+        MyContact::create($data);
 
-        Session::flash('successMsg', 'Contact created successfully.');
-        return redirect()->route('gcontact.index', ['username' => request()->segment(1)]);
+        Session::flash('successMsg', 'My Contact created successfully.');
+        return redirect()->route('gmycontact.index', ['username' => request()->segment(1)]);
     }
 
     public function edit($siteUrl, $id)
     {
-        $contact = Contact::findOrFail($id);
+        $contact = MyContact::findOrFail($id);
         $countries = CountryRegion::orderBy('name')->get();
-        return view('backend.contact.create', compact('contact', 'countries'));
+        return view('backend.mycontact.create', compact('contact', 'countries'));
     }
 
     public function update(Request $request, $siteUrl, $id)
@@ -121,7 +119,7 @@ class ContactController extends Controller
             'image' => 'nullable|image|max:2048',
         ]);
 
-        $contact = Contact::findOrFail($id);
+        $contact = MyContact::findOrFail($id);
 
         $data = [
             'name' => $request->name,
@@ -139,41 +137,25 @@ class ContactController extends Controller
         if ($request->hasFile('image')) {
             // delete old image
             if ($contact->image) {
-                Storage::disk('public')->delete('contacts/' . $contact->image);
+                Storage::disk('public')->delete('my_contacts/' . $contact->image);
             }
-            $path = $request->file('image')->store('contacts', 'public');
+            $path = $request->file('image')->store('my_contacts', 'public');
             $data['image'] = basename($path);
         }
 
         $contact->update($data);
 
-        Session::flash('successMsg', 'Contact updated successfully.');
-        return redirect()->route('gcontact.index', ['username' => request()->segment(1)]);
+        Session::flash('successMsg', 'My Contact updated successfully.');
+        return redirect()->route('gmycontact.index', ['username' => request()->segment(1)]);
     }
 
     public function destroy($siteUrl, $id)
     {
-        $contact = Contact::findOrFail($id);
+        $contact = MyContact::findOrFail($id);
         if ($contact->image) {
-            Storage::disk('public')->delete('contacts/' . $contact->image);
+            Storage::disk('public')->delete('my_contacts/' . $contact->image);
         }
         $contact->delete();
-        return response()->json(['msg' => 'Contact deleted successfully.']);
-    }
-
-    public function search(Request $request, $siteUrl)
-    {
-        $q = $request->get('q');
-        $results = Contact::select('id','name','formal_name','vat_country_code','vat_number','email','phone','address1','address2','postal_code','city','image')
-            ->when($q, function ($query) use ($q) {
-                $query->where('name', 'like', "%{$q}%")
-                    ->orWhere('email', 'like', "%{$q}%")
-                    ->orWhere('phone', 'like', "%{$q}%");
-            })
-            ->orderBy('name')
-            ->limit(10)
-            ->get();
-
-        return response()->json($results);
+        return response()->json(['msg' => 'My Contact deleted successfully.']);
     }
 }

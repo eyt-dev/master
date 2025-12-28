@@ -7,16 +7,16 @@
             <h1>@if($contact->exists) Edit My Contact @else Create My Contact @endif</h1>
         </div>
         <div class="col-md-6 text-right">
-            <a href="{{ route('gmycontact.index') }}" class="btn btn-secondary">Back</a>
+            <a href="{{ route('contacts.index') }}" class="btn btn-secondary">Back</a>
         </div>
     </div>
 
     <div class="card">
         <div class="card-body">
             @if ($contact->exists)
-                <form method="POST" action="{{ route('gmycontact.update', $contact->id) }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('contacts.update', $contact->id) }}" enctype="multipart/form-data">
             @else
-                <form method="POST" action="{{ route('gmycontact.store') }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('contacts.store') }}" enctype="multipart/form-data">
             @endif
                 @csrf
 

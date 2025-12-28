@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\MyContact;
+use App\Models\Contact;
 use App\Models\CountryRegion;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
@@ -36,7 +37,7 @@ class MyContactController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     return '<a class="edit-mycontact btn btn-sm btn-success"'
-                        . ' data-path="' . route('gmycontact.edit', ['username' => request()->segment(1), 'mycontact' => $row->id]) . '" title="Edit"><i class="fa fa-edit"></i></a>'
+                        . ' data-path="' . route('contacts.edit', ['username' => request()->segment(1), 'mycontact' => $row->id]) . '" title="Edit"><i class="fa fa-edit"></i></a>'
                         . '<a class="delete-mycontact btn btn-sm btn-danger" data-id="' . $row->id . '" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
@@ -62,7 +63,7 @@ class MyContactController extends Controller
             'formal_name' => 'nullable|string|max:191',
             'vat_country_code' => 'nullable|string|max:4',
             'vat_number' => 'nullable|string|max:64',
-            'email' => 'nullable|email|max:191',
+            'email' => 'nullable|email|unique:my_contacts,email',
             'phone' => 'nullable|string|max:64',
             'address1' => 'nullable|string|max:255',
             'address2' => 'nullable|string|max:255',
@@ -85,6 +86,8 @@ class MyContactController extends Controller
             'created_by' => auth()->id(),
         ];
 
+        $contact = Contact::where('email', $request->email)->first();
+
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('my_contacts', 'public');
             $data['image'] = basename($path);
@@ -92,8 +95,13 @@ class MyContactController extends Controller
 
         MyContact::create($data);
 
+        //If record not exist in global contact then add this record to contacts table
+        if (!$contact && $request->email) {
+            Contact::create($data);
+        }
+
         Session::flash('successMsg', 'My Contact created successfully.');
-        return redirect()->route('gmycontact.index', ['username' => request()->segment(1)]);
+        return redirect()->route('contacts.index', ['username' => request()->segment(1)]);
     }
 
     public function edit($siteUrl, $id)
@@ -146,7 +154,7 @@ class MyContactController extends Controller
         $contact->update($data);
 
         Session::flash('successMsg', 'My Contact updated successfully.');
-        return redirect()->route('gmycontact.index', ['username' => request()->segment(1)]);
+        return redirect()->route('contacts.index', ['username' => request()->segment(1)]);
     }
 
     public function destroy($siteUrl, $id)

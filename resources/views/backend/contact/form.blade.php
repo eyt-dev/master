@@ -7,16 +7,16 @@
             <h1>@if($contact->exists) Edit Global Contact @else Create Global Contact @endif</h1>
         </div>
         <div class="col-md-6 text-right">
-            <a href="{{ route('gcontact.index') }}" class="btn btn-secondary">Back</a>
+            <a href="{{ route('global_contacts.index') }}" class="btn btn-secondary">Back</a>
         </div>
     </div>
 
     <div class="card">
         <div class="card-body">
             @if ($contact->exists)
-                <form method="POST" action="{{ route('gcontact.update', $contact->id) }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('global_contacts.update', $contact->id) }}" enctype="multipart/form-data">
             @else
-                <form method="POST" action="{{ route('gcontact.store') }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('global_contacts.store') }}" enctype="multipart/form-data">
             @endif
                 @csrf
 

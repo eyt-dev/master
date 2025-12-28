@@ -1,8 +1,8 @@
 <form 
     method="POST"
     action="{{ isset($contact) && $contact->id 
-        ? route('gcontact.update', ['username' => $siteSlug, 'contact' => $contact->id]) 
-        : route('gcontact.store', ['username' => $siteSlug]) }}" 
+        ? route('global_contacts.update', ['username' => $siteSlug, 'contact' => $contact->id]) 
+        : route('global_contacts.store', ['username' => $siteSlug]) }}" 
     id="contact_form" 
     enctype="multipart/form-data" 
     novalidate 
@@ -63,7 +63,7 @@
             <div class="form-group">
                 <label>VAT Code</label>
                 <input type="text" id="vat_code_input" name="vat_country_code" class="form-control" placeholder="DE" maxlength="4"
-                    value="{{ old('vat_country_code', $contact->vat_country_code ?? '') }}">
+                    value="{{ old('vat_country_code', $contact->vat_country_code ?? '') }}" readonly>
                 @error('vat_country_code')
                     <label class="error">{{ $message }}</label>
                 @enderror
@@ -191,6 +191,6 @@
 
     <div class="card-footer">
         <button class="btn btn-primary" type="submit">Save</button>
-        <a href="{{ route('gcontact.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('global_contacts.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>

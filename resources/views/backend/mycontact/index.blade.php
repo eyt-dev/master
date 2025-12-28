@@ -88,7 +88,7 @@
     <script>
         $(document).on('click', '#add_new_mycontact', function() {
             $.ajax({
-                url: "{{ route('gmycontact.create', ['username' => $siteSlug]) }}",
+                url: "{{ route('contacts.create', ['username' => $siteSlug]) }}",
                 type: "GET",
                 success: function(response) {
                     $("#mycontact_form_modal .modal-body").html(response);
@@ -115,7 +115,7 @@
         var table = $('#mycontact_table').DataTable({
             processing: true,
             serverSide: true,
-                ajax: "{{ route('gmycontact.index', ['username' => $siteSlug]) }}",
+                ajax: "{{ route('contacts.index', ['username' => $siteSlug]) }}",
             columns: [
                 { data: 'id', name: 'id' },
                 { data: 'image', name: 'image', orderable: false, searchable: false },
@@ -146,7 +146,7 @@
                 $.ajax({
                     type: "DELETE",
                     headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                    url: "{{ route('gmycontact.destroy', ['username' => $siteSlug, 'mycontact' => ':id']) }}".replace(':id', id),
+                    url: "{{ route('contacts.destroy', ['username' => $siteSlug, 'mycontact' => ':id']) }}".replace(':id', id),
 
                     success: function (response) {
                         swal("Deleted!", response.msg, "success");

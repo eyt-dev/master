@@ -1,8 +1,8 @@
 <form 
     method="POST"
     action="{{ isset($contact) && $contact->id 
-        ? route('gmycontact.update', ['username' => $siteSlug, 'mycontact' => $contact->id]) 
-        : route('gmycontact.store', ['username' => $siteSlug]) }}" 
+        ? route('contacts.update', ['username' => $siteSlug, 'mycontact' => $contact->id]) 
+        : route('contacts.store', ['username' => $siteSlug]) }}" 
     id="mycontact_form" 
     enctype="multipart/form-data" 
     novalidate 
@@ -15,26 +15,18 @@
     @endif
 
     <div class="row">
-        <div class="col-sm-12">
-            @if(!isset($contact) || !$contact->id)
-            <div class="form-group" style="position:relative;">
-                <label>Search Global Contact</label>
-                <input type="text" id="global_contact_search" class="form-control" placeholder="Search by name, email or phone">
-                <div id="global_contact_suggestions" class="list-group" style="position:absolute; left:0; right:0; width:100%; z-index:9999; display:none;"></div>
-            </div>
-            @endif            
-        </div>
 
         <div class="col-sm-6">
-            <div class="form-group">
+            <div class="form-group" style="position:relative;">
                 <label>Name <span class="text-red">*</span></label>
-                <input type="text" name="name" class="form-control" placeholder="Name" 
+                <input id="contact_name" type="text" name="name" class="form-control" placeholder="Name" 
                     value="{{ old('name', $contact->name ?? '') }}" required>
+                <div id="name_suggestions" class="list-group" style="position:absolute; left:0; right:0; width:100%; z-index:9999; display:none;"></div>
                 @error('name')
                     <label class="error">{{ $message }}</label>
                 @enderror
             </div>
-         </div>
+        </div>
 
         <div class="col-sm-6">
             <div class="form-group">
@@ -73,7 +65,7 @@
             <div class="form-group">
                 <label>VAT Code</label>
                 <input type="text" id="vat_code_input" name="vat_country_code" class="form-control" placeholder="DE" maxlength="4"
-                    value="{{ old('vat_country_code', $contact->vat_country_code ?? '') }}">
+                    value="{{ old('vat_country_code', $contact->vat_country_code ?? '') }}" readonly>
                 @error('vat_country_code')
                     <label class="error">{{ $message }}</label>
                 @enderror
@@ -126,22 +118,22 @@
             if (select) select.addEventListener('change', updateVatCode);
         });
 
-        // Autocomplete for global contacts
+        // Autocomplete for contacts
         (function(){
-            var $search = $('#global_contact_search');
+            var $search = $('#contact_name');
             if (!$search.length) return;
-            var $suggestions = $('#global_contact_suggestions');
+            var $suggestions = $('#name_suggestions');
             var contactImageBase = "{{ asset('storage/contacts') }}";
 
             $search.on('input', function() {
                 var q = $(this).val();
                 if (!q || q.length < 2) { $suggestions.empty().hide(); return; }
 
-                $.get("{{ route('gcontact.search', ['username' => $siteSlug]) }}", { q: q }, function(data) {
+                $.get("{{ route('global_contacts.search', ['username' => $siteSlug]) }}", { q: q }, function(data) {
                     $suggestions.empty();
                     if (!data || !data.length) { $suggestions.hide(); return; }
 
-                    data.forEach(function(item){
+                    data.forEach(function(item) {
                         var label = item.name + (item.email ? ' — ' + item.email : '') + (item.phone ? ' — ' + item.phone : '');
                         var safe = $('<div>').text(label).html();
                         var a = $('<a href="#" class="list-group-item list-group-item-action contact-suggestion">').html(safe);
@@ -153,7 +145,7 @@
                 });
             });
 
-            $(document).on('click', '.contact-suggestion', function(e){
+            $(document).on('click', '.contact-suggestion', function(e) {
                 e.preventDefault();
                 var item = $(this).data('item');
 
@@ -175,12 +167,44 @@
                 }
 
                 $suggestions.empty().hide();
-                $search.val('');
             });
 
-            $(document).on('click', function(e){
-                if (!$(e.target).closest('#global_contact_search, #global_contact_suggestions').length) {
+            // Hide suggestions when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#contact_name, #name_suggestions').length) {
                     $suggestions.hide();
+                }
+            });
+
+            // Handle keyboard navigation
+            $search.on('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    $suggestions.hide();
+                } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    var $items = $suggestions.find('.contact-suggestion');
+                    if (!$items.length) return;
+                    
+                    var $active = $suggestions.find('.active');
+                    if (e.key === 'ArrowDown') {
+                        if (!$active.length) {
+                            $items.first().addClass('active');
+                        } else {
+                            $active.removeClass('active').next('.contact-suggestion').addClass('active');
+                        }
+                    } else {
+                        if (!$active.length) {
+                            $items.last().addClass('active');
+                        } else {
+                            $active.removeClass('active').prev('.contact-suggestion').addClass('active');
+                        }
+                    }
+                } else if (e.key === 'Enter') {
+                    var $active = $suggestions.find('.contact-suggestion.active');
+                    if ($active.length) {
+                        e.preventDefault();
+                        $active.trigger('click');
+                    }
                 }
             });
         })();
@@ -262,6 +286,6 @@
 
     <div class="card-footer">
         <button class="btn btn-primary" type="submit">Save</button>
-        <a href="{{ route('gmycontact.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('contacts.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>

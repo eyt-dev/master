@@ -88,7 +88,7 @@
     <script>
         $(document).on('click', '#add_new', function() {
             $.ajax({
-                url: "{{ route('gcontact.create', ['username' => $siteSlug]) }}",
+                url: "{{ route('global_contacts.create', ['username' => $siteSlug]) }}",
                 type: "GET",
                 success: function(response) {
                     $("#contact_form_modal .modal-body").html(response);
@@ -115,7 +115,7 @@
         var table = $('#contact_table').DataTable({
             processing: true,
             serverSide: true,
-                ajax: "{{ route('gcontact.index', ['username' => $siteSlug]) }}",
+                ajax: "{{ route('global_contacts.index', ['username' => $siteSlug]) }}",
             columns: [
                 { data: 'id', name: 'id' },
                 { data: 'image', name: 'image', orderable: false, searchable: false },
@@ -146,7 +146,7 @@
                 $.ajax({
                     type: "DELETE",
                     headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                    url: "{{ route('gcontact.destroy', ['username' => $siteSlug, 'contact' => ':id']) }}"
+                    url: "{{ route('global_contacts.destroy', ['username' => $siteSlug, 'contact' => ':id']) }}"
                             .replace(':id', id),
 
                     success: function (response) {

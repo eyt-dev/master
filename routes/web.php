@@ -71,7 +71,7 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::middleware(['auth', 'identify.tenant'])->group(function () {
                     Route::get('/dashboard', function () {
                         return view('index');
-                    })->name('dashboard');    
+                    })->name('dashboard');
                     Route::controller(ProfileController::class)->prefix('profile')->group(function () {
                         Route::get('/', 'index')->name('profile.index');
                         Route::get('{id?}', 'index')->name('profile.index');
@@ -164,11 +164,10 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('/check-setting/{created_by}', 'checkSetting')->name('setting.checkSetting');
                     }); 
                     
-                    Route::prefix('gcontact')
-                        ->name('gcontact.')
+                    Route::prefix('global_contacts')
+                        ->name('global_contacts.')
                         ->controller(ContactController::class)
                         ->group(function () {
-
                             Route::get('/', 'index')
                                 ->name('index')
                                 ->middleware('permission:view.contact');
@@ -198,11 +197,10 @@ if ($currentHost === config('domains.admin_subdomain')) {
                                 ->middleware('permission:delete.contact');
                         });
 
-                    Route::prefix('gmycontact')
-                        ->name('gmycontact.')
+                    Route::prefix('contacts')
+                        ->name('contacts.')
                         ->controller(MyContactController::class)
                         ->group(function () {
-
                             Route::get('/', 'index')
                                 ->name('index')
                                 ->middleware('permission:view.contact');

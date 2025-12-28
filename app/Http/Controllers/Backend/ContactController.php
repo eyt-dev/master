@@ -36,7 +36,7 @@ class ContactController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     return '<a class="edit-contact btn btn-sm btn-success"
-                                data-path="' . route('gcontact.edit', ['username' => request()->segment(1), 'contact' => $row->id]) . '"
+                                data-path="' . route('global_contacts.edit', ['username' => request()->segment(1), 'contact' => $row->id]) . '"
                                 title="Edit"><i class="fa fa-edit"></i></a>'
                         . '<a class="delete-contact btn btn-sm btn-danger"
                                 data-id="' . $row->id . '" title="Delete"><i class="fa fa-trash"></i></a>';
@@ -95,7 +95,7 @@ class ContactController extends Controller
         Contact::create($data);
 
         Session::flash('successMsg', 'Contact created successfully.');
-        return redirect()->route('gcontact.index', ['username' => request()->segment(1)]);
+        return redirect()->route('global_contacts.index', ['username' => request()->segment(1)]);
     }
 
     public function edit($siteUrl, $id)
@@ -148,7 +148,7 @@ class ContactController extends Controller
         $contact->update($data);
 
         Session::flash('successMsg', 'Contact updated successfully.');
-        return redirect()->route('gcontact.index', ['username' => request()->segment(1)]);
+        return redirect()->route('global_contacts.index', ['username' => request()->segment(1)]);
     }
 
     public function destroy($siteUrl, $id)
@@ -164,16 +164,23 @@ class ContactController extends Controller
     public function search(Request $request, $siteUrl)
     {
         $q = $request->get('q');
-        $results = Contact::select('id','name','formal_name','vat_country_code','vat_number','email','phone','address1','address2','postal_code','city','image')
-            ->when($q, function ($query) use ($q) {
-                $query->where('name', 'like', "%{$q}%")
-                    ->orWhere('email', 'like', "%{$q}%")
-                    ->orWhere('phone', 'like', "%{$q}%");
+        $results = Contact::select('id', 'name', 'formal_name', 'vat_country_code', 'vat_number', 
+                'email', 'phone', 'address1', 'address2', 'postal_code', 'city', 'image')
+            ->whereNotIn('email', function($query) {
+                $query->select('email')
+                    ->from('my_contacts')
+                    ->whereNotNull('email');
+            })
+            ->when($q, function($query) use ($q) {
+                $query->where(function($query) use ($q) {
+                    $query->where('name', 'like', "%{$q}%")
+                        ->orWhere('email', 'like', "%{$q}%")
+                        ->orWhere('phone', 'like', "%{$q}%");
+                });
             })
             ->orderBy('name')
             ->limit(10)
             ->get();
-
         return response()->json($results);
     }
 }

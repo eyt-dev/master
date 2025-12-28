@@ -7,7 +7,6 @@
 @endsection
 
 @section('page-header')
-<meta name="csrf-token" content="{{ csrf_token() }}">
     <div class="page-header">
         <div class="page-leftheader">
             <h4 class="page-title mb-0">Wheels</h4>

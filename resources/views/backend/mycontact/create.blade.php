@@ -161,7 +161,26 @@
                 $('input[name="city"]').val(item.city || '');
 
                 if (item.image) {
-                    $('#selected_contact_image_preview').html('<div class="mt-2"><img src="' + contactImageBase + '/' + item.image + '" alt="image" style="max-height:70px"></div>');
+                    const imagePath = 'storage/contacts/' + item.image;
+                    const fallbackPath = 'storage/my_contacts/' + item.image;
+                    
+                    // Check if image exists in contacts folder
+                    const img = new Image();
+                    img.onload = function() {
+                        $('#selected_contact_image_preview').html('<div class="mt-2"><img src="' + imagePath + '" alt="image" style="max-height:70px"></div>');
+                    };
+                    img.onerror = function() {
+                        // If first image fails, try fallback
+                        const fallbackImg = new Image();
+                        fallbackImg.onload = function() {
+                            $('#selected_contact_image_preview').html('<div class="mt-2"><img src="' + fallbackPath + '" alt="image" style="max-height:70px"></div>');
+                        };
+                        fallbackImg.onerror = function() {
+                            $('#selected_contact_image_preview').empty();
+                        };
+                        fallbackImg.src = fallbackPath;
+                    };
+                    img.src = imagePath;
                 } else {
                     $('#selected_contact_image_preview').empty();
                 }

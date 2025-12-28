@@ -181,8 +181,8 @@ if ($currentHost === config('domains.admin_subdomain')) {
                                 ->middleware('permission:create.global_contacts');
 
                             Route::get('/search', 'search')
-                                ->name('search')
-                                ->middleware('permission:view.global_contacts');
+                                ->name('search');
+                                // ->middleware('permission:view.global_contacts');
 
                             Route::get('/{contact}/edit', 'edit')
                                 ->name('edit')

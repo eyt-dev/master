@@ -23,7 +23,8 @@ class ContactController extends Controller
 
             return datatables()->of($data)
                 ->addColumn('image', function ($row) {
-                    $imagePath = $row->created_by != 1 ? 'my_contacts' : 'contacts';
+                    $imagePath = ($row->created_by == 1 || $row->created_by == null)
+                        ? 'contacts' : 'my_contacts';
                     if ($row->image) {
                         return '<img src="' . asset("storage/{$imagePath}/" . $row->image) . '" style="max-height:50px;" />';
                     }

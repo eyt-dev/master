@@ -170,31 +170,31 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         ->group(function () {
                             Route::get('/', 'index')
                                 ->name('index')
-                                ->middleware('permission:view.contact');
+                                ->middleware('permission:view.global_contacts');
 
                             Route::get('/create', 'create')
                                 ->name('create')
-                                ->middleware('permission:create.contact');
+                                ->middleware('permission:create.global_contacts');
 
                             Route::post('/', 'store')
                                 ->name('store')
-                                ->middleware('permission:create.contact');
+                                ->middleware('permission:create.global_contacts');
 
                             Route::get('/search', 'search')
                                 ->name('search')
-                                ->middleware('permission:view.contact');
+                                ->middleware('permission:view.global_contacts');
 
                             Route::get('/{contact}/edit', 'edit')
                                 ->name('edit')
-                                ->middleware('permission:edit.contact');
+                                ->middleware('permission:edit.global_contacts');
 
                             Route::put('/{contact}', 'update')
                                 ->name('update')
-                                ->middleware('permission:edit.contact');
+                                ->middleware('permission:edit.global_contacts');
 
                             Route::delete('/{contact}', 'destroy')
                                 ->name('destroy')
-                                ->middleware('permission:delete.contact');
+                                ->middleware('permission:delete.global_contacts');
                         });
 
                     Route::prefix('contacts')
@@ -203,27 +203,27 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         ->group(function () {
                             Route::get('/', 'index')
                                 ->name('index')
-                                ->middleware('permission:view.contact');
+                                ->middleware('permission:view.contacts');
 
                             Route::get('/create', 'create')
                                 ->name('create')
-                                ->middleware('permission:create.contact');
+                                ->middleware('permission:create.contacts');
 
                             Route::post('/', 'store')
                                 ->name('store')
-                                ->middleware('permission:create.contact');
+                                ->middleware('permission:create.contacts');
 
                             Route::get('/{mycontact}/edit', 'edit')
                                 ->name('edit')
-                                ->middleware('permission:edit.contact');
+                                ->middleware('permission:edit.contacts');
 
                             Route::put('/{mycontact}', 'update')
                                 ->name('update')
-                                ->middleware('permission:edit.contact');
+                                ->middleware('permission:edit.contacts');
 
                             Route::delete('/{mycontact}', 'destroy')
                                 ->name('destroy')
-                                ->middleware('permission:delete.contact');
+                                ->middleware('permission:delete.contacts');
                         });
 
                     Route::controller(SlideController::class)->prefix('slide')->group(function () {

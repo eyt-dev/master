@@ -79,9 +79,9 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::post('change-password/{id?}', 'changePassword')->name('profile.change-password');
                     });
                     Route::controller(AdminController::class)->prefix('admins')->group(function () {
-                        Route::get('/1', 'index')->name('admins.index')->middleware('permission:view.admin');
-                        Route::get('/2', 'index')->name('admins.index')->middleware('permission:view.public_vendor');;
-                        Route::get('/3', 'index')->name('admins.index')->middleware('permission:view.private_vendor');;
+                        Route::get('/admin', 'index')->name('admins.index')->middleware('permission:view.admin');
+                        Route::get('/publicvendor', 'publicVendor')->name('admins.publicVendor')->middleware('permission:view.public_vendor');
+                        Route::get('/privatevendor', 'privateVendor')->name('admins.privateVendor')->middleware('permission:view.private_vendor');
                         Route::get('create/{type?}', 'create')->name('admins.create');
                         Route::post('store', 'store')->name('admins.store');
                         Route::get('edit/{admin}', 'edit')->name('admins.edit');

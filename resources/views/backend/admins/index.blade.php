@@ -15,7 +15,7 @@
             @php
                 $breadcrumbText = 'Admins'; // Default text
 
-                switch(request('type')) {
+                switch($type) {
                     case 1:
                         $breadcrumbText = 'Admins';
                         break;
@@ -43,7 +43,7 @@
                     {{-- Super Admin (0) can create admins except Private Vendors (3) --}}
                     {{-- Admin (1) can create only Private Vendors (3) --}}
 
-                    <a id="add_new" class="btn btn-info" data-type="{{ request('type') }}" data-toggle="tooltip" title="Add new">
+                    <a id="add_new" class="btn btn-info" data-type="{{ $type }}" data-toggle="tooltip" title="Add new">
                         <i class="fe fe-plus mr-1"></i> Add new 
                     </a>
                 @endif
@@ -79,6 +79,7 @@
                                     <th>Email</th>
                                     <th>Username</th>
                                     <th>Created By</th>
+                                    <th>Status</th>
                                     <th data-priority="1">Action</th>
                                 </tr>
                             </thead>
@@ -121,18 +122,28 @@
     <script src="{{ URL::asset('assets/js/sweet-alert.js') }}"></script>
     <script src="{{URL::asset('assets/plugins/forn-wizard/js/jquery.validate.min.js')}}"></script>
     <script type="text/javascript">
-    var adminType = @json(request('type') ?? 1);
-    
+        var adminType = {{ $type }};
+        var routeName = '';
+        switch(adminType) {
+            case 1:
+                routeName = "{{ route('admins.index', ['username' => request()->get('username', $siteSlug)]) }}";
+                break;
+            case 2:
+                routeName = "{{ route('admins.publicVendor', ['username' => request()->get('username', $siteSlug)]) }}";
+                break;
+            case 3:
+                routeName = "{{ route('admins.privateVendor', ['username' => request()->get('username', $siteSlug)]) }}";
+                break;
+        }
         $(document).on('click', '#add_new', function() {
-            var adminType1 = @json(request('type') ?? 1);
             $.ajax({
-                url: "{{ route('admins.create', ['username' => request()->get('username', $siteSlug)]) }}/" + adminType1,
+                url: "{{ route('admins.create', ['username' => request()->get('username', $siteSlug)]) }}/" + adminType,
                 type: "GET",
                 success: function(response) {
                     console.log(response);
                     
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Add Admin");
+                    $(".modal-title").html("Create Form");
                     $("#admin_form_modal").modal('show');
                     // $("#admin_form input[name='type']").val(adminType);
                     checkValidation();
@@ -145,7 +156,7 @@
                 url: $(this).data('path'),
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Update Admin");
+                    $(".modal-title").html("Update Form");
                     $("#admin_form_modal").modal('show');
                     checkValidation();
                 }
@@ -156,7 +167,7 @@
             serverSide: true,
             responsive: true,
             ajax: {
-                url: "{{ route('admins.index', ['username' => request()->get('username', $siteSlug)]) }}",
+                url: routeName,
                 data: function (d) {
                     d.type = adminType; // Pass type dynamically
                 }
@@ -183,6 +194,11 @@
                 {
                     data: 'created_by_name',
                     name: 'created_by'
+                },
+                {
+                    data: 'status',
+                    name: 'status',
+                    visible: adminType == 1, // Only show for type=1
                 },
                 {
                     data: 'action',

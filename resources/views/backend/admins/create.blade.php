@@ -51,6 +51,18 @@
                 @enderror
             </div>
         </div>
+        @if($type == 1)
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label>Status <span class="text-red">*</span></label>
+                <select name="status" class="form-control" required>
+                    <option value="Enable" {{ (old('status', $admin->status ?? '') == 'Enable') ? 'selected' : '' }}>Enable</option>
+                    <option value="Disable" {{ (old('status', $admin->status ?? '') == 'Disable') ? 'selected' : '' }}>Disable</option>
+                    <option value="Pending" {{ (old('status', $admin->status ?? 'Pending') == 'Pending') ? 'selected' : '' }}>Pending</option>
+                </select>
+            </div>
+        </div>
+        @endif
         
 
     </div>

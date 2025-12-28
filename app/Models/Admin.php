@@ -25,21 +25,7 @@ class Admin extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'created_by',
-        'username',
-        'type' 
-        // 'address',
-        // 'phone',
-        // 'website',
-        // 'avatar',
-        // 'user_id',
-        // 'group_id',
-        // 'ugroup_id',
-        // 'username',
-        // 'access_table'
+    'name', 'email', 'password', 'type', 'status', 'created_by','username'
     ];
 
     /**
@@ -59,6 +45,7 @@ class Admin extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'status' => 'string'
     ];
 
     public function creator()

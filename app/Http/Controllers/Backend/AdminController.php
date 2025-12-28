@@ -23,79 +23,94 @@ class AdminController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index($type = null)
+    public function index()
     {
-            
-        if (request()->ajax()) {
-            $type = empty($type) ? intval(request('type')) : $type;
-            $admin = auth()->user();
+        return $this->handleAdminList(1); // 1 for admin
+    }
 
-            $query = Admin::query()->with('creator'); // Exclude logged-in admin
+    public function publicVendor()
+    {
+        return $this->handleAdminList(2); // 2 for public vendor
+    }
+
+    public function privateVendor()
+    {
+        return $this->handleAdminList(3); // 3 for private vendor
+    }
+
+    private function handleAdminList($type)
+    {
+        if (request()->ajax()) {
+            $admin = auth()->user();
+            $query = Admin::query()->with('creator');
+
             if ($admin->type == 0) {
+                $query->where('type', $type);
                 // Super Admin can see all type 3 admins
-                if ($type == 3) {
-                    $query->where('type', 3);
-                }
-                if ($type == 1) {
-                    $query->where('type', 1)->where('created_by', $admin->id);
-                }
-                if ($type == 2) {
-                    $query->where('type', 2)->where('created_by', $admin->id);
+                if ($type == 1 || $type == 2) {
+                    $query->where('created_by', $admin->id);
                 }
             } elseif ($admin->type == 1) {
                 // Admin can only see type 3 admins they created
                 if ($type == 3) {
                     $query->where('type', 3)->where('created_by', $admin->id);
                 }
-            }
-            
-            // Public Vendor (2) or Private Vendor (3) - Cannot manage admins
-            else {
+            } else {
                 abort(403, "Unauthorized access");
             }
 
             return datatables()->of($query->select('*'))
-            ->addColumn('created_by_name', function ($row) {
-                return $row->creator ? $row->creator->username : 'N/A'; // Get creator's name
-            })
+                ->addColumn('status', function($row) use ($type) {
+                    // Only show status for type=1
+                    if ($type != 1) {
+                        return null;
+                    }
+                    $statusClass = [
+                        'Enable' => 'badge-success',
+                        'Disable' => 'badge-danger',
+                        'Pending' => 'badge-warning'
+                    ][$row->status] ?? 'badge-secondary';
+                    return '<span class="badge ' . $statusClass . '">' . $row->status . '</span>';
+                })
+                ->addColumn('created_by_name', function ($row) {
+                    return $row->creator ? $row->creator->username : 'N/A';
+                })
                 ->addColumn('action', function ($row) use ($admin) {
                     $btn = '';
 
                     // Super Admin can edit and delete Admins & Public Vendors
                     if ($admin->type == 0 && in_array($row->type, [1, 2])) {
-                        $btn .= '<a class="edit-admin edit_form btn btn-icon btn-success mr-1 white" 
-                                    data-path="' . route('admins.edit', ['username' => request()->get('username', request()->segment(1)), 'admin' => $row->id]) . '" 
-                                    data-name="' . $row->name . '" 
-                                    data-id=' . $row->id . ' title="Edit"> 
-                                    <i class="fa fa-edit"></i> 
-                                </a>';
-                        $btn .= '<a class="btn btn-icon btn-danger mr-1 white delete-admin" 
-                                    data-id="' . $row->id . '" title="Delete"> 
-                                    <i class="fa fa-trash-o"></i> 
-                                </a>';
+                        $btn .= $this->getActionButtons($row);
                     }
 
                     // Admin can edit & delete only Private Vendors they created
                     if ($admin->type == 1 && $row->type == 3 && $row->created_by == $admin->id) {
-                        $btn .= '<a class="edit-admin edit_form btn btn-icon btn-success mr-1 white" 
-                                    data-path="' . route('admins.edit', ['username' => request()->get('username', request()->segment(1)), 'admin' => $row->id]) . '" 
-                                    data-name="' . $row->name . '" 
-                                    data-id=' . $row->id . ' title="Edit"> 
-                                    <i class="fa fa-edit"></i> 
-                                </a>';
-                        $btn .= '<a class="btn btn-icon btn-danger mr-1 white delete-admin" 
-                                    data-id="' . $row->id . '" title="Delete"> 
-                                    <i class="fa fa-trash-o"></i> 
-                                </a>';
+                        $btn .= $this->getActionButtons($row);
                     }
 
                     return $btn;
                 })
+                ->rawColumns(['action', 'status'])
                 ->addIndexColumn()
                 ->make(true);
         }
-       
+        
         return view('backend.admins.index', compact('type'));
+    }
+
+    private function getActionButtons($row)
+    {
+        return '
+            <a class="edit-admin edit_form btn btn-icon btn-success mr-1 white" 
+                data-path="' . route('admins.edit', ['username' => request()->get('username', request()->segment(1)), 'admin' => $row->id]) . '" 
+                data-name="' . $row->name . '" 
+                data-id=' . $row->id . ' title="Edit"> 
+                <i class="fa fa-edit"></i> 
+            </a>
+            <a class="btn btn-icon btn-danger mr-1 white delete-admin" 
+                data-id="' . $row->id . '" title="Delete"> 
+                <i class="fa fa-trash-o"></i> 
+            </a>';
     }
 
     /**
@@ -103,7 +118,7 @@ class AdminController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create($type = null)
+    public function create($siteUrl, $type = null)
     {       
         return view('backend.admins.create', ['admin' => new Admin(), 'type' => $type]);
     }
@@ -121,6 +136,7 @@ class AdminController extends Controller
             'username' => 'required',
             'email' => 'required|email|unique:admins',
             'password' => 'required|min:6',
+            'status' => 'required_if:type,1|in:Enable,Disable,Pending'
         ]);
         
         // Get admin type from request or default to Admin (1)
@@ -133,14 +149,18 @@ class AdminController extends Controller
             default => 'Admin',
         };
     
-        $admin = Admin::create([
+        $addData = [
             'name' => $request->name,
             'email' => $request->email,
             'username' => $request->username,
             'password' => Hash::make($request->password),
             'type' => $adminType,
             'created_by' => auth()->user()->id,
-        ]);
+        ];
+        if($adminType ==1) {
+            $addData['status'] = $request->status;
+        }
+        $admin = Admin::create($addData);
 
         if(empty($admin)) {
             Session::flash('errorMSg', 'Somethig went wrong.');
@@ -175,7 +195,17 @@ class AdminController extends Controller
 
         Session::flash('successMsg', '{$prefix} inserted successfully.');
         
-        return redirect()->route('admins.index', ['username' => request()->get('username', request()->segment(1)), 'type' => $adminType]);
+        // At the beginning of the update method, determine the route based on admin type
+        $routeName = 'admins.index'; // Default to admin index
+
+        if ($adminType == 2) {
+            $routeName = 'admins.publicVendor';
+        } elseif ($adminType == 3) {
+            $routeName = 'admins.privateVendor';
+        }
+
+        // Then update the return statement
+        return redirect()->route($routeName, ['username' => request()->get('username', request()->segment(1))]);
     }
 
     /**
@@ -193,7 +223,7 @@ class AdminController extends Controller
         }
 
         $roles = Role::all();
-        return view('backend.admins.create', ['admin' => $admin, 'roles' => $roles]);
+        return view('backend.admins.create', ['admin' => $admin, 'roles' => $roles, 'type' => $admin->type]);
     }
 
     /**
@@ -208,6 +238,8 @@ class AdminController extends Controller
         $request->validate([
             'name' => 'required',
             'username' => 'required',
+            // 'email' => 'required|email|unique:admins,email,' . $id,
+            // 'status' => 'required_if:type,1|in:Enable,Disable,Pending'
         ]);
 
         $admin = Admin::find($id);
@@ -217,14 +249,31 @@ class AdminController extends Controller
         }
 
         // Update the admin's name and email
-        $admin->update([
+        $admin->update();
+        $updateData = [
             'name' => $request->name,
             'username' => $request->username,
             'password' => $request->filled('password') ? Hash::make($request->password) : $admin->password,
-        ]);
+        ];
+
+        if($admin->type ==1) {
+            $updateData['status'] = $request->status;
+        }
+        $admin->update($updateData);
+
         // $admin->assignRole($request->role);
         
-        return redirect()->route('admins.index', ['username' => request()->get('username', request()->segment(1))]);
+        // At the beginning of the update method, determine the route based on admin type
+        $routeName = 'admins.index'; // Default to admin index
+
+        if ($admin->type == 2) {
+            $routeName = 'admins.publicVendor';
+        } elseif ($admin->type == 3) {
+            $routeName = 'admins.privateVendor';
+        }
+
+        // Then update the return statement
+        return redirect()->route($routeName, ['username' => request()->get('username', request()->segment(1))]);
     }
 
     /**

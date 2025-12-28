@@ -176,6 +176,7 @@ class ContactController extends Controller
             ->whereNotIn('email', function($query) {
                 $query->select('email')
                     ->from('my_contacts')
+                    ->where('created_by', auth()->id())
                     ->whereNotNull('email');
             })
             ->when($q, function($query) use ($q) {

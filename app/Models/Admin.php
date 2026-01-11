@@ -19,6 +19,7 @@ class Admin extends Authenticatable
     const PUBLIC_VENDOR = 2;
     const PRIVATE_VENDOR = 3;
 
+    protected $guard_name = 'admin'; // 🔑 MUST MATCH GUARD
     /**
      * The attributes that are mass assignable.
      *

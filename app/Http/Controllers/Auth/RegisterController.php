@@ -3,49 +3,26 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use Illuminate\Foundation\Auth\Registersadmins;
+use App\Models\Contact;
+use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
+use App\Models\CountryRegion;
+use App\Traits\RegistersAdmins;
+use Spatie\Permission\Models\Role;
 
 class RegisterController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Register Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles the registration of new admins as well as their
-    | validation and creation. By default this controller uses a trait to
-    | provide this functionality without requiring any additional code.
-    |
-    */
+    use RegistersAdmins;
 
-    use Registersadmins;
-
-    /**
-     * Where to redirect admins after registration.
-     *
-     * @var string
-     */
     protected $redirectTo = '/e/dashboard';
 
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
-        $this->middleware('guest');
+        $this->middleware('guest:admin');
     }
 
-    /**
-     * Get a validator for an incoming registration request.
-     *
-     * @param  array  $data
-     * @return \Illuminate\Contracts\Validation\Validator
-     */
     protected function validator(array $data)
     {
         return Validator::make($data, [
@@ -55,18 +32,31 @@ class RegisterController extends Controller
         ]);
     }
 
-    /**
-     * Create a new user instance after a valid registration.
-     *
-     * @param  array  $data
-     * @return \App\Models\User
-     */
     protected function create(array $data)
     {
-        return User::create([
+        $admin = Admin::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'type' => 4, // User type
         ]);
+
+        // Assign the User role
+        $role = Role::where('name', 'User')->first();
+        if ($role) {
+            $admin->assignRole($role);
+        }
+
+        // Create contact information
+        Contact::create([
+            'name' => $data['name'],
+            'formal_name' => $data['name'],
+            'email' => $data['email'],
+            'vat_country_code' => $data['vat_country_code'],
+            'vat_number' => $data['vat_number'],
+            'created_by' => $admin->id,
+        ]);
+
+        return $admin;
     }
 }

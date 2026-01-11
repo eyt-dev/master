@@ -49,6 +49,7 @@ if ($currentHost === config('domains.main_domain')) {
         });
     });
 }
+// Inside the Auth::routes() section, add:
 
 if ($currentHost === config('domains.admin_subdomain')) {
     Route::domain(config('domains.admin_subdomain'))->group(function () {
@@ -59,6 +60,9 @@ if ($currentHost === config('domains.admin_subdomain')) {
         Route::get('/', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
         Route::post('/', [App\Http\Controllers\Auth\LoginController::class, 'login']);
 
+        Route::get('register', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
+        Route::post('register', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
+
         if (request()->segment(1)) {
             Route::group(['prefix' => '{username}'], function () {
                 Auth::routes([
@@ -67,6 +71,9 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 ]);
                 Route::get('/', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
                 Route::post('/', [App\Http\Controllers\Auth\LoginController::class, 'login']);
+
+                Route::get('register', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
+                Route::post('register', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
 
                 Route::middleware(['auth', 'identify.tenant'])->group(function () {
                     Route::get('/dashboard', function () {
@@ -256,11 +263,15 @@ if ($currentHost === config('domains.admin_subdomain')) {
         ]);
         Route::get('/', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
         Route::post('/', [App\Http\Controllers\Auth\LoginController::class, 'login']);
+
+        Route::get('register', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
+        Route::post('register', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
+        
         Route::group(['prefix' => '{username}'], function () {
             Route::middleware(['auth', 'identify.tenant'])->group(function () {
                 Route::get('/dashboard', function () {
                 return view('index');
-            })->name('dashboard');    
+            })->name('dashboard');
             Route::controller(ProfileController::class)->prefix('profile')->group(function () {
                 Route::get('/', 'index')->name('profile.index');
                 Route::get('{id?}', 'index')->name('profile.index');

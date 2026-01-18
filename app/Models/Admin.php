@@ -26,7 +26,7 @@ class Admin extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-    'name', 'email', 'password', 'type', 'status', 'created_by','username'
+    'name', 'email', 'password', 'type', 'status', 'created_by','username','parent_id'
     ];
 
     /**
@@ -52,6 +52,11 @@ class Admin extends Authenticatable
     public function creator()
     {
         return $this->belongsTo(Admin::class, 'created_by');
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(Admin::class, 'parent_id');
     }
     // public function getProfileUrlAttribute()
     // {

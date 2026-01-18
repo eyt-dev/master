@@ -15,6 +15,7 @@ use App\Models\Setting;
 use Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
+use App\Models\CountryRegion;
 
 class AdminController extends Controller
 {
@@ -289,6 +290,62 @@ class AdminController extends Controller
             return response()->json(['msg' => 'Deleted successfully!']);
 
         return response()->json(['msg' => 'Something went wrong, Please try again'],500);
+    }
+
+    public function users(Request $request, $siteUrl)
+    {
+        if ($request->ajax()) {
+            $data = Admin::where('type', 4)
+                ->when(!auth('admin')->user()->hasRole('SuperAdmin'), function($query) {
+                    return $query->where('parent_id', auth('admin')->id());
+                })
+                ->with('creator')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return datatables()->of($data)
+                ->addColumn('status', function($row) {
+                    $statusClass = [
+                        'Enable' => 'badge-success',
+                        'Disable' => 'badge-danger',
+                        'Pending' => 'badge-warning'
+                    ][$row->status] ?? 'badge-secondary';
+                    return '<span class="badge ' . $statusClass . '">' . $row->status . '</span>';
+                })
+                ->addColumn('created_by_name', function ($row) {
+                    return $row->parent ? $row->parent->username : 'N/A';
+                })
+                ->addColumn('action', function ($row) {
+                    $statuses = [
+                        'Pending' => 'Pending',
+                        'Enable' => 'Active',
+                        'Disable' => 'Inactive'
+                    ];
+                    
+                    $html = '<select class="form-control status-dropdown" data-id="'.$row->id.'">';
+                    foreach ($statuses as $value => $label) {
+                        $selected = $row->status == $value ? 'selected' : '';
+                        $html .= '<option value="'.$value.'" '.$selected.'>'.$label.'</option>';
+                    }
+                    $html .= '</select>';
+                    
+                    return $html;
+                })
+                ->rawColumns(['action', 'status'])
+                ->addIndexColumn()
+                ->make(true);
+        }
+
+        $countries = CountryRegion::orderBy('name')->get();
+        return view('backend.admins.user', compact('countries'));
+    }
+    public function updateStatus(Request $request, $siteUrl)
+    {
+        $admin = Admin::findOrFail($request->id);
+        $admin->status = $request->status;
+        $admin->saveQuietly();
+        
+        return response()->json(['success' => 'Status updated successfully.']);
     }
 
 }

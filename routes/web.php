@@ -94,6 +94,8 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('edit/{admin}', 'edit')->name('admins.edit');
                         Route::post('{admin}', 'update')->name('admins.update');
                         Route::get('destroy/{admin}', 'destroy')->name('admins.destroy');
+                        Route::get('/users', 'users')->name('admins.users')->middleware('permission:view.admin');
+                        Route::patch('update-status', 'updateStatus')->name('admins.update-status');
                     });
                     Route::controller(RoleController::class)->prefix('role')->group(function () {
                         Route::get('/', 'index')->name('role.index'); //->middleware('permission:view.role');
@@ -279,14 +281,16 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::post('change-password/{id?}', 'changePassword')->name('profile.change-password');
             });
             Route::controller(AdminController::class)->prefix('admins')->group(function () {
-                Route::get('/1', 'index')->name('admins.index')->middleware('permission:view.admin');
-                Route::get('/2', 'index')->name('admins.index')->middleware('permission:view.public_vendor');;
-                Route::get('/3', 'index')->name('admins.index')->middleware('permission:view.private_vendor');;
+                Route::get('/admin', 'index')->name('admins.index')->middleware('permission:view.admin');
+                Route::get('/publicvendor', 'publicVendor')->name('admins.publicVendor')->middleware('permission:view.public_vendor');
+                Route::get('/privatevendor', 'privateVendor')->name('admins.privateVendor')->middleware('permission:view.private_vendor');
                 Route::get('create/{type?}', 'create')->name('admins.create');
                 Route::post('store', 'store')->name('admins.store');
                 Route::get('edit/{admin}', 'edit')->name('admins.edit');
                 Route::post('{admin}', 'update')->name('admins.update');
                 Route::get('destroy/{admin}', 'destroy')->name('admins.destroy');
+                Route::get('/users', 'users')->name('admins.users')->middleware('permission:view.admin');
+                Route::patch('update-status', 'updateStatus')->name('admins.update-status');
             });
             Route::controller(RoleController::class)->prefix('role')->group(function () {
                 Route::get('/', 'index')->name('role.index')->middleware('permission:view.role');

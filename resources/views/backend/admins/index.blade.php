@@ -78,6 +78,7 @@
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Username</th>
+                                    <th>Type</th>
                                     <th>Created By</th>
                                     <th>Status</th>
                                     <th data-priority="1">Action</th>
@@ -173,39 +174,42 @@
                 }
             },
             columns: [
-                {
-                    data: 'DT_RowIndex',
-                    name: 'DT_RowIndex',
-                    orderable: false,
-                    searchable: false
-                },  
-                {
-                    data: 'name',
-                    name: 'name'
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                { data: 'name', name: 'name' },
+                { data: 'email', name: 'email' },
+                { data: 'username', name: 'username' },
+                { 
+                    data: 'type', 
+                    name: 'type',
+                    render: function(data) {
+                        const types = {
+                            0: 'Super Admin',
+                            1: 'Admin',
+                            2: 'Public Vendor',
+                            3: 'Private Vendor',
+                            4: 'User'
+                        };
+                        return types[data] || data;
+                    }
                 },
-               {
-                    data: 'email',
-                    name: 'email'
-                },
-                {
-                    data: 'username',
-                    name: 'username'
-                },
-                {
-                    data: 'created_by_name',
-                    name: 'created_by'
-                },
-                {
-                    data: 'status',
-                    name: 'status',
-                    visible: adminType == 1, // Only show for type=1
-                },
-                {
-                    data: 'action',
-                    name: 'action',
+                { 
+                    data: 'created_by_name', 
+                    name: 'created_by_name',
                     orderable: false,
                     searchable: false
                 },
+                { 
+                    data: 'status_dropdown', 
+                    name: 'status_dropdown',
+                    orderable: false,
+                    searchable: false
+                },
+                { 
+                    data: 'action', 
+                    name: 'action', 
+                    orderable: false, 
+                    searchable: false 
+                }
             ],
             order: [
                 [1, 'asc']
@@ -247,46 +251,75 @@
                 }
             });
         });
-        // $(document).ready(function() {
-            function checkValidation(){
-                $("#admin_form").validate({
-                    ignore: ":hidden",
-                    rules: {
-                        name: {
-                            required: true,
-                            maxlength: 100,
-                        },
-                        email: {
-                            required: true,
-                            email: true,
-                            maxlength: 250,
-                        }
+        $(document).on('change', '.status-dropdown', function() {
+            var status = $(this).val();
+            var id = $(this).data('id');
+            var routeName = "{{ route('admins.update-status', ['username' => request()->route('username')]) }}";
+            
+            $.ajax({
+                url: routeName,
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    status: status,
+                    id: id,
+                    _method: 'PATCH'
+                },
+                success: function(response) {
+                    swal('Success', 'Status updated successfully', 'success');
+                    // Reload the table without resetting pagination
+                    if (typeof table !== 'undefined') {
+                        table.ajax.reload(null, false);
+                    }
+                },
+                error: function(xhr) {
+                    swal('Error', 'Error updating status', 'error');
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+        function checkValidation(){
+            $("#admin_form").validate({
+                ignore: ":hidden",
+                rules: {
+                    name: {
+                        required: true,
+                        maxlength: 100,
                     },
-                    messages: {
-                        name: {
-                            required: "The Name field is required",
-                            maxlength: "Name cannot exceed 100 characters",
-                        },
-                        email: {
-                            required: "The Email field is required",
-                            email: "Email must be a valid email",
-                            maxlength: "Email cannot exceed 250 characters",
-                        }
+                    email: {
+                        required: true,
+                        email: true,
+                        maxlength: 250,
+                    }
+                },
+                messages: {
+                    name: {
+                        required: "The Name field is required",
+                        maxlength: "Name cannot exceed 100 characters",
                     },
-                });
-                // function checkValidation() {
-                //     var forms = document.getElementsByClassName('needs-validation');
-                //     var validation = Array.prototype.filter.call(forms, function(form) {
-                //         form.addEventListener('submit', function(event) {
-                //             if (form.checkValidity() === false) {
-                //                 event.preventDefault();
-                //                 event.stopPropagation();
-                //             }
-                //             form.classList.add('was-validated');
-                //         }, false);
-                //     });
-                // }
-            }
-        // });
+                    email: {
+                        required: "The Email field is required",
+                        email: "Email must be a valid email",
+                        maxlength: "Email cannot exceed 250 characters",
+                    }
+                },
+            });
+            // Add this inside your document ready function
+            // Add this inside your document ready function
+            
+            // function checkValidation() {
+            //     var forms = document.getElementsByClassName('needs-validation');
+            //     var validation = Array.prototype.filter.call(forms, function(form) {
+            //         form.addEventListener('submit', function(event) {
+            //             if (form.checkValidity() === false) {
+            //                 event.preventDefault();
+            //                 event.stopPropagation();
+            //             }
+            //             form.classList.add('was-validated');
+            //         }, false);
+            //     });
+            // }
+        }
+
     </script>
 @endsection

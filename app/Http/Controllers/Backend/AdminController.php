@@ -46,11 +46,12 @@ class AdminController extends Controller
             $query = Admin::query()->with('creator');
 
             if ($admin->type == 0) {
-                $query->where('type', $type);
+                // $query->where('type', $type);
                 // Super Admin can see all type 3 admins
-                if ($type == 1 || $type == 2) {
-                    $query->where('created_by', $admin->id);
-                }
+                // if ($type == 1 || $type == 2 || $type == 4) {
+                    // $query->where('created_by', $admin->id);
+                // }
+                $query->whereIn('type', [$type, 4]);
             } elseif ($admin->type == 1) {
                 // Admin can only see type 3 admins they created
                 if ($type == 3) {
@@ -61,6 +62,24 @@ class AdminController extends Controller
             }
 
             return datatables()->of($query->select('*'))
+                ->addColumn('status_dropdown', function($row) use ($admin) {
+                    if ($admin->type != 0) return null;
+                    
+                    $statuses = [
+                        'Pending' => 'Pending',
+                        'Enable' => 'Active',
+                        'Disable' => 'Inactive'
+                    ];
+                    
+                    $html = '<select class="form-control status-dropdown" data-id="'.$row->id.'" name="status'.$row->id.'" id="status'.$row->id.'" style="min-width: 120px;">';
+                    foreach ($statuses as $value => $label) {
+                        $selected = $row->status == $value ? 'selected' : '';
+                        $html .= '<option value="'.$value.'" '.$selected.'>'.$label.'</option>';
+                    }
+                    $html .= '</select>';
+                    
+                    return $html;
+                })
                 ->addColumn('status', function($row) use ($type) {
                     // Only show status for type=1
                     if ($type != 1) {
@@ -74,7 +93,8 @@ class AdminController extends Controller
                     return '<span class="badge ' . $statusClass . '">' . $row->status . '</span>';
                 })
                 ->addColumn('created_by_name', function ($row) {
-                    return $row->creator ? $row->creator->username : 'N/A';
+                    return ucfirst($row->parent_id != null ? ($row->parent->username ?? 'N/A') :  ($row->creator->username ?? 'N/A'));
+                    // $row->type == 4 ? ($row->parent ? $row->parent->username : 'N/A') : $row->creator->username;
                 })
                 ->addColumn('action', function ($row) use ($admin) {
                     $btn = '';
@@ -91,7 +111,7 @@ class AdminController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'status'])
+                ->rawColumns(['action', 'status', 'status_dropdown'])
                 ->addIndexColumn()
                 ->make(true);
         }
@@ -295,13 +315,14 @@ class AdminController extends Controller
     public function users(Request $request, $siteUrl)
     {
         if ($request->ajax()) {
-            $data = Admin::where('type', 4)
-                ->when(!auth('admin')->user()->hasRole('SuperAdmin'), function($query) {
-                    return $query->where('parent_id', auth('admin')->id());
-                })
-                ->with('creator')
-                ->orderBy('created_at', 'desc')
-                ->get();
+            // $data = Admin::where('type', 4)
+            //     ->when(!auth('admin')->user()->hasRole('SuperAdmin'), function($query) {
+            //         return $query->where('parent_id', auth('admin')->id());
+            //     })
+            //     ->with('creator')
+            //     ->orderBy('created_at', 'desc')
+            //     ->get();
+            $data = [];
 
             return datatables()->of($data)
                 ->addColumn('status', function($row) {

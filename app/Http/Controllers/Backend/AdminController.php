@@ -103,11 +103,6 @@ class AdminController extends Controller
                 ->addColumn('action', function ($row) use ($admin) {
                     $btn = '';
 
-                    // Super Admin can edit and delete Admins & Public Vendors
-                    if ($admin->type == 0 && in_array($row->type, [1, 2])) {
-                        $btn .= $this->getActionButtons($row);
-                    }
-
                     // Admin can edit & delete only Private Vendors they created  $admin->type == 1 && $row->type == 3 && 
                     if (($row->created_by == $admin->id || $row->parent_id == $admin->id) || $admin->type == 0) {
                         $btn .= $this->getActionButtons($row);

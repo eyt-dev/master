@@ -39,7 +39,7 @@
         </div>
         <div class="page-rightheader">
             <div class="btn btn-list">
-                @if(auth()->user()->type == 0 && request('type') != 3 || auth()->user()->type == 1 && request('type') == 3)
+                @if(auth()->user()->type == 0 && $type != 3 || auth()->user()->type == 1 && $type == 3)
                     {{-- Super Admin (0) can create admins except Private Vendors (3) --}}
                     {{-- Admin (1) can create only Private Vendors (3) --}}
 
@@ -188,16 +188,6 @@
                         };
                         return types[data] || data;
                     }
-                    // render: function(data) {
-                    //     const types = {
-                    //         0: 'Super Admin',
-                    //         1: 'Admin',
-                    //         2: 'Public Vendor',
-                    //         3: 'Private Vendor',
-                    //         4: 'User'
-                    //     };
-                    //     return types[data] || data;
-                    // }
                 },
                 { 
                     data: 'created_by_name', 

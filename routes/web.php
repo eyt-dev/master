@@ -368,6 +368,67 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::get('destroy/{admin}', 'destroy')->name('setting.destroy')->middleware('permission:delete.setting');
                 Route::get('/check-setting/{created_by}', 'checkSetting')->name('setting.checkSetting');
             });
+            Route::prefix('global_contacts')
+                ->name('global_contacts.')
+                ->controller(ContactController::class)
+                ->group(function () {
+                    Route::get('/', 'index')
+                        ->name('index')
+                        ->middleware('permission:view.global_contacts');
+
+                    Route::get('/create', 'create')
+                        ->name('create')
+                        ->middleware('permission:create.global_contacts');
+
+                    Route::post('/', 'store')
+                        ->name('store')
+                        ->middleware('permission:create.global_contacts');
+
+                    Route::get('/search', 'search')
+                        ->name('search');
+                        // ->middleware('permission:view.global_contacts');
+
+                    Route::get('/{contact}/edit', 'edit')
+                        ->name('edit')
+                        ->middleware('permission:edit.global_contacts');
+
+                    Route::put('/{contact}', 'update')
+                        ->name('update')
+                        ->middleware('permission:edit.global_contacts');
+
+                    Route::delete('/{contact}', 'destroy')
+                        ->name('destroy')
+                        ->middleware('permission:delete.global_contacts');
+                });
+
+            Route::prefix('contacts')
+                ->name('contacts.')
+                ->controller(MyContactController::class)
+                ->group(function () {
+                    Route::get('/', 'index')
+                        ->name('index')
+                        ->middleware('permission:view.contacts');
+
+                    Route::get('/create', 'create')
+                        ->name('create')
+                        ->middleware('permission:create.contacts');
+
+                    Route::post('/', 'store')
+                        ->name('store')
+                        ->middleware('permission:create.contacts');
+
+                    Route::get('/{mycontact}/edit', 'edit')
+                        ->name('edit')
+                        ->middleware('permission:edit.contacts');
+
+                    Route::put('/{mycontact}', 'update')
+                        ->name('update')
+                        ->middleware('permission:edit.contacts');
+
+                    Route::delete('/{mycontact}', 'destroy')
+                        ->name('destroy')
+                        ->middleware('permission:delete.contacts');
+                });
             Route::controller(SlideController::class)->prefix('slide')->group(function () {
                 Route::get('/', 'index')->name('slide.index')->middleware('permission:view.slide');
                 Route::get('create', 'create')->name('slide.create')->middleware('permission:create.slide');

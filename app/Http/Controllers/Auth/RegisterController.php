@@ -38,36 +38,58 @@ class RegisterController extends Controller
         $userName = request()->segment(1);
         $host = request()->getHost();
         $setting = Setting::where('admin_domain', $host)->first();
+        $parent = $setting->created_by;
 
+        $type = $data['userType'];
         if($host === config('domains.admin_subdomain')){
-            $userName = 'superadmin';
+            if($type == 1) {
+                $role = 'Admin';
+            } elseif($type==2) {
+                $role = 'PublicVendor';
+            }
         } else {
-            $userName = $setting->creator->username;
+            $role = 'PrivateVendor';
+            $type = 3;
         }
-
-        $parent = Admin::where('username', $userName)->first();
         $adminCreateData = [
             'name' => $data['name'],
             'email' => $data['email'],
+            'username' => $data['username'],
             'password' => Hash::make($data['password']),
-            'type' => 4, // User type
-            'parent_id' => $parent ? $parent->id : null,
+            'type' => $type, 
+            'parent_id' => $parent,
+            'vat_country_code' => $data['vat_country_code'],
+            'vat_number' => $data['vat_number'],
+            'created_from' => 2,
         ];
         $admin = Admin::create($adminCreateData);
+
         // Assign the User role
-        $role = Role::where('name', 'User')->first();
+        if($host === config('domains.admin_subdomain')){
+            if($type == 1) {
+                $role = 'Admin';
+            } elseif($type==2) {
+                $role = 'PublicVendor';
+            }
+        } else {
+            $role = 'PrivateVendor';
+        }
+
+        $role = Role::where('name', $role)->first();
         if ($role) {
             $admin->assignRole($role);
         }
-        // Create contact information
-        Contact::create([
-            'name' => $data['name'],
-            'formal_name' => $data['name'],
-            'email' => $data['email'],
-            'vat_country_code' => $data['vat_country_code'],
-            'vat_number' => $data['vat_number'],
-            'created_by' => $admin->id,
-        ]);
+
+        Contact::updateOrCreate(
+            ['email' => $data['email']], // condition (unique key)
+            [
+                'name' => $data['name'],
+                'formal_name' => $data['name'],
+                'vat_country_code' => $data['vat_country_code'],
+                'vat_number' => $data['vat_number'],
+                'created_by' => $admin->id,
+            ]
+        );
 
         return $admin;
     }

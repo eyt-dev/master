@@ -6,6 +6,7 @@
 </style>
 @endsection
 @section('content')
+
 <div class="page">
     <div class="page-single">
         <div class="container">
@@ -22,6 +23,7 @@
                                     </div>
                                     <form method="POST" class="form-horizontal form-simple" action="{{ route('register', ['username' => request()->segment(1)]) }}" id="register">
                                         @csrf
+                                        <input type="hidden" name="userType" value="{{ request()->segment(1)=='vendor' ? 2 : (request()->segment(1)=='register' ? 1 : 3) }}">
                                         <div class="mb-2">
                                             <div class="input-group mb-1">
                                                 <div class="input-group-prepend">
@@ -58,6 +60,21 @@
                                             <div class="input-group mb-1">
                                                 <div class="input-group-prepend">
                                                     <div class="input-group-text">
+                                                        <i class="fe fe-mail"></i>
+                                                    </div>
+                                                </div>
+                                                <input type="text" class="form-control" name="username" id="username" placeholder="Username" value="{{ old('username') }}" required="" />
+                                            </div>
+                                            @error('username')
+                                                <label id="username-error" class="error" for="username">{{ $message }}</label>
+                                            @else
+                                                <label id="username-error" class="error hide" for="username">The username field is required</label>
+                                            @enderror                                           
+                                        </div>
+                                        <div class="mb-2">
+                                            <div class="input-group mb-1">
+                                                <div class="input-group-prepend">
+                                                    <div class="input-group-text">
                                                         <i class="fe fe-flag"></i>
                                                     </div>
                                                 </div>
@@ -85,7 +102,23 @@
                                                         <i class="fe fe-credit-card"></i>
                                                     </div>
                                                 </div>
-                                                <input type="text" class="form-control" placeholder="VAT Number" name="vat_number" id="vat_number" value="{{ old('vat_number') }}" readonly>
+                                                <input type="text" class="form-control" placeholder="VAT Code" name="vat_code" id="vat_code" value="{{ old('vat_code') }}" readonly>
+                                            </div>
+                                            @error('vat_code')
+                                                <label id="vat_code-error" class="error" for="vat_code">{{ $message }}</label>
+                                            @else
+                                                <label id="vat_code-error" class="error hide" for="vat_code">The VAT number field is required</label>
+                                            @enderror
+                                        </div>
+
+                                        <div class="mb-2">
+                                            <div class="input-group mb-1">
+                                                <div class="input-group-prepend">
+                                                    <div class="input-group-text">
+                                                        <i class="fe fe-credit-card"></i>
+                                                    </div>
+                                                </div>
+                                                <input type="text" class="form-control" placeholder="VAT Number" name="vat_number" id="vat_number" value="{{ old('vat_number') }}">
                                             </div>
                                             @error('vat_number')
                                                 <label id="vat_number-error" class="error" for="vat_number">{{ $message }}</label>
@@ -147,13 +180,16 @@
 
 <script>
 $(document).ready(function () {
-
+    $.validator.addMethod("noSpace", function(value, element) {
+        return value.indexOf(" ") < 0 && value !== "";
+    }, "Spaces are not allowed.");
     // jQuery validation
     $("#register").validate({
         ignore: ":hidden",
         rules: {
             name: { required: true, maxlength: 255 },
             email: { required: true, email: true, maxlength: 255 },
+            username: { required: true, maxlength: 255, noSpace: true },
             vat_country_code: { required: true },
             vat_number: { required: true, maxlength: 50 },
             password: { required: true, minlength: 8 },
@@ -168,6 +204,11 @@ $(document).ready(function () {
                 required: "The email field is required",
                 email: "Please enter a valid email address",
                 maxlength: "Email cannot exceed 255 characters"
+            },
+            username: {
+                required: "The username field is required",
+                maxlength: "Username cannot exceed 255 characters",
+                noSpace: "Spaces are not allowed."
             },
             vat_country_code: {
                 required: "Please select a country"
@@ -192,11 +233,11 @@ $(document).ready(function () {
         var countryCode = $('#vat_country_code').val();
 
         if (countryCode) {
-            $('#vat_number')
+            $('#vat_code')
                 .val(countryCode)
                 .trigger('keyup'); // trigger validation
         } else {
-            $('#vat_number').val('');
+            $('#vat_code').val('');
         }
     }
 

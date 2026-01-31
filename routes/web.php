@@ -60,6 +60,7 @@ if ($currentHost === config('domains.admin_subdomain')) {
         Route::get('/', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
         Route::post('/', [App\Http\Controllers\Auth\LoginController::class, 'login']);
 
+        Route::get('vendor', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
         Route::get('register', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
         Route::post('register', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
 

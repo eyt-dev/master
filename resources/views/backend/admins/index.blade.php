@@ -141,12 +141,11 @@
                 url: "{{ route('admins.create', ['username' => request()->get('username', $siteSlug)]) }}/" + adminType,
                 type: "GET",
                 success: function(response) {
-                    console.log(response);
-                    
+                    console.log(response);                    
                     $(".modal-body").html(response);
                     $(".modal-title").html("Create Form");
+                    $("#mode").val("add");
                     $("#admin_form_modal").modal('show');
-                    // $("#admin_form input[name='type']").val(adminType);
                     checkValidation();
                 }
             });
@@ -158,6 +157,7 @@
                 success: function(response) {
                     $(".modal-body").html(response);
                     $(".modal-title").html("Update Form");
+                    $("#mode").val("edit");
                     $("#admin_form_modal").modal('show');
                     checkValidation();
                 }
@@ -179,22 +179,30 @@
                 { data: 'email', name: 'email' },
                 { data: 'username', name: 'username' },
                 { 
-                    data: 'type', 
-                    name: 'type',
-                    render: function(data) {
+                    data: 'created_from', 
+                    name: 'created_from',
+                     render: function(data) {
                         const types = {
-                            0: 'Super Admin',
-                            1: 'Admin',
-                            2: 'Public Vendor',
-                            3: 'Private Vendor',
-                            4: 'User'
+                            1: 'Added from backend',
+                            2: 'Registered from web',
                         };
                         return types[data] || data;
                     }
+                    // render: function(data) {
+                    //     const types = {
+                    //         0: 'Super Admin',
+                    //         1: 'Admin',
+                    //         2: 'Public Vendor',
+                    //         3: 'Private Vendor',
+                    //         4: 'User'
+                    //     };
+                    //     return types[data] || data;
+                    // }
                 },
                 { 
                     data: 'created_by_name', 
                     name: 'created_by_name',
+                    visible: adminType == 3,
                     orderable: false,
                     searchable: false
                 },
@@ -278,47 +286,74 @@
                 }
             });
         });
+
+        // 🔹 Function to update VAT number
+        function updateVatNumber() {
+            var countryCode = $('#vat_country_code').val();
+
+            if (countryCode) {
+                $('#vat_code')
+                    .val(countryCode)
+                    .trigger('keyup'); // trigger validation
+            } else {
+                $('#vat_code').val('');
+            }
+        }
+
         function checkValidation(){
+            $.validator.addMethod("noSpace", function(value, element) {
+                return value.indexOf(" ") < 0 && value !== "";
+            }, "Spaces are not allowed.");
+            $('#vat_country_code').on('change', function () {
+                updateVatNumber();
+            });
+
+            // 🔹 Set initial VAT number if old value exists (page reload / validation fail)
+            if ($('#vat_country_code').val()) {
+                updateVatNumber();
+            }
+
             $("#admin_form").validate({
                 ignore: ":hidden",
                 rules: {
-                    name: {
-                        required: true,
-                        maxlength: 100,
-                    },
-                    email: {
-                        required: true,
-                        email: true,
-                        maxlength: 250,
-                    }
+                    name: { required: true, maxlength: 255 },
+                    email: { required: true, email: true, maxlength: 255 },
+                    username: { required: true, maxlength: 255, noSpace: true },
+                    vat_country_code: { required: true },
+                    vat_number: { required: true, maxlength: 50 },
+                    password: { required: function () {
+                        return $("#mode").val() === "add"; 
+                        // or return !editMode;
+                    }, minlength: 8 },
                 },
                 messages: {
-                    name: {
-                        required: "The Name field is required",
-                        maxlength: "Name cannot exceed 100 characters",
+                     name: {
+                        required: "The formal name field is required",
+                        maxlength: "Formal name cannot exceed 255 characters"
                     },
                     email: {
-                        required: "The Email field is required",
-                        email: "Email must be a valid email",
-                        maxlength: "Email cannot exceed 250 characters",
-                    }
+                        required: "The email field is required",
+                        email: "Please enter a valid email address",
+                        maxlength: "Email cannot exceed 255 characters"
+                    },
+                    username: {
+                        required: "The username field is required",
+                        maxlength: "Username cannot exceed 255 characters",
+                        noSpace: "Spaces are not allowed."
+                    },
+                    vat_country_code: {
+                        required: "Please select a country"
+                    },
+                    vat_number: {
+                        required: "The VAT number is required",
+                        maxlength: "VAT number cannot exceed 50 characters"
+                    },
+                    password: {
+                        required: "The password field is required",
+                        minlength: "Password must be at least 8 characters long"
+                    },
                 },
             });
-            // Add this inside your document ready function
-            // Add this inside your document ready function
-            
-            // function checkValidation() {
-            //     var forms = document.getElementsByClassName('needs-validation');
-            //     var validation = Array.prototype.filter.call(forms, function(form) {
-            //         form.addEventListener('submit', function(event) {
-            //             if (form.checkValidity() === false) {
-            //                 event.preventDefault();
-            //                 event.stopPropagation();
-            //             }
-            //             form.classList.add('was-validated');
-            //         }, false);
-            //     });
-            // }
         }
 
     </script>

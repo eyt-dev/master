@@ -16,6 +16,7 @@ use Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
 use App\Models\CountryRegion;
+use App\Models\Contact;
 
 class AdminController extends Controller
 {
@@ -46,16 +47,19 @@ class AdminController extends Controller
             $query = Admin::query()->with('creator');
 
             if ($admin->type == 0) {
-                // $query->where('type', $type);
-                // Super Admin can see all type 3 admins
-                // if ($type == 1 || $type == 2 || $type == 4) {
+                $query->where('type', $type);
+                // Super Admin can see all type of admins
+                if ($type == 1 || $type == 2) {
                     // $query->where('created_by', $admin->id);
-                // }
-                $query->whereIn('type', [$type, 4]);
+                }
             } elseif ($admin->type == 1) {
                 // Admin can only see type 3 admins they created
                 if ($type == 3) {
-                    $query->where('type', 3)->where('created_by', $admin->id);
+                    $query->where('type', 3)
+                        ->where(function ($q) use ($admin) {
+                            $q->where('created_by', $admin->id)
+                                ->orWhere('parent_id', $admin->id);
+                        });
                 }
             } else {
                 abort(403, "Unauthorized access");
@@ -63,7 +67,7 @@ class AdminController extends Controller
 
             return datatables()->of($query->select('*'))
                 ->addColumn('status_dropdown', function($row) use ($admin) {
-                    if ($admin->type != 0) return null;
+                    // if ($admin->type != 0) return null;
                     
                     $statuses = [
                         'Pending' => 'Pending',
@@ -80,18 +84,18 @@ class AdminController extends Controller
                     
                     return $html;
                 })
-                ->addColumn('status', function($row) use ($type) {
-                    // Only show status for type=1
-                    if ($type != 1) {
-                        return null;
-                    }
-                    $statusClass = [
-                        'Enable' => 'badge-success',
-                        'Disable' => 'badge-danger',
-                        'Pending' => 'badge-warning'
-                    ][$row->status] ?? 'badge-secondary';
-                    return '<span class="badge ' . $statusClass . '">' . $row->status . '</span>';
-                })
+                // ->addColumn('status', function($row) use ($type) {
+                //     // Only show status for type=1
+                //     if ($type != 1) {
+                //         return null;
+                //     }
+                //     $statusClass = [
+                //         'Enable' => 'badge-success',
+                //         'Disable' => 'badge-danger',
+                //         'Pending' => 'badge-warning'
+                //     ][$row->status] ?? 'badge-secondary';
+                //     return '<span class="badge ' . $statusClass . '">' . $row->status . '</span>';
+                // })
                 ->addColumn('created_by_name', function ($row) {
                     return ucfirst($row->parent_id != null ? ($row->parent->username ?? 'N/A') :  ($row->creator->username ?? 'N/A'));
                     // $row->type == 4 ? ($row->parent ? $row->parent->username : 'N/A') : $row->creator->username;
@@ -104,8 +108,8 @@ class AdminController extends Controller
                         $btn .= $this->getActionButtons($row);
                     }
 
-                    // Admin can edit & delete only Private Vendors they created
-                    if ($admin->type == 1 && $row->type == 3 && $row->created_by == $admin->id) {
+                    // Admin can edit & delete only Private Vendors they created  $admin->type == 1 && $row->type == 3 && 
+                    if (($row->created_by == $admin->id || $row->parent_id == $admin->id) || $admin->type == 0) {
                         $btn .= $this->getActionButtons($row);
                     }
 
@@ -140,8 +144,9 @@ class AdminController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function create($siteUrl, $type = null)
-    {       
-        return view('backend.admins.create', ['admin' => new Admin(), 'type' => $type]);
+    {
+        $countries = CountryRegion::orderBy('name')->get();
+        return view('backend.admins.create', ['admin' => new Admin(), 'type' => $type, 'countries' => $countries]);
     }
 
     /**
@@ -157,6 +162,8 @@ class AdminController extends Controller
             'username' => 'required',
             'email' => 'required|email|unique:admins',
             'password' => 'required|min:6',
+            'vat_country_code' => 'required',
+            'vat_number' => 'required',
             'status' => 'required_if:type,1|in:Enable,Disable,Pending'
         ]);
         
@@ -177,8 +184,12 @@ class AdminController extends Controller
             'password' => Hash::make($request->password),
             'type' => $adminType,
             'created_by' => auth()->user()->id,
+            'parent_id' => auth()->user()->id,
+            'vat_country_code' => $request->vat_country_code,
+            'vat_number' => $request->vat_number,
+            'created_from' => 1,
         ];
-        if($adminType ==1) {
+        if($adminType == 1) {
             $addData['status'] = $request->status;
         }
         $admin = Admin::create($addData);
@@ -214,6 +225,17 @@ class AdminController extends Controller
         ];
         Setting::create($createData);
 
+        Contact::updateOrCreate(
+            ['email' => $request->email], // condition (unique key)
+            [
+                'name' => $request->name,
+                'formal_name' => $request->name,
+                'vat_country_code' => $request->vat_country_code,
+                'vat_number' => $request->vat_number,
+                'created_by' => $admin->id,
+            ]
+        );
+
         Session::flash('successMsg', '{$prefix} inserted successfully.');
         
         // At the beginning of the update method, determine the route based on admin type
@@ -237,14 +259,15 @@ class AdminController extends Controller
      */
     public function edit($siteUrl, $id)
     {
-        $admin = Admin::findOrFail($id);     
+        $admin = Admin::findOrFail($id); 
+        $countries = CountryRegion::orderBy('name')->get();
      
        if(empty($admin)){
             return redirect()->route('admins.index', ['username' => request()->get('username', request()->segment(1))]);
         }
 
         $roles = Role::all();
-        return view('backend.admins.create', ['admin' => $admin, 'roles' => $roles, 'type' => $admin->type]);
+        return view('backend.admins.create', ['admin' => $admin, 'roles' => $roles, 'type' => $admin->type, 'countries' => $countries]);
     }
 
     /**
@@ -258,7 +281,9 @@ class AdminController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'username' => 'required',
+            'username' => 'required',            
+            'vat_country_code' => 'required',
+            'vat_number' => 'required',
             // 'email' => 'required|email|unique:admins,email,' . $id,
             // 'status' => 'required_if:type,1|in:Enable,Disable,Pending'
         ]);
@@ -274,6 +299,8 @@ class AdminController extends Controller
         $updateData = [
             'name' => $request->name,
             'username' => $request->username,
+            'vat_country_code' => $request->vat_country_code,
+            'vat_number' => $request->vat_number,
             'password' => $request->filled('password') ? Hash::make($request->password) : $admin->password,
         ];
 
@@ -281,6 +308,17 @@ class AdminController extends Controller
             $updateData['status'] = $request->status;
         }
         $admin->update($updateData);
+
+        Contact::updateOrCreate(
+            ['email' => $request->email], // condition (unique key)
+            [
+                'name' => $request->name,
+                'formal_name' => $request->name,
+                'vat_country_code' => $request->vat_country_code,
+                'vat_number' => $request->vat_number,
+                'created_by' => $admin->id,
+            ]
+        );
 
         // $admin->assignRole($request->role);
         

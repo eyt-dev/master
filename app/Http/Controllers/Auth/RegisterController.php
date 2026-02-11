@@ -39,7 +39,7 @@ class RegisterController extends Controller
         $host = request()->getHost();
         $setting = Setting::where('admin_domain', $host)->first();
         $parent = $setting->created_by;
-
+        
         $type = $data['userType'];
         if($host === config('domains.admin_subdomain')){
             if($type == 1) {
@@ -47,10 +47,14 @@ class RegisterController extends Controller
             } elseif($type==2) {
                 $role = 'PublicVendor';
             }
+
+            if($userName != 'register') {
+                $parent = Admin::where('username', $userName)->first()?->id;
+            }
         } else {
             $role = 'PrivateVendor';
-            $type = 3;
         }
+        
         $adminCreateData = [
             'name' => $data['name'],
             'email' => $data['email'],
@@ -61,6 +65,7 @@ class RegisterController extends Controller
             'vat_country_code' => $data['vat_country_code'],
             'vat_number' => $data['vat_number'],
             'created_from' => 2,
+            'url' => $data['url'],
         ];
         $admin = Admin::create($adminCreateData);
 
@@ -70,6 +75,8 @@ class RegisterController extends Controller
                 $role = 'Admin';
             } elseif($type==2) {
                 $role = 'PublicVendor';
+            } else {
+                $role = 'PrivateVendor';
             }
         } else {
             $role = 'PrivateVendor';

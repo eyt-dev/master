@@ -100,6 +100,9 @@ class AdminController extends Controller
                     return ucfirst($row->parent_id != null ? ($row->parent->username ?? 'N/A') :  ($row->creator->username ?? 'N/A'));
                     // $row->type == 4 ? ($row->parent ? $row->parent->username : 'N/A') : $row->creator->username;
                 })
+                ->addColumn('url', function ($row) {
+                    return ($row->url ?? '');
+                })
                 ->addColumn('action', function ($row) use ($admin) {
                     $btn = '';
 
@@ -110,7 +113,7 @@ class AdminController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'status', 'status_dropdown'])
+                ->rawColumns(['action', 'status', 'status_dropdown', 'created_by_name'])
                 ->addIndexColumn()
                 ->make(true);
         }

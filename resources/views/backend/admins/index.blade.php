@@ -80,6 +80,7 @@
                                     <th>Username</th>
                                     <th>Type</th>
                                     <th>Created By</th>
+                                    <th>URL</th>
                                     <th>Status</th>
                                     <th data-priority="1">Action</th>
                                 </tr>
@@ -193,6 +194,13 @@
                     data: 'created_by_name', 
                     name: 'created_by_name',
                     visible: adminType == 3,
+                    orderable: false,
+                    searchable: false
+                },                
+                { 
+                    data: 'url', 
+                    name: 'url',
+                    // visible: adminType == 3,
                     orderable: false,
                     searchable: false
                 },

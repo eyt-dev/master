@@ -45,7 +45,6 @@ class AdminController extends Controller
         if (request()->ajax()) {
             $admin = auth()->user();
             $query = Admin::query()->with('creator');
-
             if ($admin->type == 0) {
                 $query->where('type', $type);
                 // Super Admin can see all type of admins
@@ -55,8 +54,8 @@ class AdminController extends Controller
             } elseif ($admin->type == 1) {
                 // Admin can only see type 3 admins they created
                 if ($type == 3) {
-                    $query->where('type', 3)
-                        ->where(function ($q) use ($admin) {
+                    // $query->where('type', 3)
+                        $query->where(function ($q) use ($admin) {
                             $q->where('created_by', $admin->id)
                                 ->orWhere('parent_id', $admin->id);
                         });

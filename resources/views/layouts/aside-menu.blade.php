@@ -165,5 +165,79 @@
 	
 		@endcan
 
+        @canany(['view.country','view.unit','view.element'])
+            <li class="side-item side-item-category mt-4">
+                {{__('Global Data')}}
+            </li>
+            @can('view.country')
+                <li class="slide">
+                    <a class="side-menu__item" href="{{route('country.index', ['username' => $siteSlug])}}">
+                        <svg class="side-menu__icon" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24"
+                             width="24">
+                            <path d="M0 0h24v24H0V0z" fill="none"/>
+                            <path
+                                d="M19 5v2h-4V5h4M9 5v6H5V5h4m10 8v6h-4v-6h4M9 17v2H5v-2h4M21 3h-8v6h8V3zM11 3H3v10h8V3zm10 8h-8v10h8V11zm-10 4H3v6h8v-6z"/>
+                        </svg>
+                        <span class="side-menu__label">{{__('Country')}}</span></a>
+                </li>
+            @endcan
+            @can('view.unit')
+                <li class="slide">
+                    <a class="side-menu__item" href="{{route('unit.index', ['username' => $siteSlug])}}">
+                        <svg class="side-menu__icon" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24"
+                             width="24">
+                            <path d="M0 0h24v24H0V0z" fill="none"/>
+                            <path
+                                d="M19 5v2h-4V5h4M9 5v6H5V5h4m10 8v6h-4v-6h4M9 17v2H5v-2h4M21 3h-8v6h8V3zM11 3H3v10h8V3zm10 8h-8v10h8V11zm-10 4H3v6h8v-6z"/>
+                        </svg>
+                        <span class="side-menu__label">{{__('Unit')}}</span></a>
+                </li>
+            @endcan
+            @can('view.page')
+                <li class="slide">
+                    <a class="side-menu__item" href="{{route('element.index', ['username' => $siteSlug])}}">
+                        <svg class="side-menu__icon" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24"
+                             width="24">
+                            <path d="M0 0h24v24H0V0z" fill="none"/>
+                            <path
+                                d="M19 5v2h-4V5h4M9 5v6H5V5h4m10 8v6h-4v-6h4M9 17v2H5v-2h4M21 3h-8v6h8V3zM11 3H3v10h8V3zm10 8h-8v10h8V11zm-10 4H3v6h8v-6z"/>
+                        </svg>
+                        <span class="side-menu__label">{{__('Element')}}</span></a>
+                </li>
+            @endcan
+
+        @endcan
+
+        @canany(['view.component','view.compo_price'])
+            <li class="side-item side-item-category mt-4">
+                {{__('Animal Nutrition')}}
+            </li>
+            @can('view.component')
+                <li class="slide">
+                    <a class="side-menu__item" href="{{route('component.index', ['username' => $siteSlug])}}">
+                        <svg class="side-menu__icon" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24"
+                             width="24">
+                            <path d="M0 0h24v24H0V0z" fill="none"/>
+                            <path
+                                d="M19 5v2h-4V5h4M9 5v6H5V5h4m10 8v6h-4v-6h4M9 17v2H5v-2h4M21 3h-8v6h8V3zM11 3H3v10h8V3zm10 8h-8v10h8V11zm-10 4H3v6h8v-6z"/>
+                        </svg>
+                        <span class="side-menu__label">{{__('Component')}}</span></a>
+                </li>
+            @endcan
+            @can('view.compo_price')
+                <li class="slide">
+                    <a class="side-menu__item" href="{{route('compo_price.index', ['username' => $siteSlug])}}">
+                        <svg class="side-menu__icon" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24"
+                             width="24">
+                            <path d="M0 0h24v24H0V0z" fill="none"/>
+                            <path
+                                d="M19 5v2h-4V5h4M9 5v6H5V5h4m10 8v6h-4v-6h4M9 17v2H5v-2h4M21 3h-8v6h8V3zM11 3H3v10h8V3zm10 8h-8v10h8V11zm-10 4H3v6h8v-6z"/>
+                        </svg>
+                        <span class="side-menu__label">{{__('Compo Price')}}</span></a>
+                </li>
+            @endcan
+
+    @endcanany
+
 </aside>
 <!--aside closed-->

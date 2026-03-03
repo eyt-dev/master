@@ -19,7 +19,10 @@ class DatabaseSeeder extends Seeder
             CreateSuperAdminSeeder::class,
             CountriesRegionSeeder::class,
             SettingSeeder::class,
-            ContactSeeder::class
+            ContactSeeder::class,
+            GlobalDataSeeder::class,
+            CreateFormSeeder::class,
+            FixPermissionGuardSeeder::class,
         ]);
     }
 }

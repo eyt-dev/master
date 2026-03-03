@@ -31,9 +31,10 @@ class CreateSuperAdminSeeder extends Seeder
             'updated_at' => Carbon::now()->format('Y-m-d H:i:s')
         ]);
 
+        // Assign SuperAdmin role if it exists
         $superAdminRole = Role::where('name', 'SuperAdmin')->first();
         if ($superAdminRole) {
-            $superAdmin->assignRole([$superAdminRole->id]);
+            $superAdmin->assignRole($superAdminRole);
         }
 
         // Create Admin
@@ -45,14 +46,15 @@ class CreateSuperAdminSeeder extends Seeder
             'type' => Admin::ADMIN, // Usually 1
             'email_verified_at' => null,
             'remember_token' => null,
-            'created_by' => 1, // Created by SuperAdmin
+            'created_by' => $superAdmin->id, // Use the actual superadmin ID
             'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
             'updated_at' => Carbon::now()->format('Y-m-d H:i:s')
         ]);
 
+        // Assign Admin role if it exists
         $adminRole = Role::where('name', 'Admin')->first();
         if ($adminRole) {
-            $admin->assignRole([$adminRole->id]);
+            $admin->assignRole($adminRole);
         }
     }
 }

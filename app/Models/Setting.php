@@ -23,10 +23,16 @@ class Setting extends Model
         'primary_button_text_color',
         'secondary_button_text_color',
         'created_by',
+        'theme',
     ];
 
     public function creator()
     {
         return $this->belongsTo(Admin::class, 'created_by');
+    }
+
+    public function themes()
+    {
+        return $this->belongsTo(Theme::class, 'theme');
     }
 }

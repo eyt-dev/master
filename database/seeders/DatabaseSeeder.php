@@ -1,10 +1,7 @@
 <?php
 
-use Database\Seeders\CreateSuperAdminSeeder;
-use Database\Seeders\CreatePermissionRoleSeeder;
-use Database\Seeders\CountriesRegionSeeder;
-use Database\Seeders\GlobalDataSeeder;
-use Database\Seeders\CreateFormSeeder;
+namespace Database\Seeders;
+
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -21,8 +18,11 @@ class DatabaseSeeder extends Seeder
             CreatePermissionRoleSeeder::class,
             CreateSuperAdminSeeder::class,
             CountriesRegionSeeder::class,
+            SettingSeeder::class,
+            ContactSeeder::class,
             GlobalDataSeeder::class,
-            CreateFormSeeder::class
+            CreateFormSeeder::class,
+            FixPermissionGuardSeeder::class,
         ]);
     }
 }

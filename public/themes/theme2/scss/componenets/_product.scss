@@ -1,0 +1,137 @@
+/*=========================
+30. Product Style CSS
+===========================*/
+.product {
+  &-item {
+    &:hover {
+      .product-thumb {
+        img {
+          transform: scale(1.05);
+        }
+      }
+
+      .product-action{
+        button,a{
+          transform: none;
+          @include show;
+
+          &:nth-child(2){
+            transition-property: transform, opacify, visibility;
+            transition-delay: 0.2s;
+          }
+
+          &:nth-child(3){
+            transition-property: transform, opacify, visibility;
+            transition-delay: 0.4s;
+          }
+        }
+      }
+    }
+  }
+
+  &-thumb {
+    overflow: hidden;
+    position: relative;
+
+    img {
+      transition: 0.4s;
+    }
+  }
+
+  &-info {
+    text-align: center;
+    margin-top: 30px;
+    position: relative;
+
+    .title {
+      @include font-size(22px);
+      margin-bottom: 10px;
+
+      a {
+        color: $secondaryColor;
+
+        &:hover {
+          color: $brandColor;
+        }
+      }
+    }
+
+    .price {
+      color: $brandColor;
+      @include font-size(20px);
+      line-height: 1;
+
+      &-old {
+        color: #bbbbbb;
+        margin-right: 5px;
+      }
+
+      &-sale {
+        color: $red;
+      }
+    }
+
+    .badge {
+      position: absolute;
+      top: -50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: block;
+      margin: 0 2px;
+      padding: 0;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      color: $white;
+      text-align: center;
+      text-transform: uppercase;
+      font-weight: 500;
+      font-size: 13px;
+      line-height: 50px;
+
+      &-sale {
+        background-color: $red;
+      }
+    }
+  }
+
+  &-action {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 25px;
+    right: 25px;
+
+    button, a {
+      border: 1px solid $secondaryColor;
+      border-radius: 50%;
+      font-size: 11px;
+      text-align: center;
+      line-height: 30px;
+      height: 30px;
+      width: 30px;
+      margin-bottom: 15px;
+      transform: translateX(30px);
+      @include hide;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      &:hover{
+        background-color: $secondaryColor;
+        color: $white;
+      }
+    }
+  }
+}
+
+.products-wrapper {
+  &--grid {
+    margin-top: -30px;
+
+    .product-item {
+      margin-top: 30px;
+    }
+  }
+}

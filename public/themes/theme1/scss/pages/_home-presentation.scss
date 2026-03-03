@@ -1,0 +1,113 @@
+/*=================================
+17. Full Page Home Page Style
+==================================*/
+
+#fullpage {
+  .section {
+    @media #{$sm-device} {
+      padding: 30px 0;
+
+      &:first-child {
+        padding-top: 0;
+      }
+
+      &:last-child {
+        padding: 0;
+      }
+
+      &:nth-last-child(2) {
+        padding-bottom: 0;
+      }
+    }
+
+    & > .fp-tableCell {
+      & > div {
+        display: flex;
+        align-items: center;
+        height: 100%;
+      }
+    }
+  }
+}
+
+#fp-nav, #multiscroll-nav {
+  ul {
+    li {
+      margin: 0 0 12px;
+      height: auto;
+      width: auto;
+
+      &:last-child {
+        display: none;
+        margin-bottom: 0;
+      }
+
+      a {
+        background-color: transparent;
+        border: 3px solid $white;
+        border-radius: 50%;
+        width: 15px;
+        height: 15px;
+
+        &.active {
+          border-color: $brandColor;
+        }
+
+        span {
+          display: none;
+        }
+      }
+    }
+  }
+
+  &.dark {
+    ul {
+      li {
+        a {
+          border-color: $paragraph;
+
+          &.active {
+            border-color: $brandColor;
+          }
+        }
+
+        .fp-tooltip {
+          color: $paragraph;
+        }
+      }
+    }
+  }
+}
+
+.presentation-achievement-area {
+  @media #{$sm-device} {
+    padding: 60px 0;
+  }
+}
+
+.presentation-service-area {
+  background: url('../img/icons/letter_a-2.png') no-repeat 95% 80px;
+
+  .presentation-service-bottom {
+    border-top: 1px solid $borderColor;
+    padding-top: 80px;
+    margin-top: 80px;
+
+    @media #{$sm-device} {
+      padding-top: 50px;
+      margin-top: 50px;
+    }
+  }
+}
+
+.presentation-contact-area {
+  position: relative;
+
+  @media #{$sm-device} {
+    padding: 60px 0;
+  }
+
+  &:before {
+    @include overlay($secondaryColor, 0.9);
+  }
+}

@@ -1,0 +1,150 @@
+/*========================
+27. Banner Style CSS
+=========================*/
+.banner-content {
+  h2 {
+    margin-bottom: 20px;
+
+    @media #{$sm-device} {
+      margin-top: 10px;
+    }
+  }
+
+  .btn {
+    margin-top: 30px;
+
+    @media #{$sm-device} {
+      margin-top: 20px;
+    }
+  }
+
+  &--business-service {
+    padding: 180px 0;
+
+    @media #{$md-device, $sm-device} {
+      padding: 90px 0;
+    }
+  }
+
+  &--restaurant{
+    h2{
+      color: $white;
+      margin-bottom: 0;
+      @include font-size(60px);
+      font-family: $font-pd;
+    }
+  }
+}
+
+.banner-item-content {
+  h6 {
+    color: $brandColor;
+    font-weight: 700;
+    @include font-size(16px);
+    line-height: 1;
+    margin-bottom: 30px;
+  }
+
+  h4 {
+    color: $white;
+    margin-bottom: 24px;
+  }
+
+  .btn-bottom {
+    color: $white;
+    margin-top: 15px;
+
+    @media #{$sm-device} {
+      margin-top: 10px;
+    }
+  }
+}
+
+
+/*====================================
+Home Marketing Agency Banner Gallery
+=====================================*/
+.gallery-banner-item {
+  height: 475px;
+  width: 100%;
+
+  @media #{$md-device} {
+    height: 400px;
+  }
+
+  @media #{$sm-device} {
+    height: 300px;
+  }
+
+  &-txt {
+    display: flex;
+    align-items: center;
+    padding: 0 70px;
+
+    @media #{$xs-device, $md-device, $lg-device, $xlmax-device} {
+      padding: 0 30px;
+    }
+
+    &.bg-brand {
+      color: $secondaryColor;
+
+      h4 {
+        color: $secondaryColor;
+      }
+    }
+
+    h4 {
+      color: $brandColor;
+      margin-top: 0;
+    }
+  }
+}
+
+/*====================================
+Home Interior Banner Area
+=====================================*/
+.interior-banner-area {
+  position: relative;
+
+  &:before {
+    @include overlay($black, 0.3);
+  }
+}
+
+.interior-banner-content {
+  padding: 80px 0;
+
+  @media #{$md-device} {
+    padding: 30px 0;
+  }
+
+  @media #{$sm-device} {
+    padding: 40px 0;
+  }
+
+  h2 {
+    color: $white;
+    font-weight: 700;
+    @include font-size(50px);
+  }
+}
+
+/*====================================
+Home Restaurant Banner Area
+=====================================*/
+.banner-restaurant-area{
+  position: relative;
+  padding: 200px 0;
+
+  @media #{$md-device} {
+    padding: 120px 0;
+  }
+
+  @media #{$sm-device} {
+    padding: 100px 0;
+  }
+
+  &:before{
+    @include overlay($black, 0.5);
+  }
+}

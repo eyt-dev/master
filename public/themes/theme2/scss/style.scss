@@ -1,0 +1,75 @@
+@import 'tableofcontent';
+
+// Base
+@import 'base/variables';
+@import 'base/mixins';
+@import 'base/rfs';
+@import 'base/typography';
+
+// Utilities
+@import 'utilities/color';
+@import 'utilities/common';
+@import 'utilities/navbar';
+@import 'utilities/spacing';
+
+// Layout Header
+@import "layout/header";
+@import "layout/footer";
+
+// Components
+@import "componenets/off-canvas";
+@import "componenets/search-box";
+@import "componenets/slider";
+@import "componenets/about";
+@import "componenets/portfolio";
+@import "componenets/skill";
+@import "componenets/service";
+@import "componenets/testimonial";
+@import "componenets/brand-logo";
+@import "componenets/call-to-action";
+@import "componenets/blog";
+@import "componenets/list-box";
+@import "componenets/icon-box";
+@import "componenets/counter";
+@import "componenets/progress-bar";
+@import "componenets/pricing-table";
+@import "componenets/newsletter";
+@import "componenets/flip-box";
+@import "componenets/social-icons";
+@import "componenets/banner";
+@import "componenets/product";
+@import "componenets/accordion";
+@import "componenets/restaurant-menu";
+@import "componenets/team";
+@import "componenets/schedules";
+@import "componenets/hero-area";
+@import "componenets/timeline";
+@import "componenets/page-header";
+@import "componenets/sidebar";
+@import "componenets/preloader";
+@import "componenets/quick-view";
+
+
+// Pages
+@import "pages/home-presentation";
+@import "pages/home-portfolio";
+@import "pages/home-blog-full-slider";
+@import "pages/home-modern-shop";
+@import "pages/home-justified-gallery";
+@import "pages/home-vCard";
+@import "pages/home-wedding";
+@import "pages/home-freelancer";
+@import "pages/page-contact";
+@import "pages/page-about";
+@import "pages/page-not-found";
+@import "pages/page-maintenance";
+@import "pages/page-coming-soon";
+@import "pages/page-blog";
+@import "pages/page-blog-details";
+@import "pages/page-portfolio-details";
+@import "pages/page-shop";
+@import "pages/page-product-details";
+@import "pages/page-checkout";
+@import "pages/page-cart";
+
+// Elements

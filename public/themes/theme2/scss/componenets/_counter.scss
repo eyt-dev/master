@@ -1,0 +1,88 @@
+/*========================
+19. Counter Style CSS
+==========================*/
+
+// Counter Item Style
+.counter {
+  &-item {
+    margin-top: 40px;
+  }
+
+  &-number {
+    color: $white;
+    margin-bottom: 15px;
+    position: relative;
+
+    @media #{$sm-device} {
+      margin-bottom: 2px;
+    }
+
+    &.plus {
+      &:after {
+        content: '+';
+        position: absolute;
+        padding-left: 5px;
+      }
+    }
+
+    &--brand {
+      color: $brandColor;
+    }
+  }
+
+  &-txt {
+    color: $paragraph;
+    @include font-size(18px);
+    margin-bottom: 0;
+  }
+
+  &-item--dark {
+    .counter {
+      &-number {
+        color: $secondaryColor;
+      }
+    }
+  }
+}
+
+// Home Modern Funfact
+.funfact-modern-content {
+  border-radius: 6px;
+  padding: 100px 0;
+  margin-top: -145px;
+  position: relative;
+  z-index: 2;
+
+  @media #{$sm-device} {
+    padding: 60px 0;
+  }
+
+  &.bg-secondary {
+    .counter-item {
+      .counter-number {
+        color: $brandColor;
+      }
+    }
+  }
+}
+
+
+// Home Marketing Agency Funfact
+.funfact-agency-content {
+  background-color: #0146a3;
+  border-radius: 6px;
+
+  .counter-item {
+    .counter-txt {
+      color: $white;
+    }
+  }
+}
+
+.statistic-content{
+  h2:not(.counter-number){
+    color: $brandColor;
+    @include font-size(52px);
+    font-weight: 700;
+  }
+}

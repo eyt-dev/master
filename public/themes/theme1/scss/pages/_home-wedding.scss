@@ -1,0 +1,306 @@
+/*==============================
+38. Home Wedding Style Css
+================================*/
+
+// Wedding Hero Style
+.hero-area-wrapper {
+  height: 100vh;
+
+  .wedding-hero-content-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: $white;
+    margin-top: 50px;
+
+    h5 {
+      color: $white;
+      @include font-size(28px);
+      margin-bottom: 45px;
+
+      @media #{$sm-device} {
+        margin-bottom: 20px;
+      }
+    }
+
+    h2 {
+      color: $white;
+      @include font-size(100px);
+      font-family: $font-pd;
+      margin-bottom: 46px;
+
+      @media #{$sm-device} {
+        margin-bottom: 20px;
+      }
+    }
+
+    .heart-icon {
+      @include font-size(70px);
+      line-height: 1;
+      color: $white;
+    }
+  }
+}
+
+
+// Wedding About Style
+.wedding-about-icon {
+  margin-top: -160px;
+  margin-bottom: 80px;
+
+  @media #{$xlmax-device} {
+    margin-top: -70px;
+    margin-bottom: 60px;
+  }
+
+  @media #{$lg-device} {
+    margin-top: 60px;
+  }
+
+  @media #{$md-device} {
+    margin-bottom: 10px;
+  }
+
+  @media #{$sm-device} {
+    margin-top: 5px;
+    margin-bottom: 0;
+  }
+}
+
+.wedding-about-content {
+  h2 {
+    color: $brandColor;
+    @include font-size(50px);
+    font-family: $font-pd;
+    margin-bottom: 32px;
+
+    @media #{$sm-device} {
+      margin-bottom: 25px;
+    }
+  }
+
+  .heart-icon {
+    @include font-size(40px);
+    line-height: 1;
+    opacity: 0.3;
+  }
+}
+
+
+// Wedding Banner Quote Area
+.banner-quote-area {
+  height: 500px;
+  color: $white;
+  @include font-size(32px);
+  display: flex;
+  align-items: center;
+
+  @media #{$sm-device} {
+    height: 350px;
+  }
+
+  .quote-title {
+    @include font-size(16px);
+    color: $brandColor;
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+}
+
+
+// Wedding Ceremony Date
+.ceremony-date-content {
+  background-image: url('../img/wedding/round-bg.png');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  width: 600px;
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: auto auto 70px;
+
+  @media #{$md-device} {
+    width: 450px;
+    height: 450px;
+    margin: auto auto 50px;
+  }
+
+  @media #{$sm-device} {
+    width: 300px;
+    height: 300px;
+    margin: auto auto 30px;
+  }
+
+  h2 {
+    @include font-size(50px);
+    font-family: $font-pd;
+    color: $brandColor;
+    margin-bottom: 10px;
+  }
+
+  h5 {
+    color: $paragraph;
+    margin: 20px 0 0;
+  }
+}
+
+/*=======================
+Countdown Clock Style
+=========================*/
+.ht-countdown {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .countdown-item {
+    text-align: center;
+    position: relative;
+    margin-right: 48px;
+    padding-right: 50px;
+
+    @media #{$xs-device} {
+      padding-right: 15px;
+      margin-right: 10px;
+    }
+
+    &:after {
+      color: $secondaryColor;
+      @include font-size(30px);
+      content: ':';
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    &:last-child {
+      padding-right: 0;
+      margin-right: 0;
+
+      &:after {
+        display: none;
+      }
+    }
+
+    &__time {
+      color: $secondaryColor;
+      @include font-size(56px);
+      line-height: 1;
+    }
+
+    &__label {
+      display: block;
+    }
+  }
+
+  &--light {
+    .countdown-item {
+
+      &:after{
+        color: $white;
+      }
+
+      &__time {
+        color: $brandColor;
+      }
+
+      &__label {
+        color: rgba($white, 0.6);
+      }
+    }
+  }
+}
+
+// Ceremony Events
+.ceremony-events-wrap {
+  margin-top: 75px;
+
+  @media #{$md-device} {
+    margin-top: 55px;
+  }
+
+  @media #{$sm-device} {
+    margin-top: 35px;
+  }
+
+  .event-heart-icon {
+    color: $brandColor;
+    @include font-size(40px);
+    line-height: 1;
+  }
+}
+
+.ceremony-event-item {
+  h4 {
+    color: $brandColor;
+  }
+
+  .event-time {
+    @include font-size(16px);
+    opacity: 0.5;
+    margin-bottom: 20px;
+  }
+}
+
+// Ceremony RSVP Style
+.ceremony-rsvp-area {
+  h2 {
+    color: $white;
+    font-family: $font-pd;
+    @include font-size(57px);
+    margin-bottom: 0;
+  }
+}
+
+.rsvp-form-wrap {
+  background-color: $white;
+  border-radius: 6px;
+  padding: 90px 275px 100px 70px;
+  position: relative;
+  margin-right: 100px;
+  z-index: 1;
+
+  @media #{$lg-device} {
+    padding: 80px 225px 90px 50px;
+  }
+
+  @media #{$sm-device} {
+    padding: 50px;
+    margin-right: 0;
+  }
+
+  &:before {
+    background-image: url('../img/wedding/rsvp-frame.png');
+    background-repeat: no-repeat;
+    background-position: right center;
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -100px;
+    transform: translateY(-50%);
+    height: 100%;
+    width: 100%;
+    z-index: -1;
+  }
+}
+
+// Wedding Photo Gallery Style
+.wedding-gallery-content {
+  margin-top: -30px;
+
+  .gallery-item {
+    margin-top: 30px;
+  }
+}
+
+.section-title {
+  &.wedding {
+    h2 {
+      color: $brandColor;
+      font-family: $font-pd;
+      @include font-size(50px);
+      margin-top: -10px;
+    }
+  }
+}

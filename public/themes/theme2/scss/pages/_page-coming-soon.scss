@@ -1,0 +1,101 @@
+/*====================================
+46. Coming Soon Page Style Css
+======================================*/
+
+.coming-soon {
+  &-content-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 185px 0 100px;
+
+    @media #{$sm-device} {
+      padding: 135px 0 60px;
+    }
+
+    @media screen and (min-height: 850px) {
+      height: 100vh;
+      padding: 0;
+    }
+  }
+
+  &-header {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    @media #{$sm-device} {
+      top: 60px;
+    }
+
+    .logo {
+      max-width: 120px;
+      display: inline-block;
+    }
+  }
+
+  &-body {
+    .event-countdown-wrap {
+      padding-top: 0;
+      margin-top: 0;
+      margin-bottom: 70px;
+
+      @media #{$sm-device} {
+        margin-bottom: 50px;
+      }
+
+      &:before {
+        display: none;
+      }
+
+      .countdown-item {
+        &:after {
+          color: $white;
+        }
+      }
+    }
+
+    .coming-soon-txt {
+      color: $white;
+
+      h3 {
+        color: $white;
+        margin-bottom: 22px;
+      }
+    }
+
+    .newsletter-form-wrap {
+      margin-top: -15px !important;
+
+      @media #{$lg-device,$xl-device} {
+        max-width: 520px;
+        margin: auto;
+      }
+
+      .form-input-item {
+        @extend .sm-top-wp;
+
+        input {
+          text-align: center;
+          color: $white;
+
+          &::placeholder {
+            color: $brandColor;
+          }
+        }
+
+        .btn-bordered {
+          color: $white;
+          width: auto;
+          padding-left: 40px;
+          padding-right: 40px;
+        }
+
+        &:last-child{
+          margin-top: 30px;
+        }
+      }
+    }
+  }
+}

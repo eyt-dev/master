@@ -1,0 +1,43 @@
+/*========================
+15. List Box Style CSS
+=========================*/
+
+.list-box-item{
+  display: flex;
+  align-items: flex-start;
+  margin-top: 75px;
+
+  @media #{$md-device} {
+    margin-top: 50px;
+  }
+
+  @media #{$sm-device} {
+    margin-top: 35px;
+  }
+
+  .list-box{
+    &__serial{
+      margin-right: 20px;
+
+      .serial-no{
+        color: $brandColor;
+        margin-bottom: 0;
+      }
+    }
+
+    &__info{
+      margin-top: -5px;
+      @include font-size(16px);
+    }
+  }
+
+  &--white{
+    .list-box{
+      &__info{
+        h6{
+          color: $white;
+        }
+      }
+    }
+  }
+}

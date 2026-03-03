@@ -3,49 +3,27 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use Illuminate\Foundation\Auth\Registersadmins;
+use App\Models\Contact;
+use App\Models\Admin;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
+use App\Models\CountryRegion;
+use App\Traits\RegistersAdmins;
+use Spatie\Permission\Models\Role;
 
 class RegisterController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Register Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles the registration of new admins as well as their
-    | validation and creation. By default this controller uses a trait to
-    | provide this functionality without requiring any additional code.
-    |
-    */
+    use RegistersAdmins;
 
-    use Registersadmins;
+    protected $redirectTo = '/e/dashboard';
 
-    /**
-     * Where to redirect admins after registration.
-     *
-     * @var string
-     */
-    protected $redirectTo = '/dashboard';
-
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
-        $this->middleware('guest');
+        $this->middleware('guest:admin');
     }
 
-    /**
-     * Get a validator for an incoming registration request.
-     *
-     * @param  array  $data
-     * @return \Illuminate\Contracts\Validation\Validator
-     */
     protected function validator(array $data)
     {
         return Validator::make($data, [
@@ -55,18 +33,71 @@ class RegisterController extends Controller
         ]);
     }
 
-    /**
-     * Create a new user instance after a valid registration.
-     *
-     * @param  array  $data
-     * @return \App\Models\User
-     */
     protected function create(array $data)
     {
-        return User::create([
+        $userName = request()->segment(1);
+        $host = request()->getHost();
+        $setting = Setting::where('admin_domain', $host)->first();
+        $parent = $setting->created_by;
+        
+        $type = $data['userType'];
+        if($host === config('domains.admin_subdomain')){
+            if($type == 1) {
+                $role = 'Admin';
+            } elseif($type==2) {
+                $role = 'PublicVendor';
+            }
+
+            if($userName != 'register') {
+                $parent = Admin::where('username', $userName)->first()?->id;
+            }
+        } else {
+            $role = 'PrivateVendor';
+        }
+        
+        $adminCreateData = [
             'name' => $data['name'],
             'email' => $data['email'],
+            'username' => $data['username'],
             'password' => Hash::make($data['password']),
-        ]);
+            'type' => $type, 
+            'parent_id' => $parent,
+            'vat_country_code' => $data['vat_country_code'],
+            'vat_number' => $data['vat_number'],
+            'created_from' => 2,
+            'url' => $data['url'],
+        ];
+        $admin = Admin::create($adminCreateData);
+
+        // Assign the User role
+        if($host === config('domains.admin_subdomain')){
+            if($type == 1) {
+                $role = 'Admin';
+            } elseif($type==2) {
+                $role = 'PublicVendor';
+            } else {
+                $role = 'PrivateVendor';
+            }
+        } else {
+            $role = 'PrivateVendor';
+        }
+
+        $role = Role::where('name', $role)->first();
+        if ($role) {
+            $admin->assignRole($role);
+        }
+
+        Contact::updateOrCreate(
+            ['email' => $data['email']], // condition (unique key)
+            [
+                'name' => $data['name'],
+                'formal_name' => $data['name'],
+                'vat_country_code' => $data['vat_country_code'],
+                'vat_number' => $data['vat_number'],
+                'created_by' => $admin->id,
+            ]
+        );
+
+        return $admin;
     }
 }

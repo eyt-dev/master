@@ -1,0 +1,127 @@
+/*===========================
+56. Footer Style CSS
+===========================*/
+.footer-area {
+  background-color: #0E1220;
+  @include font-size(16px);
+
+  a {
+    color: $paragraph;
+  }
+
+  &--layout-2 {
+    background-color: $white;
+    padding: 50px 0;
+    margin: 0;
+
+    @media #{$sm-device} {
+      padding: 30px 0;
+    }
+  }
+
+  &--light{
+    background-color: transparent;
+  }
+
+  &.christmas{
+    background-color: #011e0b;
+
+    .widget-title{
+      color: $white;
+      opacity: 0.9;
+    }
+  }
+}
+
+// Reveal Footer Style
+.reveal-footer {
+  @media #{$lg-device, $xl-device} {
+    position: fixed;
+    width: 100%;
+    left: 0;
+    bottom: 0;
+  }
+}
+
+// Single Widget Item Style
+.widget-item {
+  margin-top: 38px;
+
+  .widget-title {
+    color: $brandColor;
+    @include font-size(16px);
+    font-weight: 700;
+    line-height: 1;
+    margin-top: -1px;
+    margin-bottom: 22px;
+
+    @media #{$sm-device} {
+      margin-bottom: 15px;
+    }
+  }
+
+  address {
+    line-height: 2;
+    margin-bottom: 0;
+  }
+}
+
+.widget-list {
+  li {
+    line-height: 2;
+    a {
+      &:hover {
+        color: $brandColor;
+      }
+    }
+  }
+}
+
+// About Widget
+.about-widget {
+  img {
+    max-width: 120px;
+    margin-bottom: 20px;
+  }
+}
+
+// Footer Menu
+.footer-menu {
+  li {
+    margin-right: 20px;
+
+    &:last-child {
+      margin-right: 0;
+    }
+
+    a {
+      color: $paragraph;
+      font-size: 14px;
+      line-height: 1;
+
+      &:hover {
+        color: $brandColor;
+      }
+    }
+  }
+}
+
+// Footer Copyright Area
+.footer-copyright-area {
+  padding-bottom: 55px;
+  margin-top: -15px;
+
+  .copyright-txt{
+    font-size: 14px;
+  }
+}
+
+// Footer Onepage Area
+.footer-onepage{
+  padding: 95px 0;
+
+  @media #{$sm-device} {
+    padding: 40px 0;
+  }
+}
+

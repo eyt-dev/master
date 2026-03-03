@@ -1,0 +1,108 @@
+/*===========================
+11. Testimonial Style CSS
+============================*/
+
+// Single Testimonial Item Style
+.testimonial-item {
+  background-color: $white;
+  border: 1px solid $offWhite;
+  padding: 50px 30px;
+  text-align: center;
+  transition: 0.4s;
+  margin-top: 30px;
+
+  .client {
+    &-title {
+      margin-bottom: 0;
+    }
+
+    &-designation {
+      @include font-size(16px);
+    }
+
+    &-thumb {
+      margin: 15px 0 25px;
+      img {
+        border-radius: 50%;
+        height: 100px;
+        width: 100px;
+      }
+    }
+  }
+
+  &:hover {
+    @media #{$lg-device, $xl-device} {
+      transform: translateY(-30px);
+    }
+  }
+
+  // Testimonial Item Style 2
+  &--2{
+    border: none;
+    margin-top: 0;
+    padding: 0;
+
+    &:hover{
+      transform: none
+    }
+
+    .client-thumb{
+      margin: 0 0 40px;
+
+      @media #{$sm-device} {
+        margin: 0 0 20px;
+      }
+    }
+
+   .client-quote{
+     color: $secondaryColor;
+     @include font-size(32px);
+     line-height: 1.2;
+   }
+
+    .client-info{
+      margin-top: 40px;
+
+      @media #{$sm-device} {
+        margin-top: 30px;
+      }
+
+      .client-designation{
+        color: $paragraph;
+      }
+    }
+  }
+}
+
+
+// Home Creative Agency Testimonial Wrapper Style
+.testimonial-header-area {
+  padding: 120px 0 200px;
+
+  @media #{$md-device} {
+    padding: 90px 0 200px;
+  }
+
+  @media #{$sm-device} {
+    padding: 60px 0 200px;
+  }
+}
+
+.testimonial-content-area {
+  margin-top: -230px;
+}
+
+// Home Business Classic Testimonial Wrapper Style
+.business-testimonial{
+  position: relative;
+
+  &:before{
+    @include overlay($secondaryColor, 0.5);
+  }
+}
+
+.bg-softWhite{
+  .testimonial-item--2{
+    background-color: transparent;
+  }
+}

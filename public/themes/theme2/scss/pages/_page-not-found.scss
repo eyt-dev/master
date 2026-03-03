@@ -1,0 +1,54 @@
+/*===================================
+44. 404 Page Not Found Page Style Css
+====================================*/
+
+.page-not-found-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 120px 0;
+
+  @media #{$md-device, $sm-device} {
+    padding: 90px 0;
+  }
+
+  @media screen and (min-height: 750px) {
+    height: 100vh;
+    padding: 0;
+  }
+
+  .logo {
+    max-width: 120px;
+    display: inline-block;
+    margin-bottom: 90px;
+
+    @media #{$sm-device} {
+      margin-bottom: 50px;
+    }
+  }
+
+  .page-not-found-txt {
+    margin-top: 40px;
+    h4 {
+      @include font-size(36px);
+    }
+
+    .page-not-found-buttons {
+      margin-top: 40px;
+      a {
+        display: inline-block;
+        padding: 18px 40px;
+        margin-right: 20px;
+
+        @media #{$xs-device} {
+          padding: 15px 25px;
+          margin-right: 10px;
+        }
+
+        &:last-child {
+          margin-right: 0;
+        }
+      }
+    }
+  }
+}

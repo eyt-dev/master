@@ -1,0 +1,108 @@
+/*====================================
+26. Home Blog Slider Style CSS
+=====================================*/
+.blog-slider-slide {
+  background-color: $ashColor;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  @include center;
+  text-align: center;
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  z-index: 1;
+
+  &:before {
+    background-color: rgba($black, 0.3);
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    z-index: -1;
+  }
+
+  &-txt {
+    color: $white;
+
+    @media #{$xl-device} {
+      max-width: 35%;
+    }
+
+    @media #{$lg-device, $md-device} {
+      max-width: 70%;
+    }
+
+    @media #{$sm-device} {
+      max-width: 90%;
+    }
+
+    h6 {
+      color: $brandColor;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 50px;
+
+      @media #{$sm-device} {
+        margin-bottom: 30px;
+      }
+    }
+
+    h2 {
+      @include font-size(60px);
+      color: $white;
+      margin-bottom: 20px;
+    }
+
+    .btn-bordered {
+      border-color: $white;
+      color: $white;
+      margin-top: 50px;
+
+      @media #{$sm-device} {
+        margin-top: 30px;
+      }
+
+      &:hover {
+        border-color: $brandColor;
+      }
+    }
+  }
+}
+
+// Arrows & Dots Style
+.blog-full-slider-area {
+  .lSSlideOuter {
+    position: relative;
+
+    .lSAction {
+      a {
+        left: 60px;
+        color: $white;
+
+        &.lSNext {
+          right: 60px;
+          left: auto;
+        }
+      }
+    }
+
+    .lSPager {
+      margin: 0;
+      position: absolute;
+      width: 100%;
+      bottom: 80px;
+
+      @media #{$sm-device} {
+        bottom: 30px;
+      }
+
+      li{
+        margin-right: 0;
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+/*===============================
+57. Home Freelancer Style Css
+================================*/
+.resume-content-wrap {
+  .tab-nav--2 {
+    li {
+      a {
+        @media #{$lg-device,$xl-device} {
+          padding-right: 40px;
+          padding-left: 40px;
+        }
+
+        &.active {
+          background-color: $brandColor;
+        }
+
+        &:before {
+          display: none;
+        }
+      }
+    }
+  }
+
+  .tab-content {
+    margin-top: 60px;
+  }
+}

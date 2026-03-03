@@ -19,27 +19,14 @@ class Admin extends Authenticatable
     const PUBLIC_VENDOR = 2;
     const PRIVATE_VENDOR = 3;
 
+    protected $guard_name = 'admin'; // 🔑 MUST MATCH GUARD
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'created_by',
-        'username',
-        'type' 
-        // 'address',
-        // 'phone',
-        // 'website',
-        // 'avatar',
-        // 'user_id',
-        // 'group_id',
-        // 'ugroup_id',
-        // 'username',
-        // 'access_table'
+    'name', 'email', 'password', 'type', 'status', 'created_by','username','parent_id','vat_country_code','vat_number','created_from','url'
     ];
 
     /**
@@ -59,11 +46,17 @@ class Admin extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'status' => 'string'
     ];
 
     public function creator()
     {
         return $this->belongsTo(Admin::class, 'created_by');
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(Admin::class, 'parent_id');
     }
     // public function getProfileUrlAttribute()
     // {
@@ -96,9 +89,9 @@ class Admin extends Authenticatable
     // public function admin(){
     //     return $this->belongsTo( User::class, 'user_id' );
     // }
-    // public function settings(){
-    //     return $this->hasOne( Setting::class, 'created_by' );
-    // }
+    public function setting(){
+        return $this->hasOne( Setting::class, 'created_by' );
+    }
 
     // public function groups(){
     //     return $this->hasMany( UCGroup::class, 'user_id' );

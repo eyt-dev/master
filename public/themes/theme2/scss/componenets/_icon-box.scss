@@ -1,0 +1,66 @@
+/*===========================
+16. Icon Box Style CSS
+============================*/
+
+// Icon Box Item Style
+.icon-box-item {
+  margin-top: 30px;
+
+  .icon-box {
+    &__icon {
+      color: $brandColor;
+      @include font-size(60px);
+      line-height: 1;
+      margin-bottom: 27px;
+      text-transform: uppercase;
+
+      @media #{$md-device, $sm-device} {
+        margin-bottom: 13px;
+      }
+
+      img{
+        @media #{$md-device, $sm-device} {
+          max-width: 50%;
+          margin: auto;
+        }
+      }
+
+      &-dark{
+        color: #878c9b;
+      }
+    }
+
+    &__txt {
+      @include font-size(16px);
+
+      .btn{
+        margin-top: 10px;
+      }
+
+      &--light {
+        h6 {
+          color: $white;
+        }
+      }
+    }
+  }
+
+  &--dark {
+    color: $secondaryColor;
+
+    .icon-box {
+      &__icon {
+        color: $secondaryColor;
+      }
+    }
+  }
+
+  &--left{
+    display: flex;
+
+    .icon-box__icon{
+      margin-bottom: 0;
+      margin-right: 20px;
+    }
+  }
+}

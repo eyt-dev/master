@@ -1,0 +1,216 @@
+/*==============================
+18. Contact Content Style
+==============================*/
+
+.contact-content-wrap {
+  h2 {
+    @include font-size(56px);
+    margin-bottom: 0;
+  }
+}
+
+.call-to-contact {
+  margin-top: 35px;
+
+  @media #{$sm-device} {
+    margin-top: 30px;
+  }
+
+  h5 {
+    color: $brandColor;
+    font-weight: 700;
+    @include font-size(16px);
+    line-height: 1;
+    letter-spacing: 1.5px;
+    margin-bottom: 27px;
+
+    @media #{$sm-device} {
+      margin-bottom: 15px;
+    }
+  }
+
+  // Light (White) Style
+  &--light {
+    h4 {
+      color: $white;
+      line-height: 1.6;
+    }
+  }
+}
+
+// Form Input Style
+.form-input-item {
+  margin-top: 70px;
+
+  @media #{$sm-device} {
+    margin-top: 30px;
+  }
+
+  input, textarea {
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid $brandColor;
+    color: $secondaryColor;
+    display: block;
+    @include font-size(24px);
+    width: 100%;
+
+    @media #{$sm-device} {
+      @include font-size(18px);
+    }
+
+    &::placeholder {
+      color: $secondaryColor;
+      transition: 0.4s;
+    }
+
+    &:focus {
+      border-bottom-color: $brandColor;
+
+      &::placeholder {
+        opacity: 0
+      }
+    }
+  }
+
+  textarea {
+    padding: 0;
+    resize: none;
+  }
+
+  .btn-bordered {
+    padding: 18px 10px;
+    width: 100%;
+  }
+
+  &.light {
+    input, textarea {
+      color: $brandColor;
+
+      &::placeholder {
+        color: $brandColor;
+      }
+
+      &:focus {
+        border-bottom-color: $white;
+      }
+    }
+
+    .btn-bordered {
+      color: $brandColor;
+
+      &:hover {
+        color: $white;
+      }
+    }
+  }
+
+  &.classic{
+    margin-top: 35px;
+
+    input, textarea{
+      background-color: $offWhite;
+      border-bottom: 0;
+      padding: 10px;
+    }
+
+    .btn-bordered{
+      padding: 20px 40px;
+      width: auto;
+    }
+  }
+}
+
+
+// Home Finance Business Contact
+.requested-thumb {
+  height: 100%;
+
+  @media #{$md-device} {
+    height: 400px;
+  }
+}
+
+.requested-content {
+  &-inner {
+    max-width: 650px;
+    margin: auto;
+    @media #{$sm-device} {
+      padding: 0 30px;
+    }
+  }
+
+  &-header {
+    h4 {
+      font-weight: 700;
+      color: $brandColor;
+    }
+  }
+}
+
+.requested-form {
+  .form-input-item {
+    input {
+      color: $white;
+      @include font-size(18px);
+      padding-bottom: 10px;
+
+      &::placeholder {
+        color: $white;
+      }
+    }
+  }
+
+  .btn-bordered {
+    color: $white;
+    margin-top: 40px;
+  }
+
+  .nice-select {
+    color: $white;
+    @include font-size(18px);
+
+    &:after {
+      border-right-color: $white;
+      border-bottom-color: $white;
+    }
+  }
+}
+
+.finance-map-area {
+  height: 450px;
+  width: 100%;
+
+  .leaflet-control-zoom{
+    display: none;
+  }
+}
+
+
+// Contact Page Map Style
+.contact-page-map{
+  height: 500px;
+
+  @media #{$sm-device} {
+    height: 300px;
+  }
+}
+
+// Contact Page 2 Style
+.contact-page-2-content-area{
+  position: relative;
+  padding: 165px 0 120px;
+
+  @media #{$sm-device} {
+    padding: 100px 0 90px;
+  }
+
+  @media screen and (min-height: 750px) {
+    height: 100vh;
+    padding: 50px 0 0;
+  }
+
+  &:before{
+    @include overlay($secondaryColor, 0.9);
+  }
+}

@@ -1,0 +1,29 @@
+/*======================
+09. Skills Style CSS
+========================*/
+
+// Ht Pie Chart Style
+.ht-pie-chart{
+  text-align: center;
+  position: relative;
+
+  .skill-percent{
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+// Single Skill Item Style
+.skill-item{
+  margin-top: 30px;
+
+  &__txt{
+    margin-top: 32px;
+
+    @media #{$sm-device} {
+      margin-top: 25px;
+    }
+  }
+}

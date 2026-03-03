@@ -15,13 +15,14 @@ class RouteServiceProvider extends ServiceProvider
      * @var string
      */
     protected $namespace = 'App\Http\Controllers';
+    protected $backendNamespace = 'App\Http\Controllers\Backend';
 
     /**
      * The path to the "home" route for your application.
      *
      * @var string
      */
-    public const HOME = '/home';
+    public const HOME = '/e/dashboard';
 
     /**
      * Define your route model bindings, pattern filters, etc.
@@ -45,8 +46,6 @@ class RouteServiceProvider extends ServiceProvider
         $this->mapApiRoutes();
 
         $this->mapWebRoutes();
-
-        //
     }
 
     /**
@@ -61,6 +60,10 @@ class RouteServiceProvider extends ServiceProvider
         Route::middleware('web')
             ->namespace($this->namespace)
             ->group(base_path('routes/web.php'));
+        
+        // Route::middleware('web')
+        //     ->namespace($this->backendNamespace)
+        //     ->group(base_path('routes/admin.php'));
     }
 
     /**

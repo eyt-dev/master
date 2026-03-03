@@ -1,0 +1,83 @@
+/*============================
+43. Page Header Style Css
+==============================*/
+.page-header-wrapper {
+  position: relative;
+
+  &:before {
+    @include overlay($secondaryColor, 0.9);
+  }
+}
+
+
+.page-header-content {
+  height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 75px 0;
+
+  @media #{$md-device} {
+    height: 450px;
+  }
+
+  @media #{$sm-device} {
+    height: 350px;
+  }
+
+  .section-title {
+    h2 {
+      color: $white;
+    }
+  }
+
+  .breadcrumb-wrap, .section-title {
+    align-self: flex-end;
+    flex-basis: 100%;
+  }
+}
+
+
+.breadcrumb {
+  background-color: transparent;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  justify-content: center;
+
+  li {
+    margin-right: 18px;
+    position: relative;
+
+    &:after {
+      content: '>';
+      color: $white;
+      font-weight: 500;
+      padding-left: 20px;
+      vertical-align: middle;
+    }
+
+    &:last-child {
+      margin-right: 0;
+
+      &:after {
+        display: none;
+      }
+    }
+
+    a {
+      color: $white;
+      font-size: 16px;
+
+      &:hover {
+        color: $brandColor;
+      }
+
+      &.active {
+        opacity: 0.8;
+        pointer-events: none;
+      }
+    }
+  }
+}

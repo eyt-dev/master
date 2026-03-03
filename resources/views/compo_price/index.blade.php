@@ -30,7 +30,7 @@
 
             <div class="card-body">
                 <form
-                    action="{{ route('compo_price.store') }}"
+                    action="{{ route('compo_price.store', ['username' => $siteSlug]) }}"
                     method="POST"
                     id="compo_price_form"
                     novalidate
@@ -127,7 +127,7 @@
 
                     <div class="card-footer">
                         <button class="btn btn-primary" id="submit_btn" type="submit">Save</button>
-                        <a href="{{ route('compo_price.index') }}" class="btn btn-secondary">Cancel</a>
+                        <a href="{{ route('compo_price.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
                     </div>
                 </form>
             </div>
@@ -292,7 +292,7 @@
                 }
 
                 $.ajax({
-                    url: '{{route('compo_price.store')}}',
+                    url: '{{route('compo_price.store', ['username' => $siteSlug])}}',
                     type: "post",
                     data: $('#compo_price_form').serialize(),
                     success: function (response) {
@@ -381,7 +381,7 @@
             processing: true,
             serverSide: true,
             responsive: true,
-            ajax: "{{ route('compo_price.get') }}",
+            ajax: "{{ route('compo_price.get', ['username' => $siteSlug]) }}",
             columns: [
                 {data: 'code', name: 'code'},
                 {data: 'name', name: 'name'},
@@ -408,7 +408,7 @@
                     $.ajax({
                         type: "get",
                         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        url: "{{ route('compo_price.destroy', ':id') }}".replace(':id', id),
+                        url: "{{ route('compo_price.destroy', ['username' => $siteSlug, ':id']) }}".replace(':id', id),
                         success: function (response) {
                             swal({
                                 title: response.msg

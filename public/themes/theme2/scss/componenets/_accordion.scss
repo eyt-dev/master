@@ -1,0 +1,161 @@
+/*==========================
+34. Accordion Style Css
+============================*/
+
+.accordion {
+  .card {
+    border-radius: 0;
+    border: none;
+    margin-bottom: 30px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    &-header {
+      background-color: transparent;
+      border: none;
+      border-radius: 0;
+      cursor: pointer;
+      margin-bottom: 0 !important;
+      padding: 0;
+
+
+      h4 {
+        border-bottom: 1px solid $borderColor;
+        @include font-size(20px);
+        margin: 0;
+        padding-bottom: 15px;
+        transition: 0.4s;
+
+        &:hover, &[aria-expanded="true"] {
+          color: $brandColor;
+          border-bottom-color: $brandColor;
+        }
+      }
+    }
+
+    &-body {
+      padding: 25px 0 0;
+    }
+  }
+}
+
+
+/*==========================
+47. F.A.Q Page Style Css
+============================*/
+.faq-page-content-wrap {
+  .single-faq-topic {
+    margin-bottom: 80px;
+
+    @media #{$sm-device} {
+      margin-bottom: 50px;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .faq-topic-title {
+      @media #{$sm-device} {
+        margin-bottom: 30px;
+      }
+
+      h4 {
+        margin-top: -4px;
+        position: relative;
+        padding-bottom: 10px;
+
+        &:before {
+          background-color: $brandColor;
+          content: '';
+          position: absolute;
+          left: 0;
+          bottom: 0;
+          height: 2px;
+          width: 50px;
+          display: none;
+
+          @media #{$sm-device} {
+            display: block;
+          }
+        }
+
+        @media #{$md-device} {
+          font-size: 26px;
+        }
+      }
+    }
+  }
+}
+
+
+/*=====================
+Tabs Style
+==================*/
+.tab-nav--2 {
+  li {
+    a {
+      background-color: $offWhite;
+      color: $secondaryColor;
+      display: inline-block;
+      font-size: 20px;
+      padding: 10px 20px;
+      position: relative;
+
+      @media #{$sm-device} {
+        padding: 6px 15px;
+      }
+
+      &:before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        margin-left: -10px;
+        top: 100%;
+        width: 0;
+        height: 0;
+        border: 9px solid transparent;
+        border-top-color: $secondaryColor;
+        z-index: 1;
+        @include hide;
+      }
+
+      &.active {
+        background-color: $secondaryColor;
+        color: $white;
+
+        &:before {
+          @include show
+        }
+      }
+    }
+  }
+
+  &-pill {
+    display: block;
+
+    li {
+      a {
+        display: block;
+
+        &:before {
+          left: 100%;
+          margin-left: 0;
+          top: 50%;
+          margin-top: -10px;
+          border-left-color: $secondaryColor;
+          border-top-color: transparent;
+        }
+      }
+    }
+  }
+}
+
+.tab-content {
+  &--2 {
+    border: 1px solid $borderColor;
+    padding: 40px 30px;
+  }
+}

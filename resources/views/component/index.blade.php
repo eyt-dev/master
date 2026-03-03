@@ -82,7 +82,7 @@
     <script>
         $(document).on('click', '#add_new', function() {
             $.ajax({
-                url: "{{ route('component.create') }}",
+                url: "{{ route('component.create', ['username' => $siteSlug]) }}",
                 type: "GET",
                 success: function(response) {
                     $(".modal-body").html(response);
@@ -110,7 +110,7 @@
             processing: true,
             serverSide: true,
             responsive: true,
-            ajax: "{{ route('component.index') }}",
+            ajax: "{{ route('component.index', ['username' => $siteSlug]) }}",
             columns: [
                 { data: 'code', name: 'code' },
                 { data: 'name', name: 'name' },
@@ -138,7 +138,7 @@
                     $.ajax({
                         type: "get",
                         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        url: "{{ route('element.destroy', ':id') }}".replace(':id', id),
+                        url: "{{ route('component.destroy', ['username' => $siteSlug, ':id']) }}".replace(':id', id),
                         success: function(response) {
                             swal({
                                 title: response.msg

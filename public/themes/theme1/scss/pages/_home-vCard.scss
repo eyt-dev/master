@@ -1,0 +1,119 @@
+/*==========================
+Home vCard Style CSS
+============================*/
+
+.vCard-content {
+  height: 100vh;
+  width: 100vw;
+
+  @media #{$sm-device, $md-device} {
+    height: auto;
+  }
+
+  &__left, &__right {
+    max-width: 50%;
+    flex-basis: 50%;
+    height: 100%;
+
+    @media #{$sm-device, $md-device} {
+      max-width: 100%;
+    }
+  }
+
+  &__left {
+    @media #{$md-device} {
+      height: 50vh;
+    }
+
+    @media #{$sm-device} {
+      height: 300px;
+    }
+  }
+
+  &__right {
+    background-color: #070c1f;
+    overflow-y: auto;
+    padding: 100px;
+
+    @media #{$lg-device, $md-device} {
+      padding: 100px 50px;
+    }
+
+    @media #{$sm-device} {
+      padding: 60px 15px;
+    }
+
+    .vCard-content-author {
+      margin-top: 60px;
+
+      @media #{$md-device, $sm-device} {
+        margin-top: 0;
+      }
+
+      h2 {
+        color: $brandColor;
+        font-family: $font-pd;
+        @include font-size(110px);
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 0;
+
+        @media #{$lg-device, $xlmax-device} {
+          @include font-size(80px);
+        }
+      }
+
+      .author-content-item {
+        margin-top: 55px;
+
+        h5 {
+          color: $brandColor;
+          text-transform: uppercase;
+          font-weight: 700;
+          @include font-size(16px);
+        }
+
+        .btn-bordered {
+          &:not(:hover) {
+            color: $brandColor;
+          }
+
+          i {
+            padding-right: 5px;
+          }
+        }
+
+        .btn-bottom {
+          color: $white;
+        }
+
+        .contact-info {
+          word-break: break-all;
+
+          h3 {
+            @include font-size(56px);
+            color: $white;
+
+            @media #{$xlmax-device} {
+              @include font-size(40px)
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.recent-works-list {
+  li {
+    a {
+      @include font-size(32px);
+      line-height: 1.2;
+      color: $white;
+
+      &:hover {
+        color: $brandColor;
+      }
+    }
+  }
+}

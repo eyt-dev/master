@@ -1,0 +1,113 @@
+/*============================
+41. About Page Style Css
+==============================*/
+.about-page-feature-content {
+  background-repeat: no-repeat;
+  background-position: 10% center;
+}
+
+.about-page-content {
+  @media screen and (min-width: 1601px) {
+    padding-right: 350px;
+  }
+
+  h3 {
+    @include font-size(48px);
+    margin-bottom: 20px;
+  }
+}
+
+.about-page-2-feature-area {
+  position: relative;
+
+  &:before {
+    @include overlay($secondaryColor, 0.95);
+  }
+}
+
+.about-me-hero-content {
+  height: 720px;
+  display: flex;
+  align-items: center;
+  color: $white;
+
+  @media #{$sm-device} {
+    height: 500px;
+  }
+
+  h5 {
+    color: $brandColor;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 1.5px;
+  }
+
+  h2 {
+    color: $white;
+    font-size: 90px;
+    font-weight: 700;
+    line-height: 1;
+    margin: 15px 0 30px;
+
+    @media #{$lg-device, $md-device} {
+      font-size: 80px;
+    }
+
+    @media #{$sm-device} {
+      font-size: 45px;
+    }
+  }
+}
+
+.about-me-service {
+  .icon-box-item {
+    .icon-box__txt {
+      h6 {
+        margin-bottom: 0;
+
+        @media #{$xxs-device} {
+          font-size: 16px;
+        }
+      }
+    }
+  }
+}
+
+.about-personal-skill-area {
+  .personal-skill-left {
+    padding: 150px 50px;
+    height: 100%;
+
+    @media screen and (min-width: 1500px) {
+      padding: 170px 120px 170px 365px;
+    }
+
+    @media #{$md-device} {
+      padding: 90px 50px;
+    }
+
+    @media #{$sm-device} {
+      padding: 60px 30px;
+    }
+  }
+
+  .personal-skill-right {
+    padding: 150px 50px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+
+    @media screen and (min-width: 1500px) {
+      padding: 170px 365px 170px 120px;
+    }
+
+    @media #{$md-device} {
+      padding: 55px 50px 95px;
+    }
+
+    @media #{$sm-device} {
+      padding: 35px 30px 65px;
+    }
+  }
+}

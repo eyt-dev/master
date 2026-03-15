@@ -56,7 +56,7 @@ class CountryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreCountryRequest $request)
+    public function store(StoreCountryRequest $request, $siteUrl)
     {
         $data = $request->validated();
 
@@ -69,13 +69,13 @@ class CountryController extends Controller
 
         Session::flash('successMsg', 'Country created successfully.');
 
-        return redirect()->route('country.index');
+        return redirect()->route('country.index', ['username' => request()->segment(1)]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Country $country)
+    public function edit($siteUrl, Country $country)
     {
         return view('country.create', compact('country'));
     }
@@ -83,7 +83,7 @@ class CountryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateCountryRequest $request, $id)
+    public function update(UpdateCountryRequest $request, $siteUrl, $id)
     {
         $country = Country::findOrFail($id);
 
@@ -102,13 +102,13 @@ class CountryController extends Controller
 
         Session::flash('successMsg', 'Country updated successfully.');
 
-        return redirect()->route('country.index');
+        return redirect()->route('country.index', ['username' => request()->segment(1)]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy($siteUrl, $id)
     {
         Country::findOrFail($id)->delete();
 

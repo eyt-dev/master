@@ -1,5 +1,5 @@
 <form
-    action="{{ isset($country) && $country->id ? route('country.update', $country->id) : route('country.store') }}"
+    action="{{ isset($country) && $country->id ? route('country.update', ['username' => $siteSlug, 'country' => $country->id]) : route('country.store', ['username' => $siteSlug]) }}" 
     method="POST"
     id="country_form"
     novalidate=""
@@ -81,7 +81,7 @@
 
     <div class="card-footer">
         <button class="btn btn-primary" type="submit">Save</button>
-        <a href="{{ route('country.index') }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('country.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
     </div>
 
 </form>

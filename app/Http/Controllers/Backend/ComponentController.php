@@ -39,7 +39,7 @@ class ComponentController extends Controller
                     return $row->unit->symbol;
                 })
                 ->addColumn('action', function ($row) {
-                    return '<a class="edit-component btn btn-sm btn-success" data-path="' . route('component.edit', ['username' => request()->segment(1),  'component' => $row->id]) . '" title="Edit" style="margin-right: 5px;">
+                    return '<a class="edit-component btn btn-sm btn-success" data-path="' . route('component.edit', ['username' => request()->segment(1), 'component' => $row->id]) . '" title="Edit" style="margin-right: 5px;">
                     <i class="fa fa-edit"></i></a>'
                         . '<a class="delete-component btn btn-sm btn-danger" data-id="' . $row->id . '" title="Delete" style="margin-right: 5px;">
                     <i class="fa fa-trash"></i></a>';
@@ -71,7 +71,7 @@ class ComponentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreComponentRequest $request)
+    public function store(StoreComponentRequest $request, $siteUrl)
     {
         $data = $request->validated();
 
@@ -125,7 +125,7 @@ class ComponentController extends Controller
     }
 
 
-    public function edit(Component $component)
+    public function edit($siteUrl, Component $component)
     {
         // Load the component with its elements and pivot data
         $component->load(['elements' => function ($query) {
@@ -149,7 +149,7 @@ class ComponentController extends Controller
         ));
     }
 
-    public function update(UpdateComponentRequest $request, Component $component)
+    public function update(UpdateComponentRequest $request, $siteUrl, Component $component)
     {
         $data = $request->validated();
 
@@ -240,7 +240,7 @@ class ComponentController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy($siteUrl, $id)
     {
         try {
             $component = Component::findOrFail($id);

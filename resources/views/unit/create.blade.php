@@ -1,5 +1,5 @@
 <form
-    action="{{ isset($unit) && $unit->id ? route('unit.update', $unit->id) : route('unit.store') }}"
+    action="{{ isset($unit) && $unit->id ? route('unit.update', ['username' => request()->segment(1), 'unit' => $unit->id]) : route('unit.store', ['username' => request()->segment(1)]) }}"
     method="POST"
     id="unit_form"
     novalidate=""
@@ -37,7 +37,7 @@
     </div>
     <div class="card-footer">
         <button class="btn btn-primary" type="submit">Save</button>
-        <a href="{{ route('unit.index') }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('unit.index', ['username' => request()->segment(1)]) }}" class="btn btn-secondary">Cancel</a>
     </div>
 
 </form>

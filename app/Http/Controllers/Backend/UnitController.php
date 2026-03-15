@@ -48,7 +48,7 @@ class UnitController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreUnitRequest $request)
+    public function store(StoreUnitRequest $request, $siteUrl)
     {
         $data = $request->validated();
 
@@ -56,13 +56,13 @@ class UnitController extends Controller
 
         Session::flash('successMsg', 'Unit created successfully.');
 
-        return redirect()->route('unit.index');
+        return redirect()->route('unit.index', ['username' => request()->segment(1)]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Unit $unit)
+    public function edit($siteUrl, Unit $unit)
     {
         return view('unit.create', compact('unit'));
     }
@@ -70,7 +70,7 @@ class UnitController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateUnitRequest $request, $id)
+    public function update(UpdateUnitRequest $request, $siteUrl, $id)
     {
         $unit = Unit::findOrFail($id);
 
@@ -80,13 +80,13 @@ class UnitController extends Controller
 
         Session::flash('successMsg', 'Unit updated successfully.');
 
-        return redirect()->route('unit.index');
+        return redirect()->route('unit.index', ['username' => request()->segment(1)]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy($siteUrl, $id)
     {
         Unit::findOrFail($id)->delete();
 

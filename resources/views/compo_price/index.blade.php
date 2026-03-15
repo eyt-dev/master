@@ -30,7 +30,7 @@
 
             <div class="card-body">
                 <form
-                    action="{{ route('compo_price.store', ['username' => $siteSlug]) }}"
+                    action="{{ route('compo_price.store', ['username' => request()->segment(1)]) }}"
                     method="POST"
                     id="compo_price_form"
                     novalidate

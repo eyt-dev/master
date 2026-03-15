@@ -76,7 +76,7 @@ class ElementController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreElementRequest $request)
+    public function store(StoreElementRequest $request, $siteUrl)
     {
         $data = $request->validated();
 
@@ -89,13 +89,13 @@ class ElementController extends Controller
 
         session()->flash('successMsg', 'Element created successfully.');
 
-        return redirect()->route('element.index');
+        return redirect()->route('element.index', ['username' => $siteUrl]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Element $element)
+    public function edit($siteUrl, Element $element)
     {
         return view('element.create', compact('element'));
     }
@@ -103,7 +103,7 @@ class ElementController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateElementRequest $request, $id)
+    public function update(UpdateElementRequest $request, $siteUrl, $id)
     {
         $element = Element::findOrFail($id);
 
@@ -122,13 +122,13 @@ class ElementController extends Controller
 
         Session::flash('successMsg', 'Element updated successfully.');
 
-        return redirect()->route('element.index');
+        return redirect()->route('element.index', ['username' => $siteUrl]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy($siteUrl, $id)
     {
         Element::findOrFail($id)->delete();
 

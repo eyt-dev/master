@@ -122,7 +122,7 @@
             ]
         });
 
-        $(document).on('click', '.delete-element', function() {
+        $(document).on('click', '.delete-component', function() {
             var id = $(this).attr("data-id");
             swal({
                 title: "Are you sure?",

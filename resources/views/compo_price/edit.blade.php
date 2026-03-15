@@ -1,5 +1,5 @@
 <form
-    action="{{ isset($compoPrice) && $compoPrice->id ? route('compo_price.update', $compoPrice->id) : route('compo_price.store') }}"
+    action="{{ isset($compoPrice) && $compoPrice->id ? route('compo_price.update', ['username' => request()->segment(1), 'compo_price' => $compoPrice->id]) : route('compo_price.store', ['username' => request()->segment(1)]) }}"
     method="POST"
     id="compo_price_form_edit"
     novalidate

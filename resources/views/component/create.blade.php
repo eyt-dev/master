@@ -1,5 +1,5 @@
 <form
-    action="{{ isset($component) && $component->id ? route('component.update', $component->id) : route('component.store') }}"
+    action="{{ isset($component) && $component->id ? route('component.update', ['username' => $siteSlug, $component->id]) : route('component.store', ['username' => $siteSlug]) }}"
     method="post"
     id="component_form"
     novalidate=""
@@ -178,7 +178,7 @@
         <button class="btn btn-primary" type="submit" id="submit-btn">
             {{ isset($component) ? __('Update') : __('Save') }}
         </button>
-        <a href="{{ route('component.index') }}" class="btn btn-secondary">
+        <a href="{{ route('component.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">
             {{ __('Cancel') }}
         </a>
     </div>
@@ -636,9 +636,9 @@
             $codeError.text('Checking availability...').removeClass('text-danger').addClass('text-info').show();
 
             // Debounce the request
+            const routeName = "{{ route('component.check-code', ['username' => request()->route('username')]) }}";
             codeCheckTimeout = setTimeout(function() {
-                $.ajax({
-                    url: "/component/check-code",
+                    url: routeName,
                     method: 'POST',
                     data: {
                         code: code,

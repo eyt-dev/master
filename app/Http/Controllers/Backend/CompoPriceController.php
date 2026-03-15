@@ -53,7 +53,6 @@ class CompoPriceController extends Controller
     public function index()
     {
         $components = Component::with('elements')->get();
-
         return view('compo_price.index', ['components' => $components]);
     }
 

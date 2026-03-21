@@ -37,7 +37,7 @@ class UpdateComponentRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'form' => ['required', 'exists:forms,id'],
-            'unit' => ['required', 'exists:units,id'],
+            // 'unit' => ['required', 'exists:units,id'],
             'type' => ['required', 'in:1,2'],
             'elements' => ['sometimes', 'array'],
         ];

@@ -82,26 +82,8 @@
             @enderror
         </div>
 
-        {{-- Unit --}}
-        <div class="col-md-4 mb-3">
-            <label for="unit" class="form-label fw-bold">{{ __('Unit') }} <span
-                    class="text-red">*</span></label>
-            <select name="unit" id="unit" class="form-control select2 @error('unit') is-invalid @enderror" required="">
-                <option value="">{{__('Select an option')}}</option>
-                @foreach($units as $unit)
-                    <option
-                        value="{{$unit->id}}" {{ old('unit', $component->unit_id ?? '') == $unit->id ? 'selected' : '' }}>
-                        {{ $unit->symbol }}
-                    </option>
-                @endforeach
-            </select>
-
-            @error('unit')
-            <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-        </div>
-
-        {{-- Type --}}
+        <input type="hidden"  name="type" id="type" value="2">
+        {{-- Type 
         <div class="col-md-4 mb-3">
             <label for="type" class="form-label fw-bold">{{ __('Type') }} <span
                     class="text-red">*</span></label>
@@ -117,7 +99,7 @@
             @error('type')
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
-        </div>
+        </div>--}}
     </div>
 
     <!-- Elements Container -->
@@ -638,6 +620,7 @@
             // Debounce the request
             const routeName = "{{ route('component.check-code', ['username' => request()->route('username')]) }}";
             codeCheckTimeout = setTimeout(function() {
+                $.ajax({
                     url: routeName,
                     method: 'POST',
                     data: {

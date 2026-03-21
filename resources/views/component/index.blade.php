@@ -49,8 +49,8 @@
                                     <th>{{__('Name')}}</th>
                                     <th>{{__('Description')}}</th>
                                     <th>{{__('Form')}}</th>
-                                    <th>{{__('Type')}}</th>
-                                    <th>{{__('Unit')}}</th>
+                                    {{-- <th>{{__('Type')}}</th> --}}
+                                    {{-- <th>{{__('Unit')}}</th> --}}
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -116,8 +116,8 @@
                 { data: 'name', name: 'name' },
                 { data: 'description', name: 'description' },
                 { data: 'form', name: 'form' },
-                { data: 'type', name: 'type' },
-                { data: 'unit', name: 'unit' },
+                // { data: 'type', name: 'type' },
+                // { data: 'unit', name: 'unit' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]
         });

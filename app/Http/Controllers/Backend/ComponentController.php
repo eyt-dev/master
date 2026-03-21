@@ -30,14 +30,14 @@ class ComponentController extends Controller
                 ->addColumn('form', function ($row) {
                     return $row->form?->name ?? '<span class="text-muted">No Form</span>';
                 })
-                ->addColumn('type', function ($row) {
-                    $badge = NutritionType::getNutritionbadge()[$row->type] ?? 'secondary';
-                    $label = NutritionType::getNutritionType()[$row->type] ?? 'unknown';
-                    return '<span class="text-white badge bg-' . $badge . '">' . $label . '</span>';
-                })
-                ->addColumn('unit', function ($row) {
-                    return $row->unit->symbol;
-                })
+                // ->addColumn('type', function ($row) {
+                //     $badge = NutritionType::getNutritionbadge()[$row->type] ?? 'secondary';
+                //     $label = NutritionType::getNutritionType()[$row->type] ?? 'unknown';
+                //     return '<span class="text-white badge bg-' . $badge . '">' . $label . '</span>';
+                // })
+                // ->addColumn('unit', function ($row) {
+                //     return $row->unit->symbol;
+                // })
                 ->addColumn('action', function ($row) {
                     return '<a class="edit-component btn btn-sm btn-success" data-path="' . route('component.edit', ['username' => request()->segment(1), 'component' => $row->id]) . '" title="Edit" style="margin-right: 5px;">
                     <i class="fa fa-edit"></i></a>'
@@ -87,15 +87,14 @@ class ComponentController extends Controller
             return back()->withErrors(['elements' => 'Each element can only be selected once per component.'])->withInput();
         }
 
-        DB::beginTransaction();
+        // DB::beginTransaction();
 
-        try {
+        // try {
             $component = Component::create([
                 'code' => $data['code'],
                 'name' => $data['name'],
                 'description' => $data['description'] ?? null,
                 'form_id' => $data['form'],
-                'unit_id' => $data['unit'],
                 'type' => $data['type'],
                 'created_by' => auth()->id(),
             ]);
@@ -113,15 +112,15 @@ class ComponentController extends Controller
 
             $component->elements()->sync($syncData);
 
-            DB::commit();
+            // DB::commit();
 
             Session::flash('successMsg', 'Component created successfully.');
-            return redirect()->route('component.index');
+            return redirect()->route('component.index', ['username' => request()->segment(1)]);
 
-        } catch (\Exception $e) {
-            DB::rollback();
-            return back()->withErrors(['error' => 'Failed to create component. Please try again.'])->withInput();
-        }
+        // } catch (\Exception $e) {
+        //     DB::rollback();
+        //     return back()->withErrors(['error' => 'Failed to create component. Please try again.'])->withInput();
+        // }
     }
 
 
@@ -173,7 +172,6 @@ class ComponentController extends Controller
                 'name' => $data['name'],
                 'description' => $data['description'] ?? null,
                 'form_id' => $data['form'],
-                'unit_id' => $data['unit'],
                 'type' => $data['type'],
             ]);
 
@@ -192,7 +190,7 @@ class ComponentController extends Controller
             DB::commit();
 
             Session::flash('successMsg', 'Component updated successfully.');
-            return redirect()->route('component.index');
+            return redirect()->route('component.index', ['username' => request()->segment(1)]);
 
         } catch (\Exception $e) {
             DB::rollback();

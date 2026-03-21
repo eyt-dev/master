@@ -112,7 +112,7 @@
 
     <div class="card-footer">
         <button class="btn btn-primary" id="update_btn" type="submit">Save</button>
-        <a href="{{ route('compo_price.index') }}" class="btn btn-secondary">Cancel</a>
+        <a href="{{ route('compo_price.index', $siteUrl) }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>
 

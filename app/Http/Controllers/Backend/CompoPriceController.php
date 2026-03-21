@@ -59,7 +59,7 @@ class CompoPriceController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreCompoPriceRequest $request)
+    public function store(StoreCompoPriceRequest $request, $siteUrl)
     {
         try {
             $data = $request->validated();
@@ -116,17 +116,18 @@ class CompoPriceController extends Controller
         }
     }
 
-    public function edit(CompoPrice $compoPrice)
+    public function edit($siteUrl, CompoPrice $compoPrice)
     {
         $components = Component::with('elements')->get();
 
         return view('compo_price.edit', [
+            'siteUrl' => $siteUrl,
             'compoPrice' => $compoPrice,
             'components' => $components
         ]);
     }
 
-    public function update(UpdateCompoPriceRequest $request, CompoPrice $compoPrice)
+    public function update($siteUrl, UpdateCompoPriceRequest $request, CompoPrice $compoPrice)
     {
         try {
             $data = $request->validated();
@@ -237,7 +238,7 @@ class CompoPriceController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy($siteUrl, $id)
     {
         CompoPrice::findOrFail($id)->delete();
 

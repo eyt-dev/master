@@ -1,18 +1,17 @@
 <form
-    action="{{ isset($component) && $component->id ? route('component.update', ['username' => $siteSlug, $component->id]) : route('component.store', ['username' => $siteSlug]) }}"
+    action="{{ isset($component) && $component->id ? route('component.update', ['username' => $siteSlug, 'component' => $component->id]) : route('component.store', ['username' => $siteSlug]) }}"
     method="post"
     id="component_form"
     novalidate=""
     class="needs-validation"
     enctype="multipart/form-data">
 
-@csrf
+    @csrf
 
-@if(isset($component) && $component->id)
-    @method('PUT')
-@endif
+    @if(isset($component) && $component->id)
+        @method('PUT')
+    @endif
 
-<!-- Hidden field for component ID (for edit mode) -->
     @if(isset($component) && $component->id)
         <input type="hidden" name="component_id" id="component_id" value="{{ $component->id }}">
     @else
@@ -20,7 +19,6 @@
     @endif
 
     <div class="row">
-        <!-- Code Textbox -->
         <div class="col-md-4 mb-3">
             <div class="form-group">
                 <label for="code" class="form-label">{{__('Code')}} <span class="text-red">*</span></label>
@@ -34,7 +32,6 @@
             </div>
         </div>
 
-        <!-- Name Textbox -->
         <div class="col-md-4 mb-3">
             <div class="form-group">
                 <label for="name" class="form-label">{{__('Name')}} <span class="text-red">*</span></label>
@@ -47,7 +44,6 @@
             </div>
         </div>
 
-        <!-- Description -->
         <div class="col-md-4 mb-3">
             <div class="form-group">
                 <label for="description" class="form-label">{{__('Description')}}</label>
@@ -63,60 +59,57 @@
     </div>
 
     <div class="row">
-        {{-- Form --}}
-        <div class="col-md-4 mb-3">
-            <label for="form" class="form-label fw-bold">{{ __('Form') }} <span
-                    class="text-red">*</span></label>
-            <select name="form" id="form" class="form-control select2 @error('form') is-invalid @enderror" required="">
-                <option value="">{{__('Select an option')}}</option>
-                @foreach($forms as $form)
-                    <option
-                        value="{{$form->id}}" {{ old('form', $component->form_id ?? '') == $form->id ? 'selected' : '' }}>
-                        {{ $form->name }}
-                    </option>
-                @endforeach
-            </select>
+        {{-- Form (Radio buttons in one line) --}}
+        <div class="col-md-12 mb-3">
+            <label for="form" class="form-label fw-bold">{{ __('Form') }} <span class="text-red">*</span></label>
+            <div class="form-group">
+                <div class="mt-2"> 
+                    @foreach($forms as $form)
+                        <div class="form-check form-check-inline @error('form') is-invalid @enderror" style="display: inline-block; margin-right: 15px;">
+                            <input 
+                                type="radio"
+                                name="form" 
+                                id="form_{{$form->id}}"
+                                class="form-check-input @error('form') is-invalid @enderror" 
+                                value="{{$form->id}}" 
+                                {{ old('form', $component->form_id ?? '') == $form->id ? 'checked' : '' }} 
+                                required>
+                            <label class="form-check-label" for="form_{{$form->id}}">
+                                {{ $form->name }}
+                            </label>
+                        </div>
+                    @endforeach
+                </div>
 
-            @error('form')
-            <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+                @error('form')
+                    <span class="invalid-feedback d-block" role="alert">
+                        <strong>{{ $message }}</strong>
+                    </span>
+                @enderror
+            </div>
+        </div>
+        <input type="hidden" name="type" id="type" value="2">
+    </div>
+
+    <hr>
+    
+    <div id="elements-header" class="row mb-2 d-none" style="font-weight: bold;">
+        <div class="col-md-4">{{ __('Element') }} <span class="text-red">*</span></div>
+        <div class="col-md-4">{{ __('Amount') }} <span class="text-red">*</span></div>
+        <div class="col-md-3">{{ __('Unit') }} <span class="text-red">*</span></div>
+        <div class="col-md-1"></div>
+    </div>
+
+    <div id="elements-container">
         </div>
 
-        <input type="hidden"  name="type" id="type" value="2">
-        {{-- Type 
-        <div class="col-md-4 mb-3">
-            <label for="type" class="form-label fw-bold">{{ __('Type') }} <span
-                    class="text-red">*</span></label>
-            <select name="type" id="type" class="form-control select2 @error('type') is-invalid @enderror" required="">
-                <option value="">{{__('Select an option')}}</option>
-                @foreach(\App\Constants\NutritionType::getNutritionType() as $key => $value)
-                    <option value="{{$key}}" {{ old('type', $component->type ?? '') == $key ? 'selected' : '' }}>
-                        {{ $value }}
-                    </option>
-                @endforeach
-            </select>
-
-            @error('type')
-            <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-        </div>--}}
-    </div>
-
-    <!-- Elements Container -->
-    <div id="elements-container">
-        <!-- Dynamic elements will be inserted here -->
-    </div>
-
-    <!-- Display general elements error -->
     @error('elements')
     <div class="alert alert-danger">{{ $message }}</div>
     @enderror
 
-<!-- Element Template (hidden) -->
     <div id="element-template" class="d-none">
-        <div class="element-group-wrapper row mb-3">
+        <div class="element-group-wrapper row mb-2">
             <div class="col-md-4">
-                <label class="form-label">{{ __('Element') }} <span class="text-red">*</span></label>
                 <select name="elements[__index__][element_id]" class="form-control select2-template">
                     <option value="" disabled selected>{{ __('Select Element') }}</option>
                     @foreach($elements as $element)
@@ -126,13 +119,10 @@
             </div>
 
             <div class="col-md-4">
-                <label class="form-label">{{ __('Amount') }} <span class="text-red">*</span></label>
-                <input type="number" step="0.001" min="0.001" name="elements[__index__][amount]" class="form-control"
-                       placeholder="{{ __('Enter Amount') }}">
+                <input type="text" name="elements[__index__][amount]" class="form-control amount-input" placeholder="{{ __('Enter Amount') }}">
             </div>
 
             <div class="col-md-3">
-                <label class="form-label">{{ __('Unit') }} <span class="text-red">*</span></label>
                 <select name="elements[__index__][element_unit_id]" class="form-control select2-template">
                     <option value="" disabled selected>{{ __('Select Unit') }}</option>
                     @foreach($units as $unit)
@@ -141,7 +131,7 @@
                 </select>
             </div>
 
-            <div class="col-md-1 d-flex align-items-end mb-1">
+            <div class="col-md-1">
                 <button type="button" class="btn btn-outline-danger btn-sm btn-remove" title="Remove Element">
                     X
                 </button>
@@ -149,10 +139,9 @@
         </div>
     </div>
 
-    <!-- Add Element Button -->
     <div id="add-element-container" class="mb-3 d-none">
         <button type="button" id="add-element" class="btn btn-success btn-sm">
-            {{ __('Add Element') }}
+            <i class="fa fa-plus"></i> {{ __('Add Element') }}
         </button>
     </div>
 
@@ -166,19 +155,12 @@
     </div>
 
     @if(isset($component) && isset($componentElementsJson))
-        <script>
-            // Make component elements data available to JavaScript
-            const componentElements = {!! $componentElementsJson !!};
-        </script>
+        <script>window.componentElements = {!! $componentElementsJson !!};</script>
     @else
-        <script>
-            // Define empty array if we're in create mode
-            const componentElements = [];
-        </script>
+        <script>window.componentElements = [];</script>
     @endif
 </form>
 
-<!-- Add CSRF token meta tag if not already present -->
 @if(!isset($csrfAdded))
     <meta name="csrf-token" content="{{ csrf_token() }}">
 @endif
@@ -186,466 +168,311 @@
 <script>
     $(document).ready(function () {
         // ===== Select2 init =====
-        $('.select2').select2({
-            width: '100%',
-            allowClear: true,
-            placeholder: "Select an option"
-        });
+        $('.select2').select2({ width: '100%', allowClear: true, placeholder: "Select an option" });
 
-        // Custom validation for select2 fields
         function validateSelect2Field($select) {
             const isValid = $select.val() && $select.val() !== '';
             const $container = $select.next('.select2-container');
-
             $container.removeClass('is-invalid is-valid');
             $select.removeClass('is-invalid is-valid');
-
             if (isValid) {
-                $container.addClass('is-valid');
-                $select.addClass('is-valid');
+                $container.addClass('is-valid'); $select.addClass('is-valid');
             } else {
-                $container.addClass('is-invalid');
-                $select.addClass('is-invalid');
+                $container.addClass('is-invalid'); $select.addClass('is-invalid');
             }
-
             return isValid;
         }
 
-        // Function to validate all elements
         function validateAllElements() {
             let isValid = true;
             const $elementsContainer = $('#elements-container');
-
-            // Only validate if elements container has content
-            if ($elementsContainer.children().length === 0) {
-                return true;
-            }
+            if ($elementsContainer.children().length === 0) return true;
 
             $elementsContainer.find('.element-group-wrapper').each(function() {
                 const $row = $(this);
-
-                // Validate element select
-                const $elementSelect = $row.find('select[name*="[element_id]"]');
-                if (!validateSelect2Field($elementSelect)) {
-                    isValid = false;
-                }
-
-                // Validate amount input
+                if (!validateSelect2Field($row.find('select[name*="[element_id]"]'))) isValid = false;
                 const $amountInput = $row.find('input[name*="[amount]"]');
                 const amountValue = $amountInput.val();
-                if (!amountValue || parseFloat(amountValue) <= 0) {
-                    $amountInput.addClass('is-invalid').removeClass('is-valid');
-                    isValid = false;
+                
+                // Normalize the formatted amount for validation
+                const normalizedAmount = normalizeMoney(amountValue);
+                
+                if (!amountValue || parseFloat(normalizedAmount) <= 0) {
+                    $amountInput.addClass('is-invalid'); isValid = false;
                 } else {
                     $amountInput.addClass('is-valid').removeClass('is-invalid');
                 }
-
-                // Validate unit select
-                const $unitSelect = $row.find('select[name*="[element_unit_id]"]');
-                if (!validateSelect2Field($unitSelect)) {
-                    isValid = false;
-                }
+                if (!validateSelect2Field($row.find('select[name*="[element_unit_id]"]'))) isValid = false;
             });
-
             return isValid;
         }
 
-        $('.select2').on('change.select2', function () {
-            validateSelect2Field($(this));
-        });
-
-        // Add error class to Select2 elements that have validation errors
-        function applyErrorsToSelect2() {
-            $('.select2.is-invalid').each(function () {
-                const selectId = $(this).attr('id');
-                $(`#${selectId}`).next('.select2-container').addClass('is-invalid');
-                $(`#${selectId}-error`).show();
-            });
-        }
-
-        applyErrorsToSelect2();
-
-        $('.select2').on('select2:close', function () {
-            $(this).valid && $(this).valid();
-        });
-
-        // SINGLE CONSOLIDATED FORM VALIDATION
+        // Form Submit
         $('#component_form').on('submit', function (e) {
-            console.log('Form submission started');
-
-            const form = this;
-            const $form = $(this);
-            const $codeField = $('#code');
             let formIsValid = true;
 
-            // 1. Check code field validity
-            if ($codeField.hasClass('is-invalid')) {
-                console.log('Form blocked: Code field is invalid');
-                $('#code-error').text('Please fix the code field error').addClass('text-danger').show();
-                $codeField.focus();
-                formIsValid = false;
-            }
+            if ($('#code').hasClass('is-invalid')) formIsValid = false;
 
-            // 2. Validate main form fields (non-dynamic)
-            const requiredFields = ['#code', '#name', '#form', '#unit', '#type'];
-            requiredFields.forEach(function(fieldId) {
-                const $field = $(fieldId);
-                if ($field.length) {
-                    if ($field.is('select')) {
-                        if (!validateSelect2Field($field)) {
-                            formIsValid = false;
-                        }
-                    } else {
-                        if (!$field.val() || $field.val().trim() === '') {
-                            $field.addClass('is-invalid').removeClass('is-valid');
-                            formIsValid = false;
-                        } else {
-                            $field.addClass('is-valid').removeClass('is-invalid');
-                        }
-                    }
-                }
+            ['#code', '#name'].forEach(fieldId => {
+                const $f = $(fieldId);
+                if (!$f.val()) { $f.addClass('is-invalid'); formIsValid = false; }
             });
 
-            // 3. Validate dynamic elements
-            if (!validateAllElements()) {
-                console.log('Form blocked: Element validation failed');
-                formIsValid = false;
-            }
+            if (!validateAllElements()) formIsValid = false;
 
-            // 4. Check if elements are required based on type
-            const selectedType = $('#type').val();
-            const $elementsContainer = $('#elements-container');
-
-            if (selectedType && $elementsContainer.children().length === 0) {
-                console.log('Form blocked: No elements added');
-                alert('Please add at least one element for this component type.');
-                formIsValid = false;
-            }
-
-            // If any validation failed, prevent submission
             if (!formIsValid) {
                 e.preventDefault();
-                e.stopPropagation();
-                $form.addClass('was-validated');
-                console.log('Form submission blocked due to validation errors');
+                alert('Please fix errors before saving.');
                 return false;
             }
 
-            console.log('Form validation passed, submitting...');
-            // Form will submit normally here
-        });
-
-        // Mark required Select2 fields
-        $('.select2').each(function () {
-            const $select = $(this);
-            const $label = $('label[for="' + $select.attr('id') + '"]');
-
-            if ($label.find('.text-red').length) {
-                $select.addClass('required');
-            }
-        });
-
-        // ===== Display unit based on form select =====
-     //   $('#unit').prop('disabled', true);
-
-        $('#form').on('change', function () {
-            const selectedForm = $(this).val();
-
-            if (!selectedForm) {
-                $('#unit').prop('disabled', true).empty().append('<option value="">Select an option</option>');
-                return;
-            }
-
-            $('#unit').prop('disabled', true).empty().append('<option disabled selected>Loading...</option>');
-
-            $.ajax({
-                url: `/component/getUnitByForm/${selectedForm}`,
-                type: 'GET',
-                success: function (units) {
-                    console.log(units);
-                    $('#unit').prop('disabled', false).empty();
-
-                    units.forEach(unit => {
-                        $('#unit').append(`<option value="${unit.id}" selected>${unit.symbol}</option>`);
-                    });
-                },
-                error: function () {
-                    $('#unit').prop('disabled', true).empty().append('<option disabled selected>Error loading unit</option>');
-                }
+            // convert all formatted amounts before submit
+            $('.amount-input').each(function () {
+                let val = $(this).val();
+                $(this).val(normalizeMoney(val));
             });
         });
 
-        // Global element index counter
         let elementIndex = 0;
 
-        // Function to get all selected element IDs
-        function getSelectedElementIds() {
-            const selectedIds = [];
-            $('#elements-container select[name*="[element_id]"]').each(function() {
-                const value = $(this).val();
-                if (value) {
-                    selectedIds.push(value);
-                }
-            });
-            return selectedIds;
-        }
-
-        // Function to update element options availability
-        function updateElementOptionsAvailability() {
-            const selectedIds = getSelectedElementIds();
-
-            $('#elements-container select[name*="[element_id]"]').each(function() {
-                const $currentSelect = $(this);
-                const currentValue = $currentSelect.val();
-
-                // Reset all options to enabled
-                $currentSelect.find('option').prop('disabled', false);
-
-                // Disable selected options in other dropdowns
-                selectedIds.forEach(function(selectedId) {
-                    if (selectedId !== currentValue) {
-                        $currentSelect.find(`option[value="${selectedId}"]`).prop('disabled', true);
-                    }
-                });
-
-                // Trigger change to update Select2 display
-                $currentSelect.trigger('change.select2');
-            });
-        }
-
-        // ===== Element management functions =====
-        function createElementRow(index, elementData = null) {
-            const template = $('#element-template').html();
-            const element = template.replace(/__index__/g, index);
-            const $row = $(element);
-
-            if (elementData) {
-                $row.find('select[name^="elements"][name$="[element_id]"]').val(elementData.element_id);
-                $row.find('input[name^="elements"][name$="[amount]"]').val(elementData.amount);
-                $row.find('select[name^="elements"][name$="[element_unit_id]"]').val(elementData.element_unit_id);
+        function updateHeaderVisibility() {
+            if ($('#elements-container').children().length > 0) {
+                $('#elements-header').removeClass('d-none');
+            } else {
+                $('#elements-header').addClass('d-none');
             }
-
-            return $row;
-        }
-
-        function clearElementsContainer() {
-            $('#elements-container').empty();
         }
 
         function addElementRow(elementData = null) {
-            const $newRow = createElementRow(elementIndex, elementData);
+            const template = $('#element-template').html();
+            const element = template.replace(/__index__/g, elementIndex);
+            const $newRow = $(element);
+            
             $('#elements-container').append($newRow);
+            updateHeaderVisibility();
 
-            // Initialize Select2 on the new row - REMOVE required attribute from HTML
-            const $elementSelect = $newRow.find('select[name*="[element_id]"]');
-            const $unitSelect = $newRow.find('select[name*="[element_unit_id]"]');
-            const $amountInput = $newRow.find('input[name*="[amount]"]');
+            const $elSel = $newRow.find('select[name*="[element_id]"]');
+            const $unSel = $newRow.find('select[name*="[element_unit_id]"]');
+            const $amInp = $newRow.find('input[name*="[amount]"]');
 
-            // Remove required attributes since we handle validation manually
-            $elementSelect.removeAttr('required');
-            $unitSelect.removeAttr('required');
-            $amountInput.removeAttr('required');
-
-            // Set values BEFORE initializing Select2 if we have element data
             if (elementData) {
-                $elementSelect.val(elementData.element_id);
-                $unitSelect.val(elementData.element_unit_id);
-                $amountInput.val(elementData.amount);
-            }
-
-            // Initialize Select2 AFTER setting values
-            $elementSelect.select2({
-                width: '100%',
-                allowClear: true,
-                placeholder: "Select an option"
-            }).addClass('required');
-
-            $unitSelect.select2({
-                width: '100%',
-                allowClear: true,
-                placeholder: "Select an option"
-            }).addClass('required');
-
-            // Add validation on change
-            $elementSelect.on('change', function() {
-                validateSelect2Field($(this));
-                updateElementOptionsAvailability();
-            });
-
-            $unitSelect.on('change', function() {
-                validateSelect2Field($(this));
-            });
-
-            $amountInput.on('input blur', function() {
-                const value = $(this).val();
-                if (!value || parseFloat(value) <= 0) {
-                    $(this).addClass('is-invalid').removeClass('is-valid');
-                } else {
-                    $(this).addClass('is-valid').removeClass('is-invalid');
+                $elSel.val(elementData.element_id);
+                $unSel.val(elementData.element_unit_id);
+                // Format the amount value properly
+                if (elementData.amount) {
+                    // Convert database amount to number first, then format
+                    const numericAmount = parseFloat(elementData.amount);
+                    const formattedAmount = formatMoney(numericAmount);
+                    $amInp.val(formattedAmount);
                 }
-            });
-
-            // Trigger change events to update Select2 display and validation
-            if (elementData) {
-                // Small delay to ensure Select2 is fully initialized
-                setTimeout(function() {
-                    $elementSelect.trigger('change.select2');
-                    $unitSelect.trigger('change.select2');
-                }, 50);
             }
 
-            // Update availability after adding new row
-            setTimeout(function() {
-                updateElementOptionsAvailability();
-            }, 100);
+            $elSel.select2({ width: '100%', placeholder: "Select Element" });
+            $unSel.select2({ width: '100%', placeholder: "Unit" });
+
+            // Initialize amount formatting
+            formatAmountsInContainer($newRow);
 
             elementIndex++;
             return $newRow;
         }
 
-        // ===== FIXED: Display inputs based on type =====
+        // Handle Type Logic
         function handleTypeChange() {
             const type = $('#type').val();
+            $('#elements-container').empty();
+            if (!type) return;
 
-            clearElementsContainer();
-            $('#add-element-container').addClass('d-none');
-
-            if (!type) {
-                return;
-            }
-
-            const hasExistingElements = typeof componentElements !== 'undefined' && componentElements.length > 0;
-
-            // Debug logging
-            console.log('Type selected:', type);
-            console.log('Has existing elements:', hasExistingElements);
-            console.log('Component elements:', componentElements);
-
-            if (type == 1) { // Individual
-                if (hasExistingElements) {
-                    // FIXED: Display ALL elements, not just the first one
-                    componentElements.forEach(function (element, index) {
-                        console.log(`Adding element ${index}:`, element);
-
-                        const $row = addElementRow({
-                            element_id: element.id,
-                            amount: element.pivot.amount,
-                            element_unit_id: element.pivot.element_unit_id
-                        });
-
-                        // Show remove button for all elements in Individual type
-                        // If you want to hide remove for first element only when there's just one element:
-                        // if (componentElements.length === 1 && index === 0) {
-                        //     $row.find('.btn-remove').addClass('d-none');
-                        // }
+            // Check if we're in edit mode and have existing elements
+            if (typeof componentElements !== 'undefined' && componentElements.length > 0) {
+                componentElements.forEach(el => {
+                    addElementRow({
+                        element_id: el.id,
+                        amount: el.pivot.amount,
+                        element_unit_id: el.pivot.element_unit_id
                     });
-
-                    // Show add button for Individual type when editing
-                 //   $('#add-element-container').removeClass('d-none');
-                } else {
-                    // For new Individual components, add one empty row
-                    const $row = addElementRow();
-                    // Hide remove button for single element in new Individual component
-                    $row.find('.btn-remove').addClass('d-none');
-                }
-
-            } else if (type == 2 || type == 3) { // Complex or Carrier Material
-                if (hasExistingElements) {
-                    componentElements.forEach(function (element, index) {
-                        console.log(`Adding element ${index}:`, element);
-
-                        addElementRow({
-                            element_id: element.id,
-                            amount: element.pivot.amount,
-                            element_unit_id: element.pivot.element_unit_id
-                        });
-                    });
-                } else {
-                    addElementRow();
-                }
-                $('#add-element-container').removeClass('d-none');
-            }
-
-            // Update availability after initial setup
-            setTimeout(function() {
-                updateElementOptionsAvailability();
-            }, 200);
-        }
-
-        // Initialize type change handling
-        handleTypeChange();
-        $('#type').on('change', handleTypeChange);
-
-        // ===== Add new element button =====
-        $('#add-element').on('click', function () {
-            addElementRow();
-        });
-
-        // ===== Remove element button (delegated event) =====
-        $(document).on('click', '.btn-remove', function () {
-            $(this).closest('.element-group-wrapper').remove();
-            // Update availability after removal
-            setTimeout(function() {
-                updateElementOptionsAvailability();
-            }, 100);
-        });
-
-        // Trigger type change if value exists
-        if ($('#type').val()) {
-            $('#type').trigger('change');
-        }
-
-        // ===== Code uniqueness validation =====
-        let codeCheckTimeout;
-        $('#code').on('input', function () {
-            const code = $(this).val().trim();
-            const componentId = $('#component_id').val() || null;
-            const $codeError = $('#code-error');
-            const $codeField = $(this);
-
-            // Clear previous timeout
-            clearTimeout(codeCheckTimeout);
-
-            // Clear previous error
-            $codeError.text('').hide();
-            $codeField.removeClass('is-invalid is-valid');
-
-            if (code === '') {
-                return;
-            }
-
-            // Add loading state
-            $codeError.text('Checking availability...').removeClass('text-danger').addClass('text-info').show();
-
-            // Debounce the request
-            const routeName = "{{ route('component.check-code', ['username' => request()->route('username')]) }}";
-            codeCheckTimeout = setTimeout(function() {
-                $.ajax({
-                    url: routeName,
-                    method: 'POST',
-                    data: {
-                        code: code,
-                        id: componentId,
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function (response) {
-                        $codeError.hide();
-                        if (response.available) {
-                            $codeField.removeClass('is-invalid').addClass('is-valid');
-                            $codeError.text('Code is available').removeClass('text-danger text-info').addClass('text-success').show();
-                        } else {
-                            $codeField.removeClass('is-valid').addClass('is-invalid');
-                            $codeError.text(response.message || 'Code is already taken').removeClass('text-success text-info').addClass('text-danger').show();
-                        }
-                    },
-                    error: function (xhr) {
-                        console.error('Code check error:', xhr.responseJSON);
-                        $codeField.removeClass('is-valid').addClass('is-invalid');
-                        const errorMessage = xhr.responseJSON?.message || 'Error checking code availability';
-                        $codeError.text(errorMessage).removeClass('text-success text-info').addClass('text-danger').show();
-                    }
                 });
-            }, 500); // 500ms delay
+            } else {
+                addElementRow();
+            }
+            $('#add-element-container').removeClass('d-none');
+        }
+
+        // Initialize after DOM is ready
+        setTimeout(function() {
+            handleTypeChange();
+        }, 100);
+        
+        $('#add-element').on('click', function() { addElementRow(); });
+        $(document).on('click', '.btn-remove', function() {
+            $(this).closest('.element-group-wrapper').remove();
+            updateHeaderVisibility();
         });
+
+        $('#component_form').on('submit', function (e) {
+            // convert all formatted amounts before submit
+            $('.amount-input').each(function () {
+                let val = $(this).val();
+                $(this).val(normalizeMoney(val));
+            });
+
+            let formIsValid = true;
+
+            if ($('#code').hasClass('is-invalid')) formIsValid = false;
+
+            ['#code', '#name'].forEach(fieldId => {
+                const $f = $(fieldId);
+                if (!$f.val()) { $f.addClass('is-invalid'); formIsValid = false; }
+            });
+
+            if (!validateAllElements()) formIsValid = false;
+
+            if (!formIsValid) {
+                e.preventDefault();
+                alert('Please fix errors before saving.');
+                return false;
+            }
+        });
+
+        // ===== Money Format (European style: 1.00.000,20) =====
+        function formatMoney(value, preserveCursor = false) {
+            if (!value && value !== 0) return '';
+            
+            // Store cursor position if needed
+            let cursorPos = preserveCursor ? this.selectionStart : 0;
+            
+            // If value is a number, convert to string and handle properly
+            value = value.toString();
+            
+            // Check if it's a numeric input (from database) - has dots but no commas
+            const isNumericInput = value.includes('.') && !value.includes(',');
+            
+            if (isNumericInput) {
+                // For numeric database values, split properly
+                let [integerPart, decimalPart] = value.split('.');
+                integerPart = integerPart.replace(/\D/g, '');
+                
+                if (integerPart === '') return '';
+                
+                // Format integer part with thousand separators (periods)
+                let formattedInteger = '';
+                let temp = integerPart;
+                while (temp.length > 3) {
+                    formattedInteger = '.' + temp.slice(-3) + formattedInteger;
+                    temp = temp.slice(0, -3);
+                }
+                formattedInteger = temp + formattedInteger;
+                
+                // Handle decimal part (max 2 digits)
+                if (decimalPart !== undefined) {
+                    decimalPart = decimalPart.replace(/\D/g, '').slice(0, 2);
+                    return formattedInteger + ',' + decimalPart;
+                }
+                
+                return formattedInteger;
+            } else {
+                // For user input (may have commas), remove everything except digits and comma
+                value = value.replace(/[^\d,]/g, '');
+                
+                // Handle multiple commas - keep only the last one as decimal separator
+                const commaCount = (value.match(/,/g) || []).length;
+                if (commaCount > 1) {
+                    const parts = value.split(',');
+                    value = parts.slice(0, -1).join('') + ',' + parts[parts.length - 1];
+                }
+                
+                // Split into integer and decimal parts
+                let [integerPart, decimalPart] = value.split(',');
+                
+                // Remove any non-digits from integer part
+                integerPart = integerPart.replace(/\D/g, '');
+                
+                if (integerPart === '') return '';
+                
+                // Format integer part with thousand separators (periods)
+                let formattedInteger = '';
+                let temp = integerPart;
+                while (temp.length > 3) {
+                    formattedInteger = '.' + temp.slice(-3) + formattedInteger;
+                    temp = temp.slice(0, -3);
+                }
+                formattedInteger = temp + formattedInteger;
+                
+                // Handle decimal part (max 2 digits)
+                if (decimalPart !== undefined) {
+                    decimalPart = decimalPart.replace(/\D/g, '').slice(0, 2);
+                    return formattedInteger + ',' + decimalPart;
+                }
+                
+                return formattedInteger;
+            }
+        }
+
+        // ===== Convert back to normal format for backend processing =====
+        function normalizeMoney(value) {
+            if (!value && value !== 0) return '0';
+            
+            // Remove all periods (thousand separators)
+            value = value.toString().replace(/\./g, '');
+            
+            // Replace comma with dot for decimal separator
+            value = value.replace(',', '.');
+            
+            // Return as string to preserve precision
+            return value;
+        }
+
+        // ===== Initialize amount fields with proper formatting =====
+        function initializeAmountFields($container) {
+            $container.find('.amount-input').each(function() {
+                const $input = $(this);
+                const currentValue = $input.val();
+                if (currentValue && currentValue !== '0') {
+                    // If it's already in European format, keep it
+                    if (currentValue.includes(',') || currentValue.includes('.')) {
+                        // Convert to number and back to ensure proper formatting
+                        const normalized = normalizeMoney(currentValue);
+                        const formatted = formatMoney(normalized);
+                        $input.val(formatted);
+                    }
+                }
+            });
+        }
+
+        // ===== Apply formatting while typing with cursor preservation =====
+        $(document).on('input', '.amount-input', function (e) {
+            const $input = $(this);
+            const currentValue = $input.val();
+            const cursorPos = this.selectionStart;
+            
+            // Format the value
+            const formatted = formatMoney.call(this, currentValue, true);
+            
+            // Update the value
+            $input.val(formatted);
+            
+            // Restore cursor position (adjusted for formatting changes)
+            const lengthDiff = formatted.length - currentValue.length;
+            const newCursorPos = Math.max(0, cursorPos + lengthDiff);
+            this.setSelectionRange(newCursorPos, newCursorPos);
+        });
+
+        // ===== Handle paste events =====
+        $(document).on('paste', '.amount-input', function (e) {
+            e.preventDefault();
+            const pastedData = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+            const $input = $(this);
+            
+            // Normalize and format the pasted value
+            const normalized = normalizeMoney(pastedData);
+            const formatted = formatMoney(normalized);
+            
+            $input.val(formatted);
+        });
+
+        // ===== Format amounts when elements are added =====
+        function formatAmountsInContainer($container) {
+            initializeAmountFields($container);
+        }
     });
 </script>

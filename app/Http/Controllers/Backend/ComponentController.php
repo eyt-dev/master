@@ -87,9 +87,9 @@ class ComponentController extends Controller
             return back()->withErrors(['elements' => 'Each element can only be selected once per component.'])->withInput();
         }
 
-        // DB::beginTransaction();
+        DB::beginTransaction();
 
-        // try {
+        try {
             $component = Component::create([
                 'code' => $data['code'],
                 'name' => $data['name'],
@@ -112,15 +112,15 @@ class ComponentController extends Controller
 
             $component->elements()->sync($syncData);
 
-            // DB::commit();
+            DB::commit();
 
             Session::flash('successMsg', 'Component created successfully.');
             return redirect()->route('component.index', ['username' => request()->segment(1)]);
 
-        // } catch (\Exception $e) {
-        //     DB::rollback();
-        //     return back()->withErrors(['error' => 'Failed to create component. Please try again.'])->withInput();
-        // }
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Failed to create component. Please try again.'])->withInput();
+        }
     }
 
 
@@ -135,6 +135,7 @@ class ComponentController extends Controller
         $forms = Form::all();
         $units = Unit::all();
         $elements = Element::all();
+        $elementsUnit = Unit::all();
 
         // Convert elements to JSON for JavaScript
         $componentElementsJson = $component->elements->toJson();
@@ -144,6 +145,7 @@ class ComponentController extends Controller
             'forms',
             'units',
             'elements',
+            'elementsUnit',
             'componentElementsJson'
         ));
     }
@@ -151,7 +153,7 @@ class ComponentController extends Controller
     public function update(UpdateComponentRequest $request, $siteUrl, Component $component)
     {
         $data = $request->validated();
-
+    
         // Clean elements data
         $elements = collect($data['elements'] ?? [])
             ->reject(function ($item, $key) {

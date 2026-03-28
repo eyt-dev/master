@@ -87,7 +87,7 @@
                             <label for="price" class="form-label fw-bold">{{ __('Price') }} <span
                                     class="text-danger">*</span></label>
                             <input type="text" name="price" id="price"
-                                   class="form-control @error('price') is-invalid @enderror"
+                                   class="form-control amount-input @error('price') is-invalid @enderror"
                                    placeholder="{{ __('Enter Price') }}"
                                    value="{{ old('price') }}"
                                    required="">
@@ -196,6 +196,9 @@
                 placeholder: "Select an option"
             });
 
+            // Bind European amount formatting
+            bindAmountInputs();
+
             $('.datepicker').datepicker({
                 startDate: '-3d',
                 format: "yyyy-m-d",
@@ -291,6 +294,9 @@
                     return;
                 }
 
+                // Normalize European price format before submit
+                normalizeFormAmounts($('#compo_price_form'));
+
                 $.ajax({
                     url: '{{route('compo_price.store', ['username' => $siteSlug])}}',
                     type: "post",
@@ -316,6 +322,8 @@
                         });
                     },
                     error: function (xhr) {
+                        // Re-format price back to European display on error
+                        $('#price').val(formatMoneyEU($('#price').val()));
                         // Handle validation errors
                         if (xhr.status === 422) {
                             var errors = xhr.responseJSON.errors;

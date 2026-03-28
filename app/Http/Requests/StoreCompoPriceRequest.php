@@ -18,7 +18,7 @@ class StoreCompoPriceRequest extends FormRequest
 
         $rules = [
             'component' => 'required',
-            'price' => 'required|numeric',
+            'price' => 'required|regex:/^\d+(\.\d{1,2})?$/|numeric',
             'set_last_date' => 'nullable|boolean',
             'set_last_unit' => 'nullable|boolean',
         ];

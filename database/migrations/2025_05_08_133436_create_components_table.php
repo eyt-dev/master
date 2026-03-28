@@ -18,7 +18,6 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->foreignId('form_id')->constrained();
             $table->integer('type');
-            $table->foreignId('unit_id')->constrained();
             $table->timestamps();
         });
     }

@@ -31,6 +31,9 @@
 		<!-- Custom js-->
 		<script src="{{URL::asset('assets/js/custom.js')}}"></script>
 
+		<!-- Money formatting utility -->
+		<script src="{{URL::asset('assets/js/money-format.js')}}"></script>
+
 		<script src="{{URL::asset('assets/js/select2.min.js')}}"></script>
 
 		<script src="{{asset('assets/js/bootstrap-datepicker.min.js')}}"></script>

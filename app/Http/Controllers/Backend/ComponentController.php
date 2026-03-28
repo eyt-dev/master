@@ -84,7 +84,7 @@ class ComponentController extends Controller
         // Check for duplicate elements
         $elementIds = $elements->pluck('element_id');
         if ($elementIds->count() !== $elementIds->unique()->count()) {
-            return back()->withErrors(['elements' => 'Each element can only be selected once per component.'])->withInput();
+            return response()->json(['success' => false, 'message' => 'Each element can only be selected once per component.'], 422);
         }
 
         DB::beginTransaction();
@@ -96,7 +96,6 @@ class ComponentController extends Controller
                 'description' => $data['description'] ?? null,
                 'form_id' => $data['form'],
                 'type' => $data['type'],
-                'created_by' => auth()->id(),
             ]);
 
             $syncData = [];
@@ -104,7 +103,7 @@ class ComponentController extends Controller
             foreach ($elements as $element) {
                 if (isset($element['element_id']) && $element['element_id']) {
                     $syncData[$element['element_id']] = [
-                        'amount' => $element['amount'],
+                        'amount' => (float) ($element['amount'] ?? 0),
                         'element_unit_id' => $element['element_unit_id']
                     ];
                 }
@@ -114,12 +113,11 @@ class ComponentController extends Controller
 
             DB::commit();
 
-            Session::flash('successMsg', 'Component created successfully.');
-            return redirect()->route('component.index', ['username' => request()->segment(1)]);
+            return response()->json(['success' => true, 'message' => 'Component created successfully.']);
 
         } catch (\Exception $e) {
             DB::rollback();
-            return back()->withErrors(['error' => 'Failed to create component. Please try again.'])->withInput();
+            return response()->json(['success' => false, 'message' => 'Failed to create component: ' . $e->getMessage()], 500);
         }
     }
 
@@ -154,16 +152,14 @@ class ComponentController extends Controller
     {
         $data = $request->validated();
     
-        // Clean elements data
         $elements = collect($data['elements'] ?? [])
             ->reject(function ($item, $key) {
                 return $key === '__index__' || empty($item['element_id']);
             });
 
-        // Check for duplicate elements
         $elementIds = $elements->pluck('element_id');
         if ($elementIds->count() !== $elementIds->unique()->count()) {
-            return back()->withErrors(['elements' => 'Each element can only be selected once per component.'])->withInput();
+            return response()->json(['success' => false, 'message' => 'Each element can only be selected once per component.'], 422);
         }
 
         DB::beginTransaction();
@@ -181,7 +177,7 @@ class ComponentController extends Controller
             foreach ($elements as $element) {
                 if (isset($element['element_id']) && $element['element_id']) {
                     $syncData[$element['element_id']] = [
-                        'amount' => $element['amount'] ?? 1,
+                        'amount' => (float) ($element['amount'] ?? 0),
                         'element_unit_id' => $element['element_unit_id']
                     ];
                 }
@@ -191,12 +187,11 @@ class ComponentController extends Controller
 
             DB::commit();
 
-            Session::flash('successMsg', 'Component updated successfully.');
-            return redirect()->route('component.index', ['username' => request()->segment(1)]);
+            return response()->json(['success' => true, 'message' => 'Component updated successfully.']);
 
         } catch (\Exception $e) {
             DB::rollback();
-            return back()->withErrors(['error' => 'Failed to update component. Please try again.'])->withInput();
+            return response()->json(['success' => false, 'message' => 'Failed to update component: ' . $e->getMessage()], 500);
         }
     }
 

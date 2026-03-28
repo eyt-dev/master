@@ -3,22 +3,16 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Contracts\Validation\Validator;
 
 class StoreComponentRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
@@ -26,13 +20,18 @@ class StoreComponentRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'form' => ['required', 'exists:forms,id'],
-            // 'unit' => ['required', 'exists:units,id'],
             'type' => ['required', 'in:1,2,3'],
-
-            // elements array validation
             'elements' => ['required', 'array', 'min:1'],
-           // 'elements.*.element_id' => ['required', 'exists:elements,id'],
-           // 'elements.*.amount' => ['required', 'numeric'],
+            'elements.*.element_id' => ['required', 'exists:elements,id'],
+            'elements.*.amount' => ['required', 'regex:/^\d+(\.\d{1,2})?$/', 'numeric', 'max:99999999.99'],
+            'elements.*.element_unit_id' => ['required', 'exists:units,id'],
         ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(
+            response()->json(['success' => false, 'errors' => $validator->errors()], 422)
+        );
     }
 }

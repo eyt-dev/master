@@ -16,11 +16,6 @@ class Component extends Model
         return $this->belongsTo(Form::class);
     }
 
-    public function unit()
-    {
-        return $this->belongsTo(Unit::class);
-    }
-
     public function elements()
     {
         return $this->belongsToMany(Element::class)

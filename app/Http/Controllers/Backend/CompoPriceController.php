@@ -86,7 +86,7 @@ class CompoPriceController extends Controller
                 'component_id' => $componentId,
                 'element_id' => $elementId,
                 'pricing_date' => $pricingDate,
-                'price' => $data['price'],
+                'price' => (float) $data['price'],
                 'unit' => $unit,
                 'set_last_unit' => $request->boolean('set_last_unit'),
                 'set_last_date' => $request->boolean('set_last_date'),
@@ -156,10 +156,10 @@ class CompoPriceController extends Controller
                 'component_id' => $componentId,
                 'element_id' => $elementId,
                 'pricing_date' => $pricingDate,
-                'price' => $data['price'],
+                'price' => (float) $data['price'],
                 'unit' => $unit,
                 'set_last_unit' => $request->boolean('set_last_unit'),
-                'set_last_date' => $request->boolean('set_last_date'), // Fixed typo
+                'set_last_date' => $request->boolean('set_last_date'),
             ]);
 
             Session::flash('successMsg', 'Compo Price updated successfully.');

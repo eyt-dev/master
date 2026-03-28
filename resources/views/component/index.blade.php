@@ -88,20 +88,67 @@
                     $(".modal-body").html(response);
                     $(".modal-title").html("Add Component");
                     $("#component_form_modal").modal('show');
-                    checkValidation();
                 }
             });
         });
 
         $(document).on('click', '.edit-component', function() {
-            var id = $(this).data('id');
             $.ajax({
                 url: $(this).data('path'),
                 success: function(response) {
                     $(".modal-body").html(response);
                     $(".modal-title").html("Update Component");
                     $("#component_form_modal").modal('show');
-                    checkValidation();
+                }
+            });
+        });
+
+        // AJAX form submit — handles both store and update
+        $(document).on('submit', '#component_form', function(e) {
+            e.preventDefault();
+
+            const $form = $(this);
+            const url = $form.attr('action');
+            const method = $form.find('input[name="_method"]').val() || 'POST';
+
+            // Normalize European amounts (1.234,56 → 1234.56) before sending
+            normalizeFormAmounts($form);
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: $form.serialize(),
+                headers: { 'X-HTTP-Method-Override': method },
+                success: function(response) {
+                    if (response.success) {
+                        $("#component_form_modal").modal('hide');
+                        table.ajax.reload();
+                        // Show success toast/alert
+                        $('body').append('<div class="alert alert-success position-fixed" style="top:20px;right:20px;z-index:9999">' + response.message + '</div>');
+                        setTimeout(function() { $('.alert.alert-success').fadeOut('slow', function(){ $(this).remove(); }); }, 3000);
+                    }
+                },
+                error: function(xhr) {
+                    const res = xhr.responseJSON;
+                    // Re-format amounts back to European display on error
+                    $form.find('.amount-input').each(function() {
+                        const val = $(this).val();
+                        if (val) $(this).val(formatMoneyEU(val));
+                    });
+                    if (res && res.errors) {
+                        let msg = '';
+                        $.each(res.errors, function(field, messages) {
+                            msg += messages.join('<br>') + '<br>';
+                        });
+                        let $err = $form.find('#ajax-errors');
+                        if (!$err.length) {
+                            $form.prepend('<div id="ajax-errors" class="alert alert-danger mb-3"></div>');
+                            $err = $form.find('#ajax-errors');
+                        }
+                        $err.html(msg).show();
+                    } else if (res && res.message) {
+                        alert(res.message);
+                    }
                 }
             });
         });
@@ -151,17 +198,6 @@
             });
         });
 
-        function checkValidation() {
-            var forms = document.getElementsByClassName('needs-validation');
-            var validation = Array.prototype.filter.call(forms, function(form) {
-                form.addEventListener('submit', function(event) {
-                    if (form.checkValidity() === false) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                }, false);
-            });
-        }
+        
     </script>
 @endsection

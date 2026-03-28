@@ -27,6 +27,10 @@ class CompoPriceController extends Controller
                 ->addColumn('name', function ($row) {
                     return $row->component->name;
                 })
+                ->addColumn('price', function ($row) {
+                    // European format: dot thousands, comma decimal e.g. 1.234,56
+                    return number_format((float) $row->price, 2, ',', '.');
+                })
                 ->addColumn('unit', function ($row) {
                     return Unit::getUnit()[$row->unit];
                 })

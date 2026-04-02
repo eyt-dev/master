@@ -318,8 +318,19 @@
                     }
                 });
 
-                // Refresh select2 so it picks up the disabled options
-                $sel.trigger('change.select2');
+                // Destroy and reinit select2 so it picks up the updated disabled options
+                $sel.select2('destroy');
+                $sel.select2({ width: '100%', placeholder: "Select Element" });
+
+                // Re-bind change handler after reinit
+                $sel.off('change.elementRefresh').on('change.elementRefresh', function () {
+                    refreshElementOptions();
+                });
+
+                // Restore selected value
+                if (currentVal) {
+                    $sel.val(currentVal).trigger('change.select2');
+                }
             });
         }
 
@@ -350,7 +361,7 @@
             $unSel.select2({ width: '100%', placeholder: "Unit" });
 
             // When element selection changes, refresh disabled options on all rows
-            $elSel.on('change', function () {
+            $elSel.on('change.elementRefresh', function () {
                 refreshElementOptions();
             });
 

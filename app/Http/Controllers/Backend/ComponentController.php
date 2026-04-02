@@ -216,19 +216,37 @@ class ComponentController extends Controller
         $code = $request->input('code');
         $componentId = $request->input('id');
 
-        // Build query to check if code exists
         $query = Component::where('code', $code);
-
-        // If we're updating an existing component, exclude it from the check
         if ($componentId) {
             $query->where('id', '!=', $componentId);
         }
-
         $exists = $query->exists();
 
         return response()->json([
             'available' => !$exists,
             'message' => $exists ? 'This code is already taken by another component.' : 'Code is available.'
+        ]);
+    }
+
+    public function checkName(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'id' => 'nullable|integer|exists:components,id'
+        ]);
+
+        $name = $request->input('name');
+        $componentId = $request->input('id');
+
+        $query = Component::where('name', $name);
+        if ($componentId) {
+            $query->where('id', '!=', $componentId);
+        }
+        $exists = $query->exists();
+
+        return response()->json([
+            'available' => !$exists,
+            'message' => $exists ? 'This name is already taken by another component.' : 'Name is available.'
         ]);
     }
 

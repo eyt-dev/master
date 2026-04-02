@@ -278,6 +278,7 @@ if ($currentHost === config('domains.admin_subdomain')) {
 
                     Route::controller(ComponentController::class)->prefix('component')->group(function () {
                         Route::post('check-code', 'checkCode')->name('component.check-code');
+                        Route::post('check-name', 'checkName')->name('component.check-name');
                         Route::get('/getUnitByForm/{form}','getUnitByForm');
                         Route::get('/', 'index')->name('component.index');//->middleware('permission:view.component');
                         Route::get('create', 'create')->name('component.create');//->middleware('permission:create.component');
@@ -519,6 +520,7 @@ if ($currentHost === config('domains.admin_subdomain')) {
 
             Route::controller(ComponentController::class)->prefix('component')->group(function () {
                 Route::post('check-code', 'checkCode')->name('component.check-code');
+                Route::post('check-name', 'checkName')->name('component.check-name');
                 Route::get('/getUnitByForm/{form}','getUnitByForm');
                 Route::get('/', 'index')->name('component.index');//->middleware('permission:view.component');
                 Route::get('create', 'create')->name('component.create');//->middleware('permission:create.component');

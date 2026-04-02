@@ -17,7 +17,7 @@ class StoreComponentRequest extends FormRequest
     {
         return [
             'code' => ['required', 'string', 'max:255', 'unique:components,code'],
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'unique:components,name'],
             'description' => ['nullable', 'string', 'max:1000'],
             'form' => ['required', 'exists:forms,id'],
             'type' => ['required', 'in:1,2,3'],

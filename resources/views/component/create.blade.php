@@ -37,6 +37,7 @@
                 <label for="name" class="form-label">{{__('Name')}} <span class="text-red">*</span></label>
                 <input type="text" class="form-control @error('name') is-invalid @enderror" name="name" id="name" placeholder="{{__('Enter Name')}}"
                        value="{{ old('name', $component->name ?? '') }}" required=""/>
+                <div id="name-error" class="text-danger" style="display: none;"></div>
 
                 @error('name')
                 <div class="invalid-feedback">{{ $message }}</div>
@@ -174,6 +175,56 @@
         // Bind shared amount input formatting (typing + paste)
         bindAmountInputs();
 
+        // ===== Live code uniqueness check =====
+        let codeCheckTimer;
+        $('#code').on('input', function () {
+            clearTimeout(codeCheckTimer);
+            const val = $(this).val().trim();
+            const componentId = $('#component_id').val();
+            if (!val) return;
+            codeCheckTimer = setTimeout(function () {
+                $.post('{{ route("component.check-code", ["username" => $siteSlug]) }}', {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    code: val,
+                    id: componentId || null
+                }, function (res) {
+                    const $err = $('#code-error');
+                    if (!res.available) {
+                        $('#code').addClass('is-invalid').removeClass('is-valid');
+                        $err.text(res.message).show();
+                    } else {
+                        $('#code').removeClass('is-invalid').addClass('is-valid');
+                        $err.hide();
+                    }
+                });
+            }, 400);
+        });
+
+        // ===== Live name uniqueness check =====
+        let nameCheckTimer;
+        $('#name').on('input', function () {
+            clearTimeout(nameCheckTimer);
+            const val = $(this).val().trim();
+            const componentId = $('#component_id').val();
+            if (!val) return;
+            nameCheckTimer = setTimeout(function () {
+                $.post('{{ route("component.check-name", ["username" => $siteSlug]) }}', {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    name: val,
+                    id: componentId || null
+                }, function (res) {
+                    const $err = $('#name-error');
+                    if (!res.available) {
+                        $('#name').addClass('is-invalid').removeClass('is-valid');
+                        $err.text(res.message).show();
+                    } else {
+                        $('#name').removeClass('is-invalid').addClass('is-valid');
+                        $err.hide();
+                    }
+                });
+            }, 400);
+        });
+
         function validateSelect2Field($select) {
             const isValid = $select.val() && $select.val() !== '';
             const $container = $select.next('.select2-container');
@@ -211,6 +262,8 @@
         $('#component_form').on('submit', function (e) {
             let formIsValid = true;
 
+            if ($('#code').hasClass('is-invalid') || $('#name').hasClass('is-invalid')) formIsValid = false;
+
             ['#code', '#name'].forEach(fieldId => {
                 const $f = $(fieldId);
                 if (!$f.val()) { $f.addClass('is-invalid'); formIsValid = false; }
@@ -237,6 +290,39 @@
             }
         }
 
+        // ===== Get all currently selected element IDs across all rows =====
+        function getSelectedElementIds(excludeRow) {
+            const ids = [];
+            $('#elements-container .element-group-wrapper').each(function () {
+                if (excludeRow && $(this).is(excludeRow)) return;
+                const val = $(this).find('select[name*="[element_id]"]').val();
+                if (val) ids.push(val);
+            });
+            return ids;
+        }
+
+        // ===== Refresh disabled state on all element dropdowns =====
+        function refreshElementOptions() {
+            $('#elements-container .element-group-wrapper').each(function () {
+                const $row = $(this);
+                const $sel = $row.find('select[name*="[element_id]"]');
+                const currentVal = $sel.val();
+                const selectedElsewhere = getSelectedElementIds($row);
+
+                $sel.find('option').each(function () {
+                    const optVal = $(this).val();
+                    if (optVal && selectedElsewhere.includes(optVal)) {
+                        $(this).prop('disabled', true);
+                    } else {
+                        $(this).prop('disabled', false);
+                    }
+                });
+
+                // Refresh select2 so it picks up the disabled options
+                $sel.trigger('change.select2');
+            });
+        }
+
         function addElementRow(elementData = null) {
             const template = $('#element-template').html();
             const html = template.replace(/__index__/g, elementIndex);
@@ -256,13 +342,20 @@
                 $elSel.val(elementData.element_id);
                 $unSel.val(elementData.element_unit_id);
                 if (elementData.amount) {
-                    // DB value is plain numeric — format for display
                     $amInp.val(formatMoneyEU(elementData.amount));
                 }
             }
 
             $elSel.select2({ width: '100%', placeholder: "Select Element" });
             $unSel.select2({ width: '100%', placeholder: "Unit" });
+
+            // When element selection changes, refresh disabled options on all rows
+            $elSel.on('change', function () {
+                refreshElementOptions();
+            });
+
+            // Apply current disabled state
+            refreshElementOptions();
 
             elementIndex++;
             return $newRow;
@@ -293,6 +386,7 @@
         $(document).on('click', '.btn-remove', function() {
             $(this).closest('.element-group-wrapper').remove();
             updateHeaderVisibility();
+            refreshElementOptions(); // re-enable freed element in other rows
         });
     });
 </script>

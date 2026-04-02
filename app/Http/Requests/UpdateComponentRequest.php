@@ -26,7 +26,7 @@ class UpdateComponentRequest extends FormRequest
                 'required', 'string', 'max:255',
                 Rule::unique('components', 'code')->ignore($componentId),
             ],
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', Rule::unique('components', 'name')->ignore($componentId)],
             'description' => ['nullable', 'string', 'max:1000'],
             'form' => ['required', 'exists:forms,id'],
             'type' => ['required', 'in:1,2,3'],

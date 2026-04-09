@@ -92,6 +92,36 @@
         <input type="hidden" name="type" id="type" value="2">
     </div>
 
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="attachment" class="form-label">
+                    {{ __('Attachment') }}
+                    <small class="text-muted ms-1">
+                        (PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, GIF, WEBP &mdash; max 10 MB)
+                    </small>
+                </label>
+                <input type="file"
+                       class="form-control @error('attachment') is-invalid @enderror"
+                       name="attachment"
+                       id="attachment"
+                       accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp">
+                @error('attachment')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+                @if(isset($component) && $component->attachment)
+                    <div class="mt-1">
+                        <small class="text-muted">Current file:</small>
+                        <a href="{{ asset($component->attachment) }}" target="_blank" class="ms-1">
+                            {{ basename($component->attachment) }}
+                        </a>
+                        <small class="text-muted ms-1">(upload a new file to replace)</small>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
     <hr>
     
     <div id="elements-header" class="row mb-2 d-none" style="font-weight: bold;">

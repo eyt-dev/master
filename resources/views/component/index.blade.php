@@ -114,10 +114,15 @@
             // Normalize European amounts (1.234,56 → 1234.56) before sending
             normalizeFormAmounts($form);
 
+            // Use FormData so file uploads are included
+            const formData = new FormData($form[0]);
+
             $.ajax({
                 url: url,
                 type: 'POST',
-                data: $form.serialize(),
+                data: formData,
+                processData: false,
+                contentType: false,
                 headers: { 'X-HTTP-Method-Override': method },
                 success: function(response) {
                     if (response.success) {

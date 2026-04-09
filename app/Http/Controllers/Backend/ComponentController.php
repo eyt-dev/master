@@ -90,12 +90,21 @@ class ComponentController extends Controller
         DB::beginTransaction();
 
         try {
+            $attachmentPath = null;
+            if ($request->hasFile('attachment')) {
+                $file = $request->file('attachment');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $file->move(public_path('attachments'), $filename);
+                $attachmentPath = 'attachments/' . $filename;
+            }
+
             $component = Component::create([
                 'code' => $data['code'],
                 'name' => $data['name'],
                 'description' => $data['description'] ?? null,
                 'form_id' => $data['form'],
                 'type' => $data['type'],
+                'attachment' => $attachmentPath,
             ]);
 
             $syncData = [];
@@ -165,13 +174,26 @@ class ComponentController extends Controller
         DB::beginTransaction();
 
         try {
-            $component->update([
+            $updateData = [
                 'code' => $data['code'],
                 'name' => $data['name'],
                 'description' => $data['description'] ?? null,
                 'form_id' => $data['form'],
                 'type' => $data['type'],
-            ]);
+            ];
+
+            if ($request->hasFile('attachment')) {
+                // Delete old file if exists
+                if ($component->attachment && file_exists(public_path($component->attachment))) {
+                    unlink(public_path($component->attachment));
+                }
+                $file = $request->file('attachment');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $file->move(public_path('attachments'), $filename);
+                $updateData['attachment'] = 'attachments/' . $filename;
+            }
+
+            $component->update($updateData);
 
             $syncData = [];
             foreach ($elements as $element) {
@@ -257,7 +279,10 @@ class ComponentController extends Controller
     {
         try {
             $component = Component::findOrFail($id);
-            $component->elements()->detach(); // Remove element relationships
+            $component->elements()->detach();
+            if ($component->attachment && file_exists(public_path($component->attachment))) {
+                unlink(public_path($component->attachment));
+            }
             $component->delete();
 
             return response()->json(['msg' => 'Component deleted successfully.']);

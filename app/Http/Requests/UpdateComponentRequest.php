@@ -34,6 +34,7 @@ class UpdateComponentRequest extends FormRequest
             'elements.*.element_id' => ['required', 'exists:elements,id'],
             'elements.*.amount' => ['required', 'regex:/^\d+(\.\d{1,2})?$/', 'numeric', 'max:99999999.99'],
             'elements.*.element_unit_id' => ['required', 'exists:units,id'],
+            'attachment' => ['nullable', 'file', 'max:10240', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif,webp'],
         ];
     }
 

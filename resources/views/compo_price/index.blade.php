@@ -48,6 +48,13 @@
                                     class="form-select select2 @error('component') is-invalid @enderror" required="">
                                 <option value="">{{ __('Select an option') }}</option>
                                 @foreach($components as $component)
+                                    <option value="{{ $component->id }}"
+                                        {{ old('component') == $component->id ? 'selected' : '' }}>
+                                        {{ ucfirst($component->name) }}
+                                    </option>
+                                @endforeach
+                                {{-- Previous code (showed element names inside each component):
+                                @foreach($components as $component)
                                     @foreach($component->elements as $element)
                                         <option value="{{ $component->id }}_{{ $element->id }}"
                                             {{ old('component') }}>
@@ -55,6 +62,7 @@
                                         </option>
                                     @endforeach
                                 @endforeach
+                                --}}
                             </select>
                             @error('component')
                             <div class="invalid-feedback">{{ $message }}</div>

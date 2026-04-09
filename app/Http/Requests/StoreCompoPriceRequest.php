@@ -14,8 +14,7 @@ class StoreCompoPriceRequest extends FormRequest
 
     public function rules(): array
     {
-        [$componentId, $elementId] = $this->getComponentAndElementIds();
-
+        $componentId = $this->input('component');
         $rules = [
             'component' => 'required',
             'price' => 'required|regex:/^\d+(\.\d{1,2})?$/|numeric',
@@ -33,10 +32,9 @@ class StoreCompoPriceRequest extends FormRequest
             Rule::requiredIf(fn() => !$this->boolean('set_last_unit')),
         ];
 
-        if ($this->filled('pricing_date') && $componentId && $elementId) {
-            $rules['pricing_date'][] = Rule::unique('compo_prices')->where(function ($query) use ($componentId, $elementId) {
-                return $query->where('component_id', $componentId)
-                    ->where('element_id', $elementId);
+        if ($this->filled('pricing_date') && $componentId) {
+            $rules['pricing_date'][] = Rule::unique('compo_prices')->where(function ($query) use ($componentId) {
+                return $query->where('component_id', $componentId);
             });
         }
 
@@ -73,15 +71,6 @@ class StoreCompoPriceRequest extends FormRequest
                 }
             }
         });
-    }
-
-    protected function getComponentAndElementIds()
-    {
-        $parts = explode('_', $this->input('component'));
-        return [
-            $parts[0] ?? null,
-            $parts[1] ?? null
-        ];
     }
 
     // Keep this method for backward compatibility if needed elsewhere

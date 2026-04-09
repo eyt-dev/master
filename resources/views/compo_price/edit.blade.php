@@ -24,18 +24,24 @@
             <select name="component" id="component"
                     class="form-select select2 @error('component') is-invalid @enderror" required="">
                 @php
-                    $selectedComponent = old('component', isset($compoPrice) ? $compoPrice->component_id . '_' . $compoPrice->element_id : '');
+                    $selectedComponent = old('component', isset($compoPrice) ? $compoPrice->component_id : '');
                 @endphp
 
                 <option value="">{{ __('Select an option') }}</option>
                 @foreach($components as $component)
+                    <option value="{{ $component->id }}"
+                        {{ $selectedComponent == $component->id ? 'selected' : '' }}>
+                        {{ ucfirst($component->name) }}
+                    </option>
+                @endforeach
+                {{-- @foreach($components as $component)
                     @foreach($component->elements as $element)
                         <option value="{{ $component->id }}_{{ $element->id }}"
                             {{ $selectedComponent == $component->id . '_' . $element->id ? 'selected' : '' }}>
                             {{ $component->code }} - {{ $element->name }}
                         </option>
                     @endforeach
-                @endforeach
+                @endforeach --}}
             </select>
             @error('component')
             <div class="invalid-feedback">{{ $message }}</div>

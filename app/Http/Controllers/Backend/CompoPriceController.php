@@ -56,7 +56,7 @@ class CompoPriceController extends Controller
      */
     public function index()
     {
-        $components = Component::with('elements')->get();
+        $components = Component::get();
         return view('compo_price.index', ['components' => $components]);
     }
 
@@ -68,7 +68,8 @@ class CompoPriceController extends Controller
         try {
             $data = $request->validated();
 
-            list($componentId, $elementId) = explode('_', $request->component);
+            // component field now sends just component_id
+            $componentId = $request->component;
 
             $pricingDate = $data['pricing_date'] ?? null;
             $unit = $data['unit'] ?? null;
@@ -88,7 +89,6 @@ class CompoPriceController extends Controller
 
             $compoPrice = CompoPrice::create([
                 'component_id' => $componentId,
-                'element_id' => $elementId,
                 'pricing_date' => $pricingDate,
                 'price' => (float) $data['price'],
                 'unit' => $unit,
@@ -136,7 +136,10 @@ class CompoPriceController extends Controller
         try {
             $data = $request->validated();
 
-            list($componentId, $elementId) = explode('_', $request->component);
+            // component field now sends just component_id
+            $componentId = $request->component;
+            $component = Component::with('elements')->findOrFail($componentId);
+            $elementId = $component->elements->first()?->id;
 
             $pricingDate = $data['pricing_date'] ?? null;
             $unit = $data['unit'] ?? null;
@@ -228,8 +231,12 @@ class CompoPriceController extends Controller
 
     public function checkUnique(Request $request)
     {
-        $exists = CompoPrice::where('component_id', explode('_', $request->component)[0])
-            ->where('element_id', explode('_', $request->component)[1])
+        $componentId = $request->component; // now just component_id
+        $component = Component::with('elements')->find($componentId);
+        $elementId = $component?->elements->first()?->id;
+
+        $exists = CompoPrice::where('component_id', $componentId)
+            ->where('element_id', $elementId)
             ->where('pricing_date', $request->pricing_date)
             ->when($request->id, function ($q) use ($request) {
                 return $q->where('id', '!=', $request->id);

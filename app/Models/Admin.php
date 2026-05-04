@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -13,7 +14,7 @@ use Spatie\Permission\Traits\HasRoles;
  */
 class Admin extends Authenticatable
 {
-    use HasRoles, HasFactory, Notifiable;
+    use HasApiTokens, HasRoles, HasFactory, Notifiable;
     const SUPER_ADMIN = 0;
     const ADMIN = 1;
     const PUBLIC_VENDOR = 2;

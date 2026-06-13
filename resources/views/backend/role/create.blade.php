@@ -14,7 +14,7 @@
                     <div class="valid-feedback">Looks good!</div>
                     <div class="invalid-feedback">Please enter role.</div>
                 </div>
-                <input type="hidden" value="web" name="guard_name">
+                <input type="hidden" value="admin" name="guard_name">
             </div>
             
             <div class="form-group col-sm-12 col-lg-12">

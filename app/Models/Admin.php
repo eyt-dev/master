@@ -94,6 +94,11 @@ class Admin extends Authenticatable
         return $this->hasOne( Setting::class, 'created_by' );
     }
 
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class, 'project_admin', 'admin_id', 'project_id')->withTimestamps();
+    }
+
     // public function groups(){
     //     return $this->hasMany( UCGroup::class, 'user_id' );
     // }

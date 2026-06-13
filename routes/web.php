@@ -14,6 +14,7 @@ use App\Http\Controllers\Backend\GameController;
 use App\Http\Controllers\Backend\WheelController;
 use App\Http\Controllers\Backend\StoreViewController;
 use App\Http\Controllers\Backend\CategoryController;
+use App\Http\Controllers\Backend\ProjectController;
 use App\Http\Controllers\Backend\PageController;
 use App\Http\Controllers\Backend\SettingController;
 use App\Http\Controllers\Backend\SlideController;
@@ -160,6 +161,14 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('{category}/edit', 'edit')->name('category.edit')->middleware('permission:edit.category');
                         Route::post('{category}', 'update')->name('category.update')->middleware('permission:edit.category');
                         Route::get('destroy/{category}', 'destroy')->name('category.destroy')->middleware('permission:delete.category');
+                    });
+                    Route::controller(ProjectController::class)->prefix('project')->group(function () {
+                        Route::get('/', 'index')->name('project.index')->middleware('permission:view.project');
+                        Route::get('create', 'create')->name('project.create')->middleware('permission:create.project');
+                        Route::post('store', 'store')->name('project.store')->middleware('permission:create.project');
+                        Route::get('{project}/edit', 'edit')->name('project.edit')->middleware('permission:edit.project');
+                        Route::post('{project}', 'update')->name('project.update')->middleware('permission:edit.project');
+                        Route::get('destroy/{project}', 'destroy')->name('project.destroy')->middleware('permission:delete.project');
                     });
                     Route::controller(PageController::class)->prefix('page')->group(function () {
                         Route::get('/', 'index')->name('page.index')->middleware('permission:view.page');

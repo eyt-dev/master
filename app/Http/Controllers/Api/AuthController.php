@@ -100,7 +100,6 @@ class AuthController extends Controller
                     });
             })
             ->first();
-        dd($admin);
         if (! $admin || ! Hash::check($request->password, $admin->password)) {
             return response()->json([
                 'success' => false,

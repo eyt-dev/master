@@ -24,7 +24,7 @@
             <div class="form-group">
                 <label for="url" class="form-label">URL</label>
                 <input type="url" class="form-control" name="url" id="url" placeholder="Project URL" 
-                    value="{{ old('url', $project->url ?? '') }}" />
+                    value="{{ old('url', $project->url ?? '') }}" required="" />
                 @error('url')
                     <label id="url-error" class="error" for="url">{{ $message }}</label>
                 @enderror

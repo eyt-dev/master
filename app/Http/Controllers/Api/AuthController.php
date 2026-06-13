@@ -91,7 +91,13 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $admin = Admin::where('email', $request->email)->first();
+        // $admin = Admin::where('email', $request->email)->first();
+        $admin = Admin::where('email', $request->email)
+            ->where('type', 0)
+            ->whereHas('projects', function ($query) {
+                $query->where('url', 'add2mix.eyt.app');
+            })
+            ->first();
 
         if (! $admin || ! Hash::check($request->password, $admin->password)) {
             return response()->json([

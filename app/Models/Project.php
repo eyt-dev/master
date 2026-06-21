@@ -19,4 +19,9 @@ class Project extends Model
     {
         return $this->belongsToMany(Admin::class, 'project_admin', 'project_id', 'admin_id')->withTimestamps();
     }
+
+    public function userTypes()
+    {
+        return $this->hasMany(ProjectUserType::class);
+    }
 }

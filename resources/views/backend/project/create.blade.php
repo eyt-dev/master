@@ -65,8 +65,85 @@
         </div>
     </div>
 
+    <div class="row">
+        <div class="col-sm-12 col-md-12">
+            <div class="form-group">
+                <label class="form-label">User Types <span class="text-red">*</span></label>
+                <div id="user_types_container">
+                    @php
+                        $existingUserTypes = isset($project) ? $project->userTypes->pluck('user_type')->toArray() : (old('user_types') ?: []);
+                    @endphp
+                    @if(count($existingUserTypes) > 0)
+                        @foreach($existingUserTypes as $index => $userType)
+                            <div class="row user-type-row mb-2">
+                                <div class="col-sm-11">
+                                    <input type="text" class="form-control" name="user_types[]" placeholder="Enter User Type" value="{{ $userType }}" />
+                                </div>
+                                <div class="col-sm-1">
+                                    <button type="button" class="btn btn-danger btn-sm remove-user-type" onclick="removeUserType(this)">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="row user-type-row mb-2">
+                            <div class="col-sm-11">
+                                <input type="text" class="form-control" name="user_types[]" placeholder="Enter User Type" value="" />
+                            </div>
+                            <div class="col-sm-1">
+                                <button type="button" class="btn btn-danger btn-sm remove-user-type" onclick="removeUserType(this)">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+                @error('user_types')
+                    <label id="user_types-error" class="error" for="user_types">{{ $message }}</label>
+                @enderror
+                @error('user_types.*')
+                    <label id="user_types-error" class="error" for="user_types">{{ $message }}</label>
+                @enderror
+                <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addUserType()">
+                    <i class="fa fa-plus mr-1"></i> Add More
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="card-footer">
         <button class="btn btn-primary" type="submit">Save</button>
         <a href="{{ route('project.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>
+
+<script>
+function addUserType() {
+    const container = document.getElementById('user_types_container');
+    const row = document.createElement('div');
+    row.className = 'row user-type-row mb-2';
+    row.innerHTML = `
+        <div class="col-sm-11">
+            <input type="text" class="form-control" name="user_types[]" placeholder="Enter User Type" value="" />
+        </div>
+        <div class="col-sm-1">
+            <button type="button" class="btn btn-danger btn-sm remove-user-type" onclick="removeUserType(this)">
+                <i class="fa fa-trash"></i>
+            </button>
+        </div>
+    `;
+    container.appendChild(row);
+}
+
+function removeUserType(button) {
+    const container = document.getElementById('user_types_container');
+    const rows = container.querySelectorAll('.user-type-row');
+    
+    if (rows.length > 1) {
+        button.closest('.user-type-row').remove();
+    } else {
+        alert('At least one user type is required.');
+    }
+}
+</script>

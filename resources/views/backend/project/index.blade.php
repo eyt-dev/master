@@ -56,6 +56,7 @@
                                     <th>Project Name</th>
                                     <th>URL</th>
                                     <th>Admins</th>
+                                    <th>User Types</th>
                                     <th>Created At</th>
                                     <th>Action</th>
                                 </tr>
@@ -122,6 +123,7 @@
                 { data: 'project_name', name: 'project_name' },
                 { data: 'url', name: 'url' },
                 { data: 'admins', name: 'admins' },
+                { data: 'user_types', name: 'user_types' },
                 { data: 'created_at', name: 'created_at' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]

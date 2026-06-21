@@ -12,7 +12,7 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Project::with('admins')
+            $data = Project::with('admins', 'userTypes')
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                     $query->whereHas('admins', function ($query) {
                         $query->where('admin_id', auth()->id());
@@ -24,6 +24,9 @@ class ProjectController extends Controller
             return datatables()->of($data)
                 ->addColumn('admins', function ($row) {
                     return $row->admins->pluck('name')->join(', ') ?: 'N/A';
+                })
+                ->addColumn('user_types', function ($row) {
+                    return $row->userTypes->pluck('user_type')->join(', ') ?: 'N/A';
                 })
                 ->addColumn('url', function ($row) {
                     return "<a href='{$row->url}' target='_blank'>{$row->url}</a>" ?: 'N/A';
@@ -57,7 +60,14 @@ class ProjectController extends Controller
             'url' => 'nullable|url',
             'admins' => 'required|array',
             'admins.*' => 'exists:admins,id',
+            'user_types' => 'required|array|min:1',
+            'user_types.*' => 'required|string|max:255',
         ]);
+
+        $userTypes = array_filter(array_unique($request->user_types));
+        if (count($userTypes) !== count($request->user_types)) {
+            return back()->withErrors(['user_types' => 'Duplicate user types are not allowed.'])->withInput();
+        }
 
         $project = Project::create([
             'project_name' => $request->project_name,
@@ -67,6 +77,10 @@ class ProjectController extends Controller
 
         $project->admins()->sync($request->admins);
 
+        foreach ($userTypes as $userType) {
+            $project->userTypes()->create(['user_type' => $userType]);
+        }
+
         Session::flash('successMsg', 'Project created successfully.');
         return redirect()->route('project.index', ['username' => request()->segment(1)]);
     }
@@ -74,7 +88,7 @@ class ProjectController extends Controller
     public function edit($siteUrl, $id)
     {
         $project = Project::findOrFail($id);
-        $admins = Admin::get();
+        $admins = Admin::where('type', 1)->get();
         return view('backend.project.create', compact('project', 'admins'));
     }
 
@@ -86,7 +100,14 @@ class ProjectController extends Controller
             'url' => 'nullable|url',
             'admins' => 'required|array',
             'admins.*' => 'exists:admins,id',
+            'user_types' => 'required|array|min:1',
+            'user_types.*' => 'required|string|max:255',
         ]);
+
+        $userTypes = array_filter(array_unique($request->user_types));
+        if (count($userTypes) !== count($request->user_types)) {
+            return back()->withErrors(['user_types' => 'Duplicate user types are not allowed.'])->withInput();
+        }
 
         $project = Project::findOrFail($id);
         $project->update([
@@ -96,6 +117,11 @@ class ProjectController extends Controller
         ]);
 
         $project->admins()->sync($request->admins);
+
+        $project->userTypes()->delete();
+        foreach ($userTypes as $userType) {
+            $project->userTypes()->create(['user_type' => $userType]);
+        }
 
         Session::flash('successMsg', 'Project updated successfully.');
         return redirect()->route('project.index', ['username' => request()->segment(1)]);

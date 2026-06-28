@@ -20,6 +20,9 @@ class FeedMillController extends Controller
                 ->addColumn('creator', function($row) {
                     return $row->creator->name ?? 'N/A';
                 })
+                ->addColumn('created_at', function($row) {
+                    return date('Y-m-d', strtotime($row->created_at));
+                })
                 ->addColumn('action', function($row) {
                     return '<a class="edit-feed-mill btn btn-sm btn-success" data-path="'.route('feed-mill.edit', ['username' => request()->segment(1),  'feed_mill' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
                          .'<a class="delete-feed-mill btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';

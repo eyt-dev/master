@@ -40,7 +40,7 @@ class FarmController extends Controller
 
     public function create()
     {
-        $admins = Admin::get();
+        $admins = Admin::where('type', 1)->get();
         return view('backend.farm.create', compact('admins'));
     }
 
@@ -69,7 +69,7 @@ class FarmController extends Controller
     public function edit($siteUrl, $id)
     {
         $farm = Farm::findOrFail($id);
-        $admins = Admin::get();
+        $admins = Admin::where('type', 1)->get();
         return view('backend.farm.create', compact('farm', 'admins'));
     }
 

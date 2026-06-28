@@ -24,6 +24,9 @@ class HangarController extends Controller
                 ->addColumn('creator', function($row) {
                     return $row->creator->name ?? 'N/A';
                 })
+                ->addColumn('created_at', function($row) {
+                    return date('Y-m-d', strtotime($row->created_at));
+                })
                 ->addColumn('action', function($row) {
                     return '<a class="edit-hangar btn btn-sm btn-success" data-path="'.route('hangar.edit', ['username' => request()->segment(1),  'hangar' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
                          .'<a class="delete-hangar btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';

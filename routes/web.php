@@ -15,6 +15,10 @@ use App\Http\Controllers\Backend\WheelController;
 use App\Http\Controllers\Backend\StoreViewController;
 use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\FarmController;
+use App\Http\Controllers\Backend\HangarController;
+use App\Http\Controllers\Backend\FeedMillController;
+use App\Http\Controllers\Backend\SlaughterController;
+use App\Http\Controllers\Backend\ChicksSupplierController;
 use App\Http\Controllers\Backend\ProjectController;
 use App\Http\Controllers\Backend\PageController;
 use App\Http\Controllers\Backend\SettingController;
@@ -170,6 +174,38 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('{farm}/edit', 'edit')->name('farm.edit')->middleware('permission:edit.farm');
                         Route::post('{farm}', 'update')->name('farm.update')->middleware('permission:edit.farm');
                         Route::get('destroy/{farm}', 'destroy')->name('farm.destroy')->middleware('permission:delete.farm');
+                    });
+                    Route::controller(HangarController::class)->prefix('hangar')->group(function () {
+                        Route::get('/', 'index')->name('hangar.index')->middleware('permission:view.hangar');
+                        Route::get('create', 'create')->name('hangar.create')->middleware('permission:create.hangar');
+                        Route::post('store', 'store')->name('hangar.store')->middleware('permission:create.hangar');
+                        Route::get('{hangar}/edit', 'edit')->name('hangar.edit')->middleware('permission:edit.hangar');
+                        Route::post('{hangar}', 'update')->name('hangar.update')->middleware('permission:edit.hangar');
+                        Route::get('destroy/{hangar}', 'destroy')->name('hangar.destroy')->middleware('permission:delete.hangar');
+                    });
+                    Route::controller(FeedMillController::class)->prefix('feed-mill')->group(function () {
+                        Route::get('/', 'index')->name('feed-mill.index')->middleware('permission:view.feed_mill');
+                        Route::get('create', 'create')->name('feed-mill.create')->middleware('permission:create.feed_mill');
+                        Route::post('store', 'store')->name('feed-mill.store')->middleware('permission:create.feed_mill');
+                        Route::get('{feed_mill}/edit', 'edit')->name('feed-mill.edit')->middleware('permission:edit.feed_mill');
+                        Route::post('{feed_mill}', 'update')->name('feed-mill.update')->middleware('permission:edit.feed_mill');
+                        Route::get('destroy/{feed_mill}', 'destroy')->name('feed-mill.destroy')->middleware('permission:delete.feed_mill');
+                    });
+                    Route::controller(SlaughterController::class)->prefix('slaughter')->group(function () {
+                        Route::get('/', 'index')->name('slaughter.index')->middleware('permission:view.slaughter');
+                        Route::get('create', 'create')->name('slaughter.create')->middleware('permission:create.slaughter');
+                        Route::post('store', 'store')->name('slaughter.store')->middleware('permission:create.slaughter');
+                        Route::get('{slaughter}/edit', 'edit')->name('slaughter.edit')->middleware('permission:edit.slaughter');
+                        Route::post('{slaughter}', 'update')->name('slaughter.update')->middleware('permission:edit.slaughter');
+                        Route::get('destroy/{slaughter}', 'destroy')->name('slaughter.destroy')->middleware('permission:delete.slaughter');
+                    });
+                    Route::controller(ChicksSupplierController::class)->prefix('chicks-supplier')->group(function () {
+                        Route::get('/', 'index')->name('chicks-supplier.index')->middleware('permission:view.chicks_supplier');
+                        Route::get('create', 'create')->name('chicks-supplier.create')->middleware('permission:create.chicks_supplier');
+                        Route::post('store', 'store')->name('chicks-supplier.store')->middleware('permission:create.chicks_supplier');
+                        Route::get('{chicks_supplier}/edit', 'edit')->name('chicks-supplier.edit')->middleware('permission:edit.chicks_supplier');
+                        Route::post('{chicks_supplier}', 'update')->name('chicks-supplier.update')->middleware('permission:edit.chicks_supplier');
+                        Route::get('destroy/{chicks_supplier}', 'destroy')->name('chicks-supplier.destroy')->middleware('permission:delete.chicks_supplier');
                     });
                     Route::controller(ProjectController::class)->prefix('project')->group(function () {
                         Route::get('/', 'index')->name('project.index')->middleware('permission:view.project');
@@ -430,6 +466,38 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::get('{farm}/edit', 'edit')->name('farm.edit')->middleware('permission:edit.farm');
                 Route::post('{farm}', 'update')->name('farm.update')->middleware('permission:edit.farm');
                 Route::get('destroy/{farm}', 'destroy')->name('farm.destroy')->middleware('permission:delete.farm');
+            });
+            Route::controller(HangarController::class)->prefix('hangar')->group(function () {
+                Route::get('/', 'index')->name('hangar.index')->middleware('permission:view.hangar');
+                Route::get('create', 'create')->name('hangar.create')->middleware('permission:create.hangar');
+                Route::post('store', 'store')->name('hangar.store')->middleware('permission:create.hangar');
+                Route::get('{hangar}/edit', 'edit')->name('hangar.edit')->middleware('permission:edit.hangar');
+                Route::post('{hangar}', 'update')->name('hangar.update')->middleware('permission:edit.hangar');
+                Route::get('destroy/{hangar}', 'destroy')->name('hangar.destroy')->middleware('permission:delete.hangar');
+            });
+            Route::controller(FeedMillController::class)->prefix('feed-mill')->group(function () {
+                Route::get('/', 'index')->name('feed-mill.index')->middleware('permission:view.feed_mill');
+                Route::get('create', 'create')->name('feed-mill.create')->middleware('permission:create.feed_mill');
+                Route::post('store', 'store')->name('feed-mill.store')->middleware('permission:create.feed_mill');
+                Route::get('{feed_mill}/edit', 'edit')->name('feed-mill.edit')->middleware('permission:edit.feed_mill');
+                Route::post('{feed_mill}', 'update')->name('feed-mill.update')->middleware('permission:edit.feed_mill');
+                Route::get('destroy/{feed_mill}', 'destroy')->name('feed-mill.destroy')->middleware('permission:delete.feed_mill');
+            });
+            Route::controller(SlaughterController::class)->prefix('slaughter')->group(function () {
+                Route::get('/', 'index')->name('slaughter.index')->middleware('permission:view.slaughter');
+                Route::get('create', 'create')->name('slaughter.create')->middleware('permission:create.slaughter');
+                Route::post('store', 'store')->name('slaughter.store')->middleware('permission:create.slaughter');
+                Route::get('{slaughter}/edit', 'edit')->name('slaughter.edit')->middleware('permission:edit.slaughter');
+                Route::post('{slaughter}', 'update')->name('slaughter.update')->middleware('permission:edit.slaughter');
+                Route::get('destroy/{slaughter}', 'destroy')->name('slaughter.destroy')->middleware('permission:delete.slaughter');
+            });
+            Route::controller(ChicksSupplierController::class)->prefix('chicks-supplier')->group(function () {
+                Route::get('/', 'index')->name('chicks-supplier.index')->middleware('permission:view.chicks_supplier');
+                Route::get('create', 'create')->name('chicks-supplier.create')->middleware('permission:create.chicks_supplier');
+                Route::post('store', 'store')->name('chicks-supplier.store')->middleware('permission:create.chicks_supplier');
+                Route::get('{chicks_supplier}/edit', 'edit')->name('chicks-supplier.edit')->middleware('permission:edit.chicks_supplier');
+                Route::post('{chicks_supplier}', 'update')->name('chicks-supplier.update')->middleware('permission:edit.chicks_supplier');
+                Route::get('destroy/{chicks_supplier}', 'destroy')->name('chicks-supplier.destroy')->middleware('permission:delete.chicks_supplier');
             });
             Route::controller(PageController::class)->prefix('page')->group(function () {
                 Route::get('/', 'index')->name('page.index')->middleware('permission:view.page');

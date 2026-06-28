@@ -14,6 +14,7 @@ use App\Http\Controllers\Backend\GameController;
 use App\Http\Controllers\Backend\WheelController;
 use App\Http\Controllers\Backend\StoreViewController;
 use App\Http\Controllers\Backend\CategoryController;
+use App\Http\Controllers\Backend\FarmController;
 use App\Http\Controllers\Backend\ProjectController;
 use App\Http\Controllers\Backend\PageController;
 use App\Http\Controllers\Backend\SettingController;
@@ -161,6 +162,14 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('{category}/edit', 'edit')->name('category.edit')->middleware('permission:edit.category');
                         Route::post('{category}', 'update')->name('category.update')->middleware('permission:edit.category');
                         Route::get('destroy/{category}', 'destroy')->name('category.destroy')->middleware('permission:delete.category');
+                    });
+                    Route::controller(FarmController::class)->prefix('farm')->group(function () {
+                        Route::get('/', 'index')->name('farm.index')->middleware('permission:view.farm');
+                        Route::get('create', 'create')->name('farm.create')->middleware('permission:create.farm');
+                        Route::post('store', 'store')->name('farm.store')->middleware('permission:create.farm');
+                        Route::get('{farm}/edit', 'edit')->name('farm.edit')->middleware('permission:edit.farm');
+                        Route::post('{farm}', 'update')->name('farm.update')->middleware('permission:edit.farm');
+                        Route::get('destroy/{farm}', 'destroy')->name('farm.destroy')->middleware('permission:delete.farm');
                     });
                     Route::controller(ProjectController::class)->prefix('project')->group(function () {
                         Route::get('/', 'index')->name('project.index')->middleware('permission:view.project');
@@ -413,6 +422,14 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::get('{category}/edit', 'edit')->name('category.edit')->middleware('permission:edit.category');
                 Route::post('{category}', 'update')->name('category.update')->middleware('permission:edit.category');
                 Route::get('destroy/{category}', 'destroy')->name('category.destroy')->middleware('permission:delete.category');
+            });
+            Route::controller(FarmController::class)->prefix('farm')->group(function () {
+                Route::get('/', 'index')->name('farm.index')->middleware('permission:view.farm');
+                Route::get('create', 'create')->name('farm.create')->middleware('permission:create.farm');
+                Route::post('store', 'store')->name('farm.store')->middleware('permission:create.farm');
+                Route::get('{farm}/edit', 'edit')->name('farm.edit')->middleware('permission:edit.farm');
+                Route::post('{farm}', 'update')->name('farm.update')->middleware('permission:edit.farm');
+                Route::get('destroy/{farm}', 'destroy')->name('farm.destroy')->middleware('permission:delete.farm');
             });
             Route::controller(PageController::class)->prefix('page')->group(function () {
                 Route::get('/', 'index')->name('page.index')->middleware('permission:view.page');

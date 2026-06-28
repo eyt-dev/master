@@ -73,7 +73,10 @@ class RoleController extends Controller
             return redirect()->route('role.index', ['username' => request()->segment(1)]);
         }
         if($request->has('permission_data') && $role){
-            $permissions = Permission::whereIn('id', $permission_data)->get();
+            // Filter permissions to match the role's guard
+            $permissions = Permission::whereIn('id', $permission_data)
+                                     ->where('guard_name', $role->guard_name)
+                                     ->get();
             // dd($permission_data);
             $role->syncPermissions($permissions);
         }
@@ -125,7 +128,10 @@ class RoleController extends Controller
         // $permission_data = $request->get('permission_data'); // Fetch permission IDs
         $permissions=array();
         if($permission_data){
-            $permissions = Permission::whereIn('id', $permission_data)->get(); // Fetch permission objects
+            // Filter permissions to match the role's guard
+            $permissions = Permission::whereIn('id', $permission_data)
+                                     ->where('guard_name', $role->guard_name)
+                                     ->get();
         }
         $role->syncPermissions($permissions);
         return redirect()->route('role.index', ['username' => request()->segment(1)]);

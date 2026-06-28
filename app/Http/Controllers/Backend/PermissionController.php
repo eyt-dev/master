@@ -58,7 +58,7 @@ class PermissionController extends Controller
         foreach($input['name'] as $key => $val)
         {
             $rules['name.'.$key] = ['required', Rule::unique('permissions','name')->where(function ($query) use ($request){
-                                            return $query->where('guard_name', $request['guard_name']);
+                                            return $query->where('guard_name', 'admin');
                                         })
                                     ];
             $messages['name.'.$key.'.unique'] = 'The Permission Name has already been taken.';
@@ -74,7 +74,7 @@ class PermissionController extends Controller
         foreach($request->name as $value){
             $permissionData[] = [
                 'name' => $value,
-                'guard_name' => $request->guard_name,
+                'guard_name' => 'admin',
                 'module' => $request->module,
                 'created_at' => $now,
                 'updated_at' => $now
@@ -132,21 +132,21 @@ class PermissionController extends Controller
                 $inputData['name'][] = $input['name'][$i];
                 $inputData['id'][] = null;
             }
-            $permissionData[$i]['guard_name'] = 'web';
+            $permissionData[$i]['guard_name'] = 'admin';
             $permissionData[$i]['module'] = $input['module'];
         }
-        $inputData['guard_name'] = 'web';
+        $inputData['guard_name'] = 'admin';
         $inputData['module'] = $request->module;
         $rules = [];
         foreach($inputData['name'] as $key => $val){
             if($inputData['id'][$key]){
                 $rules['name.'.$key] = ['required', Rule::unique('permissions','name')->ignore($inputData['id'][$key])->where(function ($query) use ($request){
-                        return $query->where('guard_name', $request['guardName']);
+                        return $query->where('guard_name', 'admin');
                     })
                 ];
             }else{
                 $rules['name.'.$key] = ['required', Rule::unique('permissions','name')->where(function ($query) use ($request){
-                        return $query->where('guard_name', $request['guardName']);
+                        return $query->where('guard_name', 'admin');
                     })
                 ];
             }
@@ -208,7 +208,7 @@ class PermissionController extends Controller
         foreach($permission_array as $value){
             $permissionData[] = [
                 'name' => $value,
-                'guard_name' => 'web',
+                'guard_name' => 'admin',
                 'module' => $group->id,
                 'created_at' => $now,
                 'updated_at' => $now

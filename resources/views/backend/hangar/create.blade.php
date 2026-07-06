@@ -26,14 +26,14 @@
             </div>
         </div>
 
-        <!-- Area Textbox -->
+        <!-- Hangar Name Textbox -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="area_sqm" class="form-label">Area (sqm) <span class="text-red">*</span></label>
-                <input type="number" step="0.01" class="form-control" name="area_sqm" id="area_sqm" placeholder="Area in square meters" 
-                    value="{{ old('area_sqm', $hangar->area_sqm ?? '') }}" required="" />
-                @error('area_sqm')
-                    <label id="area_sqm-error" class="error" for="area_sqm">{{ $message }}</label>
+                <label for="name" class="form-label">Hangar Name <span class="text-red">*</span></label>
+                <input type="text" class="form-control" name="name" id="name" placeholder="Hangar Name (e.g., Hangar 1)" 
+                    value="{{ old('name', $hangar->name ?? '') }}" required="" />
+                @error('name')
+                    <label id="name-error" class="error" for="name">{{ $message }}</label>
                 @enderror
             </div>
         </div>

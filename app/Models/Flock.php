@@ -5,23 +5,36 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Hangar extends Model
+class Flock extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'farm_id',
-        'name',
-        'area_sqm',
-        'layer_hens',
-        'broiler_hens',
+        'chicks_supplier_id',
+        'breed',
+        'start_date',
+        'total_quantity',
         'created_by',
     ];
 
-    // Define Relationship with Farm
+    protected $casts = [
+        'start_date' => 'date',
+    ];
+
     public function farm()
     {
         return $this->belongsTo(Farm::class, 'farm_id');
+    }
+
+    public function chicksSupplier()
+    {
+        return $this->belongsTo(ChicksSupplier::class, 'chicks_supplier_id');
+    }
+
+    public function hangars()
+    {
+        return $this->hasMany(FlockHangar::class, 'flock_id');
     }
 
     public function creator()

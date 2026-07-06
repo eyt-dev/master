@@ -21,6 +21,9 @@ class HangarController extends Controller
                 ->addColumn('farm_name', function($row) {
                     return $row->farm->name ?? 'N/A';
                 })
+                ->addColumn('name', function($row) {
+                    return $row->name ?? 'N/A';
+                })
                 ->addColumn('creator', function($row) {
                     return $row->creator->name ?? 'N/A';
                 })
@@ -48,6 +51,7 @@ class HangarController extends Controller
     {
         $request->validate([
             'farm_id' => 'required',
+            'name' => 'required|string',
             'area_sqm' => 'required|numeric',
             'layer_hens' => 'required|integer',
             'broiler_hens' => 'required|integer',
@@ -55,6 +59,7 @@ class HangarController extends Controller
 
         $createData = [
             'farm_id' => $request->farm_id,
+            'name' => $request->name,
             'area_sqm' => $request->area_sqm,
             'layer_hens' => $request->layer_hens,
             'broiler_hens' => $request->broiler_hens,
@@ -77,6 +82,7 @@ class HangarController extends Controller
     {
         $request->validate([
             'farm_id' => 'required',
+            'name' => 'required|string',
             'area_sqm' => 'required|numeric',
             'layer_hens' => 'required|integer',
             'broiler_hens' => 'required|integer',
@@ -85,6 +91,7 @@ class HangarController extends Controller
         $hangar = Hangar::findOrFail($id);
         $hangar->update([
             'farm_id' => $request->farm_id,
+            'name' => $request->name,
             'area_sqm' => $request->area_sqm,
             'layer_hens' => $request->layer_hens,
             'broiler_hens' => $request->broiler_hens,

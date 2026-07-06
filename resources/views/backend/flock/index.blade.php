@@ -12,11 +12,11 @@
 @section('page-header')
     <div class="page-header">
         <div class="page-leftheader">
-            <h4 class="page-title mb-0">Hangars</h4>
+            <h4 class="page-title mb-0">Flocks</h4>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
                     <a href="#">
-                        <i class="fe fe-layout mr-2 fs-14"></i>Hangars
+                        <i class="fe fe-layout mr-2 fs-14"></i>Flocks
                     </a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page"><a href="#">Listing</a></li>
@@ -36,7 +36,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Hangars Data</div>
+                    <div class="card-title">Flocks Data</div>
                 </div>
                 @if ($errors->any())
                     <div class="alert alert-danger">
@@ -49,15 +49,15 @@
                 @endif
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered text-nowrap" id="hangar_table">
+                        <table class="table table-bordered text-nowrap" id="flock_table">
                             <thead>
                                 <tr>
                                     <th>#</th>
                                     <th>Farm</th>
-                                    <th>Name</th>
-                                    <th>Area (sqm)</th>
-                                    <th>Layer Hens</th>
-                                    <th>Broiler Hens</th>
+                                    <th>Chicks Supplier</th>
+                                    <th>Breed</th>
+                                    <th>Start Date</th>
+                                    <th>Total Quantity</th>
                                     <th>Created By</th>
                                     <th>Created At</th>
                                     <th>Action</th>
@@ -71,11 +71,11 @@
         </div>
     </div>
 
-    <div class="modal fade bd-example-modal-lg" id="hangar_form_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal fade bd-example-modal-lg" id="flock_form_modal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Add Hangar</h4>
+                    <h4 class="modal-title">Add Flock</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">×</span> </button>
                 </div>
                 <div class="modal-body"></div>
@@ -91,53 +91,53 @@
     <script>
         $(document).on('click', '#add_new', function() {
             $.ajax({
-                url: "{{ route('hangar.create', ['username' => $siteSlug]) }}",
+                url: "{{ route('flock.create', ['username' => $siteSlug]) }}",
                 type: "GET",
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Add Hangar");
-                    $("#hangar_form_modal").modal('show');
+                    $(".modal-title").html("Add Flock");
+                    $("#flock_form_modal").modal('show');
                     checkValidation();
                 }
             });
         });
         
-        $(document).on('click', '.edit-hangar', function() {
+        $(document).on('click', '.edit-flock', function() {
             var id = $(this).data('id');
             $.ajax({
                 url: $(this).data('path'),
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Update Hangar");
-                    $("#hangar_form_modal").modal('show');
+                    $(".modal-title").html("Update Flock");
+                    $("#flock_form_modal").modal('show');
                     checkValidation();
                 }
             });
         });
         
-        var table = $('#hangar_table').DataTable({
+        var table = $('#flock_table').DataTable({
             processing: true,
             serverSide: true,
             responsive: true,
-            ajax: "{{ route('hangar.index', ['username' => $siteSlug]) }}",
+            ajax: "{{ route('flock.index', ['username' => $siteSlug]) }}",
             columns: [
                 { data: 'id', name: 'id' },
-                { data: 'farm_name', name: 'farm_name' },
-                { data: 'name', name: 'name' },
-                { data: 'area_sqm', name: 'area_sqm' },
-                { data: 'layer_hens', name: 'layer_hens' },
-                { data: 'broiler_hens', name: 'broiler_hens' },
-                { data: 'creator' },
+                { data: 'farm', name: 'farm' },
+                { data: 'chicks_supplier', name: 'chicks_supplier' },
+                { data: 'breed', name: 'breed' },
+                { data: 'start_date', name: 'start_date' },
+                { data: 'total_quantity', name: 'total_quantity' },
+                { data: 'created_by' },
                 { data: 'created_at', name: 'created_at' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]
         });
         
-        $(document).on('click', '.delete-hangar', function() {
+        $(document).on('click', '.delete-flock', function() {
             var id = $(this).attr("data-id");
             swal({
                 title: "Are you sure?",
-                text: "Once deleted, you will not be able to recover this hangar!",
+                text: "Once deleted, you will not be able to recover this flock!",
                 icon: "warning",
                 buttons: true,
                 dangerMode: true,
@@ -149,7 +149,7 @@
                     $.ajax({
                         type: "get",
                         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        url: "{{ route('hangar.destroy', ['username' => $siteSlug, 'hangar' => ':id']) }}".replace(':id', id),
+                        url: "{{ route('flock.destroy', ['username' => $siteSlug, 'flock' => ':id']) }}".replace(':id', id),
                         success: function(response) {
                             swal({
                                 title: response.msg

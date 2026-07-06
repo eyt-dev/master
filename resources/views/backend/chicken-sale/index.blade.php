@@ -12,11 +12,11 @@
 @section('page-header')
     <div class="page-header">
         <div class="page-leftheader">
-            <h4 class="page-title mb-0">Hangars</h4>
+            <h4 class="page-title mb-0">Chicken Sales</h4>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
                     <a href="#">
-                        <i class="fe fe-layout mr-2 fs-14"></i>Hangars
+                        <i class="fe fe-layout mr-2 fs-14"></i>Chicken Sales
                     </a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page"><a href="#">Listing</a></li>
@@ -36,7 +36,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Hangars Data</div>
+                    <div class="card-title">Chicken Sales Data</div>
                 </div>
                 @if ($errors->any())
                     <div class="alert alert-danger">
@@ -49,15 +49,18 @@
                 @endif
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered text-nowrap" id="hangar_table">
+                        <table class="table table-bordered text-nowrap" id="chicken_sale_table">
                             <thead>
                                 <tr>
                                     <th>#</th>
+                                    <th>Date</th>
                                     <th>Farm</th>
-                                    <th>Name</th>
-                                    <th>Area (sqm)</th>
-                                    <th>Layer Hens</th>
-                                    <th>Broiler Hens</th>
+                                    <th>Flock</th>
+                                    <th>Hangar</th>
+                                    <th>Sold To</th>
+                                    <th>Quantity</th>
+                                    <th>Net Weight</th>
+                                    <th>Avg Weight/Bird</th>
                                     <th>Created By</th>
                                     <th>Created At</th>
                                     <th>Action</th>
@@ -71,11 +74,11 @@
         </div>
     </div>
 
-    <div class="modal fade bd-example-modal-lg" id="hangar_form_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal fade bd-example-modal-lg" id="chicken_sale_form_modal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Add Hangar</h4>
+                    <h4 class="modal-title">Add Chicken Sale</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">×</span> </button>
                 </div>
                 <div class="modal-body"></div>
@@ -91,53 +94,56 @@
     <script>
         $(document).on('click', '#add_new', function() {
             $.ajax({
-                url: "{{ route('hangar.create', ['username' => $siteSlug]) }}",
+                url: "{{ route('chicken-sale.create', ['username' => $siteSlug]) }}",
                 type: "GET",
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Add Hangar");
-                    $("#hangar_form_modal").modal('show');
+                    $(".modal-title").html("Add Chicken Sale");
+                    $("#chicken_sale_form_modal").modal('show');
                     checkValidation();
                 }
             });
         });
         
-        $(document).on('click', '.edit-hangar', function() {
+        $(document).on('click', '.edit-chicken-sale', function() {
             var id = $(this).data('id');
             $.ajax({
                 url: $(this).data('path'),
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Update Hangar");
-                    $("#hangar_form_modal").modal('show');
+                    $(".modal-title").html("Update Chicken Sale");
+                    $("#chicken_sale_form_modal").modal('show');
                     checkValidation();
                 }
             });
         });
         
-        var table = $('#hangar_table').DataTable({
+        var table = $('#chicken_sale_table').DataTable({
             processing: true,
             serverSide: true,
             responsive: true,
-            ajax: "{{ route('hangar.index', ['username' => $siteSlug]) }}",
+            ajax: "{{ route('chicken-sale.index', ['username' => $siteSlug]) }}",
             columns: [
                 { data: 'id', name: 'id' },
-                { data: 'farm_name', name: 'farm_name' },
-                { data: 'name', name: 'name' },
-                { data: 'area_sqm', name: 'area_sqm' },
-                { data: 'layer_hens', name: 'layer_hens' },
-                { data: 'broiler_hens', name: 'broiler_hens' },
+                { data: 'sale_date', name: 'sale_date' },
+                { data: 'farm', name: 'farm' },
+                { data: 'flock', name: 'flock' },
+                { data: 'hangar', name: 'hangar' },
+                { data: 'slaughter', name: 'slaughter' },
+                { data: 'quantity', name: 'quantity' },
+                { data: 'net_weight', name: 'net_weight' },
+                { data: 'avg_weight_per_bird', name: 'avg_weight_per_bird' },
                 { data: 'creator' },
                 { data: 'created_at', name: 'created_at' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]
         });
         
-        $(document).on('click', '.delete-hangar', function() {
+        $(document).on('click', '.delete-chicken-sale', function() {
             var id = $(this).attr("data-id");
             swal({
                 title: "Are you sure?",
-                text: "Once deleted, you will not be able to recover this hangar!",
+                text: "Once deleted, you will not be able to recover this chicken sale!",
                 icon: "warning",
                 buttons: true,
                 dangerMode: true,
@@ -149,7 +155,7 @@
                     $.ajax({
                         type: "get",
                         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        url: "{{ route('hangar.destroy', ['username' => $siteSlug, 'hangar' => ':id']) }}".replace(':id', id),
+                        url: "{{ route('chicken-sale.destroy', ['username' => $siteSlug, 'chicken_sale' => ':id']) }}".replace(':id', id),
                         success: function(response) {
                             swal({
                                 title: response.msg

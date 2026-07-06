@@ -19,6 +19,8 @@ use App\Http\Controllers\Backend\HangarController;
 use App\Http\Controllers\Backend\FeedMillController;
 use App\Http\Controllers\Backend\SlaughterController;
 use App\Http\Controllers\Backend\ChicksSupplierController;
+use App\Http\Controllers\Backend\FlockController;
+use App\Http\Controllers\Backend\ChickenSalesController;
 use App\Http\Controllers\Backend\ProjectController;
 use App\Http\Controllers\Backend\PageController;
 use App\Http\Controllers\Backend\SettingController;
@@ -206,6 +208,26 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('{chicks_supplier}/edit', 'edit')->name('chicks-supplier.edit')->middleware('permission:edit.chicks_supplier');
                         Route::post('{chicks_supplier}', 'update')->name('chicks-supplier.update')->middleware('permission:edit.chicks_supplier');
                         Route::get('destroy/{chicks_supplier}', 'destroy')->name('chicks-supplier.destroy')->middleware('permission:delete.chicks_supplier');
+                    });
+                    Route::controller(FlockController::class)->prefix('flock')->group(function () {
+                        Route::get('/', 'index')->name('flock.index')->middleware('permission:view.flock');
+                        Route::get('create', 'create')->name('flock.create')->middleware('permission:create.flock');
+                        Route::post('store', 'store')->name('flock.store')->middleware('permission:create.flock');
+                        Route::get('hangars-by-farm/{farm}', 'getHangarsByFarm')->name('flock.hangars-by-farm');
+                        Route::post('check-duplicate', 'checkDuplicate')->name('flock.check-duplicate');
+                        Route::get('{flock}/edit', 'edit')->name('flock.edit')->middleware('permission:edit.flock');
+                        Route::post('{flock}', 'update')->name('flock.update')->middleware('permission:edit.flock');
+                        Route::get('destroy/{flock}', 'destroy')->name('flock.destroy')->middleware('permission:delete.flock');
+                    });
+                    Route::controller(ChickenSalesController::class)->prefix('chicken-sale')->group(function () {
+                        Route::get('/', 'index')->name('chicken-sale.index')->middleware('permission:view.chicken_sale');
+                        Route::get('create', 'create')->name('chicken-sale.create')->middleware('permission:create.chicken_sale');
+                        Route::post('store', 'store')->name('chicken-sale.store')->middleware('permission:create.chicken_sale');
+                        Route::get('{chicken_sale}/edit', 'edit')->name('chicken-sale.edit')->middleware('permission:edit.chicken_sale');
+                        Route::post('{chicken_sale}', 'update')->name('chicken-sale.update')->middleware('permission:edit.chicken_sale');
+                        Route::get('destroy/{chicken_sale}', 'destroy')->name('chicken-sale.destroy')->middleware('permission:delete.chicken_sale');
+                        Route::get('flocks-by-farm/{farm}', 'getFlocksByFarm')->name('chicken-sale.flocks-by-farm');
+                        Route::get('hangars-by-flock/{flock}', 'getHangarsByFlock')->name('chicken-sale.hangars-by-flock');
                     });
                     Route::controller(ProjectController::class)->prefix('project')->group(function () {
                         Route::get('/', 'index')->name('project.index')->middleware('permission:view.project');
@@ -498,6 +520,25 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::get('{chicks_supplier}/edit', 'edit')->name('chicks-supplier.edit')->middleware('permission:edit.chicks_supplier');
                 Route::post('{chicks_supplier}', 'update')->name('chicks-supplier.update')->middleware('permission:edit.chicks_supplier');
                 Route::get('destroy/{chicks_supplier}', 'destroy')->name('chicks-supplier.destroy')->middleware('permission:delete.chicks_supplier');
+            });
+            Route::controller(FlockController::class)->prefix('flock')->group(function () {
+                Route::get('/', 'index')->name('flock.index')->middleware('permission:view.flock');
+                Route::get('create', 'create')->name('flock.create')->middleware('permission:create.flock');
+                Route::post('store', 'store')->name('flock.store')->middleware('permission:create.flock');
+                Route::get('hangars-by-farm/{farm}', 'getHangarsByFarm')->name('flock.hangars-by-farm');
+                Route::get('{flock}/edit', 'edit')->name('flock.edit')->middleware('permission:edit.flock');
+                Route::post('{flock}', 'update')->name('flock.update')->middleware('permission:edit.flock');
+                Route::get('destroy/{flock}', 'destroy')->name('flock.destroy')->middleware('permission:delete.flock');
+            });
+            Route::controller(ChickenSalesController::class)->prefix('chicken-sale')->group(function () {
+                Route::get('/', 'index')->name('chicken-sale.index')->middleware('permission:view.chicken_sale');
+                Route::get('create', 'create')->name('chicken-sale.create')->middleware('permission:create.chicken_sale');
+                Route::post('store', 'store')->name('chicken-sale.store')->middleware('permission:create.chicken_sale');
+                Route::get('{chicken_sale}/edit', 'edit')->name('chicken-sale.edit')->middleware('permission:edit.chicken_sale');
+                Route::post('{chicken_sale}', 'update')->name('chicken-sale.update')->middleware('permission:edit.chicken_sale');
+                Route::get('destroy/{chicken_sale}', 'destroy')->name('chicken-sale.destroy')->middleware('permission:delete.chicken_sale');
+                Route::get('flocks-by-farm/{farm}', 'getFlocksByFarm')->name('chicken-sale.flocks-by-farm');
+                Route::get('hangars-by-flock/{flock}', 'getHangarsByFlock')->name('chicken-sale.hangars-by-flock');
             });
             Route::controller(PageController::class)->prefix('page')->group(function () {
                 Route::get('/', 'index')->name('page.index')->middleware('permission:view.page');

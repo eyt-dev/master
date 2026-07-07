@@ -75,13 +75,13 @@ class ChickenSalesController extends Controller
         return view('backend.chicken-sale.create', compact('farms', 'slaughters'));
     }
 
-    public function getFlocksByFarm($farmId)
+    public function getFlocksByFarm($siteUrl, $farmId)
     {
         $flocks = Flock::where('farm_id', $farmId)->get();
         return response()->json($flocks);
     }
 
-    public function getHangarsByFlock($flockId)
+    public function getHangarsByFlock($siteUrl, $flockId)
     {
         $hangars = Hangar::whereHas('flocks', function($query) use ($flockId) {
             $query->where('flock_id', $flockId);

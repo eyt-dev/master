@@ -41,4 +41,18 @@ class Flock extends Model
     {
         return $this->belongsTo(Admin::class, 'created_by');
     }
+
+    // Many-to-many relationship with Hangar through FlockHangar
+    public function hangarsList()
+    {
+        return $this->belongsToMany(Hangar::class, 'flock_hangars', 'flock_id', 'hangar_id')
+                    ->withPivot('quantity')
+                    ->withTimestamps();
+    }
+
+    // Get FlockHangar allocations for this flock
+    public function flockHangarAllocations()
+    {
+        return $this->hasMany(FlockHangar::class, 'flock_id');
+    }
 }

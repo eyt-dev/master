@@ -28,4 +28,18 @@ class Hangar extends Model
     {
         return $this->belongsTo(Admin::class, 'created_by');
     }
+
+    // Relationship with Flock through FlockHangar (pivot table)
+    public function flocks()
+    {
+        return $this->belongsToMany(Flock::class, 'flock_hangars', 'hangar_id', 'flock_id')
+                    ->withPivot('quantity')
+                    ->withTimestamps();
+    }
+
+    // Get FlockHangar allocations for this hangar
+    public function flockAllocations()
+    {
+        return $this->hasMany(FlockHangar::class, 'hangar_id');
+    }
 }

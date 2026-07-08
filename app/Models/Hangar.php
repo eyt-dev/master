@@ -42,4 +42,18 @@ class Hangar extends Model
     {
         return $this->hasMany(FlockHangar::class, 'hangar_id');
     }
+
+    // Relationship with MaterialStock through MaterialStockHangar (pivot table)
+    public function materialStocks()
+    {
+        return $this->belongsToMany(MaterialStock::class, 'material_stock_hangars', 'hangar_id', 'material_stock_id')
+                    ->withPivot('quantity')
+                    ->withTimestamps();
+    }
+
+    // Get MaterialStockHangar allocations for this hangar
+    public function materialStockAllocations()
+    {
+        return $this->hasMany(MaterialStockHangar::class, 'hangar_id');
+    }
 }

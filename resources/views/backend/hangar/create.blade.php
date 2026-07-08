@@ -37,6 +37,18 @@
                 @enderror
             </div>
         </div>
+
+        <!-- Area SQM Textbox -->
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="area_sqm" class="form-label">Area (SQM) <span class="text-red">*</span></label>
+                <input type="number" class="form-control" name="area_sqm" id="area_sqm" placeholder="Area in Square Meters" 
+                    value="{{ old('area_sqm', $hangar->area_sqm ?? '') }}" required="" step="0.01" min="0" />
+                @error('area_sqm')
+                    <label id="area_sqm-error" class="error" for="area_sqm">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
     </div>
 
     <div class="row">

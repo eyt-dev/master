@@ -20,6 +20,8 @@ use App\Http\Controllers\Backend\FeedMillController;
 use App\Http\Controllers\Backend\SlaughterController;
 use App\Http\Controllers\Backend\ChicksSupplierController;
 use App\Http\Controllers\Backend\FlockController;
+use App\Http\Controllers\Backend\MaterialStockController;
+use App\Http\Controllers\Backend\DailyRecordController;
 use App\Http\Controllers\Backend\ChickenSalesController;
 use App\Http\Controllers\Backend\ProjectController;
 use App\Http\Controllers\Backend\PageController;
@@ -218,6 +220,24 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('{flock}/edit', 'edit')->name('flock.edit')->middleware('permission:edit.flock');
                         Route::post('{flock}', 'update')->name('flock.update')->middleware('permission:edit.flock');
                         Route::get('destroy/{flock}', 'destroy')->name('flock.destroy')->middleware('permission:delete.flock');
+                    });
+                    Route::controller(MaterialStockController::class)->prefix('material-stock')->group(function () {
+                        Route::get('/', 'index')->name('material-stock.index')->middleware('permission:view.material_stock');
+                        Route::get('create', 'create')->name('material-stock.create')->middleware('permission:create.material_stock');
+                        Route::post('store', 'store')->name('material-stock.store')->middleware('permission:create.material_stock');
+                        Route::get('hangars-by-farm/{farm}', 'getHangarsByFarm')->name('material-stock.hangars-by-farm');
+                        Route::get('{material_stock}/edit', 'edit')->name('material-stock.edit')->middleware('permission:edit.material_stock');
+                        Route::post('{material_stock}', 'update')->name('material-stock.update')->middleware('permission:edit.material_stock');
+                        Route::get('destroy/{material_stock}', 'destroy')->name('material-stock.destroy')->middleware('permission:delete.material_stock');
+                    });
+                    Route::controller(DailyRecordController::class)->prefix('daily-record')->group(function () {
+                        Route::get('/', 'index')->name('daily-record.index')->middleware('permission:view.daily_record');
+                        Route::get('create', 'create')->name('daily-record.create')->middleware('permission:create.daily_record');
+                        Route::post('store', 'store')->name('daily-record.store')->middleware('permission:create.daily_record');
+                        Route::get('hangars-by-farm/{farm}', 'getHangarsByFarm')->name('daily-record.hangars-by-farm');
+                        Route::get('{daily_record}/edit', 'edit')->name('daily-record.edit')->middleware('permission:edit.daily_record');
+                        Route::post('{daily_record}', 'update')->name('daily-record.update')->middleware('permission:edit.daily_record');
+                        Route::get('destroy/{daily_record}', 'destroy')->name('daily-record.destroy')->middleware('permission:delete.daily_record');
                     });
                     Route::controller(ChickenSalesController::class)->prefix('chicken-sale')->group(function () {
                         Route::get('/', 'index')->name('chicken-sale.index')->middleware('permission:view.chicken_sale');
@@ -529,6 +549,24 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::get('{flock}/edit', 'edit')->name('flock.edit')->middleware('permission:edit.flock');
                 Route::post('{flock}', 'update')->name('flock.update')->middleware('permission:edit.flock');
                 Route::get('destroy/{flock}', 'destroy')->name('flock.destroy')->middleware('permission:delete.flock');
+            });
+            Route::controller(MaterialStockController::class)->prefix('material-stock')->group(function () {
+                Route::get('/', 'index')->name('material-stock.index')->middleware('permission:view.material_stock');
+                Route::get('create', 'create')->name('material-stock.create')->middleware('permission:create.material_stock');
+                Route::post('store', 'store')->name('material-stock.store')->middleware('permission:create.material_stock');
+                Route::get('hangars-by-farm/{farm}', 'getHangarsByFarm')->name('material-stock.hangars-by-farm');
+                Route::get('{material_stock}/edit', 'edit')->name('material-stock.edit')->middleware('permission:edit.material_stock');
+                Route::post('{material_stock}', 'update')->name('material-stock.update')->middleware('permission:edit.material_stock');
+                Route::get('destroy/{material_stock}', 'destroy')->name('material-stock.destroy')->middleware('permission:delete.material_stock');
+            });
+            Route::controller(DailyRecordController::class)->prefix('daily-record')->group(function () {
+                Route::get('/', 'index')->name('daily-record.index')->middleware('permission:view.daily_record');
+                Route::get('create', 'create')->name('daily-record.create')->middleware('permission:create.daily_record');
+                Route::post('store', 'store')->name('daily-record.store')->middleware('permission:create.daily_record');
+                Route::get('hangars-by-farm/{farm}', 'getHangarsByFarm')->name('daily-record.hangars-by-farm');
+                Route::get('{daily_record}/edit', 'edit')->name('daily-record.edit')->middleware('permission:edit.daily_record');
+                Route::post('{daily_record}', 'update')->name('daily-record.update')->middleware('permission:edit.daily_record');
+                Route::get('destroy/{daily_record}', 'destroy')->name('daily-record.destroy')->middleware('permission:delete.daily_record');
             });
             Route::controller(ChickenSalesController::class)->prefix('chicken-sale')->group(function () {
                 Route::get('/', 'index')->name('chicken-sale.index')->middleware('permission:view.chicken_sale');

@@ -310,6 +310,26 @@
                         <span class="side-menu__label">Chicken Sales</span></a>
                 </li>
             @endcan
+            @can('view.material_stock')
+                <li class="slide">
+                    <a class="side-menu__item" href="{{route('material-stock.index', ['username' => $siteSlug])}}">
+                        <svg class="side-menu__icon" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                            <path d="M0 0h24v24H0V0z" fill="none"/>
+                            <path d="M21 7L9 19l-5.5-5.5 1.42-1.42L9 16.17 19.58 5.59 21 7z"/>
+                        </svg>
+                        <span class="side-menu__label">Material Stock</span></a>
+                </li>
+            @endcan
+            @can('view.daily_record')
+                <li class="slide">
+                    <a class="side-menu__item" href="{{route('daily-record.index', ['username' => $siteSlug])}}">
+                        <svg class="side-menu__icon" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                            <path d="M0 0h24v24H0V0z" fill="none"/>
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5-7h4v2h-4zm0 4h4v2h-4zm-5-4h4v2H9zm0-4h4v2H9zm0 8h4v2H9z"/>
+                        </svg>
+                        <span class="side-menu__label">Daily Records</span></a>
+                </li>
+            @endcan
         @endcanany
 
 </aside>

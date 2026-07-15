@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ComponentController;
 use App\Http\Controllers\Api\FormulationController;
 use App\Http\Controllers\Api\ElementController;
 use App\Http\Controllers\Api\FormController;
+use App\Http\Controllers\Api\CompoPriceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +42,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Forms
     Route::get('forms', [FormController::class, 'index']);
     Route::get('forms/{form}', [FormController::class, 'show']);
+
+    // Compo Prices
+    Route::get('compo-prices', [CompoPriceController::class, 'index']);
+    Route::get('compo-prices/{compoPrice}', [CompoPriceController::class, 'show']);
+    Route::get('compo-prices/component/get-by-component', [CompoPriceController::class, 'getByComponent']);
+    Route::get('compo-prices/component/latest', [CompoPriceController::class, 'getLatestByComponent']);
 
     // Components
     Route::get('components/form/{form}/units', [ComponentController::class, 'getUnitsByForm']);

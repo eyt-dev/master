@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\ComponentController;
 use App\Http\Controllers\Api\FormulationController;
+use App\Http\Controllers\Api\ElementController;
+use App\Http\Controllers\Api\FormController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,6 +33,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Units
     Route::apiResource('units', UnitController::class);
+
+    // Elements
+    Route::get('elements', [ElementController::class, 'index']);
+    Route::get('elements/{element}', [ElementController::class, 'show']);
+
+    // Forms
+    Route::get('forms', [FormController::class, 'index']);
+    Route::get('forms/{form}', [FormController::class, 'show']);
 
     // Components
     Route::get('components/form/{form}/units', [ComponentController::class, 'getUnitsByForm']);

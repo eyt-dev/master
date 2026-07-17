@@ -51,7 +51,7 @@ class FormulationController extends Controller
         $validator = Validator::make($request->all(), [
             'formulation_code' => 'required|string|unique:formulations,formulation_code',
             'name' => 'required|string|max:255',
-            'target_animal' => 'required|in:broiler,layer,breeder,swine,cattle',
+            'target_animal' => 'required',
             'inclusion_percentage' => 'required|numeric|min:0|max:100',
             'total_volume' => 'nullable|integer|min:1',
             'indication_of_use' => 'nullable|string',

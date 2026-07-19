@@ -89,13 +89,29 @@
             <div class="form-group">
                 <label>Status <span class="text-red">*</span></label>
                 <select name="status" class="form-control" required>
-                    <option value="Enable" {{ (old('status', $admin->status ?? '') == 'Enable') ? 'selected' : '' }}>Enable</option>
-                    <option value="Disable" {{ (old('status', $admin->status ?? '') == 'Disable') ? 'selected' : '' }}>Disable</option>
-                    <option value="Pending" {{ (old('status', $admin->status ?? 'Pending') == 'Pending') ? 'selected' : '' }}>Pending</option>
+                    <option value="Active" {{ (old('status', $admin->status ?? '') == 'Active') ? 'selected' : '' }}>Active</option>
+                    <option value="Inactive" {{ (old('status', $admin->status ?? '') == 'Inactive') ? 'selected' : '' }}>Inactive</option>
                 </select>
             </div>
         </div>
         @endif
+
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="project_id" class="form-label">Project</label>
+                <select class="form-control" name="project_id" id="project_id">
+                    <option value="">Select Project</option>
+                    @foreach($projects as $project)
+                        <option value="{{ $project->id }}" {{ old('project_id', $admin->project_id ?? '') == $project->id ? 'selected' : '' }}>
+                            {{ $project->project_name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('project_id')
+                    <label id="project_id-error" class="error" for="project_id">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
         
 
     </div>

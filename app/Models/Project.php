@@ -13,15 +13,11 @@ class Project extends Model
         'project_name',
         'description',
         'url',
+        'created_by',
     ];
 
-    public function admins()
+    public function creator()
     {
-        return $this->belongsToMany(Admin::class, 'project_admin', 'project_id', 'admin_id')->withTimestamps();
-    }
-
-    public function userTypes()
-    {
-        return $this->hasMany(ProjectUserType::class);
+        return $this->belongsTo(Admin::class, 'created_by');
     }
 }

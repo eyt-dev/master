@@ -8,6 +8,11 @@ return new class extends Migration
 {
     public function up()
     {
+        Schema::dropIfExists('project_admin');
+    }
+
+    public function down()
+    {
         Schema::create('project_admin', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('project_id');
@@ -24,10 +29,5 @@ return new class extends Migration
                 ->on('admins')
                 ->onDelete('cascade');
         });
-    }
-
-    public function down()
-    {
-        Schema::dropIfExists('project_admin');
     }
 };

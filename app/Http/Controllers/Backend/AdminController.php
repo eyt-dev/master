@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
 use App\Models\CountryRegion;
 use App\Models\Contact;
+use App\Models\Project;
 
 class AdminController extends Controller
 {
@@ -44,7 +45,7 @@ class AdminController extends Controller
     {
         if (request()->ajax()) {
             $admin = auth()->user();
-            $query = Admin::query()->with('creator');
+            $query = Admin::query()->with(['creator', 'project']);
             if ($admin->type == 0) {
                 $query->where('type', $type);
                 // Super Admin can see all type of admins
@@ -69,9 +70,8 @@ class AdminController extends Controller
                     // if ($admin->type != 0) return null;
                     
                     $statuses = [
-                        'Pending' => 'Pending',
-                        'Enable' => 'Active',
-                        'Disable' => 'Inactive'
+                        'Active' => 'Active',
+                        'Inactive' => 'Inactive'
                     ];
                     
                     $html = '<select class="form-control status-dropdown" data-id="'.$row->id.'" name="status'.$row->id.'" id="status'.$row->id.'" style="min-width: 120px;">';
@@ -98,6 +98,9 @@ class AdminController extends Controller
                 ->addColumn('created_by_name', function ($row) {
                     return ucfirst($row->parent_id != null ? ($row->parent->username ?? 'N/A') :  ($row->creator->username ?? 'N/A'));
                     // $row->type == 4 ? ($row->parent ? $row->parent->username : 'N/A') : $row->creator->username;
+                })
+                ->addColumn('project_name', function ($row) {
+                    return $row->project?->project_name ?? 'N/A';
                 })
                 ->addColumn('url', function ($row) {
                     return ($row->url ?? '');
@@ -143,7 +146,8 @@ class AdminController extends Controller
     public function create($siteUrl, $type = null)
     {
         $countries = CountryRegion::orderBy('name')->get();
-        return view('backend.admins.create', ['admin' => new Admin(), 'type' => $type, 'countries' => $countries]);
+        $projects = $this->getProjectsForAdmin();
+        return view('backend.admins.create', ['admin' => new Admin(), 'type' => $type, 'countries' => $countries, 'projects' => $projects]);
     }
 
     /**
@@ -161,7 +165,8 @@ class AdminController extends Controller
             'password' => 'required|min:6',
             'vat_country_code' => 'required',
             'vat_number' => 'required',
-            'status' => 'required_if:type,1|in:Enable,Disable,Pending'
+            'status' => 'required_if:type,1|in:Active,Inactive',
+            'project_id' => 'nullable|exists:projects,id'
         ]);
         
         // Get admin type from request or default to Admin (1)
@@ -188,6 +193,10 @@ class AdminController extends Controller
         ];
         if($adminType == 1) {
             $addData['status'] = $request->status;
+        }
+
+        if ($request->filled('project_id')) {
+            $addData['project_id'] = $request->project_id;
         }
         $admin = Admin::create($addData);
 
@@ -233,7 +242,7 @@ class AdminController extends Controller
             ]
         );
 
-        Session::flash('successMsg', '{$prefix} inserted successfully.');
+        Session::flash('successMsg', "$prefix inserted successfully.");
         
         // At the beginning of the update method, determine the route based on admin type
         $routeName = 'admins.index'; // Default to admin index
@@ -264,7 +273,8 @@ class AdminController extends Controller
         }
 
         $roles = Role::all();
-        return view('backend.admins.create', ['admin' => $admin, 'roles' => $roles, 'type' => $admin->type, 'countries' => $countries]);
+        $projects = $this->getProjectsForAdmin();
+        return view('backend.admins.create', ['admin' => $admin, 'roles' => $roles, 'type' => $admin->type, 'countries' => $countries, 'projects' => $projects]);
     }
 
     /**
@@ -281,6 +291,7 @@ class AdminController extends Controller
             'username' => 'required',            
             'vat_country_code' => 'required',
             'vat_number' => 'required',
+            'project_id' => 'nullable|exists:projects,id',
             // 'email' => 'required|email|unique:admins,email,' . $id,
             // 'status' => 'required_if:type,1|in:Enable,Disable,Pending'
         ]);
@@ -304,6 +315,8 @@ class AdminController extends Controller
         if($admin->type ==1) {
             $updateData['status'] = $request->status;
         }
+
+        $updateData['project_id'] = $request->filled('project_id') ? $request->project_id : null;
         $admin->update($updateData);
 
         Contact::updateOrCreate(
@@ -362,9 +375,8 @@ class AdminController extends Controller
             return datatables()->of($data)
                 ->addColumn('status', function($row) {
                     $statusClass = [
-                        'Enable' => 'badge-success',
-                        'Disable' => 'badge-danger',
-                        'Pending' => 'badge-warning'
+                        'Active' => 'badge-success',
+                        'Inactive' => 'badge-danger'
                     ][$row->status] ?? 'badge-secondary';
                     return '<span class="badge ' . $statusClass . '">' . $row->status . '</span>';
                 })
@@ -373,9 +385,8 @@ class AdminController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     $statuses = [
-                        'Pending' => 'Pending',
-                        'Enable' => 'Active',
-                        'Disable' => 'Inactive'
+                        'Active' => 'Active',
+                        'Inactive' => 'Inactive'
                     ];
                     
                     $html = '<select class="form-control status-dropdown" data-id="'.$row->id.'">';
@@ -398,10 +409,21 @@ class AdminController extends Controller
     public function updateStatus(Request $request, $siteUrl)
     {
         $admin = Admin::findOrFail($request->id);
-        $admin->status = $request->status;
+        $admin->status = in_array($request->status, ['Active', 'Inactive']) ? $request->status : 'Inactive';
         $admin->saveQuietly();
         
         return response()->json(['success' => 'Status updated successfully.']);
+    }
+
+    private function getProjectsForAdmin()
+    {
+        $query = Project::query()->orderBy('project_name');
+
+        if (auth()->user()?->type != Admin::SUPER_ADMIN) {
+            $query->where('created_by', auth()->id());
+        }
+
+        return $query->get();
     }
 
 }

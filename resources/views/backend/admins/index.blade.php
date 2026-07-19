@@ -80,6 +80,7 @@
                                     <th>Username</th>
                                     <th>Type</th>
                                     <th>Created By</th>
+                                    <th>Project</th>
                                     <th>URL</th>
                                     <th>Status</th>
                                     <th data-priority="1">Action</th>
@@ -196,7 +197,13 @@
                     visible: adminType == 3,
                     orderable: false,
                     searchable: false
-                },                
+                },
+                {
+                    data: 'project_name',
+                    name: 'project_name',
+                    orderable: false,
+                    searchable: false
+                },
                 { 
                     data: 'url', 
                     name: 'url',

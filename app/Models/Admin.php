@@ -27,7 +27,7 @@ class Admin extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-    'name', 'email', 'password', 'type', 'status', 'created_by','username','parent_id','vat_country_code','vat_number','created_from','url'
+    'name', 'email', 'password', 'type', 'status', 'created_by','username','parent_id','vat_country_code','vat_number','created_from','url','project_id'
     ];
 
     /**
@@ -58,6 +58,11 @@ class Admin extends Authenticatable
     public function parent()
     {
         return $this->belongsTo(Admin::class, 'parent_id');
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'project_id');
     }
     // public function getProfileUrlAttribute()
     // {
@@ -92,11 +97,6 @@ class Admin extends Authenticatable
     // }
     public function setting(){
         return $this->hasOne( Setting::class, 'created_by' );
-    }
-
-    public function projects()
-    {
-        return $this->belongsToMany(Project::class, 'project_admin', 'admin_id', 'project_id')->withTimestamps();
     }
 
     // public function groups(){

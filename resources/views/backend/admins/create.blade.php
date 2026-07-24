@@ -84,35 +84,69 @@
                 @enderror
             </div>
         </div>
-        @if($type == 1)
-        <div class="col-sm-6 col-md-6">
-            <div class="form-group">
-                <label>Status <span class="text-red">*</span></label>
-                <select name="status" class="form-control" required>
-                    <option value="Active" {{ (old('status', $admin->status ?? '') == 'Active') ? 'selected' : '' }}>Active</option>
-                    <option value="Inactive" {{ (old('status', $admin->status ?? '') == 'Inactive') ? 'selected' : '' }}>Inactive</option>
-                </select>
-            </div>
-        </div>
-        @endif
 
-        <div class="col-sm-6 col-md-6">
+        <div class="col-sm-12">
             <div class="form-group">
-                <label for="project_id" class="form-label">Project</label>
-                <select class="form-control" name="project_id" id="project_id">
-                    <option value="">Select Project</option>
-                    @foreach($projects as $project)
-                        <option value="{{ $project->id }}" {{ old('project_id', $admin->project_id ?? '') == $project->id ? 'selected' : '' }}>
-                            {{ $project->project_name }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('project_id')
-                    <label id="project_id-error" class="error" for="project_id">{{ $message }}</label>
+                <label class="form-label">Project & Status</label>
+                <div id="project-status-rows">
+                    @php
+                        $projectRows = old('project_rows', isset($admin->id) ? $admin->projectStatuses->map(function ($row) {
+                            return ['project_id' => $row->project_id, 'status' => $row->status];
+                        })->values()->all() : []);
+                    @endphp
+
+                    @if(empty($projectRows))
+                        <div class="project-status-row row mb-2 align-items-end">
+                            <div class="col-sm-5">
+                                <select class="form-control" name="project_rows[0][project_id]">
+                                    <option value="">Select Project</option>
+                                    @foreach($projects as $project)
+                                        <option value="{{ $project->id }}">{{ $project->project_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-sm-5">
+                                <select class="form-control" name="project_rows[0][status]">
+                                    <option value="">Select Status</option>
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-2">
+                                <button type="button" class="btn btn-outline-danger remove-project-row">Remove</button>
+                            </div>
+                        </div>
+                    @else
+                        @foreach($projectRows as $index => $row)
+                            <div class="project-status-row row mb-2 align-items-end">
+                                <div class="col-sm-5">
+                                    <select class="form-control" name="project_rows[{{ $index }}][project_id]">
+                                        <option value="">Select Project</option>
+                                        @foreach($projects as $project)
+                                            <option value="{{ $project->id }}" {{ ($row['project_id'] ?? '') == $project->id ? 'selected' : '' }}>{{ $project->project_name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-sm-5">
+                                    <select class="form-control" name="project_rows[{{ $index }}][status]">
+                                        <option value="">Select Status</option>
+                                        <option value="Active" {{ ($row['status'] ?? '') == 'Active' ? 'selected' : '' }}>Active</option>
+                                        <option value="Inactive" {{ ($row['status'] ?? '') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-2">
+                                    <button type="button" class="btn btn-outline-danger remove-project-row">Remove</button>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
+                <button type="button" class="btn btn-outline-primary mt-2" id="add-project-row">Add New</button>
+                @error('project_rows')
+                    <label id="project_rows-error" class="error" for="project_rows">{{ $message }}</label>
                 @enderror
             </div>
         </div>
-        
 
     </div>
     <div class="card-footer">
@@ -120,3 +154,131 @@
         <a href="{{ route('admins.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>
+
+<script>
+    (function () {
+        const rowsContainer = document.getElementById('project-status-rows');
+        const addButton = document.getElementById('add-project-row');
+
+        function reindexRows() {
+            if (!rowsContainer) {
+                return;
+            }
+
+            const rows = rowsContainer.querySelectorAll('.project-status-row');
+            rows.forEach(function (row, index) {
+                row.querySelectorAll('select').forEach(function (select) {
+                    const name = select.getAttribute('name');
+                    if (name) {
+                        select.setAttribute('name', name.replace(/project_rows\[\d+\]/, 'project_rows[' + index + ']'));
+                    }
+                });
+            });
+        }
+
+        function updateProjectDisabled() {
+            if (!rowsContainer) return;
+
+            const rows = rowsContainer.querySelectorAll('.project-status-row');
+            const selectedProjects = new Set();
+
+            rows.forEach(function (row) {
+                const projectSelect = row.querySelector('select[name$="[project_id]"]');
+                if (projectSelect?.value) {
+                    selectedProjects.add(projectSelect.value);
+                }
+            });
+
+            rows.forEach(function (row) {
+                const projectSelect = row.querySelector('select[name$="[project_id]"]');
+                const currentValue = projectSelect?.value;
+
+                projectSelect?.querySelectorAll('option').forEach(function (option) {
+                    if (option.value && option.value !== currentValue && selectedProjects.has(option.value)) {
+                        option.disabled = true;
+                    } else {
+                        option.disabled = false;
+                    }
+                });
+            });
+        }
+
+        function attachProjectChangeListener(projectSelect) {
+            projectSelect?.addEventListener('change', updateProjectDisabled);
+        }
+
+        addButton?.addEventListener('click', function () {
+            if (!rowsContainer) {
+                return;
+            }
+
+            const rowCount = rowsContainer.querySelectorAll('.project-status-row').length;
+            const row = document.createElement('div');
+            row.className = 'project-status-row row mb-2 align-items-end';
+            row.innerHTML = `
+                <div class="col-sm-5">
+                    <select class="form-control" name="project_rows[${rowCount}][project_id]">
+                        <option value="">Select Project</option>
+                        @foreach($projects as $project)
+                            <option value="{{ $project->id }}">{{ $project->project_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-sm-5">
+                    <select class="form-control" name="project_rows[${rowCount}][status]">
+                        <option value="">Select Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-sm-2">
+                    <button type="button" class="btn btn-outline-danger remove-project-row">Remove</button>
+                </div>`;
+            rowsContainer.appendChild(row);
+
+            const newProjectSelect = row.querySelector('select[name$="[project_id]"]');
+            attachProjectChangeListener(newProjectSelect);
+            updateProjectDisabled();
+        });
+
+        rowsContainer?.addEventListener('click', function (event) {
+            if (event.target.classList.contains('remove-project-row')) {
+                event.target.closest('.project-status-row')?.remove();
+                reindexRows();
+                updateProjectDisabled();
+            }
+        });
+
+        const projectSelects = rowsContainer?.querySelectorAll('select[name$="[project_id]"]') || [];
+        projectSelects.forEach(function (select) {
+            attachProjectChangeListener(select);
+        });
+        updateProjectDisabled();
+
+        const form = document.getElementById('admin_form');
+        form?.addEventListener('submit', function (event) {
+            const rows = rowsContainer?.querySelectorAll('.project-status-row') || [];
+            let hasValue = false;
+
+            rows.forEach(function (row) {
+                const projectSelect = row.querySelector('select[name$="[project_id]"]');
+                const statusSelect = row.querySelector('select[name$="[status]"]');
+                if (projectSelect?.value || statusSelect?.value) {
+                    hasValue = true;
+                }
+            });
+
+            if (rows.length > 0) {
+                for (const row of rows) {
+                    const projectSelect = row.querySelector('select[name$="[project_id]"]');
+                    const statusSelect = row.querySelector('select[name$="[status]"]');
+                    if ((projectSelect?.value && !statusSelect?.value) || (!projectSelect?.value && statusSelect?.value)) {
+                        event.preventDefault();
+                        alert('Each project/status row must have both a project and a status.');
+                        return false;
+                    }
+                }
+            }
+        });
+    })();
+</script>

@@ -64,6 +64,27 @@ class Admin extends Authenticatable
     {
         return $this->belongsTo(Project::class, 'project_id');
     }
+
+    public function projectStatuses()
+    {
+        return $this->hasMany(AdminProjectStatus::class);
+    }
+
+    public function syncProjectStatuses(array $rows): void
+    {
+        $this->projectStatuses()->delete();
+
+        foreach ($rows as $row) {
+            if (empty($row['project_id'])) {
+                continue;
+            }
+
+            $this->projectStatuses()->create([
+                'project_id' => $row['project_id'],
+                'status' => $row['status'] ?? null,
+            ]);
+        }
+    }
     // public function getProfileUrlAttribute()
     // {
     //     return asset('uploads/admins/'.$this->avatar);

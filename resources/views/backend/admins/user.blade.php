@@ -139,29 +139,5 @@
                 [1, 'asc']
             ]
         });
-        $(document).on('change', '.status-dropdown', function() {
-            var status = $(this).val();
-            var id = $(this).data('id');
-            var routeName = "{{ route('admins.update-status', ['username' => request()->get('username', $siteSlug)]) }}";
-            
-            $.ajax({
-                url: routeName,
-                type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    status: status,
-                    id: id,
-                    _method: 'PATCH'
-                },
-                success: function(response) {
-                    swal('Success', 'Status updated successfully', 'success');
-                    table.ajax.reload(null, false); // Reload table without resetting pagination
-                },
-                error: function(xhr) {
-                    swal('Error', 'Error updating status', 'error');
-                    console.error(xhr.responseText);
-                }
-            });
-        });
     </script>
 @endsection

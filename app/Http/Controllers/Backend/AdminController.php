@@ -15,9 +15,11 @@ use App\Models\Setting;
 use Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use App\Models\CountryRegion;
 use App\Models\Contact;
 use App\Models\Project;
+use App\Models\AdminProjectStatus;
 
 class AdminController extends Controller
 {
@@ -28,24 +30,39 @@ class AdminController extends Controller
      */
     public function index()
     {
-        return $this->handleAdminList(1); // 1 for admin
+        if (request()->ajax()) {
+            return $this->handleAdminList(1);
+        }
+        $projects = $this->getAllProjects();
+        $type = 1;
+        return view('backend.admins.index', compact('type', 'projects'));
     }
 
     public function publicVendor()
     {
-        return $this->handleAdminList(2); // 2 for public vendor
+        if (request()->ajax()) {
+            return $this->handleAdminList(2);
+        }
+        $projects = $this->getAllProjects();
+        $type = 2;
+        return view('backend.admins.index', compact('type', 'projects'));
     }
 
     public function privateVendor()
     {
-        return $this->handleAdminList(3); // 3 for private vendor
+        if (request()->ajax()) {
+            return $this->handleAdminList(3);
+        }
+        $projects = $this->getAllProjects();
+        $type = 3;
+        return view('backend.admins.index', compact('type', 'projects'));
     }
 
     private function handleAdminList($type)
     {
         if (request()->ajax()) {
             $admin = auth()->user();
-            $query = Admin::query()->with(['creator', 'project']);
+            $query = Admin::query()->with(['creator', 'project', 'projectStatuses.project']);
             if ($admin->type == 0) {
                 $query->where('type', $type);
                 // Super Admin can see all type of admins
@@ -65,42 +82,31 @@ class AdminController extends Controller
                 abort(403, "Unauthorized access");
             }
 
+            // Get all projects for dynamic columns
+            $allProjects = $this->getAllProjects();
+
             return datatables()->of($query->select('*'))
-                ->addColumn('status_dropdown', function($row) use ($admin) {
-                    // if ($admin->type != 0) return null;
-                    
-                    $statuses = [
-                        'Active' => 'Active',
-                        'Inactive' => 'Inactive'
-                    ];
-                    
-                    $html = '<select class="form-control status-dropdown" data-id="'.$row->id.'" name="status'.$row->id.'" id="status'.$row->id.'" style="min-width: 120px;">';
-                    foreach ($statuses as $value => $label) {
-                        $selected = $row->status == $value ? 'selected' : '';
-                        $html .= '<option value="'.$value.'" '.$selected.'>'.$label.'</option>';
-                    }
-                    $html .= '</select>';
-                    
-                    return $html;
-                })
-                // ->addColumn('status', function($row) use ($type) {
-                //     // Only show status for type=1
-                //     if ($type != 1) {
-                //         return null;
-                //     }
-                //     $statusClass = [
-                //         'Enable' => 'badge-success',
-                //         'Disable' => 'badge-danger',
-                //         'Pending' => 'badge-warning'
-                //     ][$row->status] ?? 'badge-secondary';
-                //     return '<span class="badge ' . $statusClass . '">' . $row->status . '</span>';
-                // })
                 ->addColumn('created_by_name', function ($row) {
                     return ucfirst($row->parent_id != null ? ($row->parent->username ?? 'N/A') :  ($row->creator->username ?? 'N/A'));
-                    // $row->type == 4 ? ($row->parent ? $row->parent->username : 'N/A') : $row->creator->username;
                 })
-                ->addColumn('project_name', function ($row) {
-                    return $row->project?->project_name ?? 'N/A';
+                ->addColumn('project_statuses_json', function ($row) use ($allProjects) {
+                    try {
+                        $statuses = [];
+                        foreach ($allProjects as $project) {
+                            $projectStatus = $row->projectStatuses->firstWhere('project_id', $project->id);
+                            $statuses[$project->id] = $projectStatus?->status ?? null;
+                        }
+                        $json = json_encode($statuses);
+                        // Ensure it's valid JSON
+                        if (json_last_error() !== JSON_ERROR_NONE) {
+                            \Log::warning('JSON encoding error: ' . json_last_error_msg(), ['statuses' => $statuses]);
+                            return json_encode([]);
+                        }
+                        return $json;
+                    } catch (\Exception $e) {
+                        \Log::error('Error generating project_statuses_json: ' . $e->getMessage());
+                        return json_encode([]);
+                    }
                 })
                 ->addColumn('url', function ($row) {
                     return ($row->url ?? '');
@@ -108,18 +114,19 @@ class AdminController extends Controller
                 ->addColumn('action', function ($row) use ($admin) {
                     $btn = '';
 
-                    // Admin can edit & delete only Private Vendors they created  $admin->type == 1 && $row->type == 3 && 
+                    // Admin can edit & delete only Private Vendors they created  $admin->type == 1 && $row->type == 3 &&
                     if (($row->created_by == $admin->id || $row->parent_id == $admin->id) || $admin->type == 0) {
                         $btn .= $this->getActionButtons($row);
                     }
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'status', 'status_dropdown', 'created_by_name'])
+                ->rawColumns(['action', 'created_by_name', 'project_statuses_json'])
                 ->addIndexColumn()
+                ->with('projects', $allProjects)
                 ->make(true);
         }
-        
+
         return view('backend.admins.index', compact('type'));
     }
 
@@ -165,9 +172,13 @@ class AdminController extends Controller
             'password' => 'required|min:6',
             'vat_country_code' => 'required',
             'vat_number' => 'required',
-            'status' => 'required_if:type,1|in:Active,Inactive',
-            'project_id' => 'nullable|exists:projects,id'
+            'project_id' => 'nullable|exists:projects,id',
+            'project_rows' => 'nullable|array',
+            'project_rows.*.project_id' => 'nullable|exists:projects,id',
+            'project_rows.*.status' => 'nullable|in:Active,Inactive',
         ]);
+
+        $this->validateProjectRows($request);
         
         // Get admin type from request or default to Admin (1)
         $adminType = $request->type ?? 1;
@@ -191,14 +202,15 @@ class AdminController extends Controller
             'vat_number' => $request->vat_number,
             'created_from' => 1,
         ];
-        if($adminType == 1) {
-            $addData['status'] = $request->status;
-        }
 
         if ($request->filled('project_id')) {
             $addData['project_id'] = $request->project_id;
         }
         $admin = Admin::create($addData);
+
+        if ($request->filled('project_rows')) {
+            $admin->syncProjectStatuses($this->normalizeProjectRows($request));
+        }
 
         if(empty($admin)) {
             Session::flash('errorMSg', 'Somethig went wrong.');
@@ -292,9 +304,14 @@ class AdminController extends Controller
             'vat_country_code' => 'required',
             'vat_number' => 'required',
             'project_id' => 'nullable|exists:projects,id',
+            'project_rows' => 'nullable|array',
+            'project_rows.*.project_id' => 'nullable|exists:projects,id',
+            'project_rows.*.status' => 'nullable|in:Active,Inactive',
             // 'email' => 'required|email|unique:admins,email,' . $id,
             // 'status' => 'required_if:type,1|in:Enable,Disable,Pending'
         ]);
+
+        $this->validateProjectRows($request);
 
         $admin = Admin::find($id);
 
@@ -310,14 +327,13 @@ class AdminController extends Controller
             'vat_country_code' => $request->vat_country_code,
             'vat_number' => $request->vat_number,
             'password' => $request->filled('password') ? Hash::make($request->password) : $admin->password,
+            'project_id' => $request->filled('project_id') ? $request->project_id : null,
         ];
-
-        if($admin->type ==1) {
-            $updateData['status'] = $request->status;
-        }
-
-        $updateData['project_id'] = $request->filled('project_id') ? $request->project_id : null;
         $admin->update($updateData);
+
+        if ($request->has('project_rows')) {
+            $admin->syncProjectStatuses($this->normalizeProjectRows($request));
+        }
 
         Contact::updateOrCreate(
             ['email' => $request->email], // condition (unique key)
@@ -406,13 +422,62 @@ class AdminController extends Controller
         $countries = CountryRegion::orderBy('name')->get();
         return view('backend.admins.user', compact('countries'));
     }
-    public function updateStatus(Request $request, $siteUrl)
+
+    private function validateProjectRows(Request $request): void
     {
-        $admin = Admin::findOrFail($request->id);
-        $admin->status = in_array($request->status, ['Active', 'Inactive']) ? $request->status : 'Inactive';
-        $admin->saveQuietly();
-        
-        return response()->json(['success' => 'Status updated successfully.']);
+        $projectRows = $request->input('project_rows', []);
+
+        foreach ($projectRows as $index => $row) {
+            $hasProject = filled($row['project_id'] ?? null);
+            $hasStatus = filled($row['status'] ?? null);
+
+            if ($hasProject xor $hasStatus) {
+                throw ValidationException::withMessages([
+                    'project_rows' => ['Each project/status row must include both a project and a status.'],
+                ]);
+            }
+        }
+    }
+
+    private function normalizeProjectRows(Request $request): array
+    {
+        return collect($request->input('project_rows', []))
+            ->filter(function ($row) {
+                return filled($row['project_id'] ?? null) && filled($row['status'] ?? null);
+            })
+            ->values()
+            ->all();
+    }
+
+    public function updateProjectStatus(Request $request, $siteUrl)
+    {
+        $request->validate([
+            'admin_id' => 'required|exists:admins,id',
+            'project_id' => 'required|exists:projects,id',
+            'status' => 'required|in:Active,Inactive',
+        ]);
+
+        $admin = Admin::findOrFail($request->admin_id);
+
+        if ($request->status === 'Inactive' && $request->input('is_unassign')) {
+            AdminProjectStatus::where('admin_id', $admin->id)
+                ->where('project_id', $request->project_id)
+                ->delete();
+
+            return response()->json(['success' => true, 'message' => 'Project unassigned']);
+        }
+
+        AdminProjectStatus::updateOrCreate(
+            [
+                'admin_id' => $admin->id,
+                'project_id' => $request->project_id,
+            ],
+            [
+                'status' => $request->status,
+            ]
+        );
+
+        return response()->json(['success' => true, 'message' => 'Status updated successfully']);
     }
 
     private function getProjectsForAdmin()
@@ -424,6 +489,11 @@ class AdminController extends Controller
         }
 
         return $query->get();
+    }
+
+    private function getAllProjects()
+    {
+        return Project::orderBy('project_name')->get();
     }
 
 }

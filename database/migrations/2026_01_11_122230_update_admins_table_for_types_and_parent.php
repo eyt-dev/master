@@ -25,11 +25,13 @@ return new class extends Migration
         });
 
         // Update type column comment
-        DB::statement("
-            ALTER TABLE `admins`
-            MODIFY COLUMN `type` TINYINT NOT NULL DEFAULT 4
-            COMMENT '0 = Super Admin, 1 = Admin, 2 = Public Vendor, 3 = Private Vendor, 4 = User'
-        ");
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement("
+                ALTER TABLE `admins`
+                MODIFY COLUMN `type` TINYINT NOT NULL DEFAULT 4
+                COMMENT '0 = Super Admin, 1 = Admin, 2 = Public Vendor, 3 = Private Vendor, 4 = User'
+            ");
+        }
     }
 
     /**
@@ -45,9 +47,11 @@ return new class extends Migration
         });
 
         // Revert type column (remove comment)
-        DB::statement("
-            ALTER TABLE `admins`
-            MODIFY COLUMN `type` TINYINT NOT NULL DEFAULT 4
-        ");
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement("
+                ALTER TABLE `admins`
+                MODIFY COLUMN `type` TINYINT NOT NULL DEFAULT 4
+            ");
+        }
     }
 };

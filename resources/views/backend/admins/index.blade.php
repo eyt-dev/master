@@ -80,9 +80,10 @@
                                     <th>Username</th>
                                     <th>Type</th>
                                     <th>Created By</th>
-                                    <th>Project</th>
+                                    @foreach($projects as $project)
+                                        <th>{{ $project->project_name }}</th>
+                                    @endforeach
                                     <th>URL</th>
-                                    <th>Status</th>
                                     <th data-priority="1">Action</th>
                                 </tr>
                             </thead>
@@ -127,6 +128,17 @@
     <script type="text/javascript">
         var adminType = {{ $type }};
         var routeName = '';
+        var projects = {!! json_encode($projects) !!};
+        var projectsMap = {};
+
+        console.log('Projects loaded:', projects);
+        console.log('Number of projects:', projects ? projects.length : 0);
+
+        if (projects && projects.length > 0) {
+            projects.forEach(p => projectsMap[p.id] = p.project_name);
+            console.log('Projects map:', projectsMap);
+        }
+
         switch(adminType) {
             case 1:
                 routeName = "{{ route('admins.index', ['username' => request()->get('username', $siteSlug)]) }}";
@@ -165,70 +177,159 @@
                 }
             });
         });
+        // Build column definitions dynamically
+        var columnDefs = [
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+            { data: 'name', name: 'name' },
+            { data: 'email', name: 'email' },
+            { data: 'username', name: 'username' },
+            {
+                data: 'created_from',
+                name: 'created_from',
+                render: function(data) {
+                    const types = {
+                        1: 'Added from backend',
+                        2: 'Registered from web',
+                    };
+                    return types[data] || data;
+                }
+            },
+            {
+                data: 'created_by_name',
+                name: 'created_by_name',
+                visible: adminType == 3,
+                orderable: false,
+                searchable: false
+            }
+        ];
+
+        // Add dynamic project columns
+        console.log('Creating dynamic project columns for', projects.length, 'projects');
+        projects.forEach(project => {
+            console.log('Adding column for project:', project.id, project.project_name);
+            columnDefs.push({
+                data: null,
+                name: 'project_' + project.id,
+                orderable: false,
+                searchable: false,
+                render: function(data, type, row) {
+                    console.log('Rendering project', project.id, 'for row:', row.id, 'data:', row.project_statuses_json);
+                    try {
+                        let statuses = {};
+
+                        // Try to get the statuses from the row data
+                        if (row.project_statuses_json) {
+                            const statusJson = row.project_statuses_json;
+                            console.log('statusJson type:', typeof statusJson, 'value:', statusJson);
+
+                            // Handle different data formats
+                            if (typeof statusJson === 'object') {
+                                statuses = statusJson;
+                            } else if (typeof statusJson === 'string') {
+                                try {
+                                    let cleanData = statusJson.trim();
+
+                                    // Decode HTML entities if present
+                                    if (cleanData.includes('&quot;')) {
+                                        cleanData = cleanData
+                                            .replace(/&quot;/g, '"')
+                                            .replace(/&#34;/g, '"')
+                                            .replace(/&amp;/g, '&')
+                                            .replace(/&lt;/g, '<')
+                                            .replace(/&gt;/g, '>');
+                                    }
+
+                                    if (cleanData.startsWith('{') || cleanData.startsWith('[')) {
+                                        statuses = JSON.parse(cleanData);
+                                        console.log('Successfully parsed statuses:', statuses);
+                                    }
+                                } catch (parseError) {
+                                    console.warn('Failed to parse project statuses JSON for project', project.id, ':', statusJson, parseError);
+                                }
+                            }
+                        }
+
+                        // Get the status for this specific project
+                        const currentStatus = statuses[project.id];
+                        const adminId = row.id;
+                        const dropdownId = 'project_' + adminId + '_' + project.id;
+
+                        // Build the dropdown with proper selected states
+                        let html = '<select class="form-control project-status-dropdown" id="' + dropdownId + '" data-admin-id="' + adminId + '" data-project-id="' + project.id + '" style="width: 100%;">';
+
+                        // Empty option (no assignment)
+                        html += '<option value="" ' + (!currentStatus ? 'selected' : '') + '>--</option>';
+
+                        // Active option
+                        html += '<option value="Active" ' + (currentStatus === 'Active' ? 'selected' : '') + '>Active</option>';
+
+                        // Inactive option
+                        html += '<option value="Inactive" ' + (currentStatus === 'Inactive' ? 'selected' : '') + '>Inactive</option>';
+
+                        html += '</select>';
+
+                        return html;
+                    } catch (error) {
+                        console.error('Error rendering project column for project', project.id, 'error:', error);
+                        return '<span class="text-danger">Error</span>';
+                    }
+                }
+            });
+        });
+
+        // Add remaining columns
+        columnDefs.push({
+            data: 'url',
+            name: 'url',
+            orderable: false,
+            searchable: false
+        });
+
+        columnDefs.push({
+            data: 'action',
+            name: 'action',
+            orderable: false,
+            searchable: false
+        });
+
+        console.log('Total column definitions:', columnDefs.length);
+        console.log('Column definitions:', columnDefs);
+
         var table = $('#admin_table').DataTable({
             processing: true,
             serverSide: true,
-            responsive: true,
+            responsive: false,
             ajax: {
                 url: routeName,
                 data: function (d) {
                     d.type = adminType; // Pass type dynamically
+                },
+                error: function(xhr, status, error) {
+                    console.error('DataTable AJAX Error:', error, xhr);
+                },
+                complete: function(jqXHR, textStatus) {
+                    console.log('AJAX complete, status:', textStatus);
                 }
             },
-            columns: [
-                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                { data: 'name', name: 'name' },
-                { data: 'email', name: 'email' },
-                { data: 'username', name: 'username' },
-                { 
-                    data: 'created_from', 
-                    name: 'created_from',
-                     render: function(data) {
-                        const types = {
-                            1: 'Added from backend',
-                            2: 'Registered from web',
-                        };
-                        return types[data] || data;
-                    }
-                },
-                { 
-                    data: 'created_by_name', 
-                    name: 'created_by_name',
-                    visible: adminType == 3,
-                    orderable: false,
-                    searchable: false
-                },
-                {
-                    data: 'project_name',
-                    name: 'project_name',
-                    orderable: false,
-                    searchable: false
-                },
-                { 
-                    data: 'url', 
-                    name: 'url',
-                    // visible: adminType == 3,
-                    orderable: false,
-                    searchable: false
-                },
-                { 
-                    data: 'status_dropdown', 
-                    name: 'status_dropdown',
-                    orderable: false,
-                    searchable: false
-                },
-                { 
-                    data: 'action', 
-                    name: 'action', 
-                    orderable: false, 
-                    searchable: false 
-                }
-            ],
+            columns: columnDefs,
             order: [
                 [1, 'asc']
-            ]
+            ],
+            initComplete: function() {
+                console.log('DataTable initialized with', columnDefs.length, 'columns');
+                attachProjectStatusChangeHandlers();
+            },
+            drawCallback: function(settings) {
+                console.log('DataTable drawn, rows displayed:', settings.fnRecordsDisplay());
+                console.log('First row data:', settings.aoData[0] ? settings.aoData[0]._aData : 'No data');
+            }
         });
-        
+
+        // Reattach handlers when table is redrawn
+        $('#admin_table').on('draw.dt', function() {
+            attachProjectStatusChangeHandlers();
+        });
+
         $(document).on('click', '.delete-admin', function() {
             var id = $(this).attr("data-id");
           
@@ -264,33 +365,70 @@
                 }
             });
         });
-        $(document).on('change', '.status-dropdown', function() {
-            var status = $(this).val();
-            var id = $(this).data('id');
-            var routeName = "{{ route('admins.update-status', ['username' => request()->route('username')]) }}";
-            
-            $.ajax({
-                url: routeName,
-                type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    status: status,
-                    id: id,
-                    _method: 'PATCH'
-                },
-                success: function(response) {
-                    swal('Success', 'Status updated successfully', 'success');
-                    // Reload the table without resetting pagination
-                    if (typeof table !== 'undefined') {
-                        table.ajax.reload(null, false);
-                    }
-                },
-                error: function(xhr) {
-                    swal('Error', 'Error updating status', 'error');
-                    console.error(xhr.responseText);
+
+        // Function to attach change handlers to project status dropdowns
+        function attachProjectStatusChangeHandlers() {
+            $(document).off('change', '.project-status-dropdown').on('change', '.project-status-dropdown', function() {
+                var adminId = $(this).data('admin-id');
+                var projectId = $(this).data('project-id');
+                var status = $(this).val();
+                var $select = $(this);
+
+                if (!status) {
+                    return; // Don't update if no status selected
                 }
+
+                $.ajax({
+                    url: "{{ route('admins.update-project-status', ['username' => request()->get('username', $siteSlug)]) }}",
+                    type: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: {
+                        admin_id: adminId,
+                        project_id: projectId,
+                        status: status
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Visual feedback on dropdown
+                            $select.css('border-color', '#28a745').css('background-color', '#f0fff4');
+                            setTimeout(function() {
+                                $select.css('border-color', '').css('background-color', '');
+                            }, 1000);
+
+                            // Show success alert
+                            swal({
+                                title: 'Success!',
+                                text: response.message || 'Status updated successfully',
+                                icon: 'success',
+                                button: 'OK'
+                            });
+                        } else {
+                            swal('Error', response.message || 'Failed to update status', 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMsg = 'Failed to update status';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        } else if (xhr.responseText) {
+                            try {
+                                const response = JSON.parse(xhr.responseText);
+                                if (response.message) {
+                                    errorMsg = response.message;
+                                }
+                            } catch(e) {
+                                // Ignore JSON parse errors
+                            }
+                        }
+                        console.error('Update status error:', xhr, errorMsg);
+                        swal('Error', errorMsg, 'error');
+                        $select.val('').change();
+                    }
+                });
             });
-        });
+        }
 
         // 🔹 Function to update VAT number
         function updateVatNumber() {

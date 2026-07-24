@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -l resources/views/backend/admins/index.blade.php)"
+    ]
+  }
+}

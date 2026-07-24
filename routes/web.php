@@ -108,10 +108,10 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('create/{type?}', 'create')->name('admins.create');
                         Route::post('store', 'store')->name('admins.store');
                         Route::get('edit/{admin}', 'edit')->name('admins.edit');
-                        Route::post('{admin}', 'update')->name('admins.update');
                         Route::get('destroy/{admin}', 'destroy')->name('admins.destroy');
                         Route::get('/users', 'users')->name('admins.users')->middleware('permission:view.admin');
-                        Route::patch('update-status', 'updateStatus')->name('admins.update-status');
+                        Route::post('update-project-status', 'updateProjectStatus')->name('admins.update-project-status');
+                        Route::post('{admin}', 'update')->name('admins.update');
                     });
                     Route::controller(RoleController::class)->prefix('role')->group(function () {
                         Route::get('/', 'index')->name('role.index'); //->middleware('permission:view.role');
@@ -438,10 +438,10 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::get('create/{type?}', 'create')->name('admins.create');
                 Route::post('store', 'store')->name('admins.store');
                 Route::get('edit/{admin}', 'edit')->name('admins.edit');
-                Route::post('{admin}', 'update')->name('admins.update');
                 Route::get('destroy/{admin}', 'destroy')->name('admins.destroy');
                 Route::get('/users', 'users')->name('admins.users')->middleware('permission:view.admin');
-                Route::patch('update-status', 'updateStatus')->name('admins.update-status');
+                Route::post('update-project-status', 'updateProjectStatus')->name('admins.update-project-status');
+                Route::post('{admin}', 'update')->name('admins.update');
             });
             Route::controller(RoleController::class)->prefix('role')->group(function () {
                 Route::get('/', 'index')->name('role.index')->middleware('permission:view.role');

@@ -175,7 +175,7 @@ class AdminController extends Controller
             'project_id' => 'nullable|exists:projects,id',
             'project_rows' => 'nullable|array',
             'project_rows.*.project_id' => 'nullable|exists:projects,id',
-            'project_rows.*.status' => 'nullable|in:Active,Inactive',
+            'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
         ]);
 
         $this->validateProjectRows($request);
@@ -306,7 +306,7 @@ class AdminController extends Controller
             'project_id' => 'nullable|exists:projects,id',
             'project_rows' => 'nullable|array',
             'project_rows.*.project_id' => 'nullable|exists:projects,id',
-            'project_rows.*.status' => 'nullable|in:Active,Inactive',
+            'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
             // 'email' => 'required|email|unique:admins,email,' . $id,
             // 'status' => 'required_if:type,1|in:Enable,Disable,Pending'
         ]);
@@ -432,9 +432,9 @@ class AdminController extends Controller
         foreach ($projectRows as $row) {
             if (filled($row['status'] ?? null)) {
                 $status = $row['status'];
-                if (!in_array($status, ['Active', 'Inactive'])) {
+                if (!in_array($status, ['Active', 'Inactive', 'Pending'])) {
                     throw ValidationException::withMessages([
-                        'project_rows' => ['Invalid status value. Must be Active or Inactive.'],
+                        'project_rows' => ['Invalid status value. Must be Active, Inactive, or Pending.'],
                     ]);
                 }
             }
@@ -457,7 +457,7 @@ class AdminController extends Controller
         $request->validate([
             'admin_id' => 'required|exists:admins,id',
             'project_id' => 'required|exists:projects,id',
-            'status' => 'required|in:Active,Inactive',
+            'status' => 'required|in:Active,Inactive,Pending',
         ]);
 
         $admin = Admin::findOrFail($request->admin_id);

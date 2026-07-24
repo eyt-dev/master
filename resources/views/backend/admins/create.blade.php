@@ -112,7 +112,12 @@
                             $savedStatus = $savedStatuses[$projectId] ?? null;
                             $oldStatus = old("project_rows.{$index}.status");
                             $selectedStatus = $oldStatus !== null ? $oldStatus : $savedStatus;
-                            $statusColor = $selectedStatus === 'Active' ? '#28a745' : ($selectedStatus === 'Inactive' ? '#dc3545' : '#6c757d');
+                            $statusColor = match($selectedStatus) {
+                                'Active' => '#28a745',
+                                'Inactive' => '#dc3545',
+                                'Pending' => '#ffc107',
+                                default => '#6c757d'
+                            };
                         @endphp
                         <div class="d-flex align-items-center justify-content-between p-3" style="border-bottom: 1px solid #dee2e6;">
                             <div class="d-flex align-items-center flex-grow-1">
@@ -129,6 +134,7 @@
                                     <option value="">-- (Not Assigned)</option>
                                     <option value="Active" {{ $selectedStatus === 'Active' ? 'selected' : '' }}>Active</option>
                                     <option value="Inactive" {{ $selectedStatus === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                                    <option value="Pending" {{ $selectedStatus === 'Pending' ? 'selected' : '' }}>Pending</option>
                                 </select>
                             </div>
                         </div>
@@ -175,6 +181,9 @@
                         select.style.borderWidth = '2px';
                     } else if (select.value === 'Inactive') {
                         select.style.borderColor = '#dc3545';
+                        select.style.borderWidth = '2px';
+                    } else if (select.value === 'Pending') {
+                        select.style.borderColor = '#ffc107';
                         select.style.borderWidth = '2px';
                     } else {
                         select.style.borderColor = '#ced4da';

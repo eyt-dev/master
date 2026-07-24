@@ -266,6 +266,9 @@
                         // Inactive option
                         html += '<option value="Inactive" ' + (currentStatus === 'Inactive' ? 'selected' : '') + '>Inactive</option>';
 
+                        // Pending option
+                        html += '<option value="Pending" ' + (currentStatus === 'Pending' ? 'selected' : '') + '>Pending</option>';
+
                         html += '</select>';
 
                         return html;
@@ -366,13 +369,41 @@
             });
         });
 
+        // Function to get color for status
+        function getStatusColor(status) {
+            switch(status) {
+                case 'Active':
+                    return '#28a745';
+                case 'Inactive':
+                    return '#dc3545';
+                case 'Pending':
+                    return '#ffc107';
+                default:
+                    return '#ced4da';
+            }
+        }
+
+        // Function to style dropdown based on status
+        function styleStatusDropdown($select) {
+            const status = $select.val();
+            $select.css('border-color', getStatusColor(status)).css('border-width', status ? '2px' : '1px');
+        }
+
         // Function to attach change handlers to project status dropdowns
         function attachProjectStatusChangeHandlers() {
+            // Style all existing dropdowns based on their current value
+            $('.project-status-dropdown').each(function() {
+                styleStatusDropdown($(this));
+            });
+
             $(document).off('change', '.project-status-dropdown').on('change', '.project-status-dropdown', function() {
                 var adminId = $(this).data('admin-id');
                 var projectId = $(this).data('project-id');
                 var status = $(this).val();
                 var $select = $(this);
+
+                // Update styling immediately
+                styleStatusDropdown($select);
 
                 if (!status) {
                     return; // Don't update if no status selected
@@ -391,11 +422,12 @@
                     },
                     success: function(response) {
                         if (response.success) {
-                            // Visual feedback on dropdown
+                            // Visual feedback: briefly show green then revert to status color
                             $select.css('border-color', '#28a745').css('background-color', '#f0fff4');
                             setTimeout(function() {
-                                $select.css('border-color', '').css('background-color', '');
-                            }, 1000);
+                                styleStatusDropdown($select);
+                                $select.css('background-color', '');
+                            }, 1500);
 
                             // Show success alert
                             swal({

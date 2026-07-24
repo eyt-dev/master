@@ -427,20 +427,23 @@ class AdminController extends Controller
     {
         $projectRows = $request->input('project_rows', []);
 
-        foreach ($projectRows as $index => $row) {
-            $hasProject = filled($row['project_id'] ?? null);
-            $hasStatus = filled($row['status'] ?? null);
-
-            if ($hasProject xor $hasStatus) {
-                throw ValidationException::withMessages([
-                    'project_rows' => ['Each project/status row must include both a project and a status.'],
-                ]);
+        // Validation is done on the frontend
+        // Only ensure status values are valid when provided
+        foreach ($projectRows as $row) {
+            if (filled($row['status'] ?? null)) {
+                $status = $row['status'];
+                if (!in_array($status, ['Active', 'Inactive'])) {
+                    throw ValidationException::withMessages([
+                        'project_rows' => ['Invalid status value. Must be Active or Inactive.'],
+                    ]);
+                }
             }
         }
     }
 
     private function normalizeProjectRows(Request $request): array
     {
+        // Only include rows that have a non-empty status value
         return collect($request->input('project_rows', []))
             ->filter(function ($row) {
                 return filled($row['project_id'] ?? null) && filled($row['status'] ?? null);

@@ -95,7 +95,7 @@ class AuthController extends Controller
         $admin = Admin::where('email', $request->email)
             ->where(function ($query) {
                 $query->where('type', 0)
-                    ->orWhereHas('projects', function ($projectQuery) {
+                    ->orWhereHas('project', function ($projectQuery) {
                         $projectQuery->where('url', 'LIKE', '%add2mix.eyt.app%');
                     });
             })

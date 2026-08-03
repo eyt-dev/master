@@ -17,7 +17,7 @@ class MaterialStockController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = MaterialStock::with('farm', 'supplier', 'creator')
+            $data = MaterialStock::with('farm', 'supplier', 'creator', 'materialStockHangarAllocations.hangar')
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                     $query->where('created_by', auth()->id());
                 })
@@ -38,12 +38,82 @@ class MaterialStockController extends Controller
                 ->addColumn('created_at', function($row) {
                     return date('Y-m-d', strtotime($row->created_at));
                 })
+                ->addColumn('hangar1', function($row) {
+                    $allocations = $row->materialStockHangarAllocations;
+                    if (isset($allocations[0])) {
+                        return $allocations[0]->hangar->name . '<br>Qty: ' . $allocations[0]->quantity . '<br>Remaining: ' . $allocations[0]->remaining_quantity;
+                    }
+                    return 'N/A';
+                })
+                ->addColumn('hangar2', function($row) {
+                    $allocations = $row->materialStockHangarAllocations;
+                    if (isset($allocations[1])) {
+                        return $allocations[1]->hangar->name . '<br>Qty: ' . $allocations[1]->quantity . '<br>Remaining: ' . $allocations[1]->remaining_quantity;
+                    }
+                    return 'N/A';
+                })
+                ->addColumn('hangar3', function($row) {
+                    $allocations = $row->materialStockHangarAllocations;
+                    if (isset($allocations[2])) {
+                        return $allocations[2]->hangar->name . '<br>Qty: ' . $allocations[2]->quantity . '<br>Remaining: ' . $allocations[2]->remaining_quantity;
+                    }
+                    return 'N/A';
+                })
+                ->addColumn('hangar4', function($row) {
+                    $allocations = $row->materialStockHangarAllocations;
+                    if (isset($allocations[3])) {
+                        return $allocations[3]->hangar->name . '<br>Qty: ' . $allocations[3]->quantity . '<br>Remaining: ' . $allocations[3]->remaining_quantity;
+                    }
+                    return 'N/A';
+                })
+                ->addColumn('hangar5', function($row) {
+                    $allocations = $row->materialStockHangarAllocations;
+                    if (isset($allocations[4])) {
+                        return $allocations[4]->hangar->name . '<br>Qty: ' . $allocations[4]->quantity . '<br>Remaining: ' . $allocations[4]->remaining_quantity;
+                    }
+                    return 'N/A';
+                })
+                ->addColumn('hangar6', function($row) {
+                    $allocations = $row->materialStockHangarAllocations;
+                    if (isset($allocations[5])) {
+                        return $allocations[5]->hangar->name . '<br>Qty: ' . $allocations[5]->quantity . '<br>Remaining: ' . $allocations[5]->remaining_quantity;
+                    }
+                    return 'N/A';
+                })
+                ->addColumn('hangar7', function($row) {
+                    $allocations = $row->materialStockHangarAllocations;
+                    if (isset($allocations[6])) {
+                        return $allocations[6]->hangar->name . '<br>Qty: ' . $allocations[6]->quantity . '<br>Remaining: ' . $allocations[6]->remaining_quantity;
+                    }
+                    return 'N/A';
+                })
+                ->addColumn('hangar8', function($row) {
+                    $allocations = $row->materialStockHangarAllocations;
+                    if (isset($allocations[7])) {
+                        return $allocations[7]->hangar->name . '<br>Qty: ' . $allocations[7]->quantity . '<br>Remaining: ' . $allocations[7]->remaining_quantity;
+                    }
+                    return 'N/A';
+                })
+                ->addColumn('hangar9', function($row) {
+                    $allocations = $row->materialStockHangarAllocations;
+                    if (isset($allocations[8])) {
+                        return $allocations[8]->hangar->name . '<br>Qty: ' . $allocations[8]->quantity . '<br>Remaining: ' . $allocations[8]->remaining_quantity;
+                    }
+                    return 'N/A';
+                })
+                ->addColumn('hangar10', function($row) {
+                    $allocations = $row->materialStockHangarAllocations;
+                    if (isset($allocations[9])) {
+                        return $allocations[9]->hangar->name . '<br>Qty: ' . $allocations[9]->quantity . '<br>Remaining: ' . $allocations[9]->remaining_quantity;
+                    }
+                    return 'N/A';
+                })
                 ->addColumn('action', function($row) {
                     return '<a class="edit-material-stock btn btn-sm btn-success mr-1" data-id="'.$row->id.'" data-path="'.route('material-stock.edit', ['username' => request()->segment(1), 'material_stock' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
                          .'<a class="delete-material-stock btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action'])   
+                ->rawColumns(['action', 'hangar1', 'hangar2', 'hangar3', 'hangar4', 'hangar5', 'hangar6', 'hangar7', 'hangar8', 'hangar9', 'hangar10'])   
                 ->make(true);
         }
         return view('backend.material-stock.index');
@@ -83,6 +153,7 @@ class MaterialStockController extends Controller
             'supplier_id' => 'required|exists:chicks_suppliers,id',
             'name' => 'required|string',
             'stock_date' => 'required|date',
+            'quantity' => 'required|numeric|min:1',
             'hangar_quantities_json' => 'required|json',
         ]);
 
@@ -98,15 +169,12 @@ class MaterialStockController extends Controller
             return back()->withErrors(['hangar_quantities_json' => 'Duplicate hangars are not allowed. Each hangar can only be selected once.']);
         }
 
-        // Calculate total quantity from hangar allocations
-        $totalQuantity = collect($hangarQuantities)->sum('quantity');
-
         $materialStock = MaterialStock::create([
             'farm_id' => $request->farm_id,
             'supplier_id' => $request->supplier_id,
             'name' => $request->name,
             'stock_date' => $request->stock_date,
-            'quantity' => $totalQuantity,
+            'quantity' => $request->quantity,
             'created_by' => auth()->id()
         ]);
 
@@ -115,7 +183,8 @@ class MaterialStockController extends Controller
             MaterialStockHangar::create([
                 'material_stock_id' => $materialStock->id,
                 'hangar_id' => $allocation['hangar_id'],
-                'quantity' => $allocation['quantity']
+                'quantity' => $allocation['quantity'],
+                'remaining_quantity' => $allocation['remaining_quantity'] ?? $allocation['quantity']
             ]);
         }
 
@@ -146,6 +215,7 @@ class MaterialStockController extends Controller
             'supplier_id' => 'required|exists:chicks_suppliers,id',
             'name' => 'required|string',
             'stock_date' => 'required|date',
+            'quantity' => 'required|numeric|min:1',
             'hangar_quantities_json' => 'required|json',
         ]);
 
@@ -161,16 +231,13 @@ class MaterialStockController extends Controller
             return back()->withErrors(['hangar_quantities_json' => 'Duplicate hangars are not allowed. Each hangar can only be selected once.']);
         }
 
-        // Calculate total quantity from hangar allocations
-        $totalQuantity = collect($hangarQuantities)->sum('quantity');
-
         $materialStock = MaterialStock::findOrFail($id);
         $materialStock->update([
             'farm_id' => $request->farm_id,
             'supplier_id' => $request->supplier_id,
             'name' => $request->name,
             'stock_date' => $request->stock_date,
-            'quantity' => $totalQuantity,
+            'quantity' => $request->quantity,
         ]);
 
         // Delete old allocations
@@ -181,7 +248,8 @@ class MaterialStockController extends Controller
             MaterialStockHangar::create([
                 'material_stock_id' => $materialStock->id,
                 'hangar_id' => $allocation['hangar_id'],
-                'quantity' => $allocation['quantity']
+                'quantity' => $allocation['quantity'],
+                'remaining_quantity' => $allocation['remaining_quantity'] ?? $allocation['quantity']
             ]);
         }
 

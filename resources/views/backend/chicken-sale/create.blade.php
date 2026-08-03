@@ -129,7 +129,7 @@
         <!-- Gross Weight -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="gross_weight" class="form-label">Gross Weight <span class="text-red">*</span></label>
+                <label for="gross_weight" class="form-label">Cage's Weight <span class="text-red">*</span></label>
                 <input type="number" class="form-control" name="gross_weight" id="gross_weight" placeholder="Gross Weight" 
                     value="{{ old('gross_weight', $chickenSale->gross_weight ?? '') }}" required="" step="0.01" min="0" />
                 @error('gross_weight')

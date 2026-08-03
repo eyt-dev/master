@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\FlockHelper;
 use Illuminate\Http\Request;
 use App\Models\DailyRecord;
 use App\Models\Farm;
 use App\Models\Hangar;
+use App\Models\Flock;
 use App\Models\Admin;
 use Illuminate\Support\Facades\Session;
 
@@ -49,21 +51,16 @@ class DailyRecordController extends Controller
 
     public function create()
     {
-        $farms = Farm::where('created_by', auth()->id())->orWhere('created_by', function($query) {
-            $query->select('id')->from('admins')->where('type', 0);
-        })->get();
-        
-        if (auth()->user()->role === 'SuperAdmin') {
-            $farms = Farm::all();
-        }
-
-        return view('backend.daily-record.create', compact('farms'));
+        $flocks = FlockHelper::getAllFlockOptions();
+        return view('backend.daily-record.create', compact('flocks'));
     }
 
-    public function getHangarsByFarm($siteUrl, $farmId)
+    public function getHangarsByFlock($siteUrl, $flockId)
     {        
-        $farmId = (int) $farmId;
-        $hangars = Hangar::where('farm_id', $farmId)
+        $flockId = (int) $flockId;
+        $flock = Flock::findOrFail($flockId);
+        
+        $hangars = Hangar::where('farm_id', $flock->farm_id)
             ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                 $query->where('created_by', auth()->id());
             })
@@ -77,7 +74,7 @@ class DailyRecordController extends Controller
     {
         $request->validate([
             'record_date' => 'required|date',
-            'farm_id' => 'required|exists:farms,id',
+            'flock_id' => 'required|exists:flocks,id',
             'hangar_id' => 'required|exists:hangars,id',
             'feed_kg' => 'required|numeric|min:0',
             'eggs_tray_30' => 'required|integer|min:0',
@@ -85,10 +82,14 @@ class DailyRecordController extends Controller
             'mortality' => 'required|integer|min:0',
         ]);
 
+        // Get farm_id from the selected flock
+        $flock = Flock::findOrFail($request->flock_id);
+
         DailyRecord::create([
             'record_date' => $request->record_date,
-            'farm_id' => $request->farm_id,
+            'farm_id' => $flock->farm_id,
             'hangar_id' => $request->hangar_id,
+            'flock_id' => $request->flock_id,
             'feed_kg' => $request->feed_kg,
             'eggs_tray_30' => $request->eggs_tray_30,
             'eggs_count' => $request->eggs_count,
@@ -103,23 +104,17 @@ class DailyRecordController extends Controller
     public function edit($siteUrl, $id)
     {
         $dailyRecord = DailyRecord::findOrFail($id);
-        $farms = Farm::where('created_by', auth()->id())->orWhere('created_by', function($query) {
-            $query->select('id')->from('admins')->where('type', 0);
-        })->get();
-        
-        if (auth()->user()->role === 'SuperAdmin') {
-            $farms = Farm::all();
-        }
-
+        $flocks = FlockHelper::getAllFlockOptions();
         $hangars = Hangar::where('farm_id', $dailyRecord->farm_id)->get();
-        return view('backend.daily-record.create', compact('dailyRecord', 'farms', 'hangars'));
+        
+        return view('backend.daily-record.create', compact('dailyRecord', 'flocks', 'hangars'));
     }
 
     public function update(Request $request, $siteUrl, $id)
     {
         $request->validate([
             'record_date' => 'required|date',
-            'farm_id' => 'required|exists:farms,id',
+            'flock_id' => 'required|exists:flocks,id',
             'hangar_id' => 'required|exists:hangars,id',
             'feed_kg' => 'required|numeric|min:0',
             'eggs_tray_30' => 'required|integer|min:0',
@@ -127,11 +122,15 @@ class DailyRecordController extends Controller
             'mortality' => 'required|integer|min:0',
         ]);
 
+        // Get farm_id from the selected flock
+        $flock = Flock::findOrFail($request->flock_id);
+
         $dailyRecord = DailyRecord::findOrFail($id);
         $dailyRecord->update([
             'record_date' => $request->record_date,
-            'farm_id' => $request->farm_id,
+            'farm_id' => $flock->farm_id,
             'hangar_id' => $request->hangar_id,
+            'flock_id' => $request->flock_id,
             'feed_kg' => $request->feed_kg,
             'eggs_tray_30' => $request->eggs_tray_30,
             'eggs_count' => $request->eggs_count,

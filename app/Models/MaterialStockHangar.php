@@ -13,6 +13,7 @@ class MaterialStockHangar extends Model
         'material_stock_id',
         'hangar_id',
         'quantity',
+        'remaining_quantity',
     ];
 
     public function materialStock()

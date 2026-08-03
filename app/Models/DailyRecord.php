@@ -13,6 +13,7 @@ class DailyRecord extends Model
         'record_date',
         'farm_id',
         'hangar_id',
+        'flock_id',
         'feed_kg',
         'eggs_tray_30',
         'eggs_count',
@@ -32,6 +33,11 @@ class DailyRecord extends Model
     public function hangar()
     {
         return $this->belongsTo(Hangar::class, 'hangar_id');
+    }
+
+    public function flock()
+    {
+        return $this->belongsTo(Flock::class, 'flock_id');
     }
 
     public function creator()

@@ -94,11 +94,11 @@
         <!-- Total Quantity -->
         <div class="col-sm-12 col-md-12">
             <div class="form-group">
-                <label for="total_quantity" class="form-label">Total Quantity <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="total_quantity" id="total_quantity" placeholder="Total Quantity" 
-                    value="{{ old('total_quantity', $materialStock->quantity ?? '') }}" required="" min="1" readonly />
-                @error('total_quantity')
-                    <label id="total_quantity-error" class="error" for="total_quantity">{{ $message }}</label>
+                <label for="quantity" class="form-label">Total Quantity <span class="text-red">*</span></label>
+                <input type="number" class="form-control" name="quantity" id="quantity" placeholder="Total Quantity" 
+                    value="{{ old('quantity', $materialStock->quantity ?? '') }}" required="" min="1" />
+                @error('quantity')
+                    <label id="quantity-error" class="error" for="quantity">{{ $message }}</label>
                 @enderror
             </div>
         </div>
@@ -111,13 +111,11 @@
                 <label class="form-label">Hangar Allocation <span class="text-red">*</span></label>
                 <small class="form-text text-muted d-block mb-3">Select hangars and enter quantity for each. You can add up to 10 hangars.</small>
                 
-                <div id="hangars_allocation_container">
+                <div id="hangars_allocation_container" class="bg-light rounded-lg p-0" style="border: 1px solid #dee2e6; background-color: #f8f9fa !important; display: none;">
                     <!-- Hangar rows will be generated here -->
                 </div>
 
-                <button type="button" id="add_hangar_row" class="btn btn-sm btn-success mt-2" style="display:none;">
-                    <i class="fa fa-plus mr-1"></i> Add Hangar
-                </button>
+                <p id="no_hangars_message" class="text-warning">Please select a farm first.</p>
 
                 @error('hangar_quantities')
                     <label id="hangar_quantities-error" class="error" for="hangar_quantities">{{ $message }}</label>
@@ -136,16 +134,16 @@
 <script>
     $(document).ready(function() {
         var allHangars = [];
-        var currentRowCount = 0;
-        const maxRows = 10;
         
         // Load all hangars for the selected farm
         function loadHangarsForFarm(farmId) {
+            var container = $('#hangars_allocation_container');
+            var noHangarsMsg = $('#no_hangars_message');
+
             if (!farmId) {
-                $('#hangars_allocation_container').html('<p class="text-warning">Please select a farm first.</p>');
-                $('#total_quantity').val('');
-                $('#add_hangar_row').hide();
-                currentRowCount = 0;
+                container.hide();
+                noHangarsMsg.show().text('Please select a farm first.');
+                $('#quantity').val('');
                 return;
             }
 
@@ -161,165 +159,75 @@
             });
         }
 
+        // Initialize hangar rows as a list
         function initializeHangarRows(hangars) {
             var container = $('#hangars_allocation_container');
-            container.html('');
-            currentRowCount = 0;
+            var noHangarsMsg = $('#no_hangars_message');
 
             if (hangars.length === 0) {
-                container.html('<p class="text-warning">No hangars found for this farm.</p>');
-                $('#add_hangar_row').hide();
+                container.hide();
+                noHangarsMsg.show().text('No hangars found for this farm.');
                 return;
             }
 
+            container.html('');
+            noHangarsMsg.hide();
+
+        // Check if editing - load previous data
             var existingAllocations = {};
+            var existingRemaining = {};
             @if(isset($materialStockHangars))
                 @foreach($materialStockHangars as $msh)
-                    existingAllocations[{{ $loop->index }}] = {
-                        hangar_id: {{ $msh->hangar_id }},
-                        quantity: {{ $msh->quantity }}
-                    };
+                    existingAllocations[{{ $msh->hangar_id }}] = {{ $msh->quantity }};
+                    existingRemaining[{{ $msh->hangar_id }}] = {{ $msh->remaining_quantity }};
                 @endforeach
             @endif
 
-            if (Object.keys(existingAllocations).length > 0) {
-                Object.keys(existingAllocations).forEach(function(index) {
-                    addHangarRow(hangars, existingAllocations[index].hangar_id, existingAllocations[index].quantity);
-                });
-            } else {
-                addHangarRow(hangars);
-            }
-
-            updateAddButton();
-            updateHangarDropdowns();
-        }
-
-        function addHangarRow(hangars, selectedHangarId = null, selectedQuantity = null) {
-            if (currentRowCount >= maxRows) {
-                alert('Maximum 10 hangars allowed.');
-                return;
-            }
-
-            var container = $('#hangars_allocation_container');
-            var rowIndex = currentRowCount;
-
-            var html = `
-                <div class="row mb-2 hangar-row" data-row-index="${rowIndex}">
-                    <div class="col-md-5">
-                        <select class="form-control hangar-select" name="hangar_id[]" data-row-index="${rowIndex}" required>
-                            <option value="">Select Hangar</option>
-            `;
-
+            // Build the hangar list with Qty and Remaining Qty columns
             hangars.forEach(function(hangar) {
-                var selected = selectedHangarId == hangar.id ? 'selected' : '';
-                html += `<option value="${hangar.id}" ${selected}>${hangar.name}</option>`;
+                var quantity = existingAllocations[hangar.id] || '';
+                var remainingQty = existingRemaining[hangar.id] || quantity || '';
+                var html = `
+                    <div class="d-flex align-items-center justify-content-between p-3" style="border-bottom: 1px solid #dee2e6;">
+                        <div class="d-flex align-items-center flex-grow-1" style="min-width: 200px;">
+                            <div class="mr-3">
+                                <i class="fe fe-home" style="font-size: 18px; color: #007bff;"></i>
+                            </div>
+                            <div>
+                                <p class="mb-0 font-weight-600" style="color: #212529;">${hangar.name}</p>
+                            </div>
+                        </div>
+                        <div class="ml-3" style="min-width: 150px;">
+                            <input type="number" class="form-control hangar-quantity-input" name="hangar_qty[${hangar.id}]" 
+                                placeholder="Qty" value="${quantity}" min="0" data-hangar-id="${hangar.id}" />
+                        </div>
+                        <div class="ml-3" style="min-width: 150px;">
+                            <input type="number" class="form-control hangar-remaining-qty-input" name="hangar_remaining_qty[${hangar.id}]" 
+                                placeholder="Remaining" value="${remainingQty}" min="0" data-hangar-id="${hangar.id}" />
+                        </div>
+                    </div>
+                `;
+                container.append(html);
             });
 
-            html += `
-                        </select>
-                    </div>
-                    <div class="col-md-5">
-                        <input type="number" class="form-control hangar-quantity" name="hangar_qty[]" placeholder="Quantity" 
-                            value="${selectedQuantity || ''}" min="0" data-row-index="${rowIndex}" required />
-                    </div>
-                    <div class="col-md-2">
-            `;
-
-            if (currentRowCount > 0) {
-                html += `<button type="button" class="btn btn-sm btn-danger remove-hangar-row" data-row-index="${rowIndex}">
-                            <i class="fa fa-trash"></i>
-                        </button>`;
-            }
-
-            html += `
-                    </div>
-                </div>
-            `;
-
-            container.append(html);
-            currentRowCount++;
+            container.show();
             attachEventListeners();
-            calculateTotalQuantity();
         }
 
-        function removeHangarRow(rowIndex) {
-            $(`.hangar-row[data-row-index="${rowIndex}"]`).remove();
-            currentRowCount--;
-            updateAddButton();
-            calculateTotalQuantity();
-            updateHangarDropdowns();
-        }
-
-        function updateAddButton() {
-            if (currentRowCount < maxRows) {
-                $('#add_hangar_row').show();
-            } else {
-                $('#add_hangar_row').hide();
-            }
-        }
-
-        function updateHangarDropdowns() {
-            var selectedHangars = [];
-
-            $('.hangar-select').each(function() {
-                var value = $(this).val();
-                if (value) {
-                    selectedHangars.push(parseInt(value));
-                }
-            });
-
-            $('.hangar-select').each(function() {
-                var currentValue = $(this).val();
-
-                $(this).find('option').each(function() {
-                    var optionValue = $(this).val();
-                    
-                    if (optionValue && selectedHangars.includes(parseInt(optionValue)) && parseInt(optionValue) !== parseInt(currentValue)) {
-                        $(this).attr('disabled', 'disabled');
-                    } else if (optionValue === '') {
-                        $(this).removeAttr('disabled');
-                    } else {
-                        $(this).removeAttr('disabled');
-                    }
-                });
-            });
-        }
-
+        // Attach event listeners for quantity inputs
         function attachEventListeners() {
-            $(document).off('change keyup', '.hangar-quantity').on('change keyup', '.hangar-quantity', function() {
-                calculateTotalQuantity();
-            });
-
-            $(document).off('change', '.hangar-select').on('change', '.hangar-select', function() {
-                updateHangarDropdowns();
-            });
-
-            $(document).off('click', '.remove-hangar-row').on('click', '.remove-hangar-row', function(e) {
-                e.preventDefault();
-                var rowIndex = $(this).data('row-index');
-                removeHangarRow(rowIndex);
+            $(document).off('change keyup', '.hangar-quantity-input').on('change keyup', '.hangar-quantity-input', function() {
+                // Do not calculate total - use manual entry
             });
         }
 
-        function calculateTotalQuantity() {
-            var total = 0;
-            $('.hangar-quantity').each(function() {
-                var qty = parseInt($(this).val()) || 0;
-                total += qty;
-            });
-            $('#total_quantity').val(total);
-        }
-
-        $(document).on('click', '#add_hangar_row', function(e) {
-            e.preventDefault();
-            addHangarRow(allHangars);
-        });
-
+        // When farm changes, reload hangars
         $('#farm_id').on('change', function() {
             var farmId = $(this).val();
             loadHangarsForFarm(farmId);
         });
 
+        // On page load (edit mode), load hangars if farm is selected
         @if(isset($materialStock))
             var farmId = $('#farm_id').val();
             if (farmId) {
@@ -327,50 +235,50 @@
             }
         @endif
 
+        // Form validation on submit
         $('#material_stock_form').on('submit', function(e) {
             var selectedHangars = [];
-            var totalQty = 0;
             var hasError = false;
 
-            $('.hangar-row').each(function() {
-                var hangarId = $(this).find('.hangar-select').val();
-                var quantity = parseInt($(this).find('.hangar-quantity').val()) || 0;
+            $('.hangar-quantity-input').each(function() {
+                var hangarId = $(this).data('hangar-id');
+                var quantity = parseInt($(this).val()) || 0;
+                var remainingQty = parseInt($('input[name="hangar_remaining_qty[' + hangarId + ']"]').val()) || 0;
 
-                if (!hangarId) {
-                    e.preventDefault();
-                    alert('Please select a hangar for each row.');
-                    hasError = true;
-                    return false;
+                if (quantity > 0) {
+                    selectedHangars.push({ 
+                        hangar_id: hangarId, 
+                        quantity: quantity,
+                        remaining_quantity: remainingQty 
+                    });
                 }
-
-                if (quantity <= 0) {
-                    e.preventDefault();
-                    alert('Please enter a quantity greater than 0 for each hangar.');
-                    hasError = true;
-                    return false;
-                }
-
-                if (selectedHangars.some(h => h.hangar_id == hangarId)) {
-                    e.preventDefault();
-                    alert('Duplicate hangars are not allowed. Each hangar can only be selected once.');
-                    hasError = true;
-                    return false;
-                }
-
-                selectedHangars.push({ hangar_id: hangarId, quantity: quantity });
-                totalQty += quantity;
             });
-
-            if (hasError) {
-                return false;
-            }
 
             if (selectedHangars.length === 0) {
                 e.preventDefault();
-                alert('Please select at least one hangar with quantity.');
+                swal({
+                    title: 'Validation Error',
+                    text: 'Please select at least one hangar with quantity.',
+                    icon: 'warning',
+                    button: 'OK'
+                });
                 return false;
             }
 
+            // Validate quantity is entered
+            var qty = parseInt($('#quantity').val());
+            if (!qty || qty < 1) {
+                e.preventDefault();
+                swal({
+                    title: 'Validation Error',
+                    text: 'Please enter a valid total quantity.',
+                    icon: 'warning',
+                    button: 'OK'
+                });
+                return false;
+            }
+
+            // Store hangar data for submission - this will be sent as JSON
             $('#hangar_quantities_json').val(JSON.stringify(selectedHangars));
         });
     });

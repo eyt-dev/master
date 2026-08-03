@@ -31,27 +31,29 @@
             </div>
         </div>
 
-        <!-- Farm Dropdown -->
+        <!-- Flock Dropdown -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="farm_id" class="form-label">Farm <span class="text-red">*</span></label>
-                <select class="form-control" name="farm_id" id="farm_id" required="">
-                    <option value="">Select Farm</option>
-                    @foreach($farms as $farm)
-                        <option value="{{ $farm->id }}" {{ old('farm_id', $dailyRecord->farm_id ?? '') == $farm->id ? 'selected' : '' }}>
-                            {{ $farm->name }}
-                        </option>
-                    @endforeach
+                <label for="flock_id" class="form-label">Flock <span class="text-red">*</span></label>
+                <select class="form-control" name="flock_id" id="flock_id" required="">
+                    <option value="">Select Flock</option>
+                    @if(isset($flocks))
+                        @foreach($flocks as $flock)
+                            <option value="{{ $flock['id'] }}" {{ old('flock_id', $dailyRecord->flock_id ?? '') == $flock['id'] ? 'selected' : '' }}>
+                                {{ $flock['label'] }}
+                            </option>
+                        @endforeach
+                    @endif
                 </select>
-                @error('farm_id')
-                    <label id="farm_id-error" class="error" for="farm_id">{{ $message }}</label>
+                @error('flock_id')
+                    <label id="flock_id-error" class="error" for="flock_id">{{ $message }}</label>
                 @enderror
             </div>
         </div>
     </div>
 
     <div class="row">
-        <!-- Hangar Dropdown (Cascading) -->
+        <!-- Hangar Dropdown (Cascading from Flock) -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="hangar_id" class="form-label">Hangar <span class="text-red">*</span></label>
@@ -132,14 +134,14 @@
 
 <script>
     $(document).ready(function() {
-        // Load hangars when farm is selected
-        $('#farm_id').on('change', function() {
-            var farmId = $(this).val();
+        // Load hangars when flock is selected
+        $('#flock_id').on('change', function() {
+            var flockId = $(this).val();
             $('#hangar_id').html('<option value="">Select Hangar</option>');
             
-            if (farmId) {
+            if (flockId) {
                 $.ajax({
-                    url: "{{ route('daily-record.hangars-by-farm', ['username' => $siteSlug, 'farm' => ':farm']) }}".replace(':farm', farmId),
+                    url: "{{ route('daily-record.hangars-by-flock', ['username' => $siteSlug, 'flock' => ':flock']) }}".replace(':flock', flockId),
                     type: 'GET',
                     success: function(hangars) {
                         hangars.forEach(function(hangar) {

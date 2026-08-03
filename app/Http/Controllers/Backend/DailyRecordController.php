@@ -31,11 +31,13 @@ class DailyRecordController extends Controller
                 })
                 ->map(function($group) {
                     $firstRecord = $group->first();
+                    $flockLabel = $firstRecord->flock ? \App\Helpers\FlockHelper::getFlockLabel($firstRecord->flock) : 'N/A';
+                    
                     return [
                         'id' => $firstRecord->id,
                         'record_date' => $firstRecord->record_date,
                         'flock_id' => $firstRecord->flock_id,
-                        'flock_label' => \App\Helpers\FlockHelper::getFlockLabel($firstRecord->flock),
+                        'flock_label' => $flockLabel,
                         'farm' => $firstRecord->farm->name ?? 'N/A',
                         'created_by' => $firstRecord->creator->name ?? 'N/A',
                         'created_at' => $firstRecord->created_at,

@@ -10,14 +10,18 @@ class FlockHelper
      * Generate flock label in format: farm-breed-date (lowercase, no spaces)
      * Example: mytestfarm-ross308-20260803
      * 
-     * @param Flock $flock
+     * @param Flock|null $flock
      * @return string
      */
-    public static function getFlockLabel(Flock $flock): string
+    public static function getFlockLabel(?Flock $flock): string
     {
-        $farmName = strtolower(str_replace(' ', '', $flock->farm->name));
-        $breed = strtolower(str_replace(' ', '', $flock->breed));
-        $startDate = $flock->start_date->format('Ymd');
+        if (!$flock) {
+            return 'N/A';
+        }
+        
+        $farmName = strtolower(str_replace(' ', '', $flock->farm->name ?? ''));
+        $breed = strtolower(str_replace(' ', '', $flock->breed ?? ''));
+        $startDate = $flock->start_date ? $flock->start_date->format('Ymd') : '';
         
         return "{$farmName}-{$breed}-{$startDate}";
     }

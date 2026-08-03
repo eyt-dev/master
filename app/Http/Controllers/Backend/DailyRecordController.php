@@ -9,6 +9,7 @@ use App\Models\DailyRecord;
 use App\Models\Farm;
 use App\Models\Hangar;
 use App\Models\Flock;
+use App\Models\FlockHangar;
 use App\Models\Admin;
 use Illuminate\Support\Facades\Session;
 
@@ -17,36 +18,110 @@ class DailyRecordController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = DailyRecord::with('farm', 'hangar', 'creator')
+            // Get unique flock/date combinations
+            $data = DailyRecord::with('farm', 'flock', 'creator')
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                     $query->where('created_by', auth()->id());
                 })
-                ->orderBy('created_at', 'desc')->get();
+                ->orderBy('record_date', 'desc')
+                ->orderBy('flock_id', 'desc')
+                ->get()
+                ->groupBy(function($record) {
+                    return $record->flock_id . '_' . $record->record_date;
+                })
+                ->map(function($group) {
+                    $firstRecord = $group->first();
+                    return [
+                        'id' => $firstRecord->id,
+                        'record_date' => $firstRecord->record_date,
+                        'flock_id' => $firstRecord->flock_id,
+                        'flock_label' => \App\Helpers\FlockHelper::getFlockLabel($firstRecord->flock),
+                        'farm' => $firstRecord->farm->name ?? 'N/A',
+                        'created_by' => $firstRecord->creator->name ?? 'N/A',
+                        'created_at' => $firstRecord->created_at,
+                        'hangars' => $group->map(function($record) {
+                            return [
+                                'hangar_id' => $record->hangar_id,
+                                'hangar_name' => $record->hangar->name ?? 'N/A',
+                                'feed_kg' => $record->feed_kg,
+                                'eggs_tray_30' => $record->eggs_tray_30,
+                                'eggs_count' => $record->eggs_count,
+                                'mortality' => $record->mortality
+                            ];
+                        })->sortBy('hangar_name')->values()
+                    ];
+                })
+                ->values();
+
             return datatables()->of($data)
                 ->addColumn('record_date', function($row) {
-                    return date('Y-m-d', strtotime($row->record_date));
+                    return date('Y-m-d', strtotime($row['record_date']));
+                })
+                ->addColumn('flock', function($row) {
+                    return $row['flock_label'];
                 })
                 ->addColumn('farm', function($row) {
-                    return $row->farm->name ?? 'N/A';
-                })
-                ->addColumn('hangar', function($row) {
-                    return $row->hangar->name ?? 'N/A';
+                    return $row['farm'];
                 })
                 ->addColumn('created_by', function($row) {
-                    return $row->creator->name ?? 'N/A';
+                    return $row['created_by'];
                 })
                 ->addColumn('created_at', function($row) {
-                    return date('Y-m-d', strtotime($row->created_at));
+                    return date('Y-m-d', strtotime($row['created_at']));
+                })
+                ->addColumn('hangar1', function($row) {
+                    return $this->formatHangarData($row, 0);
+                })
+                ->addColumn('hangar2', function($row) {
+                    return $this->formatHangarData($row, 1);
+                })
+                ->addColumn('hangar3', function($row) {
+                    return $this->formatHangarData($row, 2);
+                })
+                ->addColumn('hangar4', function($row) {
+                    return $this->formatHangarData($row, 3);
+                })
+                ->addColumn('hangar5', function($row) {
+                    return $this->formatHangarData($row, 4);
+                })
+                ->addColumn('hangar6', function($row) {
+                    return $this->formatHangarData($row, 5);
+                })
+                ->addColumn('hangar7', function($row) {
+                    return $this->formatHangarData($row, 6);
+                })
+                ->addColumn('hangar8', function($row) {
+                    return $this->formatHangarData($row, 7);
+                })
+                ->addColumn('hangar9', function($row) {
+                    return $this->formatHangarData($row, 8);
+                })
+                ->addColumn('hangar10', function($row) {
+                    return $this->formatHangarData($row, 9);
                 })
                 ->addColumn('action', function($row) {
-                    return '<a class="edit-daily-record btn btn-sm btn-success mr-1" data-id="'.$row->id.'" data-path="'.route('daily-record.edit', ['username' => request()->segment(1), 'daily_record' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
-                         .'<a class="delete-daily-record btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
+                    return '<a class="edit-daily-record btn btn-sm btn-success mr-1" data-id="'.$row['id'].'" data-path="'.route('daily-record.edit', ['username' => request()->segment(1), 'daily_record' => $row['id']]).'" title="Edit"><i class="fa fa-edit"></i></a>'
+                         .'<a class="delete-daily-record btn btn-sm btn-danger" data-id="'.$row['id'].'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action'])   
+                ->rawColumns(['action', 'hangar1', 'hangar2', 'hangar3', 'hangar4', 'hangar5', 'hangar6', 'hangar7', 'hangar8', 'hangar9', 'hangar10'])   
                 ->make(true);
         }
         return view('backend.daily-record.index');
+    }
+
+    private function formatHangarData($row, $index)
+    {
+        if (!isset($row['hangars'][$index])) {
+            return 'N/A';
+        }
+        
+        $hangar = $row['hangars'][$index];
+        return '<strong>' . $hangar['hangar_name'] . '</strong><br>' .
+               'Feed: ' . $hangar['feed_kg'] . ' kg<br>' .
+               'Eggs(T): ' . $hangar['eggs_tray_30'] . '<br>' .
+               'Eggs(C): ' . $hangar['eggs_count'] . '<br>' .
+               'Mortality: ' . $hangar['mortality'];
     }
 
     public function create()
@@ -60,14 +135,19 @@ class DailyRecordController extends Controller
         $flockId = (int) $flockId;
         $flock = Flock::findOrFail($flockId);
         
-        $hangars = Hangar::where('farm_id', $flock->farm_id)
-            ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
-                $query->where('created_by', auth()->id());
-            })
-            ->select('id', 'name')
-            ->get();
+        // Get hangars allocated to this flock via FlockHangar
+        $flockHangars = \App\Models\FlockHangar::where('flock_id', $flockId)
+            ->with('hangar')
+            ->get()
+            ->map(function($allocation) {
+                return [
+                    'id' => $allocation->hangar->id,
+                    'name' => $allocation->hangar->name,
+                    'quantity' => $allocation->quantity
+                ];
+            });
         
-        return response()->json($hangars);
+        return response()->json($flockHangars);
     }
 
     public function store(Request $request, $siteUrl)
@@ -75,29 +155,34 @@ class DailyRecordController extends Controller
         $request->validate([
             'record_date' => 'required|date',
             'flock_id' => 'required|exists:flocks,id',
-            'hangar_id' => 'required|exists:hangars,id',
-            'feed_kg' => 'required|numeric|min:0',
-            'eggs_tray_30' => 'required|integer|min:0',
-            'eggs_count' => 'required|integer|min:0',
-            'mortality' => 'required|integer|min:0',
+            'hangar_records' => 'required|json',
         ]);
 
         // Get farm_id from the selected flock
         $flock = Flock::findOrFail($request->flock_id);
+        
+        $hangarRecords = json_decode($request->hangar_records, true);
+        
+        if (empty($hangarRecords)) {
+            return back()->withErrors(['hangar_records' => 'Please add at least one hangar record.']);
+        }
 
-        DailyRecord::create([
-            'record_date' => $request->record_date,
-            'farm_id' => $flock->farm_id,
-            'hangar_id' => $request->hangar_id,
-            'flock_id' => $request->flock_id,
-            'feed_kg' => $request->feed_kg,
-            'eggs_tray_30' => $request->eggs_tray_30,
-            'eggs_count' => $request->eggs_count,
-            'mortality' => $request->mortality,
-            'created_by' => auth()->id()
-        ]);
+        // Create daily records for each hangar
+        foreach ($hangarRecords as $record) {
+            DailyRecord::create([
+                'record_date' => $request->record_date,
+                'farm_id' => $flock->farm_id,
+                'hangar_id' => $record['hangar_id'],
+                'flock_id' => $request->flock_id,
+                'feed_kg' => $record['feed_kg'] ?? 0,
+                'eggs_tray_30' => $record['eggs_tray_30'] ?? 0,
+                'eggs_count' => $record['eggs_count'] ?? 0,
+                'mortality' => $record['mortality'] ?? 0,
+                'created_by' => auth()->id()
+            ]);
+        }
 
-        Session::flash('successMsg', 'Daily Record created successfully.');
+        Session::flash('successMsg', 'Daily Records created successfully.');
         return redirect()->route('daily-record.index', ['username' => request()->segment(1)]);
     }
 
@@ -105,9 +190,26 @@ class DailyRecordController extends Controller
     {
         $dailyRecord = DailyRecord::findOrFail($id);
         $flocks = FlockHelper::getAllFlockOptions();
-        $hangars = Hangar::where('farm_id', $dailyRecord->farm_id)->get();
         
-        return view('backend.daily-record.create', compact('dailyRecord', 'flocks', 'hangars'));
+        // Get all hangars for the selected flock
+        $flockHangars = \App\Models\FlockHangar::where('flock_id', $dailyRecord->flock_id)
+            ->with('hangar')
+            ->get()
+            ->map(function($allocation) {
+                return [
+                    'id' => $allocation->hangar->id,
+                    'name' => $allocation->hangar->name,
+                    'quantity' => $allocation->quantity
+                ];
+            });
+        
+        // Get all existing daily records for this flock on this date to populate form
+        $existingRecords = DailyRecord::where('flock_id', $dailyRecord->flock_id)
+            ->where('record_date', $dailyRecord->record_date)
+            ->get()
+            ->keyBy('hangar_id');
+        
+        return view('backend.daily-record.create', compact('dailyRecord', 'flocks', 'flockHangars', 'existingRecords'));
     }
 
     public function update(Request $request, $siteUrl, $id)
@@ -115,27 +217,55 @@ class DailyRecordController extends Controller
         $request->validate([
             'record_date' => 'required|date',
             'flock_id' => 'required|exists:flocks,id',
-            'hangar_id' => 'required|exists:hangars,id',
-            'feed_kg' => 'required|numeric|min:0',
-            'eggs_tray_30' => 'required|integer|min:0',
-            'eggs_count' => 'required|integer|min:0',
-            'mortality' => 'required|integer|min:0',
+            'hangar_records' => 'required|json',
         ]);
 
         // Get farm_id from the selected flock
         $flock = Flock::findOrFail($request->flock_id);
+        
+        $hangarRecords = json_decode($request->hangar_records, true);
+        
+        if (empty($hangarRecords)) {
+            return back()->withErrors(['hangar_records' => 'Please add at least one hangar record.']);
+        }
 
         $dailyRecord = DailyRecord::findOrFail($id);
-        $dailyRecord->update([
-            'record_date' => $request->record_date,
-            'farm_id' => $flock->farm_id,
-            'hangar_id' => $request->hangar_id,
-            'flock_id' => $request->flock_id,
-            'feed_kg' => $request->feed_kg,
-            'eggs_tray_30' => $request->eggs_tray_30,
-            'eggs_count' => $request->eggs_count,
-            'mortality' => $request->mortality,
-        ]);
+        
+        // Delete old records for this flock on this date
+        DailyRecord::where('flock_id', $request->flock_id)
+            ->where('record_date', $request->record_date)
+            ->where('id', '!=', $id)
+            ->delete();
+
+        // Update or create records for each hangar
+        foreach ($hangarRecords as $index => $record) {
+            if ($index === 0) {
+                // Update the first (main) record
+                $dailyRecord->update([
+                    'record_date' => $request->record_date,
+                    'farm_id' => $flock->farm_id,
+                    'hangar_id' => $record['hangar_id'],
+                    'flock_id' => $request->flock_id,
+                    'feed_kg' => $record['feed_kg'] ?? 0,
+                    'eggs_tray_30' => $record['eggs_tray_30'] ?? 0,
+                    'eggs_count' => $record['eggs_count'] ?? 0,
+                    'mortality' => $record['mortality'] ?? 0,
+                ]);
+            } else {
+                // Create additional records
+                DailyRecord::create([
+                    'record_date' => $request->record_date,
+                    'farm_id' => $flock->farm_id,
+                    'hangar_id' => $record['hangar_id'],
+                    'flock_id' => $request->flock_id,
+                    'feed_kg' => $record['feed_kg'] ?? 0,
+                    'eggs_tray_30' => $record['eggs_tray_30'] ?? 0,
+                    'eggs_count' => $record['eggs_count'] ?? 0,
+                    'mortality' => $record['mortality'] ?? 0,
+                    'created_by' => auth()->id()
+                ]);
+            }
+        }
 
         Session::flash('successMsg', 'Daily Record updated successfully.');
         return redirect()->route('daily-record.index', ['username' => request()->segment(1)]);

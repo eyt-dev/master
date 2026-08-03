@@ -53,74 +53,20 @@
     </div>
 
     <div class="row">
-        <!-- Hangar Dropdown (Cascading from Flock) -->
-        <div class="col-sm-6 col-md-6">
+        <!-- Hangar List with Input Fields -->
+        <div class="col-sm-12 col-md-12">
             <div class="form-group">
-                <label for="hangar_id" class="form-label">Hangar <span class="text-red">*</span></label>
-                <select class="form-control" name="hangar_id" id="hangar_id" required="">
-                    <option value="">Select Hangar</option>
-                    @if(isset($hangars))
-                        @foreach($hangars as $hangar)
-                            <option value="{{ $hangar->id }}" {{ old('hangar_id', $dailyRecord->hangar_id ?? '') == $hangar->id ? 'selected' : '' }}>
-                                {{ $hangar->name }}
-                            </option>
-                        @endforeach
-                    @endif
-                </select>
-                @error('hangar_id')
-                    <label id="hangar_id-error" class="error" for="hangar_id">{{ $message }}</label>
-                @enderror
-            </div>
-        </div>
+                <label class="form-label">Hangar Details <span class="text-red">*</span></label>
+                <small class="form-text text-muted d-block mb-3">Enter details for each hangar allocated to this flock.</small>
+                
+                <div id="hangars_container" class="bg-light rounded-lg p-0" style="border: 1px solid #dee2e6; background-color: #f8f9fa !important; display: none;">
+                    <!-- Hangar rows will be generated here -->
+                </div>
 
-        <!-- Feed (Kg) -->
-        <div class="col-sm-6 col-md-6">
-            <div class="form-group">
-                <label for="feed_kg" class="form-label">Feed (Kg) <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="feed_kg" id="feed_kg" placeholder="Feed in Kg" 
-                    value="{{ old('feed_kg', $dailyRecord->feed_kg ?? '') }}" required="" step="0.01" min="0" />
-                @error('feed_kg')
-                    <label id="feed_kg-error" class="error" for="feed_kg">{{ $message }}</label>
-                @enderror
-            </div>
-        </div>
-    </div>
+                <p id="no_hangars_message" class="text-warning">Please select a flock first to see allocated hangars.</p>
 
-    <div class="row">
-        <!-- Eggs (Tray 30) -->
-        <div class="col-sm-6 col-md-6">
-            <div class="form-group">
-                <label for="eggs_tray_30" class="form-label">Eggs (Tray 30) <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="eggs_tray_30" id="eggs_tray_30" placeholder="Eggs in Trays of 30" 
-                    value="{{ old('eggs_tray_30', $dailyRecord->eggs_tray_30 ?? '') }}" required="" min="0" />
-                @error('eggs_tray_30')
-                    <label id="eggs_tray_30-error" class="error" for="eggs_tray_30">{{ $message }}</label>
-                @enderror
-            </div>
-        </div>
-
-        <!-- Eggs (Eggs Count) -->
-        <div class="col-sm-6 col-md-6">
-            <div class="form-group">
-                <label for="eggs_count" class="form-label">Eggs (Eggs) <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="eggs_count" id="eggs_count" placeholder="Eggs Count" 
-                    value="{{ old('eggs_count', $dailyRecord->eggs_count ?? '') }}" required="" min="0" />
-                @error('eggs_count')
-                    <label id="eggs_count-error" class="error" for="eggs_count">{{ $message }}</label>
-                @enderror
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- Mortality -->
-        <div class="col-sm-6 col-md-6">
-            <div class="form-group">
-                <label for="mortality" class="form-label">Mortality <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="mortality" id="mortality" placeholder="Mortality Count" 
-                    value="{{ old('mortality', $dailyRecord->mortality ?? '') }}" required="" min="0" />
-                @error('mortality')
-                    <label id="mortality-error" class="error" for="mortality">{{ $message }}</label>
+                @error('hangar_records')
+                    <label id="hangar_records-error" class="error" for="hangar_records">{{ $message }}</label>
                 @enderror
             </div>
         </div>
@@ -134,22 +80,141 @@
 
 <script>
     $(document).ready(function() {
+        // Existing records data for edit mode
+        var existingRecordsData = @json(isset($existingRecords) ? $existingRecords : []);
+        
         // Load hangars when flock is selected
         $('#flock_id').on('change', function() {
             var flockId = $(this).val();
-            $('#hangar_id').html('<option value="">Select Hangar</option>');
+            var container = $('#hangars_container');
+            var noHangarsMsg = $('#no_hangars_message');
+            
+            container.html('');
+            container.hide();
+            noHangarsMsg.hide();
             
             if (flockId) {
                 $.ajax({
                     url: "{{ route('daily-record.hangars-by-flock', ['username' => $siteSlug, 'flock' => ':flock']) }}".replace(':flock', flockId),
                     type: 'GET',
                     success: function(hangars) {
-                        hangars.forEach(function(hangar) {
-                            $('#hangar_id').append('<option value="' + hangar.id + '">' + hangar.name + '</option>');
+                        if (hangars.length === 0) {
+                            noHangarsMsg.show().text('No hangars allocated to this flock.');
+                            container.hide();
+                            return;
+                        }
+                        
+                        hangars.forEach(function(hangar, index) {
+                            // Get existing data if in edit mode
+                            var existingData = existingRecordsData[hangar.id] || {};
+                            var feedValue = existingData.feed_kg || '';
+                            var eggsTraySValue = existingData.eggs_tray_30 || '';
+                            var eggsCountValue = existingData.eggs_count || '';
+                            var mortalityValue = existingData.mortality || '';
+                            
+                            var html = `
+                                <div class="hangar-record-row p-3" style="border-bottom: 1px solid #dee2e6;" data-hangar-id="${hangar.id}">
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <h6 class="mb-0" style="color: #007bff;">
+                                                <i class="fe fe-home mr-2"></i>${hangar.name} (Allocated: ${hangar.quantity})
+                                            </h6>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group mb-0">
+                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Feed (Kg)</label>
+                                                <input type="number" class="form-control feed-input" name="hangar_feed[${hangar.id}]" 
+                                                    value="${feedValue}" placeholder="0.00" step="0.01" min="0" data-hangar-id="${hangar.id}" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group mb-0">
+                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Eggs (Tray 30)</label>
+                                                <input type="number" class="form-control eggs-tray-input" name="hangar_eggs_tray[${hangar.id}]" 
+                                                    value="${eggsTraySValue}" placeholder="0" min="0" data-hangar-id="${hangar.id}" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group mb-0">
+                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Eggs (Eggs)</label>
+                                                <input type="number" class="form-control eggs-count-input" name="hangar_eggs_count[${hangar.id}]" 
+                                                    value="${eggsCountValue}" placeholder="0" min="0" data-hangar-id="${hangar.id}" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group mb-0">
+                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Mortality</label>
+                                                <input type="number" class="form-control mortality-input" name="hangar_mortality[${hangar.id}]" 
+                                                    value="${mortalityValue}" placeholder="0" min="0" data-hangar-id="${hangar.id}" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            container.append(html);
                         });
+                        
+                        container.show();
+                        noHangarsMsg.hide();
+                    },
+                    error: function() {
+                        noHangarsMsg.show().text('Error loading hangars.');
+                        container.hide();
                     }
                 });
+            } else {
+                noHangarsMsg.show().text('Please select a flock first to see allocated hangars.');
             }
         });
+
+        // Form submission
+        $('#daily_record_form').on('submit', function(e) {
+            var container = $('#hangars_container');
+            var hangarRecords = [];
+            
+            container.find('.hangar-record-row').each(function() {
+                var hangarId = $(this).data('hangar-id');
+                var feedKg = parseFloat($(this).find('.feed-input').val()) || 0;
+                var eggsTray = parseInt($(this).find('.eggs-tray-input').val()) || 0;
+                var eggsCount = parseInt($(this).find('.eggs-count-input').val()) || 0;
+                var mortality = parseInt($(this).find('.mortality-input').val()) || 0;
+                
+                hangarRecords.push({
+                    hangar_id: hangarId,
+                    feed_kg: feedKg,
+                    eggs_tray_30: eggsTray,
+                    eggs_count: eggsCount,
+                    mortality: mortality
+                });
+            });
+            
+            if (hangarRecords.length === 0) {
+                e.preventDefault();
+                swal({
+                    title: 'Validation Error',
+                    text: 'Please select a flock and enter hangar details.',
+                    icon: 'warning',
+                    button: 'OK'
+                });
+                return false;
+            }
+            
+            // Store hangar records as JSON
+            $('<input>').attr({
+                type: 'hidden',
+                name: 'hangar_records',
+                value: JSON.stringify(hangarRecords)
+            }).appendTo('#daily_record_form');
+        });
+
+        // Trigger flock loading on page load if in edit mode
+        @if(isset($dailyRecord) && isset($flockHangars))
+            var flockId = $('#flock_id').val();
+            if (flockId) {
+                $('#flock_id').trigger('change');
+            }
+        @endif
     });
 </script>

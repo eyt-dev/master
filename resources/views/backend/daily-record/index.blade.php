@@ -54,12 +54,18 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Record Date</th>
+                                    <th>Flock</th>
                                     <th>Farm</th>
-                                    <th>Hangar</th>
-                                    <th>Feed (Kg)</th>
-                                    <th>Eggs (Tray 30)</th>
-                                    <th>Eggs (Eggs)</th>
-                                    <th>Mortality</th>
+                                    <th>Hangar 1</th>
+                                    <th>Hangar 2</th>
+                                    <th>Hangar 3</th>
+                                    <th>Hangar 4</th>
+                                    <th>Hangar 5</th>
+                                    <th>Hangar 6</th>
+                                    <th>Hangar 7</th>
+                                    <th>Hangar 8</th>
+                                    <th>Hangar 9</th>
+                                    <th>Hangar 10</th>
                                     <th>Created By</th>
                                     <th>Created At</th>
                                     <th>Action</th>
@@ -125,12 +131,18 @@
             columns: [
                 { data: 'id', name: 'id' },
                 { data: 'record_date', name: 'record_date' },
+                { data: 'flock', name: 'flock' },
                 { data: 'farm', name: 'farm' },
-                { data: 'hangar', name: 'hangar' },
-                { data: 'feed_kg', name: 'feed_kg' },
-                { data: 'eggs_tray_30', name: 'eggs_tray_30' },
-                { data: 'eggs_count', name: 'eggs_count' },
-                { data: 'mortality', name: 'mortality' },
+                { data: 'hangar1', name: 'hangar1', orderable: false, searchable: false },
+                { data: 'hangar2', name: 'hangar2', orderable: false, searchable: false },
+                { data: 'hangar3', name: 'hangar3', orderable: false, searchable: false },
+                { data: 'hangar4', name: 'hangar4', orderable: false, searchable: false },
+                { data: 'hangar5', name: 'hangar5', orderable: false, searchable: false },
+                { data: 'hangar6', name: 'hangar6', orderable: false, searchable: false },
+                { data: 'hangar7', name: 'hangar7', orderable: false, searchable: false },
+                { data: 'hangar8', name: 'hangar8', orderable: false, searchable: false },
+                { data: 'hangar9', name: 'hangar9', orderable: false, searchable: false },
+                { data: 'hangar10', name: 'hangar10', orderable: false, searchable: false },
                 { data: 'created_by' },
                 { data: 'created_at', name: 'created_at' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
@@ -178,5 +190,6 @@
                 }, false);
             });
         }
+    </script>
     </script>
 @endsection

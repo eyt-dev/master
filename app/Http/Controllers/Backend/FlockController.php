@@ -17,7 +17,7 @@ class FlockController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Flock::with('farm', 'chicksSupplier', 'creator')
+            $data = Flock::with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar')
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                     $query->where('created_by', auth()->id());
                 })
@@ -37,6 +37,46 @@ class FlockController extends Controller
                 })
                 ->addColumn('created_at', function($row) {
                     return date('Y-m-d', strtotime($row->created_at));
+                })
+                ->addColumn('hangar1', function($row) {
+                    $allocations = $row->flockHangarAllocations;
+                    return isset($allocations[0]) ? $allocations[0]->hangar->name . '-' . $allocations[0]->quantity : 'N/A';
+                })
+                ->addColumn('hangar2', function($row) {
+                    $allocations = $row->flockHangarAllocations;
+                    return isset($allocations[1]) ? $allocations[1]->hangar->name . '-' . $allocations[1]->quantity : 'N/A';
+                })
+                ->addColumn('hangar3', function($row) {
+                    $allocations = $row->flockHangarAllocations;
+                    return isset($allocations[2]) ? $allocations[2]->hangar->name . '-' . $allocations[2]->quantity : 'N/A';
+                })
+                ->addColumn('hangar4', function($row) {
+                    $allocations = $row->flockHangarAllocations;
+                    return isset($allocations[3]) ? $allocations[3]->hangar->name . '-' . $allocations[3]->quantity : 'N/A';
+                })
+                ->addColumn('hangar5', function($row) {
+                    $allocations = $row->flockHangarAllocations;
+                    return isset($allocations[4]) ? $allocations[4]->hangar->name . '-' . $allocations[4]->quantity : 'N/A';
+                })
+                ->addColumn('hangar6', function($row) {
+                    $allocations = $row->flockHangarAllocations;
+                    return isset($allocations[5]) ? $allocations[5]->hangar->name . '-' . $allocations[5]->quantity : 'N/A';
+                })
+                ->addColumn('hangar7', function($row) {
+                    $allocations = $row->flockHangarAllocations;
+                    return isset($allocations[6]) ? $allocations[6]->hangar->name . '-' . $allocations[6]->quantity : 'N/A';
+                })
+                ->addColumn('hangar8', function($row) {
+                    $allocations = $row->flockHangarAllocations;
+                    return isset($allocations[7]) ? $allocations[7]->hangar->name . '-' . $allocations[7]->quantity : 'N/A';
+                })
+                ->addColumn('hangar9', function($row) {
+                    $allocations = $row->flockHangarAllocations;
+                    return isset($allocations[8]) ? $allocations[8]->hangar->name . '-' . $allocations[8]->quantity : 'N/A';
+                })
+                ->addColumn('hangar10', function($row) {
+                    $allocations = $row->flockHangarAllocations;
+                    return isset($allocations[9]) ? $allocations[9]->hangar->name . '-' . $allocations[9]->quantity : 'N/A';
                 })
                 ->addColumn('action', function($row) {
                     return '<a class="edit-flock btn btn-sm btn-success mr-1" data-path="'.route('flock.edit', ['username' => request()->segment(1), 'flock' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
@@ -103,6 +143,7 @@ class FlockController extends Controller
             'chicks_supplier_id' => 'required|exists:chicks_suppliers,id',
             'breed' => 'required|string',
             'start_date' => 'required|date',
+            'total_quantity' => 'required|numeric|min:1',
             'hangar_quantities_json' => 'required|json',
         ]);
 
@@ -129,15 +170,12 @@ class FlockController extends Controller
             return back()->withErrors(['hangar_quantities_json' => 'Duplicate hangars are not allowed. Each hangar can only be selected once.']);
         }
 
-        // Calculate total quantity from hangar allocations
-        $totalQuantity = collect($hangarQuantities)->sum('quantity');
-
         $flock = Flock::create([
             'farm_id' => $request->farm_id,
             'chicks_supplier_id' => $request->chicks_supplier_id,
             'breed' => $request->breed,
             'start_date' => $request->start_date,
-            'total_quantity' => $totalQuantity,
+            'total_quantity' => $request->total_quantity,
             'created_by' => auth()->id()
         ]);
 
@@ -177,6 +215,7 @@ class FlockController extends Controller
             'chicks_supplier_id' => 'required|exists:chicks_suppliers,id',
             'breed' => 'required|string',
             'start_date' => 'required|date',
+            'total_quantity' => 'required|numeric|min:1',
             'hangar_quantities_json' => 'required|json',
         ]);
 
@@ -206,15 +245,12 @@ class FlockController extends Controller
             return back()->withErrors(['hangar_quantities_json' => 'Duplicate hangars are not allowed. Each hangar can only be selected once.']);
         }
 
-        // Calculate total quantity from hangar allocations
-        $totalQuantity = collect($hangarQuantities)->sum('quantity');
-
         $flock->update([
             'farm_id' => $request->farm_id,
             'chicks_supplier_id' => $request->chicks_supplier_id,
             'breed' => $request->breed,
             'start_date' => $request->start_date,
-            'total_quantity' => $totalQuantity,
+            'total_quantity' => $request->total_quantity,
         ]);
 
         // Delete old allocations

@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(php -l resources/views/backend/admins/index.blade.php)"
+      "Bash(php -l resources/views/backend/admins/index.blade.php)",
+      "Bash(php -l resources/views/backend/admins/create.blade.php)"
     ]
   }
 }

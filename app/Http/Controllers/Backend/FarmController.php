@@ -21,6 +21,17 @@ class FarmController extends Controller
                 ->addColumn('assigned_admin', function($row) {
                     return $row->assignedAdmin->name ?? 'N/A';
                 })
+                ->addColumn('type', function($row) {
+                    // Define the same label mappings
+                    $typeData = [
+                        'closed_system' => 'Closed System',
+                        'open_system'   => 'Open System',
+                        'cages'         => 'Cages',
+                    ];
+
+                    // Return the readable label if the key exists, otherwise fallback to the raw type or 'N/A'
+                    return $typeData[$row->type] ?? $row->type ?? 'N/A';
+                })
                 ->addColumn('creator', function($row) {
                     return $row->creator->name ?? 'N/A';
                 })
@@ -28,7 +39,7 @@ class FarmController extends Controller
                     return date('Y-m-d', strtotime($row->created_at));
                 })
                 ->addColumn('action', function($row) {
-                    return '<a class="edit-farm btn btn-sm btn-success mr-1" data-path="'.route('farm.edit', ['username' => request()->segment(1),  'farm' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
+                    return '<a class="edit-farm btn btn-sm btn-success mr-1" data-id="'.$row->id.'" data-path="'.route('farm.edit', ['username' => request()->segment(1),  'farm' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
                          .'<a class="delete-farm btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
@@ -46,11 +57,12 @@ class FarmController extends Controller
 
     public function store(Request $request, $siteUrl)
     {
-        $request->validate([
-            'name' => 'required',
+        $validated = $request->validate([
+            'name' => 'required|unique:farms,name',
             'location' => 'required',
             'number_of_hangars' => 'required|numeric|min:1',
             'assigned_to' => 'required',
+            'type' => 'required',
         ]);
 
         $createData = [
@@ -58,9 +70,18 @@ class FarmController extends Controller
             'location' => $request->location,
             'number_of_hangars' => $request->number_of_hangars,
             'assigned_to' => $request->assigned_to,
+            'type' => $request->type,
             'created_by' => auth()->id()
         ];
-        Farm::create($createData);
+        $farm = Farm::create($createData);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Farm created successfully.',
+                'farm' => $farm->load('assignedAdmin', 'creator')
+            ]);
+        }
 
         Session::flash('successMsg', 'Farm created successfully.');
         return redirect()->route('farm.index', ['username' => request()->segment(1)]);
@@ -75,20 +96,31 @@ class FarmController extends Controller
 
     public function update(Request $request, $siteUrl, $id)
     {
-        $request->validate([
-            'name' => 'required',
+        $farm = Farm::findOrFail($id);
+        
+        $validated = $request->validate([
+            'name' => 'required|unique:farms,name,' . $farm->id,
             'location' => 'required',
             'number_of_hangars' => 'required|numeric|min:1',
             'assigned_to' => 'required',
+            'type' => 'required',
         ]);
 
-        $farm = Farm::findOrFail($id);
         $farm->update([
             'name' => $request->name,
             'location' => $request->location,
             'number_of_hangars' => $request->number_of_hangars,
             'assigned_to' => $request->assigned_to,
+            'type' => $request->type,
         ]);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Farm updated successfully.',
+                'farm' => $farm->load('assignedAdmin', 'creator')
+            ]);
+        }
 
         Session::flash('successMsg', 'Farm updated successfully.');
         return redirect()->route('farm.index', ['username' => request()->segment(1)]);

@@ -12,6 +12,7 @@ class Farm extends Model
     protected $fillable = [
         'name',
         'location',
+        'type',
         'number_of_hangars',
         'assigned_to',
         'created_by',

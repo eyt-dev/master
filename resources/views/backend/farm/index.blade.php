@@ -56,6 +56,7 @@
                                     <th>Farm Name</th>
                                     <th>Location</th>
                                     <th>Number of Hangars</th>
+                                    <th>Type</th>
                                     <th>Assigned To</th>
                                     <th>Created By</th>
                                     <th>Created At</th>
@@ -88,7 +89,12 @@
     <script src="{{ URL::asset('assets/plugins/sweet-alert/sweetalert.min.js') }}"></script>
     <script src="{{ URL::asset('assets/plugins/select2/select2.full.min.js') }}"></script>
     <script>
+        var table;
+        var farmId = null;
+        var formAction = null;
+
         $(document).on('click', '#add_new', function() {
+            farmId = null;
             $.ajax({
                 url: "{{ route('farm.create', ['username' => $siteSlug]) }}",
                 type: "GET",
@@ -96,25 +102,107 @@
                     $(".modal-body").html(response);
                     $(".modal-title").html("Add Farm");
                     $("#farm_form_modal").modal('show');
-                    checkValidation();
+                    attachFormHandler();
                 }
             });
         });
         
         $(document).on('click', '.edit-farm', function() {
             var id = $(this).data('id');
+            farmId = id;
             $.ajax({
                 url: $(this).data('path'),
+                type: "GET",
                 success: function(response) {
                     $(".modal-body").html(response);
                     $(".modal-title").html("Update Farm");
                     $("#farm_form_modal").modal('show');
-                    checkValidation();
+                    attachFormHandler();
                 }
             });
         });
+
+        function attachFormHandler() {
+            checkValidation();
+            
+            $(document).off('submit', '#farm_form').on('submit', '#farm_form', function(e) {
+                e.preventDefault();
+                
+                var form = $(this);
+                
+                // Check client-side validation first
+                if (form[0].checkValidity() === false) {
+                    e.stopPropagation();
+                    form.addClass('was-validated');
+                    return false;
+                }
+                
+                var url = farmId 
+                    ? "{{ route('farm.update', ['username' => $siteSlug, 'farm' => ':id']) }}".replace(':id', farmId)
+                    : "{{ route('farm.store', ['username' => $siteSlug]) }}";
+                
+                var method = 'POST';
+
+                $.ajax({
+                    url: url,
+                    type: method,
+                    headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                    data: form.serialize(),
+                    success: function(response) {
+                        if (response.success) {
+                            swal({
+                                title: "Success!",
+                                text: response.message,
+                                icon: "success",
+                                buttons: false,
+                                timer: 2000
+                            });
+                            $("#farm_form_modal").modal('hide');
+                            table.ajax.reload(function() {
+                                table.row(0).node().scrollIntoView();
+                            });
+                        }
+                    },
+                    error: function(response) {
+                        if (response.status === 422) {
+                            var errors = response.responseJSON.errors;
+                            
+                            // Clear previous errors
+                            form.find('.error').remove();
+                            form.find('.form-control').removeClass('is-invalid');
+                            
+                            // Display new errors
+                            $.each(errors, function(field, messages) {
+                                var input = form.find('[name="' + field + '"]');
+                                input.addClass('is-invalid');
+                                input.after('<label class="error" for="' + field + '">' + messages[0] + '</label>');
+                            });
+                        } else {
+                            swal({
+                                title: "Error!",
+                                text: "Something went wrong",
+                                icon: "error"
+                            });
+                        }
+                    }
+                });
+            });
+        }
+
+        function checkValidation() {
+            var forms = document.getElementsByClassName('needs-validation');
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }
         
-        var table = $('#farm_table').DataTable({
+        table = $('#farm_table').DataTable({
             processing: true,
             serverSide: true,
             responsive: true,
@@ -124,6 +212,7 @@
                 { data: 'name', name: 'name' },
                 { data: 'location', name: 'location' },
                 { data: 'number_of_hangars', name: 'number_of_hangars' },
+                { data: 'type', name: 'type' },
                 { data: 'assigned_admin', name: 'assigned_admin' },
                 { data: 'creator' },
                 { data: 'created_at', name: 'created_at' },
@@ -145,32 +234,19 @@
             }, function(willDelete) {
                 if (willDelete) {
                     $.ajax({
-                        type: "get",
+                        type: "GET",
                         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                         url: "{{ route('farm.destroy', ['username' => $siteSlug, 'farm' => ':id']) }}".replace(':id', id),
                         success: function(response) {
                             swal({
                                 title: response.msg
                             }, function(result) {
-                                location.reload();
+                                table.ajax.reload();
                             });
                         }
                     });
                 }
             });
         });
-
-        function checkValidation() {
-            var forms = document.getElementsByClassName('needs-validation');
-            var validation = Array.prototype.filter.call(forms, function(form) {
-                form.addEventListener('submit', function(event) {
-                    if (form.checkValidity() === false) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                }, false);
-            });
-        }
     </script>
 @endsection

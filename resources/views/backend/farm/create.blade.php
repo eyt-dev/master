@@ -1,6 +1,4 @@
 <form 
-    action="{{ isset($farm) && $farm->id ? route('farm.update', ['username' => $siteSlug, 'farm' => $farm->id]) : route('farm.store', ['username' => $siteSlug]) }}" 
-    method="POST" 
     id="farm_form"
     novalidate=""
     class="needs-validation">
@@ -64,10 +62,33 @@
                 @enderror
             </div>
         </div>
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="assigned_to" class="form-label">Type <span class="text-red">*</span></label>
+                @php
+                    $typeData = array(
+                        'closed_system'     =>      'Closed System',
+                        'open_system'       =>      'Open System',
+                        'cages'             =>      'Cages',
+                    );
+                @endphp
+                <select class="form-control" name="type" id="type" required="">
+                    <option value="">Select Type</option>
+                    @foreach($typeData as $key=>$type)
+                    <option value="{{ $key }}" {{ old('type', $farm->type ?? '') == $key ? 'selected' : '' }}>
+                        {{$type}}
+                    </option>
+                    @endforeach
+                </select>
+                @error('type')
+                    <label id="type-error" class="error" for="type">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
     </div>
 
     <div class="card-footer">
-        <button class="btn btn-primary" type="submit">Save</button>
-        <a href="{{ route('farm.index', ['username' => $siteSlug]) }}" class="btn btn-secondary">Cancel</a>
+        <button class="btn btn-primary" type="submit" id="submit_btn">Save</button>
+        <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
     </div>
 </form>

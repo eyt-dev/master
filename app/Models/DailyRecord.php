@@ -18,6 +18,8 @@ class DailyRecord extends Model
         'eggs_tray_30',
         'eggs_count',
         'mortality',
+        'eggs_weight',
+        'chicks_weight',
         'created_by',
     ];
 

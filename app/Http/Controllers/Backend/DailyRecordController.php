@@ -48,6 +48,8 @@ class DailyRecordController extends Controller
                                 'feed_kg' => $record->feed_kg,
                                 'eggs_tray_30' => $record->eggs_tray_30,
                                 'eggs_count' => $record->eggs_count,
+                                'eggs_weight' => $record->eggs_weight,
+                                'chicks_weight' => $record->chicks_weight,
                                 'mortality' => $record->mortality
                             ];
                         })->sortBy('hangar_name')->values()
@@ -119,10 +121,16 @@ class DailyRecordController extends Controller
         }
         
         $hangar = $row['hangars'][$index];
+        $feedKg = number_format((float) $hangar['feed_kg'], 2, ',', '.');
+        $eggsWeight = number_format((float) $hangar['eggs_weight'], 2, ',', '.');
+        $chicksWeight = number_format((float) $hangar['chicks_weight'], 2, ',', '.');
+        
         return '<strong>' . $hangar['hangar_name'] . '</strong><br>' .
-               'Feed: ' . $hangar['feed_kg'] . ' kg<br>' .
+               'Feed: ' . $feedKg . ' kg<br>' .
                'Eggs(T): ' . $hangar['eggs_tray_30'] . '<br>' .
                'Eggs(C): ' . $hangar['eggs_count'] . '<br>' .
+               'Eggs Weight: ' . $eggsWeight . ' kg<br>' .
+               'Chicks Weight: ' . $chicksWeight . ' kg<br>' .
                'Mortality: ' . $hangar['mortality'];
     }
 
@@ -179,6 +187,8 @@ class DailyRecordController extends Controller
                 'feed_kg' => $record['feed_kg'] ?? 0,
                 'eggs_tray_30' => $record['eggs_tray_30'] ?? 0,
                 'eggs_count' => $record['eggs_count'] ?? 0,
+                'eggs_weight' => $record['eggs_weight'] ?? 0,
+                'chicks_weight' => $record['chicks_weight'] ?? 0,
                 'mortality' => $record['mortality'] ?? 0,
                 'created_by' => auth()->id()
             ]);
@@ -251,6 +261,8 @@ class DailyRecordController extends Controller
                     'feed_kg' => $record['feed_kg'] ?? 0,
                     'eggs_tray_30' => $record['eggs_tray_30'] ?? 0,
                     'eggs_count' => $record['eggs_count'] ?? 0,
+                    'eggs_weight' => $record['eggs_weight'] ?? 0,
+                    'chicks_weight' => $record['chicks_weight'] ?? 0,
                     'mortality' => $record['mortality'] ?? 0,
                 ]);
             } else {
@@ -263,6 +275,8 @@ class DailyRecordController extends Controller
                     'feed_kg' => $record['feed_kg'] ?? 0,
                     'eggs_tray_30' => $record['eggs_tray_30'] ?? 0,
                     'eggs_count' => $record['eggs_count'] ?? 0,
+                    'eggs_weight' => $record['eggs_weight'] ?? 0,
+                    'chicks_weight' => $record['chicks_weight'] ?? 0,
                     'mortality' => $record['mortality'] ?? 0,
                     'created_by' => auth()->id()
                 ]);

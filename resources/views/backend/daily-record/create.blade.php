@@ -107,7 +107,10 @@
                         hangars.forEach(function(hangar, index) {
                             // Get existing data if in edit mode
                             var existingData = existingRecordsData[hangar.id] || {};
-                            var feedValue = existingData.feed_kg || '';
+                            // Format decimal values with comma as separator
+                            var feedValue = existingData.feed_kg ? parseFloat(existingData.feed_kg).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
+                            var eggsWeightValue = existingData.eggs_weight ? parseFloat(existingData.eggs_weight).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
+                            var chicksWeightValue = existingData.chicks_weight ? parseFloat(existingData.chicks_weight).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
                             var eggsTraySValue = existingData.eggs_tray_30 || '';
                             var eggsCountValue = existingData.eggs_count || '';
                             var mortalityValue = existingData.mortality || '';
@@ -125,8 +128,8 @@
                                         <div class="col-md-3">
                                             <div class="form-group mb-0">
                                                 <label class="form-label mb-1" style="font-size: 0.85rem;">Feed (Kg)</label>
-                                                <input type="number" class="form-control feed-input" name="hangar_feed[${hangar.id}]" 
-                                                    value="${feedValue}" placeholder="0.00" step="0.01" min="0" data-hangar-id="${hangar.id}" />
+                                                <input type="text" class="form-control feed-input" name="hangar_feed[${hangar.id}]" 
+                                                    value="${feedValue}" placeholder="0,00" data-hangar-id="${hangar.id}" />
                                             </div>
                                         </div>
                                         <div class="col-md-3">
@@ -148,6 +151,22 @@
                                                 <label class="form-label mb-1" style="font-size: 0.85rem;">Mortality</label>
                                                 <input type="number" class="form-control mortality-input" name="hangar_mortality[${hangar.id}]" 
                                                     value="${mortalityValue}" placeholder="0" min="0" data-hangar-id="${hangar.id}" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-3">
+                                            <div class="form-group mb-0">
+                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Eggs Weight (Kg)</label>
+                                                <input type="text" class="form-control eggs-weight-input" name="hangar_eggs_weight[${hangar.id}]" 
+                                                    value="${eggsWeightValue}" placeholder="0,00" data-hangar-id="${hangar.id}" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group mb-0">
+                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Chicks Weight (Kg)</label>
+                                                <input type="text" class="form-control chicks-weight-input" name="hangar_chicks_weight[${hangar.id}]" 
+                                                    value="${chicksWeightValue}" placeholder="0,00" data-hangar-id="${hangar.id}" />
                                             </div>
                                         </div>
                                     </div>
@@ -176,9 +195,18 @@
             
             container.find('.hangar-record-row').each(function() {
                 var hangarId = $(this).data('hangar-id');
-                var feedKg = parseFloat($(this).find('.feed-input').val()) || 0;
+                // Convert comma to dot for decimal values
+                var feedValue = $(this).find('.feed-input').val().replace(',', '.');
+                var feedKg = parseFloat(feedValue) || 0;
                 var eggsTray = parseInt($(this).find('.eggs-tray-input').val()) || 0;
                 var eggsCount = parseInt($(this).find('.eggs-count-input').val()) || 0;
+                
+                var eggsWeightValue = $(this).find('.eggs-weight-input').val().replace(',', '.');
+                var eggsWeight = parseFloat(eggsWeightValue) || 0;
+                
+                var chicksWeightValue = $(this).find('.chicks-weight-input').val().replace(',', '.');
+                var chicksWeight = parseFloat(chicksWeightValue) || 0;
+                
                 var mortality = parseInt($(this).find('.mortality-input').val()) || 0;
                 
                 hangarRecords.push({
@@ -186,6 +214,8 @@
                     feed_kg: feedKg,
                     eggs_tray_30: eggsTray,
                     eggs_count: eggsCount,
+                    eggs_weight: eggsWeight,
+                    chicks_weight: chicksWeight,
                     mortality: mortality
                 });
             });

@@ -260,8 +260,16 @@ class FlockController extends Controller
             return back()->withErrors(['hangar_quantities_json' => 'Duplicate hangars are not allowed. Each hangar can only be selected once.']);
         }
 
+        // Determine if name should be regenerated
+        // Only regenerate if: farm changed OR flock has no name (old records)
+        $newName = $flock->name; // Keep existing name by default
+        if ($request->farm_id !== $flock->farm_id || !$flock->name) {
+            // Farm changed or name doesn't exist - generate new name
+            $newName = FlockNamingHelper::generateFlockName($request->farm_id, $flock->id);
+        }
+
         $flock->update([
-            'name' => FlockNamingHelper::generateFlockName($request->farm_id, $flock->id),
+            'name' => $newName,
             'farm_id' => $request->farm_id,
             'chicks_supplier_id' => $request->chicks_supplier_id,
             'breed' => $request->breed,

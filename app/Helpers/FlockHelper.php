@@ -7,8 +7,8 @@ use App\Models\Flock;
 class FlockHelper
 {
     /**
-     * Generate flock label in format: farm-breed-date (lowercase, no spaces)
-     * Example: mytestfarm-ross308-20260803
+     * Get flock label - uses the flock name field directly
+     * Example: Farm1-Flock1
      * 
      * @param Flock|null $flock
      * @return string
@@ -19,11 +19,13 @@ class FlockHelper
             return 'N/A';
         }
         
-        $farmName = strtolower(str_replace(' ', '', $flock->farm->name ?? ''));
-        $breed = strtolower(str_replace(' ', '', $flock->breed ?? ''));
-        $startDate = $flock->start_date ? $flock->start_date->format('Ymd') : '';
+        // Use the flock name field directly if available
+        if ($flock->name) {
+            return $flock->name;
+        }
         
-        return "{$farmName}-{$breed}-{$startDate}";
+        // Fallback to N/A if no name exists
+        return 'N/A';
     }
 
     /**
@@ -81,3 +83,4 @@ class FlockHelper
         return self::getFlockLabel($flock);
     }
 }
+

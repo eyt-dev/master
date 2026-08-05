@@ -53,6 +53,7 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
+                                    <th>Flock Name</th>
                                     <th>Farm</th>
                                     <th>Chicks Supplier</th>
                                     <th>Breed</th>
@@ -132,6 +133,7 @@
             ajax: "{{ route('flock.index', ['username' => $siteSlug]) }}",
             columns: [
                 { data: 'id', name: 'id' },
+                { data: 'name', name: 'name' },
                 { data: 'farm', name: 'farm' },
                 { data: 'chicks_supplier', name: 'chicks_supplier' },
                 { data: 'breed', name: 'breed' },

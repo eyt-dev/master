@@ -19,6 +19,17 @@
     @endif
     
     <div class="row">
+        <!-- Flock Name (Auto-generated) -->
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="flock_name" class="form-label">Flock Name <span class="text-red">*</span></label>
+                <input type="text" class="form-control" id="flock_name" placeholder="Auto-generated" readonly />
+                @error('name')
+                    <label id="flock_name-error" class="error" for="flock_name">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
+
         <!-- Farm Dropdown -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
@@ -227,17 +238,46 @@
             // User can choose to use this or set their own value
         }
 
-        // When farm changes, reload hangars
+        // When farm changes, reload hangars and update flock name
         $('#farm_id').on('change', function() {
             var farmId = $(this).val();
             loadHangarsForFarm(farmId);
+            updateFlockName(farmId);
         });
 
-        // On page load (edit mode), load hangars if farm is selected
+        // Function to update flock name based on selected farm
+        function updateFlockName(farmId) {
+            if (!farmId) {
+                $('#flock_name').val('');
+                return;
+            }
+
+            // Get the farm name from the selected option
+            var farmName = $('#farm_id option:selected').text();
+            var farmId = parseInt(farmId);
+
+            // Make AJAX call to get next sequence number for this farm
+            $.ajax({
+                url: "{{ route('flock.get-sequence', ['username' => $siteSlug]) }}?farm_id=" + farmId,
+                type: 'GET',
+                success: function(response) {
+                    // Remove spaces and special characters from farm name
+                    var sanitizedName = farmName.replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '');
+                    if (!sanitizedName) {
+                        sanitizedName = 'Farm';
+                    }
+                    var flockName = sanitizedName + '-Flock' + response.sequence;
+                    $('#flock_name').val(flockName);
+                }
+            });
+        }
+
+        // On page load (edit mode), load hangars and show existing name
         @if(isset($flock))
             var farmId = $('#farm_id').val();
             if (farmId) {
                 loadHangarsForFarm(farmId);
+                $('#flock_name').val('{{ $flock->name }}');
             }
         @endif
 

@@ -217,6 +217,7 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::post('store', 'store')->name('flock.store')->middleware('permission:create.flock');
                         Route::get('hangars-by-farm/{farm}', 'getHangarsByFarm')->name('flock.hangars-by-farm');
                         Route::post('check-duplicate', 'checkDuplicate')->name('flock.check-duplicate');
+                        Route::get('get-sequence', 'getSequenceNumber')->name('flock.get-sequence');
                         Route::get('{flock}/edit', 'edit')->name('flock.edit')->middleware('permission:edit.flock');
                         Route::post('{flock}', 'update')->name('flock.update')->middleware('permission:edit.flock');
                         Route::get('destroy/{flock}', 'destroy')->name('flock.destroy')->middleware('permission:delete.flock');
@@ -546,6 +547,7 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::get('create', 'create')->name('flock.create')->middleware('permission:create.flock');
                 Route::post('store', 'store')->name('flock.store')->middleware('permission:create.flock');
                 Route::get('hangars-by-farm/{farm}', 'getHangarsByFarm')->name('flock.hangars-by-farm');
+                Route::get('get-sequence', 'getSequenceNumber')->name('flock.get-sequence');
                 Route::get('{flock}/edit', 'edit')->name('flock.edit')->middleware('permission:edit.flock');
                 Route::post('{flock}', 'update')->name('flock.update')->middleware('permission:edit.flock');
                 Route::get('destroy/{flock}', 'destroy')->name('flock.destroy')->middleware('permission:delete.flock');

@@ -10,6 +10,7 @@ class Flock extends Model
     use HasFactory;
 
     protected $fillable = [
+        'name',
         'farm_id',
         'chicks_supplier_id',
         'breed',

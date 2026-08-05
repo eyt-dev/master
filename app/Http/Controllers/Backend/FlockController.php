@@ -10,6 +10,7 @@ use App\Models\ChicksSupplier;
 use App\Models\Hangar;
 use App\Models\FlockHangar;
 use App\Models\Admin;
+use App\Helpers\FlockNamingHelper;
 use Illuminate\Support\Facades\Session;
 
 class FlockController extends Controller
@@ -25,6 +26,9 @@ class FlockController extends Controller
             return datatables()->of($data)
                 ->addColumn('farm', function($row) {
                     return $row->farm->name ?? 'N/A';
+                })
+                ->addColumn('name', function($row) {
+                    return $row->name ?? 'N/A';
                 })
                 ->addColumn('chicks_supplier', function($row) {
                     return $row->chicksSupplier->name ?? 'N/A';
@@ -136,6 +140,16 @@ class FlockController extends Controller
         return response()->json(['exists' => $exists]);
     }
 
+    public function getSequenceNumber(Request $request)
+    {
+        $request->validate([
+            'farm_id' => 'required|exists:farms,id'
+        ]);
+
+        $sequence = FlockNamingHelper::getNextSequenceNumber($request->farm_id);
+        return response()->json(['sequence' => $sequence]);
+    }
+
     public function store(Request $request, $siteUrl)
     {
         $request->validate([
@@ -171,6 +185,7 @@ class FlockController extends Controller
         }
 
         $flock = Flock::create([
+            'name' => FlockNamingHelper::generateFlockName($request->farm_id),
             'farm_id' => $request->farm_id,
             'chicks_supplier_id' => $request->chicks_supplier_id,
             'breed' => $request->breed,
@@ -246,6 +261,7 @@ class FlockController extends Controller
         }
 
         $flock->update([
+            'name' => FlockNamingHelper::generateFlockName($request->farm_id, $flock->id),
             'farm_id' => $request->farm_id,
             'chicks_supplier_id' => $request->chicks_supplier_id,
             'breed' => $request->breed,

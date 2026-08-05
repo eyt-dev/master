@@ -220,6 +220,7 @@ class FlockController extends Controller
 
         $chicksSuppliers = ChicksSupplier::all();
         $flockHangars = FlockHangar::where('flock_id', $flock->id)->get();
+        // Store original farm_id and name in session for comparison during update
         return view('backend.flock.create', compact('flock', 'farms', 'chicksSuppliers', 'flockHangars'));
     }
 
@@ -260,11 +261,11 @@ class FlockController extends Controller
             return back()->withErrors(['hangar_quantities_json' => 'Duplicate hangars are not allowed. Each hangar can only be selected once.']);
         }
 
-        // Determine if name should be regenerated
-        // Only regenerate if: farm changed OR flock has no name (old records)
-        $newName = $flock->name; // Keep existing name by default
-        if ($request->farm_id !== $flock->farm_id || !$flock->name) {
-            // Farm changed or name doesn't exist - generate new name
+        // Determine flock name based on farm change
+        $newName = $flock->name;
+        
+        if ($request->farm_id !== $flock->farm_id) {
+            // Farm has changed - generate new name for the new farm
             $newName = FlockNamingHelper::generateFlockName($request->farm_id, $flock->id);
         }
 

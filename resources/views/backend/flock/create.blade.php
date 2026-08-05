@@ -238,6 +238,15 @@
             // User can choose to use this or set their own value
         }
 
+        // Store original farm and flock name for edit mode
+        var originalFarmId = null;
+        var originalFlockName = null;
+        
+        @if(isset($flock))
+            originalFarmId = {{ $flock->farm_id }};
+            originalFlockName = '{{ $flock->name }}';
+        @endif
+
         // When farm changes, reload hangars and update flock name
         $('#farm_id').on('change', function() {
             var farmId = $(this).val();
@@ -251,6 +260,15 @@
                 $('#flock_name').val('');
                 return;
             }
+
+            // In edit mode, check if we're changing back to original farm
+            @if(isset($flock))
+                if (farmId == originalFarmId) {
+                    // Changed back to original farm - restore original name
+                    $('#flock_name').val(originalFlockName);
+                    return;
+                }
+            @endif
 
             // Get the farm name from the selected option
             var farmName = $('#farm_id option:selected').text();

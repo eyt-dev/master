@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\FormController;
 use App\Http\Controllers\Api\CompoPriceController;
 use App\Http\Controllers\Api\Add2Farm\AuthController as Add2FarmAuthController;
 use App\Http\Controllers\Api\Add2Farm\ProfileController as Add2FarmProfileController;
+use App\Http\Controllers\Api\Add2Farm\SupervisorController as Add2FarmSupervisorController;
+use App\Http\Controllers\Api\Add2Farm\FarmerController as Add2FarmFarmerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -90,4 +92,10 @@ Route::prefix('add2farm')->middleware('auth:sanctum')->group(function () {
         Route::put('/', [Add2FarmProfileController::class, 'update']);
         Route::put('change-password', [Add2FarmProfileController::class, 'changePassword']);
     });
+
+    // Supervisors (Type 3) - CRUD endpoints
+    Route::apiResource('supervisors', Add2FarmSupervisorController::class);
+
+    // Farmers (Type 4) - CRUD endpoints
+    Route::apiResource('farmers', Add2FarmFarmerController::class);
 });

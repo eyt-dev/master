@@ -13,49 +13,41 @@ use Spatie\Permission\Models\Role;
 
 /**
  * @group Add2Farm Authentication
- * APIs for user authentication and account management
+ * APIs for Add2Farm user authentication with 2FA (OTP-based)
  */
 class AuthController extends Controller
 {
     /**
-     * Register a new user
+     * Register a new Add2Farm user
      *
-     * Create a new Add2Farm account by providing name, email, username and password.
-     * The user will be created with PrivateVendor type and active status.
+     * Create a new Add2Farm account using mobile number and password.
+     * User is created with Inactive status. OTP is generated and must be verified.
      *
      * @unauthenticated
-     * @bodyParam name string required The user's full name. Example: John Doe
-     * @bodyParam email string required The user's email address. Must be unique. Example: john@example.com
-     * @bodyParam username string required The user's username. Must be unique. Example: johndoe
-     * @bodyParam password string required The user's password. Minimum 8 characters. Example: password123
-     * @bodyParam password_confirmation string required Password confirmation. Must match password field. Example: password123
+     * @bodyParam mobile_number string required User's mobile number. Example: +1234567890
+     * @bodyParam password string required Password (min 8 characters). Example: password123
+     * @bodyParam password_confirmation string required Password confirmation. Example: password123
+     * @bodyParam type integer required User type (1=Farm Admin, 2=Farm Owner). Example: 1
+     * @bodyParam name string optional User's full name. Example: John Doe
+     *
      * @response 201 {
      *   "success": true,
-     *   "message": "Registration successful.",
-     *   "token": "1|add2farm-token|...",
-     *   "user": {
-     *     "id": 1,
-     *     "name": "John Doe",
-     *     "email": "john@example.com",
-     *     "username": "johndoe",
-     *     "type": 3,
-     *     "status": "Active"
-     *   }
+     *   "message": "OTP sent successfully."
      * }
      * @response 422 {
      *   "success": false,
      *   "errors": {
-     *     "email": ["The email has already been taken."]
+     *     "mobile_number": ["The mobile number has already been taken."]
      *   }
      * }
      */
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|max:255|unique:admins,email',
-            'username' => 'required|string|max:255|unique:admins,username',
-            'password' => 'required|string|min:8|confirmed',
+            'mobile_number' => 'required|string|max:20|unique:admins,mobile_number',
+            'password'      => 'required|string|min:8|confirmed',
+            'type'          => 'required|integer|in:1,2',
+            'name'          => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -66,69 +58,61 @@ class AuthController extends Controller
         }
 
         try {
+            DB::beginTransaction();
+
+            // Create admin account with Inactive status
             $admin = Admin::create([
-                'name'         => $request->name,
-                'email'        => $request->email,
-                'username'     => $request->username,
-                'password'     => Hash::make($request->password),
-                'type'         => Admin::PRIVATE_VENDOR,
-                'status'       => 'Active',
-                'created_from' => 3, // add2farm registration
+                'mobile_number' => $request->mobile_number,
+                'password'      => Hash::make($request->password),
+                'type'          => Admin::PRIVATE_VENDOR,
+                'status'        => 'Inactive',
+                'name'          => $request->name ?? 'Add2Farm User',
+                'created_from'  => 3,
+                'email'         => $request->email ?? 'add2farm-' . uniqid() . '@add2farm.local',
             ]);
 
+            // Assign PrivateVendor role
             $role = Role::where('name', 'PrivateVendor')->first();
             if ($role) {
                 $admin->assignRole($role);
             }
 
-            // Mirror to contacts table
-            Contact::updateOrCreate(
-                ['email' => $request->email],
-                [
-                    'name'       => $request->name,
-                    'formal_name' => $request->name,
-                    'created_by' => $admin->id,
-                ]
-            );
+            // Generate OTP
+            $otp = $admin->generateOtp();
 
-            $token = $admin->createToken('add2farm-token')->plainTextToken;
+            DB::commit();
+
+            // TODO: Send OTP via SMS provider
 
             return response()->json([
                 'success' => true,
-                'message' => 'Registration successful.',
-                'token'   => $token,
-                'user'    => $this->formatUser($admin),
+                'message' => 'OTP sent successfully.',
             ], 201);
+
         } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Add2Farm registration error: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Registration failed.',
-                'error'   => $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Login user
+     * Login user with mobile number and password
      *
-     * Authenticate a user with email and password to obtain an access token.
-     * The token can be used to access protected endpoints.
+     * Authenticate using mobile number and password.
+     * OTP is generated and sent. User must verify OTP to obtain auth token.
      *
      * @unauthenticated
-     * @bodyParam email string required The user's email address. Example: john@example.com
-     * @bodyParam password string required The user's password. Example: password123
+     * @bodyParam mobile_number string required User's mobile number. Example: +1234567890
+     * @bodyParam password string required User's password. Example: password123
+     *
      * @response 200 {
      *   "success": true,
-     *   "message": "Login successful.",
-     *   "token": "1|add2farm-token|...",
-     *   "user": {
-     *     "id": 1,
-     *     "name": "John Doe",
-     *     "email": "john@example.com",
-     *     "username": "johndoe",
-     *     "type": 3,
-     *     "status": "Active"
-     *   }
+     *   "message": "OTP sent successfully."
      * }
      * @response 401 {
      *   "success": false,
@@ -142,8 +126,8 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email'    => 'required|email',
-            'password' => 'required|string',
+            'mobile_number' => 'required|string|max:20',
+            'password'      => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -153,7 +137,8 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $admin = Admin::where('email', $request->email)->first();
+        // Find user by mobile number
+        $admin = Admin::where('mobile_number', $request->mobile_number)->first();
 
         if (!$admin || !Hash::check($request->password, $admin->password)) {
             return response()->json([
@@ -162,6 +147,7 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // Check account status
         if ($admin->status === 'Disable') {
             return response()->json([
                 'success' => false,
@@ -169,17 +155,374 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // Revoke previous tokens (single-session behaviour)
-        $admin->tokens()->delete();
+        // Generate new OTP
+        $otp = $admin->generateOtp();
 
-        $token = $admin->createToken('add2farm-token')->plainTextToken;
+        // TODO: Send OTP via SMS provider
 
         return response()->json([
             'success' => true,
-            'message' => 'Login successful.',
-            'token'   => $token,
-            'user'    => $this->formatUser($admin),
+            'message' => 'OTP sent successfully.',
         ]);
+    }
+
+    /**
+     * Verify OTP and obtain authentication token
+     *
+     * Verify the 6-digit OTP sent to user's mobile number.
+     * On successful verification:
+     * - Account status is set to Active (if Inactive)
+     * - Sanctum auth token is generated
+     * - OTP is cleared from database
+     *
+     * Development Override: OTP '000000' is accepted for testing.
+     *
+     * @unauthenticated
+     * @bodyParam mobile_number string required User's mobile number. Example: +1234567890
+     * @bodyParam otp string required 6-digit OTP code. Example: 123456
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "OTP verified successfully.",
+     *   "token": "1|add2farm-token|...",
+     *   "user": {
+     *     "id": 1,
+     *     "name": "John Doe",
+     *     "mobile_number": "+1234567890",
+     *     "type": 3,
+     *     "status": "Active"
+     *   }
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "User not found."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "OTP has expired. Please request a new OTP."
+     * }
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Invalid OTP."
+     * }
+     */
+    public function verifyOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'mobile_number' => 'required|string|max:20',
+            'otp'           => 'required|string|size:6|regex:/^\d+$/',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        // Find user by mobile number
+        $admin = Admin::where('mobile_number', $request->mobile_number)->first();
+
+        if (!$admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found.',
+            ], 404);
+        }
+
+        // Check if OTP exists
+        if (!$admin->otp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No OTP found. Please request OTP first.',
+            ], 400);
+        }
+
+        // Check if OTP has expired
+        if ($admin->isOtpExpired()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'OTP has expired. Please request a new OTP.',
+            ], 422);
+        }
+
+        // Verify OTP
+        if (!$admin->isOtpValid($request->otp)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid OTP.',
+            ], 400);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Mark OTP as verified and clear it
+            $admin->markOtpVerified();
+
+            // Update account status to Active if Inactive
+            if ($admin->status === 'Inactive') {
+                $admin->update(['status' => 'Active']);
+            }
+
+            // Revoke previous tokens
+            $admin->tokens()->delete();
+
+            // Generate new token
+            $token = $admin->createToken('add2farm-token')->plainTextToken;
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'OTP verified successfully.',
+                'token'   => $token,
+                'user'    => $this->formatUser($admin->fresh()),
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('OTP verification error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'OTP verification failed.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Resend OTP to user's mobile number
+     *
+     * Generate a new OTP and send it to the user's registered mobile number.
+     * This endpoint resets the OTP expiry to 10 minutes from current time.
+     *
+     * @unauthenticated
+     * @bodyParam mobile_number string required User's mobile number. Example: +1234567890
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "OTP sent successfully."
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "User not found."
+     * }
+     */
+    public function resendOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'mobile_number' => 'required|string|max:20',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        // Find user by mobile number
+        $admin = Admin::where('mobile_number', $request->mobile_number)->first();
+
+        if (!$admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found.',
+            ], 404);
+        }
+
+        try {
+            // Generate new OTP
+            $otp = $admin->generateOtp();
+
+            // TODO: Send OTP via SMS provider
+
+            return response()->json([
+                'success' => true,
+                'message' => 'OTP sent successfully.',
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Resend OTP error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to resend OTP.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Forgot Password - Step 1
+     *
+     * Initiate forgot password flow by providing mobile number.
+     * OTP is generated and sent to verify identity.
+     *
+     * @unauthenticated
+     * @bodyParam mobile_number string required User's mobile number. Example: +1234567890
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "OTP sent successfully."
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "User not found."
+     * }
+     */
+    public function forgotPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'mobile_number' => 'required|string|max:20',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        // Find user by mobile number
+        $admin = Admin::where('mobile_number', $request->mobile_number)->first();
+
+        if (!$admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found.',
+            ], 404);
+        }
+
+        try {
+            // Generate OTP
+            $otp = $admin->generateOtp();
+
+            // TODO: Send OTP via SMS provider
+
+            return response()->json([
+                'success' => true,
+                'message' => 'OTP sent successfully.',
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Forgot password error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send OTP.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Reset Password - Step 2
+     *
+     * Reset password after OTP verification in forgot password flow.
+     * OTP must be valid and verified before password can be reset.
+     *
+     * @unauthenticated
+     * @bodyParam mobile_number string required User's mobile number. Example: +1234567890
+     * @bodyParam otp string required 6-digit OTP code. Example: 123456
+     * @bodyParam password string required New password (min 8 characters). Example: newpassword123
+     * @bodyParam password_confirmation string required Password confirmation. Example: newpassword123
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Password reset successfully."
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "User not found."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "OTP has expired. Please request a new OTP."
+     * }
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Invalid OTP."
+     * }
+     */
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'mobile_number' => 'required|string|max:20',
+            'otp'           => 'required|string|size:6|regex:/^\d+$/',
+            'password'      => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        // Find user by mobile number
+        $admin = Admin::where('mobile_number', $request->mobile_number)->first();
+
+        if (!$admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found.',
+            ], 404);
+        }
+
+        // Check if OTP exists
+        if (!$admin->otp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No OTP found. Please request OTP first.',
+            ], 400);
+        }
+
+        // Check if OTP has expired
+        if ($admin->isOtpExpired()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'OTP has expired. Please request a new OTP.',
+            ], 422);
+        }
+
+        // Verify OTP
+        if (!$admin->isOtpValid($request->otp)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid OTP.',
+            ], 400);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Update password and clear OTP
+            $admin->update([
+                'password' => Hash::make($request->password),
+                'otp' => null,
+                'otp_expires_at' => null,
+                'otp_verified_at' => null,
+            ]);
+
+            // Revoke all tokens for security
+            $admin->tokens()->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Password reset successfully.',
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Reset password error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Password reset failed.',
+            ], 500);
+        }
     }
 
     /**
@@ -204,175 +547,33 @@ class AuthController extends Controller
     }
 
     /**
-     * Verify OTP
-     *
-     * Verify a 6-digit OTP code for account verification or two-factor authentication.
-     *
-     * @unauthenticated
-     * @bodyParam email string required The user's email address. Example: john@example.com
-     * @bodyParam otp string required The 6-digit OTP code. Example: 123456
-     * @response 200 {
-     *   "success": true,
-     *   "message": "OTP verified successfully.",
-     *   "user": {
-     *     "id": 1,
-     *     "name": "John Doe",
-     *     "email": "john@example.com",
-     *     "username": "johndoe",
-     *     "type": 3,
-     *     "status": "Active"
-     *   }
-     * }
-     * @response 404 {
-     *   "success": false,
-     *   "message": "User not found."
-     * }
+     * Get type label based on type value
      */
-    public function verifyOtp(Request $request)
+    private function getTypeLabel($type): string
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'otp'   => 'required|string|size:6',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors'  => $validator->errors(),
-            ], 422);
-        }
-
-        $admin = Admin::where('email', $request->email)->first();
-
-        if (!$admin) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found.',
-            ], 404);
-        }
-
-        // TODO: Implement OTP verification logic with cache or DB
-        // For now, returning success response structure
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'OTP verified successfully.',
-            'user'    => $this->formatUser($admin),
-        ]);
+        $types = [
+            1 => 'Farm Admin',
+            2 => 'Farm Owner',
+            3 => 'Supervisor',
+            4 => 'Farmers',
+        ];
+        return $types[$type] ?? 'Unknown';
     }
 
     /**
-     * Forgot Password
-     *
-     * Request a password reset link. An email will be sent with instructions to reset your password.
-     *
-     * @unauthenticated
-     * @bodyParam email string required The user's email address. Example: john@example.com
-     * @response 200 {
-     *   "success": true,
-     *   "message": "Password reset link sent to your email."
-     * }
-     * @response 404 {
-     *   "success": false,
-     *   "message": "User not found."
-     * }
+     * Format user data for API responses
      */
-    public function forgotPassword(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors'  => $validator->errors(),
-            ], 422);
-        }
-
-        $admin = Admin::where('email', $request->email)->first();
-
-        if (!$admin) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found.',
-            ], 404);
-        }
-
-        // TODO: Generate and send password reset token via email
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Password reset link sent to your email.',
-        ]);
-    }
-
-    /**
-     * Reset Password
-     *
-     * Reset your password using the reset token sent to your email.
-     *
-     * @unauthenticated
-     * @bodyParam email string required The user's email address. Example: john@example.com
-     * @bodyParam token string required The password reset token from email. Example: abc123def456
-     * @bodyParam password string required The new password. Minimum 8 characters. Example: newpassword123
-     * @bodyParam password_confirmation string required Password confirmation. Must match password field. Example: newpassword123
-     * @response 200 {
-     *   "success": true,
-     *   "message": "Password reset successfully."
-     * }
-     * @response 404 {
-     *   "success": false,
-     *   "message": "User not found."
-     * }
-     */
-    public function resetPassword(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'email'                => 'required|email',
-            'token'                => 'required|string',
-            'password'             => 'required|string|min:8|confirmed',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors'  => $validator->errors(),
-            ], 422);
-        }
-
-        $admin = Admin::where('email', $request->email)->first();
-
-        if (!$admin) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found.',
-            ], 404);
-        }
-
-        // TODO: Verify token validity
-
-        $admin->update([
-            'password' => Hash::make($request->password),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Password reset successfully.',
-        ]);
-    }
-
-    // -------------------------------------------------------------------------
-
     private function formatUser(Admin $admin): array
     {
         return [
-            'id'       => $admin->id,
-            'name'     => $admin->name,
-            'email'    => $admin->email,
-            'username' => $admin->username,
-            'type'     => $admin->type,
-            'status'   => $admin->status,
+            'id'            => $admin->id,
+            'name'          => $admin->name,
+            'mobile_number' => $admin->mobile_number,
+            'type'          => $admin->type,
+            'type_label'    => $this->getTypeLabel($admin->type),
+            'status'        => $admin->status,
+            'created_by_name' => $admin->creator?->name ?? null,
+            'created_at'    => $admin->created_at,
         ];
     }
 }

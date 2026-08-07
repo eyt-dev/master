@@ -154,15 +154,32 @@ class ProfileController extends Controller
 
     // -------------------------------------------------------------------------
 
+    /**
+     * Get type label based on type value
+     */
+    private function getTypeLabel($type): string
+    {
+        $types = [
+            1 => 'Farm Admin',
+            2 => 'Farm Owner',
+            3 => 'Supervisor',
+            4 => 'Farmers',
+        ];
+        return $types[$type] ?? 'Unknown';
+    }
+
     private function formatUser($user): array
     {
         return [
-            'id'       => $user->id,
-            'name'     => $user->name,
-            'email'    => $user->email,
-            'username' => $user->username,
-            'type'     => $user->type,
-            'status'   => $user->status,
+            'id'            => $user->id,
+            'name'          => $user->name,
+            'email'         => $user->email,
+            'username'      => $user->username,
+            'mobile_number' => $user->mobile_number,
+            'type'          => $user->type,
+            'type_label'    => $this->getTypeLabel($user->type),
+            'status'        => $user->status,
+            'created_by_name' => $user->creator?->name ?? null,
         ];
     }
 }

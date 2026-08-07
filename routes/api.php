@@ -75,6 +75,7 @@ Route::prefix('add2farm/auth')->group(function () {
     Route::post('register', [Add2FarmAuthController::class, 'register']);
     Route::post('login', [Add2FarmAuthController::class, 'login']);
     Route::post('verify-otp', [Add2FarmAuthController::class, 'verifyOtp']);
+    Route::post('resend-otp', [Add2FarmAuthController::class, 'resendOtp']);
     Route::post('forgot-password', [Add2FarmAuthController::class, 'forgotPassword']);
     Route::post('reset-password', [Add2FarmAuthController::class, 'resetPassword']);
 });

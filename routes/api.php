@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\FormulationController;
 use App\Http\Controllers\Api\ElementController;
 use App\Http\Controllers\Api\FormController;
 use App\Http\Controllers\Api\CompoPriceController;
+use App\Http\Controllers\Api\Add2Farm\AuthController as Add2FarmAuthController;
+use App\Http\Controllers\Api\Add2Farm\ProfileController as Add2FarmProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -58,4 +60,33 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('formulations/template/{formulation}', [FormulationController::class, 'getTemplate']);
     Route::get('formulations/{formulation}/edit', [FormulationController::class, 'edit']);
     Route::apiResource('formulations', FormulationController::class);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Add2Farm API Routes
+|--------------------------------------------------------------------------
+| Separate routes for add2farm mobile/web application
+| Public routes for authentication, protected routes for user operations
+*/
+
+// Add2Farm public authentication routes
+Route::prefix('add2farm/auth')->group(function () {
+    Route::post('register', [Add2FarmAuthController::class, 'register']);
+    Route::post('login', [Add2FarmAuthController::class, 'login']);
+    Route::post('verify-otp', [Add2FarmAuthController::class, 'verifyOtp']);
+    Route::post('forgot-password', [Add2FarmAuthController::class, 'forgotPassword']);
+    Route::post('reset-password', [Add2FarmAuthController::class, 'resetPassword']);
+});
+
+// Add2Farm protected routes — require a valid Sanctum token
+Route::prefix('add2farm')->middleware('auth:sanctum')->group(function () {
+    Route::post('auth/logout', [Add2FarmAuthController::class, 'logout']);
+
+    // User profile endpoints
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [Add2FarmProfileController::class, 'show']);
+        Route::put('/', [Add2FarmProfileController::class, 'update']);
+        Route::put('change-password', [Add2FarmProfileController::class, 'changePassword']);
+    });
 });

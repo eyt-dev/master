@@ -29,28 +29,22 @@ return [
 
     // The base URL displayed in the docs.
     // If you're using `laravel` type, you can set this to a dynamic string, like '{{ config("app.tenant_url") }}' to get a dynamic base URL.
+    // Uses APP_URL from .env which can be configured per environment
     'base_url' => rtrim(config('app.url'), '/'),
 
     // Routes to include in the docs
     'routes' => [
         [
             'match' => [
-                // Match only Add2Farm API routes
-                'prefixes' => ['api/add2farm/*'],
+                // Match only Add2Farm routes except auth and profile
+                'uri_pattern' => '^api/add2farm/(supervisors|farmers|farms)',
 
                 // Match only routes whose domains match this pattern (use * as a wildcard to match any characters). Example: 'api.*'.
                 'domains' => ['*'],
             ],
 
-            // Include these routes even if they did not match the rules above.
-            'include' => [
-                // 'users.index', 'POST /new', '/auth/*'
-            ],
-
             // Exclude these routes even if they matched the rules above.
-            'exclude' => [
-                // Exclude any other routes
-            ],
+            'exclude' => [],
         ],
     ],
 
@@ -96,6 +90,7 @@ return [
         'enabled' => true,
 
         // The base URL to use in the API tester. Leave as null to be the same as the displayed URL (`scribe.base_url`).
+        // Uses APP_URL from .env which can be configured per environment
         'base_url' => rtrim(config('app.url'), '/'),
 
         // [Laravel Sanctum] Fetch a CSRF token before each request, and add it as an X-XSRF-TOKEN header.
@@ -235,15 +230,9 @@ return [
         'bodyParameters' => [
             ...Defaults::BODY_PARAMETERS_STRATEGIES,
         ],
-        'responses' => configureStrategy(
+        'responses' => removeStrategies(
             Defaults::RESPONSES_STRATEGIES,
-            Strategies\Responses\ResponseCalls::withSettings(
-                only: ['GET *'],
-                // Recommended: disable debug mode in response calls to avoid error stack traces in responses
-                config: [
-                    'app.debug' => false,
-                ]
-            )
+            [Strategies\Responses\ResponseCalls::class]
         ),
         'responseFields' => [
             ...Defaults::RESPONSE_FIELDS_STRATEGIES,

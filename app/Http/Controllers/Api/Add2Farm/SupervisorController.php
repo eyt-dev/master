@@ -279,6 +279,45 @@ class SupervisorController extends Controller
      *   "message": "Supervisor not found."
      * }
      */
+    /**
+     * Update a supervisor
+     *
+     * Update supervisor details including name, email, status and project assignments.
+     * Mobile number and type cannot be changed.
+     *
+     * @authenticated
+     * @urlParam id integer required The supervisor ID. Example: 1
+     * @bodyParam name string required Supervisor's full name. Example: John Supervisor Updated
+     * @bodyParam email string optional Email address. Example: john.updated@example.com
+     * @bodyParam status string required Status (Active, Inactive, Disable). Example: Active
+     * @bodyParam project_rows array optional Array of project assignments. Example: [{"project_id": 1, "status": "Active"}]
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Supervisor updated successfully.",
+     *   "data": {
+     *     "id": 1,
+     *     "name": "John Supervisor Updated",
+     *     "mobile_number": "+1234567890",
+     *     "email": "john.updated@example.com",
+     *     "type": 3,
+     *     "type_label": "Supervisor",
+     *     "status": "Active",
+     *     "created_by_name": "Admin Name",
+     *     "created_at": "2026-08-07T10:30:00Z"
+     *   }
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Supervisor not found."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "errors": {
+     *     "email": ["The email has already been taken."]
+     *   }
+     * }
+     */
     public function update(Request $request, $id)
     {
         $admin = Admin::where('type', self::ADMIN_TYPE)->find($id);

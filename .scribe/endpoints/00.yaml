@@ -1,24 +1,136 @@
-name: 'Add2Farm Authentication'
-description: 'APIs for user authentication and account management'
+name: 'Add2Farm Supervisors (Type 3)'
+description: 'CRUD APIs for managing Type 3 (Supervisors) in Add2Farm'
 endpoints:
   -
     custom: []
     httpMethods:
-      - POST
-    uri: api/add2farm/auth/register
+      - GET
+    uri: api/add2farm/supervisors
     metadata:
       custom: []
-      groupName: 'Add2Farm Authentication'
-      groupDescription: 'APIs for user authentication and account management'
+      groupName: 'Add2Farm Supervisors (Type 3)'
+      groupDescription: 'CRUD APIs for managing Type 3 (Supervisors) in Add2Farm'
       subgroup: ''
       subgroupDescription: ''
-      title: 'Register a new user'
-      description: |-
-        Create a new Add2Farm account by providing name, email, username and password.
-        The user will be created with PrivateVendor type and active status.
-      authenticated: false
+      title: 'List all supervisors (Type 3)'
+      description: 'Get paginated list of all supervisors with search and filtering.'
+      authenticated: true
       deprecated: false
     headers:
+      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      page:
+        custom: []
+        name: page
+        description: 'optional Pagination page number.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      per_page:
+        custom: []
+        name: per_page
+        description: 'optional Items per page. Default: 15.'
+        required: false
+        example: 20
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      search:
+        custom: []
+        name: search
+        description: 'optional Search by name or mobile_number.'
+        required: false
+        example: John
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: 'optional Filter by status (Active, Inactive, Disable).'
+        required: false
+        example: Active
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      page: 1
+      per_page: 20
+      search: John
+      status: Active
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "message": "Supervisors retrieved successfully.",
+            "data": {
+              "current_page": 1,
+              "data": [
+                {
+                  "id": 1,
+                  "name": "Supervisor Name",
+                  "mobile_number": "+1234567890",
+                  "email": "supervisor@add2farm.local",
+                  "type": 3,
+                  "type_label": "Supervisor",
+                  "status": "Active",
+                  "created_by_name": "Admin Name",
+                  "created_at": "2026-08-07T10:30:00Z"
+                }
+              ],
+              "total": 10,
+              "last_page": 1
+            }
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/add2farm/supervisors
+    metadata:
+      custom: []
+      groupName: 'Add2Farm Supervisors (Type 3)'
+      groupDescription: 'CRUD APIs for managing Type 3 (Supervisors) in Add2Farm'
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Create a new supervisor'
+      description: |-
+        Create a new Type 3 (Supervisor) admin account.
+        Type is automatically set to 3 and cannot be changed.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
       Content-Type: application/json
       Accept: application/json
     urlParameters: []
@@ -29,9 +141,20 @@ endpoints:
       name:
         custom: []
         name: name
-        description: "The user's full name."
+        description: "Supervisor's full name."
         required: true
-        example: 'John Doe'
+        example: 'John Supervisor'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      mobile_number:
+        custom: []
+        name: mobile_number
+        description: 'Unique mobile number with country code.'
+        required: true
+        example: '+1234567890'
         type: string
         enumValues: []
         exampleWasSpecified: true
@@ -40,29 +163,18 @@ endpoints:
       email:
         custom: []
         name: email
-        description: "The user's email address. Must be unique."
-        required: true
+        description: 'optional Email address.'
+        required: false
         example: john@example.com
         type: string
         enumValues: []
         exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      username:
-        custom: []
-        name: username
-        description: "The user's username. Must be unique."
-        required: true
-        example: johndoe
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
+        nullable: true
         deprecated: false
       password:
         custom: []
         name: password
-        description: "The user's password. Minimum 8 characters."
+        description: 'Password (min 8 characters).'
         required: true
         example: password123
         type: string
@@ -70,10 +182,49 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
+      project_rows:
+        custom: []
+        name: project_rows
+        description: 'optional Array of project assignments.'
+        required: false
+        example:
+          -
+            project_id: 1
+            status: Active
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      'project_rows[].project_id':
+        custom: []
+        name: 'project_rows[].project_id'
+        description: 'Must match an existing stored value.'
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'project_rows[].status':
+        custom: []
+        name: 'project_rows[].status'
+        description: ''
+        required: false
+        example: Active
+        type: string
+        enumValues:
+          - Active
+          - Inactive
+          - Pending
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
       password_confirmation:
         custom: []
         name: password_confirmation
-        description: 'Password confirmation. Must match password field.'
+        description: 'Password confirmation.'
         required: true
         example: password123
         type: string
@@ -82,10 +233,14 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      name: 'John Doe'
+      name: 'John Supervisor'
+      mobile_number: '+1234567890'
       email: john@example.com
-      username: johndoe
       password: password123
+      project_rows:
+        -
+          project_id: 1
+          status: Active
       password_confirmation: password123
     fileParameters: []
     responses:
@@ -95,15 +250,15 @@ endpoints:
         content: |-
           {
             "success": true,
-            "message": "Registration successful.",
-            "token": "1|add2farm-token|...",
-            "user": {
+            "message": "Supervisor created successfully.",
+            "data": {
               "id": 1,
-              "name": "John Doe",
-              "email": "john@example.com",
-              "username": "johndoe",
+              "name": "John Supervisor",
+              "mobile_number": "+1234567890",
               "type": 3,
-              "status": "Active"
+              "type_label": "Supervisor",
+              "status": "Active",
+              "created_at": "2026-08-07T10:30:00Z"
             }
           }
         headers: []
@@ -115,391 +270,8 @@ endpoints:
           {
             "success": false,
             "errors": {
-              "email": ["The email has already been taken."]
+              "mobile_number": ["The mobile number has already been taken."]
             }
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: api/add2farm/auth/login
-    metadata:
-      custom: []
-      groupName: 'Add2Farm Authentication'
-      groupDescription: 'APIs for user authentication and account management'
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Login user'
-      description: |-
-        Authenticate a user with email and password to obtain an access token.
-        The token can be used to access protected endpoints.
-      authenticated: false
-      deprecated: false
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      email:
-        custom: []
-        name: email
-        description: "The user's email address."
-        required: true
-        example: john@example.com
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      password:
-        custom: []
-        name: password
-        description: "The user's password."
-        required: true
-        example: password123
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      email: john@example.com
-      password: password123
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "Login successful.",
-            "token": "1|add2farm-token|...",
-            "user": {
-              "id": 1,
-              "name": "John Doe",
-              "email": "john@example.com",
-              "username": "johndoe",
-              "type": 3,
-              "status": "Active"
-            }
-          }
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 401
-        content: |-
-          {
-            "success": false,
-            "message": "Invalid credentials."
-          }
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 403
-        content: |-
-          {
-            "success": false,
-            "message": "Your account has been disabled."
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: api/add2farm/auth/verify-otp
-    metadata:
-      custom: []
-      groupName: 'Add2Farm Authentication'
-      groupDescription: 'APIs for user authentication and account management'
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Verify OTP'
-      description: 'Verify a 6-digit OTP code for account verification or two-factor authentication.'
-      authenticated: false
-      deprecated: false
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      email:
-        custom: []
-        name: email
-        description: "The user's email address."
-        required: true
-        example: john@example.com
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      otp:
-        custom: []
-        name: otp
-        description: 'The 6-digit OTP code.'
-        required: true
-        example: '123456'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      email: john@example.com
-      otp: '123456'
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "OTP verified successfully.",
-            "user": {
-              "id": 1,
-              "name": "John Doe",
-              "email": "john@example.com",
-              "username": "johndoe",
-              "type": 3,
-              "status": "Active"
-            }
-          }
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 404
-        content: |-
-          {
-            "success": false,
-            "message": "User not found."
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: api/add2farm/auth/forgot-password
-    metadata:
-      custom: []
-      groupName: 'Add2Farm Authentication'
-      groupDescription: 'APIs for user authentication and account management'
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Forgot Password'
-      description: 'Request a password reset link. An email will be sent with instructions to reset your password.'
-      authenticated: false
-      deprecated: false
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      email:
-        custom: []
-        name: email
-        description: "The user's email address."
-        required: true
-        example: john@example.com
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      email: john@example.com
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "Password reset link sent to your email."
-          }
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 404
-        content: |-
-          {
-            "success": false,
-            "message": "User not found."
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: api/add2farm/auth/reset-password
-    metadata:
-      custom: []
-      groupName: 'Add2Farm Authentication'
-      groupDescription: 'APIs for user authentication and account management'
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Reset Password'
-      description: 'Reset your password using the reset token sent to your email.'
-      authenticated: false
-      deprecated: false
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      email:
-        custom: []
-        name: email
-        description: "The user's email address."
-        required: true
-        example: john@example.com
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      token:
-        custom: []
-        name: token
-        description: 'The password reset token from email.'
-        required: true
-        example: abc123def456
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      password:
-        custom: []
-        name: password
-        description: 'The new password. Minimum 8 characters.'
-        required: true
-        example: newpassword123
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      password_confirmation:
-        custom: []
-        name: password_confirmation
-        description: 'Password confirmation. Must match password field.'
-        required: true
-        example: newpassword123
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      email: john@example.com
-      token: abc123def456
-      password: newpassword123
-      password_confirmation: newpassword123
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "Password reset successfully."
-          }
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 404
-        content: |-
-          {
-            "success": false,
-            "message": "User not found."
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: api/add2farm/auth/logout
-    metadata:
-      custom: []
-      groupName: 'Add2Farm Authentication'
-      groupDescription: 'APIs for user authentication and account management'
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Logout user'
-      description: 'Revoke the current access token and logout the authenticated user.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "Logged out successfully."
           }
         headers: []
         description: ''

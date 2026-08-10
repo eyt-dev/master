@@ -295,6 +295,45 @@ class FarmerController extends Controller
      *   "message": "Farmer not found."
      * }
      */
+    /**
+     * Update a farmer
+     *
+     * Update farmer details including name, email, status and project assignments.
+     * Mobile number and type cannot be changed.
+     *
+     * @authenticated
+     * @urlParam id integer required The farmer ID. Example: 2
+     * @bodyParam name string required Farmer's full name. Example: Jane Farmer Updated
+     * @bodyParam email string optional Email address. Example: jane.updated@example.com
+     * @bodyParam status string required Status (Active, Inactive, Disable). Example: Active
+     * @bodyParam project_rows array optional Array of project assignments. Example: [{"project_id": 1, "status": "Active"}]
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Farmer updated successfully.",
+     *   "data": {
+     *     "id": 2,
+     *     "name": "Jane Farmer Updated",
+     *     "mobile_number": "+0987654321",
+     *     "email": "jane.updated@example.com",
+     *     "type": 4,
+     *     "type_label": "Farmer",
+     *     "status": "Active",
+     *     "created_by_name": "Farm Owner Name",
+     *     "created_at": "2026-08-07T10:30:00Z"
+     *   }
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Farmer not found."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "errors": {
+     *     "email": ["The email has already been taken."]
+     *   }
+     * }
+     */
     public function update(Request $request, $id)
     {
         $admin = Admin::where('type', self::ADMIN_TYPE)->find($id);

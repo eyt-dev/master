@@ -84,25 +84,41 @@ Route::prefix('add2farm/auth')->group(function () {
 });
 
 // Add2Farm protected routes — require a valid Sanctum token
-Route::prefix('add2farm')->middleware('auth:sanctum')->group(function () {
-    Route::post('auth/logout', [Add2FarmAuthController::class, 'logout']);
+Route::prefix('add2farm')->group(function () {
+    // Public endpoints (no auth required for Scribe)
+    Route::post('auth/logout', [Add2FarmAuthController::class, 'logout'])->middleware('auth:sanctum');
 
-    // User profile endpoints
-    Route::prefix('profile')->group(function () {
+    // User profile endpoints (protected)
+    Route::prefix('profile')->middleware('auth:sanctum')->group(function () {
         Route::get('/', [Add2FarmProfileController::class, 'show']);
         Route::put('/', [Add2FarmProfileController::class, 'update']);
         Route::put('change-password', [Add2FarmProfileController::class, 'changePassword']);
     });
 
     // Supervisors (Type 3) - Only Type 1 (Farm Admin) can access
-    Route::apiResource('supervisors', Add2FarmSupervisorController::class)
-        ->middleware('check.admin.type:1');
+    Route::middleware(['auth:sanctum', 'check.admin.type:1'])->group(function () {
+        Route::get('supervisors', [Add2FarmSupervisorController::class, 'index']);
+        Route::post('supervisors', [Add2FarmSupervisorController::class, 'store']);
+        Route::get('supervisors/{supervisor}', [Add2FarmSupervisorController::class, 'show']);
+        Route::put('supervisors/{supervisor}', [Add2FarmSupervisorController::class, 'update']);
+        Route::delete('supervisors/{supervisor}', [Add2FarmSupervisorController::class, 'destroy']);
+    });
 
     // Farmers (Type 4) - Only Type 2 (Farm Owner) can access
-    Route::apiResource('farmers', Add2FarmFarmerController::class)
-        ->middleware('check.admin.type:2');
+    Route::middleware(['auth:sanctum', 'check.admin.type:2'])->group(function () {
+        Route::get('farmers', [Add2FarmFarmerController::class, 'index']);
+        Route::post('farmers', [Add2FarmFarmerController::class, 'store']);
+        Route::get('farmers/{farmer}', [Add2FarmFarmerController::class, 'show']);
+        Route::put('farmers/{farmer}', [Add2FarmFarmerController::class, 'update']);
+        Route::delete('farmers/{farmer}', [Add2FarmFarmerController::class, 'destroy']);
+    });
 
     // Farms - Type 2 (Farm Owner) and Type 3 (Supervisor) can access
-    Route::apiResource('farms', Add2FarmFarmController::class)
-        ->middleware('check.admin.type:2,3');
+    Route::middleware(['auth:sanctum', 'check.admin.type:2,3'])->group(function () {
+        Route::get('farms', [Add2FarmFarmController::class, 'index']);
+        Route::post('farms', [Add2FarmFarmController::class, 'store']);
+        Route::get('farms/{farm}', [Add2FarmFarmController::class, 'show']);
+        Route::put('farms/{farm}', [Add2FarmFarmController::class, 'update']);
+        Route::delete('farms/{farm}', [Add2FarmFarmController::class, 'destroy']);
+    });
 });

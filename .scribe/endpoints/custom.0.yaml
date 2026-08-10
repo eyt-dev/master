@@ -1,53 +1,476 @@
-# To include an endpoint that isn't a part of your Laravel app (or belongs to a vendor package),
-# you can define it in a custom.*.yaml file, like this one.
-# Each custom file should contain an array of endpoints. Here's an example:
-# See https://scribe.knuckles.wtf/laravel/documenting/custom-endpoints#extra-sorting-groups-in-custom-endpoint-files for more options
+# Custom endpoints for Update and Delete operations
+# These are added manually because Scribe's automatic route detection doesn't always
+# pick up resource routes with URI parameters
 
-#- httpMethods:
-#    - POST
-#  uri: api/doSomething/{param}
-#  metadata:
-#    groupName: The group the endpoint belongs to. Can be a new group or an existing group.
-#    groupDescription: A description for the group. You don't need to set this for every endpoint; once is enough.
-#    subgroup: You can add a subgroup, too.
-#    title: Do something
-#    description: 'This endpoint allows you to do something.'
-#    authenticated: false
-#  headers:
-#    Content-Type: application/json
-#    Accept: application/json
-#  urlParameters:
-#    param:
-#      name: param
-#      description: A URL param for no reason.
-#      required: true
-#      example: 2
-#      type: integer
-#  queryParameters:
-#    speed:
-#      name: speed
-#      description: How fast the thing should be done. Can be `slow` or `fast`.
-#      required: false
-#      example: fast
-#      type: string
-#  bodyParameters:
-#    something:
-#      name: something
-#      description: The things we should do.
-#      required: true
-#      example:
-#        - string 1
-#        - string 2
-#      type: 'string[]'
-#  responses:
-#    - status: 200
-#      description: 'When the thing was done smoothly.'
-#      content: # Your response content can be an object, an array, a string or empty.
-#         {
-#           "hey": "ho ho ho"
-#         }
-#  responseFields:
-#    hey:
-#      name: hey
-#      description: Who knows?
-#      type: string # This is optional
+- httpMethods:
+    - GET
+  uri: api/add2farm/supervisors/{supervisor}
+  metadata:
+    groupName: Add2Farm Supervisors (Type 3)
+    title: Get a single supervisor
+    description: 'Retrieve detailed information of a specific supervisor.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  urlParameters:
+    supervisor:
+      name: supervisor
+      description: 'The supervisor ID.'
+      required: true
+      example: 1
+      type: integer
+  responses:
+    - status: 200
+      content: |-
+        {
+          "success": true,
+          "message": "Supervisor retrieved successfully.",
+          "data": {
+            "id": 1,
+            "name": "Supervisor Name",
+            "mobile_number": "+1234567890",
+            "email": "supervisor@add2farm.local",
+            "type": 3,
+            "type_label": "Supervisor",
+            "status": "Active",
+            "created_by_name": "Admin Name",
+            "created_at": "2026-08-07T10:30:00Z"
+          }
+        }
+    - status: 404
+      content: |-
+        {
+          "success": false,
+          "message": "Supervisor not found."
+        }
+
+- httpMethods:
+    - PUT
+  uri: api/add2farm/supervisors/{supervisor}
+  metadata:
+    groupName: Add2Farm Supervisors (Type 3)
+    title: Update a supervisor
+    description: 'Update supervisor details including name, email, status and project assignments. Mobile number and type cannot be changed.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  urlParameters:
+    supervisor:
+      name: supervisor
+      description: 'The supervisor ID.'
+      required: true
+      example: 1
+      type: integer
+  bodyParameters:
+    name:
+      name: name
+      description: "Supervisor's full name."
+      required: true
+      example: John Supervisor Updated
+      type: string
+    email:
+      name: email
+      description: Email address.
+      required: false
+      example: john.updated@example.com
+      type: string
+    status:
+      name: status
+      description: 'Status (Active, Inactive, Disable).'
+      required: true
+      example: Active
+      type: string
+    project_rows:
+      name: project_rows
+      description: Array of project assignments.
+      required: false
+      example:
+        - project_id: 1
+          status: Active
+      type: array
+  responses:
+    - status: 200
+      content: |-
+        {
+          "success": true,
+          "message": "Supervisor updated successfully.",
+          "data": {
+            "id": 1,
+            "name": "John Supervisor Updated",
+            "mobile_number": "+1234567890",
+            "email": "john.updated@example.com",
+            "type": 3,
+            "type_label": "Supervisor",
+            "status": "Active",
+            "created_by_name": "Admin Name",
+            "created_at": "2026-08-07T10:30:00Z"
+          }
+        }
+    - status: 404
+      content: |-
+        {
+          "success": false,
+          "message": "Supervisor not found."
+        }
+    - status: 422
+      content: |-
+        {
+          "success": false,
+          "errors": {
+            "email": ["The email has already been taken."]
+          }
+        }
+
+- httpMethods:
+    - DELETE
+  uri: api/add2farm/supervisors/{supervisor}
+  metadata:
+    groupName: Add2Farm Supervisors (Type 3)
+    title: Delete a supervisor
+    description: 'Delete a supervisor and their project status records.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  urlParameters:
+    supervisor:
+      name: supervisor
+      description: 'The supervisor ID.'
+      required: true
+      example: 1
+      type: integer
+  responses:
+    - status: 200
+      content: |-
+        {
+          "success": true,
+          "message": "Supervisor deleted successfully."
+        }
+    - status: 404
+      content: |-
+        {
+          "success": false,
+          "message": "Supervisor not found."
+        }
+
+- httpMethods:
+    - GET
+  uri: api/add2farm/farmers/{farmer}
+  metadata:
+    groupName: Add2Farm Farmers (Type 4)
+    title: Get a single farmer
+    description: 'Retrieve detailed information of a specific farmer.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  urlParameters:
+    farmer:
+      name: farmer
+      description: 'The farmer ID.'
+      required: true
+      example: 2
+      type: integer
+  responses:
+    - status: 200
+      content: |-
+        {
+          "success": true,
+          "message": "Farmer retrieved successfully.",
+          "data": {
+            "id": 2,
+            "name": "Farmer Name",
+            "mobile_number": "+0987654321",
+            "email": "farmer@add2farm.local",
+            "type": 4,
+            "type_label": "Farmer",
+            "status": "Active",
+            "created_by_name": "Farm Owner Name",
+            "created_at": "2026-08-07T10:30:00Z"
+          }
+        }
+    - status: 404
+      content: |-
+        {
+          "success": false,
+          "message": "Farmer not found."
+        }
+
+- httpMethods:
+    - PUT
+  uri: api/add2farm/farmers/{farmer}
+  metadata:
+    groupName: Add2Farm Farmers (Type 4)
+    title: Update a farmer
+    description: 'Update farmer details including name, email, status and project assignments. Mobile number and type cannot be changed.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  urlParameters:
+    farmer:
+      name: farmer
+      description: 'The farmer ID.'
+      required: true
+      example: 2
+      type: integer
+  bodyParameters:
+    name:
+      name: name
+      description: "Farmer's full name."
+      required: true
+      example: Jane Farmer Updated
+      type: string
+    email:
+      name: email
+      description: Email address.
+      required: false
+      example: jane.updated@example.com
+      type: string
+    status:
+      name: status
+      description: 'Status (Active, Inactive, Disable).'
+      required: true
+      example: Active
+      type: string
+    project_rows:
+      name: project_rows
+      description: Array of project assignments.
+      required: false
+      example:
+        - project_id: 1
+          status: Active
+      type: array
+  responses:
+    - status: 200
+      content: |-
+        {
+          "success": true,
+          "message": "Farmer updated successfully.",
+          "data": {
+            "id": 2,
+            "name": "Jane Farmer Updated",
+            "mobile_number": "+0987654321",
+            "email": "jane.updated@example.com",
+            "type": 4,
+            "type_label": "Farmer",
+            "status": "Active",
+            "created_by_name": "Farm Owner Name",
+            "created_at": "2026-08-07T10:30:00Z"
+          }
+        }
+    - status: 404
+      content: |-
+        {
+          "success": false,
+          "message": "Farmer not found."
+        }
+    - status: 422
+      content: |-
+        {
+          "success": false,
+          "errors": {
+            "email": ["The email has already been taken."]
+          }
+        }
+
+- httpMethods:
+    - DELETE
+  uri: api/add2farm/farmers/{farmer}
+  metadata:
+    groupName: Add2Farm Farmers (Type 4)
+    title: Delete a farmer
+    description: 'Delete a farmer and their project status records.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  urlParameters:
+    farmer:
+      name: farmer
+      description: 'The farmer ID.'
+      required: true
+      example: 2
+      type: integer
+  responses:
+    - status: 200
+      content: |-
+        {
+          "success": true,
+          "message": "Farmer deleted successfully."
+        }
+    - status: 404
+      content: |-
+        {
+          "success": false,
+          "message": "Farmer not found."
+        }
+
+- httpMethods:
+    - GET
+  uri: api/add2farm/farms/{farm}
+  metadata:
+    groupName: Add2Farm Farms
+    title: Get a single farm
+    description: 'Retrieve detailed information of a specific farm.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  urlParameters:
+    farm:
+      name: farm
+      description: 'The farm ID.'
+      required: true
+      example: 1
+      type: integer
+  responses:
+    - status: 200
+      content: |-
+        {
+          "success": true,
+          "message": "Farm retrieved successfully.",
+          "data": {
+            "id": 1,
+            "name": "Main Farm",
+            "location": "Village A",
+            "type": "Layer",
+            "number_of_hangars": 5,
+            "assigned_to": 1,
+            "assigned_to_name": "Farmer Name",
+            "created_by": 1,
+            "created_by_name": "Farm Owner Name",
+            "created_at": "2026-08-07T10:30:00Z"
+          }
+        }
+    - status: 404
+      content: |-
+        {
+          "success": false,
+          "message": "Farm not found."
+        }
+
+- httpMethods:
+    - PUT
+  uri: api/add2farm/farms/{farm}
+  metadata:
+    groupName: Add2Farm Farms
+    title: Update a farm
+    description: 'Update farm details including name, location, type, hangars count and farmer assignment.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  urlParameters:
+    farm:
+      name: farm
+      description: 'The farm ID.'
+      required: true
+      example: 1
+      type: integer
+  bodyParameters:
+    name:
+      name: name
+      description: Farm name.
+      required: true
+      example: Green Valley Farm Updated
+      type: string
+    location:
+      name: location
+      description: Farm location.
+      required: true
+      example: North Region Updated
+      type: string
+    type:
+      name: type
+      description: Farm type.
+      required: true
+      example: Poultry
+      type: string
+    number_of_hangars:
+      name: number_of_hangars
+      description: 'Number of hangars (1-999).'
+      required: true
+      example: 5
+      type: integer
+    assigned_to:
+      name: assigned_to
+      description: Farmer ID to assign the farm to.
+      required: false
+      example: 2
+      type: integer
+  responses:
+    - status: 200
+      content: |-
+        {
+          "success": true,
+          "message": "Farm updated successfully.",
+          "data": {
+            "id": 1,
+            "name": "Green Valley Farm Updated",
+            "location": "North Region Updated",
+            "type": "Poultry",
+            "number_of_hangars": 5,
+            "assigned_to": 2,
+            "assigned_to_name": "Farmer Name",
+            "created_by": 1,
+            "created_by_name": "Farm Owner Name",
+            "created_at": "2026-08-07T10:30:00Z",
+            "updated_at": "2026-08-10T14:22:00Z"
+          }
+        }
+    - status: 404
+      content: |-
+        {
+          "success": false,
+          "message": "Farm not found."
+        }
+    - status: 422
+      content: |-
+        {
+          "success": false,
+          "message": "This farmer is already assigned to another farm. Each farmer can be assigned to only 1 farm."
+        }
+
+- httpMethods:
+    - DELETE
+  uri: api/add2farm/farms/{farm}
+  metadata:
+    groupName: Add2Farm Farms
+    title: Delete a farm
+    description: 'Delete a farm and all its related records.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  urlParameters:
+    farm:
+      name: farm
+      description: 'The farm ID.'
+      required: true
+      example: 1
+      type: integer
+  responses:
+    - status: 200
+      content: |-
+        {
+          "success": true,
+          "message": "Farm deleted successfully."
+        }
+    - status: 404
+      content: |-
+        {
+          "success": false,
+          "message": "Farm not found."
+        }

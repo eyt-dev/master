@@ -270,6 +270,45 @@ class FarmController extends Controller
      *   "message": "Farm not found."
      * }
      */
+    /**
+     * Update a farm
+     *
+     * Update farm details including name, location, type, hangars count and farmer assignment.
+     *
+     * @authenticated
+     * @urlParam id integer required The farm ID. Example: 1
+     * @bodyParam name string required Farm name. Example: Green Valley Farm Updated
+     * @bodyParam location string required Farm location. Example: North Region Updated
+     * @bodyParam type string required Farm type. Example: Poultry
+     * @bodyParam number_of_hangars integer required Number of hangars (1-999). Example: 5
+     * @bodyParam assigned_to integer optional Farmer ID to assign the farm to. Example: 2
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Farm updated successfully.",
+     *   "data": {
+     *     "id": 1,
+     *     "name": "Green Valley Farm Updated",
+     *     "location": "North Region Updated",
+     *     "type": "Poultry",
+     *     "number_of_hangars": 5,
+     *     "assigned_to": 2,
+     *     "assigned_to_name": "Farmer Name",
+     *     "created_by": 1,
+     *     "created_by_name": "Farm Owner Name",
+     *     "created_at": "2026-08-07T10:30:00Z",
+     *     "updated_at": "2026-08-10T14:22:00Z"
+     *   }
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Farm not found."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "This farmer is already assigned to another farm. Each farmer can be assigned to only 1 farm."
+     * }
+     */
     public function update(Request $request, $id)
     {
         $farm = Farm::find($id);

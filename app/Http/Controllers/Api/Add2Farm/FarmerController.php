@@ -147,6 +147,7 @@ class FarmerController extends Controller
      *
      * Create a new Type 4 (Farmer) admin account.
      * Type is automatically set to 4 and cannot be changed.
+     * Type 2 (Farm Owner) can only assign 1 project per farmer.
      *
      * @authenticated
      * @bodyParam name string required Farmer's full name. Example: John Farmer
@@ -154,7 +155,7 @@ class FarmerController extends Controller
      * @bodyParam email string optional Email address. Example: john@example.com
      * @bodyParam password string required Password (min 8 characters). Example: password123
      * @bodyParam password_confirmation string required Password confirmation. Example: password123
-     * @bodyParam project_rows array optional Array of project assignments. Example: [{"project_id": 1, "status": "Active"}]
+     * @bodyParam project_rows array optional Array of project assignments. Type 2 can assign max 1. Example: [{"project_id": 1, "status": "Active"}]
      *
      * @response 201 {
      *   "success": true,
@@ -193,6 +194,20 @@ class FarmerController extends Controller
                 'success' => false,
                 'errors'  => $validator->errors(),
             ], 422);
+        }
+
+        // Type 2 (Farm Owner) can only assign 1 project per farmer
+        $user = auth()->user();
+        if ($user->type == 2 && $request->filled('project_rows')) {
+            $projectRows = array_filter($request->project_rows, function ($row) {
+                return !empty($row['project_id']);
+            });
+            if (count($projectRows) > 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Farm Owner can only assign 1 project per farmer.',
+                ], 422);
+            }
         }
 
         try {
@@ -254,13 +269,14 @@ class FarmerController extends Controller
      * Update a farmer
      *
      * Update farmer information. Type cannot be changed.
+     * Type 2 (Farm Owner) can only assign 1 project per farmer.
      *
      * @authenticated
      * @urlParam id integer required The farmer ID. Example: 2
      * @bodyParam name string required Farmer's full name. Example: John Farmer
      * @bodyParam email string optional Email address. Example: john@example.com
      * @bodyParam status string required Account status (Active, Inactive, Disable). Example: Active
-     * @bodyParam project_rows array optional Array of project assignments. Example: [{"project_id": 1, "status": "Active"}]
+     * @bodyParam project_rows array optional Array of project assignments. Type 2 can assign max 1. Example: [{"project_id": 1, "status": "Active"}]
      *
      * @response 200 {
      *   "success": true,
@@ -304,6 +320,20 @@ class FarmerController extends Controller
                 'success' => false,
                 'errors'  => $validator->errors(),
             ], 422);
+        }
+
+        // Type 2 (Farm Owner) can only assign 1 project per farmer
+        $user = auth()->user();
+        if ($user->type == 2 && $request->filled('project_rows')) {
+            $projectRows = array_filter($request->project_rows, function ($row) {
+                return !empty($row['project_id']);
+            });
+            if (count($projectRows) > 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Farm Owner can only assign 1 project per farmer.',
+                ], 422);
+            }
         }
 
         try {

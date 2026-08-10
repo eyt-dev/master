@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Add2Farm\AuthController as Add2FarmAuthController;
 use App\Http\Controllers\Api\Add2Farm\ProfileController as Add2FarmProfileController;
 use App\Http\Controllers\Api\Add2Farm\SupervisorController as Add2FarmSupervisorController;
 use App\Http\Controllers\Api\Add2Farm\FarmerController as Add2FarmFarmerController;
+use App\Http\Controllers\Api\Add2Farm\FarmController as Add2FarmFarmController;
 
 /*
 |--------------------------------------------------------------------------
@@ -93,9 +94,15 @@ Route::prefix('add2farm')->middleware('auth:sanctum')->group(function () {
         Route::put('change-password', [Add2FarmProfileController::class, 'changePassword']);
     });
 
-    // Supervisors (Type 3) - CRUD endpoints
-    Route::apiResource('supervisors', Add2FarmSupervisorController::class);
+    // Supervisors (Type 3) - Only Type 1 (Farm Admin) can access
+    Route::apiResource('supervisors', Add2FarmSupervisorController::class)
+        ->middleware('check.admin.type:1');
 
-    // Farmers (Type 4) - CRUD endpoints
-    Route::apiResource('farmers', Add2FarmFarmerController::class);
+    // Farmers (Type 4) - Only Type 2 (Farm Owner) can access
+    Route::apiResource('farmers', Add2FarmFarmerController::class)
+        ->middleware('check.admin.type:2');
+
+    // Farms - Type 2 (Farm Owner) and Type 3 (Supervisor) can access
+    Route::apiResource('farms', Add2FarmFarmController::class)
+        ->middleware('check.admin.type:2,3');
 });

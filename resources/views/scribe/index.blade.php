@@ -66,6 +66,28 @@
                     <a href="#authenticating-requests">Authenticating requests</a>
                 </li>
                             </ul>
+                    <ul id="tocify-header-add2farm-daily-records" class="tocify-header">
+                <li class="tocify-item level-1" data-unique="add2farm-daily-records">
+                    <a href="#add2farm-daily-records">Add2Farm Daily Records</a>
+                </li>
+                                    <ul id="tocify-subheader-add2farm-daily-records" class="tocify-subheader">
+                                                    <li class="tocify-item level-2" data-unique="add2farm-daily-records-GETapi-add2farm-daily-records">
+                                <a href="#add2farm-daily-records-GETapi-add2farm-daily-records">List all daily records</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="add2farm-daily-records-POSTapi-add2farm-daily-records">
+                                <a href="#add2farm-daily-records-POSTapi-add2farm-daily-records">Create a new daily record</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="add2farm-daily-records-GETapi-add2farm-daily-records--daily_record-">
+                                <a href="#add2farm-daily-records-GETapi-add2farm-daily-records--daily_record-">Get a single daily record</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="add2farm-daily-records-PUTapi-add2farm-daily-records--daily_record-">
+                                <a href="#add2farm-daily-records-PUTapi-add2farm-daily-records--daily_record-">Update a daily record</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="add2farm-daily-records-DELETEapi-add2farm-daily-records--daily_record-">
+                                <a href="#add2farm-daily-records-DELETEapi-add2farm-daily-records--daily_record-">Delete a daily record</a>
+                            </li>
+                                                                        </ul>
+                            </ul>
                     <ul id="tocify-header-add2farm-farmers-type-4" class="tocify-header">
                 <li class="tocify-item level-1" data-unique="add2farm-farmers-type-4">
                     <a href="#add2farm-farmers-type-4">Add2Farm Farmers (Type 4)</a>
@@ -107,6 +129,28 @@
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="add2farm-farms-DELETEapi-add2farm-farms--farm-">
                                 <a href="#add2farm-farms-DELETEapi-add2farm-farms--farm-">Delete a farm</a>
+                            </li>
+                                                                        </ul>
+                            </ul>
+                    <ul id="tocify-header-add2farm-flocks" class="tocify-header">
+                <li class="tocify-item level-1" data-unique="add2farm-flocks">
+                    <a href="#add2farm-flocks">Add2Farm Flocks</a>
+                </li>
+                                    <ul id="tocify-subheader-add2farm-flocks" class="tocify-subheader">
+                                                    <li class="tocify-item level-2" data-unique="add2farm-flocks-GETapi-add2farm-flocks">
+                                <a href="#add2farm-flocks-GETapi-add2farm-flocks">List all flocks</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="add2farm-flocks-POSTapi-add2farm-flocks">
+                                <a href="#add2farm-flocks-POSTapi-add2farm-flocks">Create a new flock</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="add2farm-flocks-GETapi-add2farm-flocks--flock-">
+                                <a href="#add2farm-flocks-GETapi-add2farm-flocks--flock-">Get a single flock</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="add2farm-flocks-PUTapi-add2farm-flocks--flock-">
+                                <a href="#add2farm-flocks-PUTapi-add2farm-flocks--flock-">Update a flock</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="add2farm-flocks-DELETEapi-add2farm-flocks--flock-">
+                                <a href="#add2farm-flocks-DELETEapi-add2farm-flocks--flock-">Delete a flock</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -166,7 +210,1133 @@ The Add2Farm API uses Sanctum token-based authentication. Register or login to o
 <p>All authenticated endpoints are marked with a <code>requires authentication</code> badge in the documentation below.</p>
 <p>You can retrieve your token by registering or logging in at the <code>/api/add2farm/auth/register</code> or <code>/api/add2farm/auth/login</code> endpoints.</p>
 
-        <h1 id="add2farm-farmers-type-4">Add2Farm Farmers (Type 4)</h1>
+        <h1 id="add2farm-daily-records">Add2Farm Daily Records</h1>
+
+    
+
+                                <h2 id="add2farm-daily-records-GETapi-add2farm-daily-records">List all daily records</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Get paginated list of all daily records with search and filtering.</p>
+
+<span id="example-requests-GETapi-add2farm-daily-records">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://admin.eyt.test/api/add2farm/daily-records?page=1&amp;per_page=20&amp;flock_id=1&amp;farm_id=1&amp;record_date=1786060800" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/daily-records"
+);
+
+const params = {
+    "page": "1",
+    "per_page": "20",
+    "flock_id": "1",
+    "farm_id": "1",
+    "record_date": "1786060800",
+};
+Object.keys(params)
+    .forEach(key =&gt; url.searchParams.append(key, params[key]));
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-add2farm-daily-records">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Daily records retrieved successfully.&quot;,
+    &quot;data&quot;: {
+        &quot;current_page&quot;: 1,
+        &quot;data&quot;: [
+            {
+                &quot;id&quot;: 1,
+                &quot;record_date&quot;: &quot;2026-08-07&quot;,
+                &quot;farm_id&quot;: 1,
+                &quot;farm_name&quot;: &quot;Main Farm&quot;,
+                &quot;flock_id&quot;: 1,
+                &quot;flock_name&quot;: &quot;Farm1-Flock4&quot;,
+                &quot;hangar_id&quot;: 1,
+                &quot;hangar_name&quot;: &quot;Farm1-Hangar1&quot;,
+                &quot;feed_kg&quot;: 450.5,
+                &quot;eggs_tray_30&quot;: 12,
+                &quot;eggs_count&quot;: 360,
+                &quot;eggs_weight&quot;: 18.5,
+                &quot;chicks_weight&quot;: 1.85,
+                &quot;mortality&quot;: 5
+            }
+        ],
+        &quot;total&quot;: 50,
+        &quot;last_page&quot;: 3
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-add2farm-daily-records" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-add2farm-daily-records"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-add2farm-daily-records"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-add2farm-daily-records" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-add2farm-daily-records">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-add2farm-daily-records" data-method="GET"
+      data-path="api/add2farm/daily-records"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-add2farm-daily-records', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-add2farm-daily-records"
+                    onclick="tryItOut('GETapi-add2farm-daily-records');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-add2farm-daily-records"
+                    onclick="cancelTryOut('GETapi-add2farm-daily-records');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-add2farm-daily-records"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/add2farm/daily-records</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-add2farm-daily-records"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-add2farm-daily-records"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-add2farm-daily-records"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="page"                data-endpoint="GETapi-add2farm-daily-records"
+               value="1"
+               data-component="query">
+    <br>
+<p>optional Pagination page number. Example: <code>1</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>per_page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="per_page"                data-endpoint="GETapi-add2farm-daily-records"
+               value="20"
+               data-component="query">
+    <br>
+<p>optional Items per page. Default: 15. Example: <code>20</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>flock_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="flock_id"                data-endpoint="GETapi-add2farm-daily-records"
+               value="1"
+               data-component="query">
+    <br>
+<p>optional Filter by flock ID. Example: <code>1</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>farm_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="farm_id"                data-endpoint="GETapi-add2farm-daily-records"
+               value="1"
+               data-component="query">
+    <br>
+<p>optional Filter by farm ID. Example: <code>1</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>record_date</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="record_date"                data-endpoint="GETapi-add2farm-daily-records"
+               value="1786060800"
+               data-component="query">
+    <br>
+<p>optional Filter by record date (format: yyyy-mm-dd). Example: <code>1786060800</code></p>
+            </div>
+                </form>
+
+                    <h2 id="add2farm-daily-records-POSTapi-add2farm-daily-records">Create a new daily record</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Create a new daily record for a flock/hangar combination.</p>
+
+<span id="example-requests-POSTapi-add2farm-daily-records">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://admin.eyt.test/api/add2farm/daily-records" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"record_date\": \"07-08-2026\",
+    \"flock_id\": 1,
+    \"hangar_id\": 1,
+    \"feed_kg\": 450.5,
+    \"eggs_tray_30\": 12,
+    \"eggs_count\": 360,
+    \"eggs_weight\": 18.5,
+    \"chicks_weight\": 1.85,
+    \"mortality\": 5
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/daily-records"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "record_date": "07-08-2026",
+    "flock_id": 1,
+    "hangar_id": 1,
+    "feed_kg": 450.5,
+    "eggs_tray_30": 12,
+    "eggs_count": 360,
+    "eggs_weight": 18.5,
+    "chicks_weight": 1.85,
+    "mortality": 5
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-add2farm-daily-records">
+            <blockquote>
+            <p>Example response (201):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Daily record created successfully.&quot;,
+    &quot;data&quot;: {
+        &quot;id&quot;: 1,
+        &quot;record_date&quot;: &quot;2026-08-07&quot;,
+        &quot;farm_id&quot;: 1,
+        &quot;farm_name&quot;: &quot;Main Farm&quot;,
+        &quot;flock_id&quot;: 1,
+        &quot;flock_name&quot;: &quot;Farm1-Flock4&quot;,
+        &quot;hangar_id&quot;: 1,
+        &quot;hangar_name&quot;: &quot;Farm1-Hangar1&quot;,
+        &quot;feed_kg&quot;: 450.5,
+        &quot;eggs_tray_30&quot;: 12,
+        &quot;eggs_count&quot;: 360,
+        &quot;eggs_weight&quot;: 18.5,
+        &quot;chicks_weight&quot;: 1.85,
+        &quot;mortality&quot;: 5,
+        &quot;created_by&quot;: 1,
+        &quot;created_by_name&quot;: &quot;Admin Name&quot;,
+        &quot;created_at&quot;: &quot;2026-08-07T10:30:00Z&quot;
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-POSTapi-add2farm-daily-records" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-add2farm-daily-records"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-add2farm-daily-records"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-add2farm-daily-records" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-add2farm-daily-records">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-add2farm-daily-records" data-method="POST"
+      data-path="api/add2farm/daily-records"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-add2farm-daily-records', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-add2farm-daily-records"
+                    onclick="tryItOut('POSTapi-add2farm-daily-records');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-add2farm-daily-records"
+                    onclick="cancelTryOut('POSTapi-add2farm-daily-records');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-add2farm-daily-records"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/add2farm/daily-records</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-add2farm-daily-records"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-add2farm-daily-records"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-add2farm-daily-records"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>record_date</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="record_date"                data-endpoint="POSTapi-add2farm-daily-records"
+               value="07-08-2026"
+               data-component="body">
+    <br>
+<p>Record date (format: dd-mm-yyyy). Example: <code>07-08-2026</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>flock_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="flock_id"                data-endpoint="POSTapi-add2farm-daily-records"
+               value="1"
+               data-component="body">
+    <br>
+<p>Flock ID. Example: <code>1</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>hangar_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="hangar_id"                data-endpoint="POSTapi-add2farm-daily-records"
+               value="1"
+               data-component="body">
+    <br>
+<p>Hangar ID. Example: <code>1</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>feed_kg</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="feed_kg"                data-endpoint="POSTapi-add2farm-daily-records"
+               value="450.5"
+               data-component="body">
+    <br>
+<p>Feed quantity in kg. Example: <code>450.5</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>eggs_tray_30</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="eggs_tray_30"                data-endpoint="POSTapi-add2farm-daily-records"
+               value="12"
+               data-component="body">
+    <br>
+<p>Number of egg trays (30 count). Example: <code>12</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>eggs_count</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="eggs_count"                data-endpoint="POSTapi-add2farm-daily-records"
+               value="360"
+               data-component="body">
+    <br>
+<p>Egg count. Example: <code>360</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>eggs_weight</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="eggs_weight"                data-endpoint="POSTapi-add2farm-daily-records"
+               value="18.5"
+               data-component="body">
+    <br>
+<p>Eggs weight in kg. Example: <code>18.5</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>chicks_weight</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="chicks_weight"                data-endpoint="POSTapi-add2farm-daily-records"
+               value="1.85"
+               data-component="body">
+    <br>
+<p>Chicks weight in kg. Example: <code>1.85</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>mortality</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="mortality"                data-endpoint="POSTapi-add2farm-daily-records"
+               value="5"
+               data-component="body">
+    <br>
+<p>Mortality count. Example: <code>5</code></p>
+        </div>
+        </form>
+
+                    <h2 id="add2farm-daily-records-GETapi-add2farm-daily-records--daily_record-">Get a single daily record</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Retrieve detailed information of a specific daily record.</p>
+
+<span id="example-requests-GETapi-add2farm-daily-records--daily_record-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://admin.eyt.test/api/add2farm/daily-records/1" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/daily-records/1"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-add2farm-daily-records--daily_record-">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Daily record retrieved successfully.&quot;,
+    &quot;data&quot;: {
+        &quot;id&quot;: 1,
+        &quot;record_date&quot;: &quot;2026-08-07&quot;,
+        &quot;farm_id&quot;: 1,
+        &quot;farm_name&quot;: &quot;Main Farm&quot;,
+        &quot;flock_id&quot;: 1,
+        &quot;flock_name&quot;: &quot;Farm1-Flock4&quot;,
+        &quot;hangar_id&quot;: 1,
+        &quot;hangar_name&quot;: &quot;Farm1-Hangar1&quot;,
+        &quot;feed_kg&quot;: 450.5,
+        &quot;eggs_tray_30&quot;: 12,
+        &quot;eggs_count&quot;: 360,
+        &quot;eggs_weight&quot;: 18.5,
+        &quot;chicks_weight&quot;: 1.85,
+        &quot;mortality&quot;: 5,
+        &quot;created_by&quot;: 1,
+        &quot;created_by_name&quot;: &quot;Admin Name&quot;,
+        &quot;created_at&quot;: &quot;2026-08-07T10:30:00Z&quot;
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-add2farm-daily-records--daily_record-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-add2farm-daily-records--daily_record-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-add2farm-daily-records--daily_record-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-add2farm-daily-records--daily_record-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-add2farm-daily-records--daily_record-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-add2farm-daily-records--daily_record-" data-method="GET"
+      data-path="api/add2farm/daily-records/{daily_record}"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-add2farm-daily-records--daily_record-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-add2farm-daily-records--daily_record-"
+                    onclick="tryItOut('GETapi-add2farm-daily-records--daily_record-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-add2farm-daily-records--daily_record-"
+                    onclick="cancelTryOut('GETapi-add2farm-daily-records--daily_record-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-add2farm-daily-records--daily_record-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/add2farm/daily-records/{daily_record}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-add2farm-daily-records--daily_record-"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-add2farm-daily-records--daily_record-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-add2farm-daily-records--daily_record-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>daily_record</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="daily_record"                data-endpoint="GETapi-add2farm-daily-records--daily_record-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The daily record ID. Example: <code>1</code></p>
+            </div>
+                    </form>
+
+                    <h2 id="add2farm-daily-records-PUTapi-add2farm-daily-records--daily_record-">Update a daily record</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Update an existing daily record.</p>
+
+<span id="example-requests-PUTapi-add2farm-daily-records--daily_record-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request PUT \
+    "http://admin.eyt.test/api/add2farm/daily-records/1" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"record_date\": \"07-08-2026\",
+    \"hangar_id\": 1,
+    \"feed_kg\": 450.5,
+    \"eggs_tray_30\": 12,
+    \"eggs_count\": 360,
+    \"eggs_weight\": 18.5,
+    \"chicks_weight\": 1.85,
+    \"mortality\": 5
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/daily-records/1"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "record_date": "07-08-2026",
+    "hangar_id": 1,
+    "feed_kg": 450.5,
+    "eggs_tray_30": 12,
+    "eggs_count": 360,
+    "eggs_weight": 18.5,
+    "chicks_weight": 1.85,
+    "mortality": 5
+};
+
+fetch(url, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-PUTapi-add2farm-daily-records--daily_record-">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Daily record updated successfully.&quot;,
+    &quot;data&quot;: {
+        &quot;id&quot;: 1,
+        &quot;record_date&quot;: &quot;2026-08-07&quot;,
+        &quot;farm_id&quot;: 1,
+        &quot;farm_name&quot;: &quot;Main Farm&quot;,
+        &quot;flock_id&quot;: 1,
+        &quot;flock_name&quot;: &quot;Farm1-Flock4&quot;,
+        &quot;hangar_id&quot;: 1,
+        &quot;hangar_name&quot;: &quot;Farm1-Hangar1&quot;,
+        &quot;feed_kg&quot;: 450.5,
+        &quot;eggs_tray_30&quot;: 12,
+        &quot;eggs_count&quot;: 360,
+        &quot;eggs_weight&quot;: 18.5,
+        &quot;chicks_weight&quot;: 1.85,
+        &quot;mortality&quot;: 5,
+        &quot;created_by&quot;: 1,
+        &quot;created_by_name&quot;: &quot;Admin Name&quot;,
+        &quot;created_at&quot;: &quot;2026-08-07T10:30:00Z&quot;
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-PUTapi-add2farm-daily-records--daily_record-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-PUTapi-add2farm-daily-records--daily_record-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-PUTapi-add2farm-daily-records--daily_record-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-PUTapi-add2farm-daily-records--daily_record-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-PUTapi-add2farm-daily-records--daily_record-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-PUTapi-add2farm-daily-records--daily_record-" data-method="PUT"
+      data-path="api/add2farm/daily-records/{daily_record}"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('PUTapi-add2farm-daily-records--daily_record-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-PUTapi-add2farm-daily-records--daily_record-"
+                    onclick="tryItOut('PUTapi-add2farm-daily-records--daily_record-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-PUTapi-add2farm-daily-records--daily_record-"
+                    onclick="cancelTryOut('PUTapi-add2farm-daily-records--daily_record-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-PUTapi-add2farm-daily-records--daily_record-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-darkblue">PUT</small>
+            <b><code>api/add2farm/daily-records/{daily_record}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="PUTapi-add2farm-daily-records--daily_record-"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="PUTapi-add2farm-daily-records--daily_record-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="PUTapi-add2farm-daily-records--daily_record-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>daily_record</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="daily_record"                data-endpoint="PUTapi-add2farm-daily-records--daily_record-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The daily record ID. Example: <code>1</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>record_date</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="record_date"                data-endpoint="PUTapi-add2farm-daily-records--daily_record-"
+               value="07-08-2026"
+               data-component="body">
+    <br>
+<p>Record date (format: dd-mm-yyyy). Example: <code>07-08-2026</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>hangar_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="hangar_id"                data-endpoint="PUTapi-add2farm-daily-records--daily_record-"
+               value="1"
+               data-component="body">
+    <br>
+<p>Hangar ID. Example: <code>1</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>feed_kg</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="feed_kg"                data-endpoint="PUTapi-add2farm-daily-records--daily_record-"
+               value="450.5"
+               data-component="body">
+    <br>
+<p>Feed quantity in kg. Example: <code>450.5</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>eggs_tray_30</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="eggs_tray_30"                data-endpoint="PUTapi-add2farm-daily-records--daily_record-"
+               value="12"
+               data-component="body">
+    <br>
+<p>Number of egg trays (30 count). Example: <code>12</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>eggs_count</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="eggs_count"                data-endpoint="PUTapi-add2farm-daily-records--daily_record-"
+               value="360"
+               data-component="body">
+    <br>
+<p>Egg count. Example: <code>360</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>eggs_weight</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="eggs_weight"                data-endpoint="PUTapi-add2farm-daily-records--daily_record-"
+               value="18.5"
+               data-component="body">
+    <br>
+<p>Eggs weight in kg. Example: <code>18.5</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>chicks_weight</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="chicks_weight"                data-endpoint="PUTapi-add2farm-daily-records--daily_record-"
+               value="1.85"
+               data-component="body">
+    <br>
+<p>Chicks weight in kg. Example: <code>1.85</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>mortality</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="mortality"                data-endpoint="PUTapi-add2farm-daily-records--daily_record-"
+               value="5"
+               data-component="body">
+    <br>
+<p>Mortality count. Example: <code>5</code></p>
+        </div>
+        </form>
+
+                    <h2 id="add2farm-daily-records-DELETEapi-add2farm-daily-records--daily_record-">Delete a daily record</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Delete a daily record.</p>
+
+<span id="example-requests-DELETEapi-add2farm-daily-records--daily_record-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request DELETE \
+    "http://admin.eyt.test/api/add2farm/daily-records/1" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/daily-records/1"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "DELETE",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-DELETEapi-add2farm-daily-records--daily_record-">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Daily record deleted successfully.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-DELETEapi-add2farm-daily-records--daily_record-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-DELETEapi-add2farm-daily-records--daily_record-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-DELETEapi-add2farm-daily-records--daily_record-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-DELETEapi-add2farm-daily-records--daily_record-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-DELETEapi-add2farm-daily-records--daily_record-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-DELETEapi-add2farm-daily-records--daily_record-" data-method="DELETE"
+      data-path="api/add2farm/daily-records/{daily_record}"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('DELETEapi-add2farm-daily-records--daily_record-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-DELETEapi-add2farm-daily-records--daily_record-"
+                    onclick="tryItOut('DELETEapi-add2farm-daily-records--daily_record-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-DELETEapi-add2farm-daily-records--daily_record-"
+                    onclick="cancelTryOut('DELETEapi-add2farm-daily-records--daily_record-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-DELETEapi-add2farm-daily-records--daily_record-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-red">DELETE</small>
+            <b><code>api/add2farm/daily-records/{daily_record}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="DELETEapi-add2farm-daily-records--daily_record-"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="DELETEapi-add2farm-daily-records--daily_record-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="DELETEapi-add2farm-daily-records--daily_record-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>daily_record</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="daily_record"                data-endpoint="DELETEapi-add2farm-daily-records--daily_record-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The daily record ID. Example: <code>1</code></p>
+            </div>
+                    </form>
+
+                <h1 id="add2farm-farmers-type-4">Add2Farm Farmers (Type 4)</h1>
 
     <p>CRUD APIs for managing Type 4 (Farmers) in Add2Farm</p>
 
@@ -725,20 +1895,8 @@ fetch(url, {
         &quot;email&quot;: &quot;farmer@add2farm.local&quot;,
         &quot;type&quot;: 4,
         &quot;type_label&quot;: &quot;Farmer&quot;,
-        &quot;status&quot;: &quot;Active&quot;,
-        &quot;created_by_name&quot;: &quot;Farm Owner Name&quot;,
-        &quot;created_at&quot;: &quot;2026-08-07T10:30:00Z&quot;
+        &quot;status&quot;: &quot;Active&quot;
     }
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (404):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;message&quot;: &quot;Farmer not found.&quot;
 }</code>
  </pre>
     </span>
@@ -846,7 +2004,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <small class="badge badge-darkred">requires authentication</small>
 </p>
 
-<p>Update farmer details including name, email, status and project assignments. Mobile number and type cannot be changed.</p>
+<p>Update farmer details including name, email, status and project assignments.</p>
 
 <span id="example-requests-PUTapi-add2farm-farmers--farmer-">
 <blockquote>Example request:</blockquote>
@@ -861,13 +2019,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --data "{
     \"name\": \"Jane Farmer Updated\",
     \"email\": \"jane.updated@example.com\",
-    \"status\": \"Active\",
-    \"project_rows\": [
-        {
-            \"project_id\": 1,
-            \"status\": \"Active\"
-        }
-    ]
+    \"status\": \"Active\"
 }"
 </code></pre></div>
 
@@ -886,13 +2038,7 @@ const headers = {
 let body = {
     "name": "Jane Farmer Updated",
     "email": "jane.updated@example.com",
-    "status": "Active",
-    "project_rows": [
-        {
-            "project_id": 1,
-            "status": "Active"
-        }
-    ]
+    "status": "Active"
 };
 
 fetch(url, {
@@ -918,34 +2064,7 @@ fetch(url, {
         &quot;mobile_number&quot;: &quot;+0987654321&quot;,
         &quot;email&quot;: &quot;jane.updated@example.com&quot;,
         &quot;type&quot;: 4,
-        &quot;type_label&quot;: &quot;Farmer&quot;,
-        &quot;status&quot;: &quot;Active&quot;,
-        &quot;created_by_name&quot;: &quot;Farm Owner Name&quot;,
-        &quot;created_at&quot;: &quot;2026-08-07T10:30:00Z&quot;
-    }
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (404):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;message&quot;: &quot;Farmer not found.&quot;
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (422):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;errors&quot;: {
-        &quot;email&quot;: [
-            &quot;The email has already been taken.&quot;
-        ]
+        &quot;status&quot;: &quot;Active&quot;
     }
 }</code>
  </pre>
@@ -1083,18 +2202,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
     <br>
 <p>Status (Active, Inactive, Disable). Example: <code>Active</code></p>
         </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>project_rows</code></b>&nbsp;&nbsp;
-<small>array</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="project_rows"                data-endpoint="PUTapi-add2farm-farmers--farmer-"
-               value=""
-               data-component="body">
-    <br>
-<p>Array of project assignments.</p>
-        </div>
         </form>
 
                     <h2 id="add2farm-farmers-type-4-DELETEapi-add2farm-farmers--farmer-">Delete a farmer</h2>
@@ -1145,16 +2252,6 @@ fetch(url, {
 <code class="language-json" style="max-height: 300px;">{
     &quot;success&quot;: true,
     &quot;message&quot;: &quot;Farmer deleted successfully.&quot;
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (404):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;message&quot;: &quot;Farmer not found.&quot;
 }</code>
  </pre>
     </span>
@@ -1790,22 +2887,8 @@ fetch(url, {
         &quot;location&quot;: &quot;Village A&quot;,
         &quot;type&quot;: &quot;Layer&quot;,
         &quot;number_of_hangars&quot;: 5,
-        &quot;assigned_to&quot;: 1,
-        &quot;assigned_to_name&quot;: &quot;Farmer Name&quot;,
-        &quot;created_by&quot;: 1,
-        &quot;created_by_name&quot;: &quot;Farm Owner Name&quot;,
-        &quot;created_at&quot;: &quot;2026-08-07T10:30:00Z&quot;
+        &quot;assigned_to&quot;: 1
     }
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (404):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;message&quot;: &quot;Farm not found.&quot;
 }</code>
  </pre>
     </span>
@@ -1929,8 +3012,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"name\": \"Green Valley Farm Updated\",
     \"location\": \"North Region Updated\",
     \"type\": \"Poultry\",
-    \"number_of_hangars\": 5,
-    \"assigned_to\": 2
+    \"number_of_hangars\": 5
 }"
 </code></pre></div>
 
@@ -1950,8 +3032,7 @@ let body = {
     "name": "Green Valley Farm Updated",
     "location": "North Region Updated",
     "type": "Poultry",
-    "number_of_hangars": 5,
-    "assigned_to": 2
+    "number_of_hangars": 5
 };
 
 fetch(url, {
@@ -1976,34 +3057,8 @@ fetch(url, {
         &quot;name&quot;: &quot;Green Valley Farm Updated&quot;,
         &quot;location&quot;: &quot;North Region Updated&quot;,
         &quot;type&quot;: &quot;Poultry&quot;,
-        &quot;number_of_hangars&quot;: 5,
-        &quot;assigned_to&quot;: 2,
-        &quot;assigned_to_name&quot;: &quot;Farmer Name&quot;,
-        &quot;created_by&quot;: 1,
-        &quot;created_by_name&quot;: &quot;Farm Owner Name&quot;,
-        &quot;created_at&quot;: &quot;2026-08-07T10:30:00Z&quot;,
-        &quot;updated_at&quot;: &quot;2026-08-10T14:22:00Z&quot;
+        &quot;number_of_hangars&quot;: 5
     }
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (404):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;message&quot;: &quot;Farm not found.&quot;
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (422):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;message&quot;: &quot;This farmer is already assigned to another farm. Each farmer can be assigned to only 1 farm.&quot;
 }</code>
  </pre>
     </span>
@@ -2152,18 +3207,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
     <br>
 <p>Number of hangars (1-999). Example: <code>5</code></p>
         </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>assigned_to</code></b>&nbsp;&nbsp;
-<small>integer</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="number" style="display: none"
-               step="any"               name="assigned_to"                data-endpoint="PUTapi-add2farm-farms--farm-"
-               value="2"
-               data-component="body">
-    <br>
-<p>Farmer ID to assign the farm to. Example: <code>2</code></p>
-        </div>
         </form>
 
                     <h2 id="add2farm-farms-DELETEapi-add2farm-farms--farm-">Delete a farm</h2>
@@ -2214,16 +3257,6 @@ fetch(url, {
 <code class="language-json" style="max-height: 300px;">{
     &quot;success&quot;: true,
     &quot;message&quot;: &quot;Farm deleted successfully.&quot;
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (404):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;message&quot;: &quot;Farm not found.&quot;
 }</code>
  </pre>
     </span>
@@ -2322,6 +3355,1064 @@ You can check the Dev Tools console for debugging information.</code></pre>
                data-component="url">
     <br>
 <p>The farm ID. Example: <code>1</code></p>
+            </div>
+                    </form>
+
+                <h1 id="add2farm-flocks">Add2Farm Flocks</h1>
+
+    
+
+                                <h2 id="add2farm-flocks-GETapi-add2farm-flocks">List all flocks</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Get paginated list of all flocks with search and filtering.</p>
+
+<span id="example-requests-GETapi-add2farm-flocks">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://admin.eyt.test/api/add2farm/flocks?page=1&amp;per_page=20&amp;search=Flock1" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/flocks"
+);
+
+const params = {
+    "page": "1",
+    "per_page": "20",
+    "search": "Flock1",
+};
+Object.keys(params)
+    .forEach(key =&gt; url.searchParams.append(key, params[key]));
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-add2farm-flocks">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Flocks retrieved successfully.&quot;,
+    &quot;data&quot;: {
+        &quot;current_page&quot;: 1,
+        &quot;data&quot;: [
+            {
+                &quot;id&quot;: 1,
+                &quot;name&quot;: &quot;Farm1-Flock4&quot;,
+                &quot;farm_id&quot;: 1,
+                &quot;farm_name&quot;: &quot;Main Farm&quot;,
+                &quot;chicks_supplier_id&quot;: 1,
+                &quot;chicks_supplier_name&quot;: &quot;Al-Rowad Farm&quot;,
+                &quot;breed&quot;: &quot;Broiler,Cobb 500&quot;,
+                &quot;start_date&quot;: &quot;2026-05-18&quot;,
+                &quot;total_quantity&quot;: 12500
+            }
+        ],
+        &quot;total&quot;: 10,
+        &quot;last_page&quot;: 1
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-add2farm-flocks" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-add2farm-flocks"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-add2farm-flocks"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-add2farm-flocks" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-add2farm-flocks">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-add2farm-flocks" data-method="GET"
+      data-path="api/add2farm/flocks"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-add2farm-flocks', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-add2farm-flocks"
+                    onclick="tryItOut('GETapi-add2farm-flocks');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-add2farm-flocks"
+                    onclick="cancelTryOut('GETapi-add2farm-flocks');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-add2farm-flocks"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/add2farm/flocks</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-add2farm-flocks"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-add2farm-flocks"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-add2farm-flocks"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="page"                data-endpoint="GETapi-add2farm-flocks"
+               value="1"
+               data-component="query">
+    <br>
+<p>optional Pagination page number. Example: <code>1</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>per_page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="per_page"                data-endpoint="GETapi-add2farm-flocks"
+               value="20"
+               data-component="query">
+    <br>
+<p>optional Items per page. Default: 15. Example: <code>20</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>search</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="search"                data-endpoint="GETapi-add2farm-flocks"
+               value="Flock1"
+               data-component="query">
+    <br>
+<p>optional Search by flock name. Example: <code>Flock1</code></p>
+            </div>
+                </form>
+
+                    <h2 id="add2farm-flocks-POSTapi-add2farm-flocks">Create a new flock</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Create a new flock with hangar allocations.</p>
+
+<span id="example-requests-POSTapi-add2farm-flocks">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://admin.eyt.test/api/add2farm/flocks" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"name\": \"Farm1-Flock4\",
+    \"farm_id\": 1,
+    \"chicks_supplier_id\": 1,
+    \"breed\": \"Broiler,Cobb 500\",
+    \"start_date\": \"18-05-2026\",
+    \"total_quantity\": 12500,
+    \"hangar_allocations\": [
+        {
+            \"hangar_id\": 1,
+            \"quantity\": 3000
+        },
+        {
+            \"hangar_id\": 2,
+            \"quantity\": 3000
+        }
+    ]
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/flocks"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "name": "Farm1-Flock4",
+    "farm_id": 1,
+    "chicks_supplier_id": 1,
+    "breed": "Broiler,Cobb 500",
+    "start_date": "18-05-2026",
+    "total_quantity": 12500,
+    "hangar_allocations": [
+        {
+            "hangar_id": 1,
+            "quantity": 3000
+        },
+        {
+            "hangar_id": 2,
+            "quantity": 3000
+        }
+    ]
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-add2farm-flocks">
+            <blockquote>
+            <p>Example response (201):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Flock created successfully.&quot;,
+    &quot;data&quot;: {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;Farm1-Flock4&quot;,
+        &quot;farm_id&quot;: 1,
+        &quot;farm_name&quot;: &quot;Main Farm&quot;,
+        &quot;chicks_supplier_id&quot;: 1,
+        &quot;chicks_supplier_name&quot;: &quot;Al-Rowad Farm&quot;,
+        &quot;breed&quot;: &quot;Broiler,Cobb 500&quot;,
+        &quot;start_date&quot;: &quot;2026-05-18&quot;,
+        &quot;total_quantity&quot;: 12500,
+        &quot;created_by&quot;: 1,
+        &quot;created_by_name&quot;: &quot;Admin Name&quot;,
+        &quot;created_at&quot;: &quot;2026-08-07T10:30:00Z&quot;
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-POSTapi-add2farm-flocks" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-add2farm-flocks"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-add2farm-flocks"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-add2farm-flocks" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-add2farm-flocks">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-add2farm-flocks" data-method="POST"
+      data-path="api/add2farm/flocks"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-add2farm-flocks', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-add2farm-flocks"
+                    onclick="tryItOut('POSTapi-add2farm-flocks');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-add2farm-flocks"
+                    onclick="cancelTryOut('POSTapi-add2farm-flocks');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-add2farm-flocks"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/add2farm/flocks</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-add2farm-flocks"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-add2farm-flocks"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-add2farm-flocks"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>name</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="name"                data-endpoint="POSTapi-add2farm-flocks"
+               value="Farm1-Flock4"
+               data-component="body">
+    <br>
+<p>Flock name. Example: <code>Farm1-Flock4</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>farm_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="farm_id"                data-endpoint="POSTapi-add2farm-flocks"
+               value="1"
+               data-component="body">
+    <br>
+<p>Farm ID. Example: <code>1</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>chicks_supplier_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="chicks_supplier_id"                data-endpoint="POSTapi-add2farm-flocks"
+               value="1"
+               data-component="body">
+    <br>
+<p>Chicks supplier ID. Example: <code>1</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>breed</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="breed"                data-endpoint="POSTapi-add2farm-flocks"
+               value="Broiler,Cobb 500"
+               data-component="body">
+    <br>
+<p>Breed name. Example: <code>Broiler,Cobb 500</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>start_date</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="start_date"                data-endpoint="POSTapi-add2farm-flocks"
+               value="18-05-2026"
+               data-component="body">
+    <br>
+<p>Start date (format: dd-mm-yyyy). Example: <code>18-05-2026</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>total_quantity</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="total_quantity"                data-endpoint="POSTapi-add2farm-flocks"
+               value="12500"
+               data-component="body">
+    <br>
+<p>Total number of chicks. Example: <code>12500</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>hangar_allocations</code></b>&nbsp;&nbsp;
+<small>array</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="hangar_allocations"                data-endpoint="POSTapi-add2farm-flocks"
+               value=""
+               data-component="body">
+    <br>
+<p>Array of hangar allocations.</p>
+        </div>
+        </form>
+
+                    <h2 id="add2farm-flocks-GETapi-add2farm-flocks--flock-">Get a single flock</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Retrieve detailed information of a specific flock.</p>
+
+<span id="example-requests-GETapi-add2farm-flocks--flock-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://admin.eyt.test/api/add2farm/flocks/1" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/flocks/1"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-add2farm-flocks--flock-">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Flock retrieved successfully.&quot;,
+    &quot;data&quot;: {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;Farm1-Flock4&quot;,
+        &quot;farm_id&quot;: 1,
+        &quot;farm_name&quot;: &quot;Main Farm&quot;,
+        &quot;chicks_supplier_id&quot;: 1,
+        &quot;chicks_supplier_name&quot;: &quot;Al-Rowad Farm&quot;,
+        &quot;breed&quot;: &quot;Broiler,Cobb 500&quot;,
+        &quot;start_date&quot;: &quot;2026-05-18&quot;,
+        &quot;total_quantity&quot;: 12500,
+        &quot;created_by&quot;: 1,
+        &quot;created_by_name&quot;: &quot;Admin Name&quot;,
+        &quot;hangars&quot;: [
+            {
+                &quot;hangar_id&quot;: 1,
+                &quot;hangar_name&quot;: &quot;Farm1-Hangar1&quot;,
+                &quot;quantity&quot;: 3000
+            }
+        ],
+        &quot;created_at&quot;: &quot;2026-08-07T10:30:00Z&quot;
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-add2farm-flocks--flock-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-add2farm-flocks--flock-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-add2farm-flocks--flock-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-add2farm-flocks--flock-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-add2farm-flocks--flock-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-add2farm-flocks--flock-" data-method="GET"
+      data-path="api/add2farm/flocks/{flock}"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-add2farm-flocks--flock-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-add2farm-flocks--flock-"
+                    onclick="tryItOut('GETapi-add2farm-flocks--flock-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-add2farm-flocks--flock-"
+                    onclick="cancelTryOut('GETapi-add2farm-flocks--flock-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-add2farm-flocks--flock-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/add2farm/flocks/{flock}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-add2farm-flocks--flock-"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-add2farm-flocks--flock-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-add2farm-flocks--flock-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>flock</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="flock"                data-endpoint="GETapi-add2farm-flocks--flock-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The flock ID. Example: <code>1</code></p>
+            </div>
+                    </form>
+
+                    <h2 id="add2farm-flocks-PUTapi-add2farm-flocks--flock-">Update a flock</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Update flock details and hangar allocations.</p>
+
+<span id="example-requests-PUTapi-add2farm-flocks--flock-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request PUT \
+    "http://admin.eyt.test/api/add2farm/flocks/1" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"name\": \"Farm1-Flock4 Updated\",
+    \"chicks_supplier_id\": 1,
+    \"breed\": \"Broiler,Cobb 500\",
+    \"start_date\": \"18-05-2026\",
+    \"total_quantity\": 12500,
+    \"hangar_allocations\": [
+        {
+            \"hangar_id\": 1,
+            \"quantity\": 3000
+        }
+    ]
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/flocks/1"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "name": "Farm1-Flock4 Updated",
+    "chicks_supplier_id": 1,
+    "breed": "Broiler,Cobb 500",
+    "start_date": "18-05-2026",
+    "total_quantity": 12500,
+    "hangar_allocations": [
+        {
+            "hangar_id": 1,
+            "quantity": 3000
+        }
+    ]
+};
+
+fetch(url, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-PUTapi-add2farm-flocks--flock-">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Flock updated successfully.&quot;,
+    &quot;data&quot;: {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;Farm1-Flock4 Updated&quot;,
+        &quot;farm_id&quot;: 1,
+        &quot;farm_name&quot;: &quot;Main Farm&quot;,
+        &quot;chicks_supplier_id&quot;: 1,
+        &quot;chicks_supplier_name&quot;: &quot;Al-Rowad Farm&quot;,
+        &quot;breed&quot;: &quot;Broiler,Cobb 500&quot;,
+        &quot;start_date&quot;: &quot;2026-05-18&quot;,
+        &quot;total_quantity&quot;: 12500,
+        &quot;created_by&quot;: 1,
+        &quot;created_by_name&quot;: &quot;Admin Name&quot;
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-PUTapi-add2farm-flocks--flock-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-PUTapi-add2farm-flocks--flock-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-PUTapi-add2farm-flocks--flock-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-PUTapi-add2farm-flocks--flock-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-PUTapi-add2farm-flocks--flock-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-PUTapi-add2farm-flocks--flock-" data-method="PUT"
+      data-path="api/add2farm/flocks/{flock}"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('PUTapi-add2farm-flocks--flock-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-PUTapi-add2farm-flocks--flock-"
+                    onclick="tryItOut('PUTapi-add2farm-flocks--flock-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-PUTapi-add2farm-flocks--flock-"
+                    onclick="cancelTryOut('PUTapi-add2farm-flocks--flock-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-PUTapi-add2farm-flocks--flock-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-darkblue">PUT</small>
+            <b><code>api/add2farm/flocks/{flock}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="PUTapi-add2farm-flocks--flock-"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="PUTapi-add2farm-flocks--flock-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="PUTapi-add2farm-flocks--flock-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>flock</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="flock"                data-endpoint="PUTapi-add2farm-flocks--flock-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The flock ID. Example: <code>1</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>name</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="name"                data-endpoint="PUTapi-add2farm-flocks--flock-"
+               value="Farm1-Flock4 Updated"
+               data-component="body">
+    <br>
+<p>Flock name. Example: <code>Farm1-Flock4 Updated</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>chicks_supplier_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="chicks_supplier_id"                data-endpoint="PUTapi-add2farm-flocks--flock-"
+               value="1"
+               data-component="body">
+    <br>
+<p>Chicks supplier ID. Example: <code>1</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>breed</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="breed"                data-endpoint="PUTapi-add2farm-flocks--flock-"
+               value="Broiler,Cobb 500"
+               data-component="body">
+    <br>
+<p>Breed name. Example: <code>Broiler,Cobb 500</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>start_date</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="start_date"                data-endpoint="PUTapi-add2farm-flocks--flock-"
+               value="18-05-2026"
+               data-component="body">
+    <br>
+<p>Start date (format: dd-mm-yyyy). Example: <code>18-05-2026</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>total_quantity</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="total_quantity"                data-endpoint="PUTapi-add2farm-flocks--flock-"
+               value="12500"
+               data-component="body">
+    <br>
+<p>Total number of chicks. Example: <code>12500</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>hangar_allocations</code></b>&nbsp;&nbsp;
+<small>array</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="hangar_allocations"                data-endpoint="PUTapi-add2farm-flocks--flock-"
+               value=""
+               data-component="body">
+    <br>
+<p>Array of hangar allocations.</p>
+        </div>
+        </form>
+
+                    <h2 id="add2farm-flocks-DELETEapi-add2farm-flocks--flock-">Delete a flock</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Delete a flock and all its hangar allocations.</p>
+
+<span id="example-requests-DELETEapi-add2farm-flocks--flock-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request DELETE \
+    "http://admin.eyt.test/api/add2farm/flocks/1" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/flocks/1"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "DELETE",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-DELETEapi-add2farm-flocks--flock-">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Flock deleted successfully.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-DELETEapi-add2farm-flocks--flock-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-DELETEapi-add2farm-flocks--flock-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-DELETEapi-add2farm-flocks--flock-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-DELETEapi-add2farm-flocks--flock-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-DELETEapi-add2farm-flocks--flock-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-DELETEapi-add2farm-flocks--flock-" data-method="DELETE"
+      data-path="api/add2farm/flocks/{flock}"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('DELETEapi-add2farm-flocks--flock-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-DELETEapi-add2farm-flocks--flock-"
+                    onclick="tryItOut('DELETEapi-add2farm-flocks--flock-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-DELETEapi-add2farm-flocks--flock-"
+                    onclick="cancelTryOut('DELETEapi-add2farm-flocks--flock-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-DELETEapi-add2farm-flocks--flock-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-red">DELETE</small>
+            <b><code>api/add2farm/flocks/{flock}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="DELETEapi-add2farm-flocks--flock-"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="DELETEapi-add2farm-flocks--flock-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="DELETEapi-add2farm-flocks--flock-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>flock</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="flock"                data-endpoint="DELETEapi-add2farm-flocks--flock-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The flock ID. Example: <code>1</code></p>
             </div>
                     </form>
 
@@ -2883,20 +4974,8 @@ fetch(url, {
         &quot;email&quot;: &quot;supervisor@add2farm.local&quot;,
         &quot;type&quot;: 3,
         &quot;type_label&quot;: &quot;Supervisor&quot;,
-        &quot;status&quot;: &quot;Active&quot;,
-        &quot;created_by_name&quot;: &quot;Admin Name&quot;,
-        &quot;created_at&quot;: &quot;2026-08-07T10:30:00Z&quot;
+        &quot;status&quot;: &quot;Active&quot;
     }
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (404):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;message&quot;: &quot;Supervisor not found.&quot;
 }</code>
  </pre>
     </span>
@@ -3004,7 +5083,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <small class="badge badge-darkred">requires authentication</small>
 </p>
 
-<p>Update supervisor details including name, email, status and project assignments. Mobile number and type cannot be changed.</p>
+<p>Update supervisor details including name, email, status and project assignments.</p>
 
 <span id="example-requests-PUTapi-add2farm-supervisors--supervisor-">
 <blockquote>Example request:</blockquote>
@@ -3019,13 +5098,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --data "{
     \"name\": \"John Supervisor Updated\",
     \"email\": \"john.updated@example.com\",
-    \"status\": \"Active\",
-    \"project_rows\": [
-        {
-            \"project_id\": 1,
-            \"status\": \"Active\"
-        }
-    ]
+    \"status\": \"Active\"
 }"
 </code></pre></div>
 
@@ -3044,13 +5117,7 @@ const headers = {
 let body = {
     "name": "John Supervisor Updated",
     "email": "john.updated@example.com",
-    "status": "Active",
-    "project_rows": [
-        {
-            "project_id": 1,
-            "status": "Active"
-        }
-    ]
+    "status": "Active"
 };
 
 fetch(url, {
@@ -3076,34 +5143,7 @@ fetch(url, {
         &quot;mobile_number&quot;: &quot;+1234567890&quot;,
         &quot;email&quot;: &quot;john.updated@example.com&quot;,
         &quot;type&quot;: 3,
-        &quot;type_label&quot;: &quot;Supervisor&quot;,
-        &quot;status&quot;: &quot;Active&quot;,
-        &quot;created_by_name&quot;: &quot;Admin Name&quot;,
-        &quot;created_at&quot;: &quot;2026-08-07T10:30:00Z&quot;
-    }
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (404):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;message&quot;: &quot;Supervisor not found.&quot;
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (422):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;errors&quot;: {
-        &quot;email&quot;: [
-            &quot;The email has already been taken.&quot;
-        ]
+        &quot;status&quot;: &quot;Active&quot;
     }
 }</code>
  </pre>
@@ -3241,18 +5281,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
     <br>
 <p>Status (Active, Inactive, Disable). Example: <code>Active</code></p>
         </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>project_rows</code></b>&nbsp;&nbsp;
-<small>array</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="project_rows"                data-endpoint="PUTapi-add2farm-supervisors--supervisor-"
-               value=""
-               data-component="body">
-    <br>
-<p>Array of project assignments.</p>
-        </div>
         </form>
 
                     <h2 id="add2farm-supervisors-type-3-DELETEapi-add2farm-supervisors--supervisor-">Delete a supervisor</h2>
@@ -3303,16 +5331,6 @@ fetch(url, {
 <code class="language-json" style="max-height: 300px;">{
     &quot;success&quot;: true,
     &quot;message&quot;: &quot;Supervisor deleted successfully.&quot;
-}</code>
- </pre>
-            <blockquote>
-            <p>Example response (404):</p>
-        </blockquote>
-                <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;success&quot;: false,
-    &quot;message&quot;: &quot;Supervisor not found.&quot;
 }</code>
  </pre>
     </span>

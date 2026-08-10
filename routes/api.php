@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\Add2Farm\ProfileController as Add2FarmProfileContro
 use App\Http\Controllers\Api\Add2Farm\SupervisorController as Add2FarmSupervisorController;
 use App\Http\Controllers\Api\Add2Farm\FarmerController as Add2FarmFarmerController;
 use App\Http\Controllers\Api\Add2Farm\FarmController as Add2FarmFarmController;
+use App\Http\Controllers\Api\Add2Farm\FlockController as Add2FarmFlockController;
+use App\Http\Controllers\Api\Add2Farm\DailyRecordController as Add2FarmDailyRecordController;
 
 /*
 |--------------------------------------------------------------------------
@@ -120,5 +122,23 @@ Route::prefix('add2farm')->group(function () {
         Route::get('farms/{farm}', [Add2FarmFarmController::class, 'show']);
         Route::put('farms/{farm}', [Add2FarmFarmController::class, 'update']);
         Route::delete('farms/{farm}', [Add2FarmFarmController::class, 'destroy']);
+    });
+
+    // Flocks - Accessible to authenticated users
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('flocks', [Add2FarmFlockController::class, 'index']);
+        Route::post('flocks', [Add2FarmFlockController::class, 'store']);
+        Route::get('flocks/{flock}', [Add2FarmFlockController::class, 'show']);
+        Route::put('flocks/{flock}', [Add2FarmFlockController::class, 'update']);
+        Route::delete('flocks/{flock}', [Add2FarmFlockController::class, 'destroy']);
+    });
+
+    // Daily Records - Accessible to authenticated users
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('daily-records', [Add2FarmDailyRecordController::class, 'index']);
+        Route::post('daily-records', [Add2FarmDailyRecordController::class, 'store']);
+        Route::get('daily-records/{daily_record}', [Add2FarmDailyRecordController::class, 'show']);
+        Route::put('daily-records/{daily_record}', [Add2FarmDailyRecordController::class, 'update']);
+        Route::delete('daily-records/{daily_record}', [Add2FarmDailyRecordController::class, 'destroy']);
     });
 });

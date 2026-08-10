@@ -1,6 +1,212 @@
-# Custom endpoints for Update and Delete operations
+# Custom endpoints for Add2Farm resources
 # These are added manually because Scribe's automatic route detection doesn't always
 # pick up resource routes with URI parameters
+
+- httpMethods:
+    - GET
+  uri: api/add2farm/flocks
+  metadata:
+    groupName: Add2Farm Flocks
+    title: List all flocks
+    description: 'Get paginated list of all flocks with search and filtering.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  queryParameters:
+    page:
+      name: page
+      description: 'optional Pagination page number.'
+      required: false
+      example: 1
+      type: integer
+    per_page:
+      name: per_page
+      description: 'optional Items per page. Default: 15.'
+      required: false
+      example: 20
+      type: integer
+    search:
+      name: search
+      description: 'optional Search by flock name.'
+      required: false
+      example: Flock1
+      type: string
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Flocks retrieved successfully.", "data": {"current_page": 1, "data": [{"id": 1, "name": "Farm1-Flock4", "farm_id": 1, "farm_name": "Main Farm", "chicks_supplier_id": 1, "chicks_supplier_name": "Al-Rowad Farm", "breed": "Broiler,Cobb 500", "start_date": "2026-05-18", "total_quantity": 12500}], "total": 10, "last_page": 1}}'
+
+- httpMethods:
+    - POST
+  uri: api/add2farm/flocks
+  metadata:
+    groupName: Add2Farm Flocks
+    title: Create a new flock
+    description: 'Create a new flock with hangar allocations.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  bodyParameters:
+    name:
+      name: name
+      description: Flock name.
+      required: true
+      example: Farm1-Flock4
+      type: string
+    farm_id:
+      name: farm_id
+      description: Farm ID.
+      required: true
+      example: 1
+      type: integer
+    chicks_supplier_id:
+      name: chicks_supplier_id
+      description: Chicks supplier ID.
+      required: true
+      example: 1
+      type: integer
+    breed:
+      name: breed
+      description: Breed name.
+      required: true
+      example: Broiler,Cobb 500
+      type: string
+    start_date:
+      name: start_date
+      description: 'Start date (format: dd-mm-yyyy).'
+      required: true
+      example: 18-05-2026
+      type: string
+    total_quantity:
+      name: total_quantity
+      description: Total number of chicks.
+      required: true
+      example: 12500
+      type: integer
+    hangar_allocations:
+      name: hangar_allocations
+      description: Array of hangar allocations.
+      required: true
+      example:
+        - hangar_id: 1
+          quantity: 3000
+        - hangar_id: 2
+          quantity: 3000
+      type: array
+  responses:
+    - status: 201
+      content: '{"success": true, "message": "Flock created successfully.", "data": {"id": 1, "name": "Farm1-Flock4", "farm_id": 1, "farm_name": "Main Farm", "chicks_supplier_id": 1, "chicks_supplier_name": "Al-Rowad Farm", "breed": "Broiler,Cobb 500", "start_date": "2026-05-18", "total_quantity": 12500, "created_by": 1, "created_by_name": "Admin Name", "created_at": "2026-08-07T10:30:00Z"}}'
+
+- httpMethods:
+    - GET
+  uri: api/add2farm/flocks/{flock}
+  metadata:
+    groupName: Add2Farm Flocks
+    title: Get a single flock
+    description: 'Retrieve detailed information of a specific flock.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  urlParameters:
+    flock:
+      name: flock
+      description: 'The flock ID.'
+      required: true
+      example: 1
+      type: integer
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Flock retrieved successfully.", "data": {"id": 1, "name": "Farm1-Flock4", "farm_id": 1, "farm_name": "Main Farm", "chicks_supplier_id": 1, "chicks_supplier_name": "Al-Rowad Farm", "breed": "Broiler,Cobb 500", "start_date": "2026-05-18", "total_quantity": 12500, "created_by": 1, "created_by_name": "Admin Name", "hangars": [{"hangar_id": 1, "hangar_name": "Farm1-Hangar1", "quantity": 3000}], "created_at": "2026-08-07T10:30:00Z"}}'
+
+- httpMethods:
+    - PUT
+  uri: api/add2farm/flocks/{flock}
+  metadata:
+    groupName: Add2Farm Flocks
+    title: Update a flock
+    description: 'Update flock details and hangar allocations.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  urlParameters:
+    flock:
+      name: flock
+      description: 'The flock ID.'
+      required: true
+      example: 1
+      type: integer
+  bodyParameters:
+    name:
+      name: name
+      description: Flock name.
+      required: true
+      example: Farm1-Flock4 Updated
+      type: string
+    chicks_supplier_id:
+      name: chicks_supplier_id
+      description: Chicks supplier ID.
+      required: true
+      example: 1
+      type: integer
+    breed:
+      name: breed
+      description: Breed name.
+      required: true
+      example: Broiler,Cobb 500
+      type: string
+    start_date:
+      name: start_date
+      description: 'Start date (format: dd-mm-yyyy).'
+      required: true
+      example: 18-05-2026
+      type: string
+    total_quantity:
+      name: total_quantity
+      description: Total number of chicks.
+      required: true
+      example: 12500
+      type: integer
+    hangar_allocations:
+      name: hangar_allocations
+      description: Array of hangar allocations.
+      required: true
+      example:
+        - hangar_id: 1
+          quantity: 3000
+      type: array
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Flock updated successfully.", "data": {"id": 1, "name": "Farm1-Flock4 Updated", "farm_id": 1, "farm_name": "Main Farm", "chicks_supplier_id": 1, "chicks_supplier_name": "Al-Rowad Farm", "breed": "Broiler,Cobb 500", "start_date": "2026-05-18", "total_quantity": 12500, "created_by": 1, "created_by_name": "Admin Name"}}'
+
+- httpMethods:
+    - DELETE
+  uri: api/add2farm/flocks/{flock}
+  metadata:
+    groupName: Add2Farm Flocks
+    title: Delete a flock
+    description: 'Delete a flock and all its hangar allocations.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  urlParameters:
+    flock:
+      name: flock
+      description: 'The flock ID.'
+      required: true
+      example: 1
+      type: integer
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Flock deleted successfully."}'
 
 - httpMethods:
     - GET
@@ -23,28 +229,7 @@
       type: integer
   responses:
     - status: 200
-      content: |-
-        {
-          "success": true,
-          "message": "Supervisor retrieved successfully.",
-          "data": {
-            "id": 1,
-            "name": "Supervisor Name",
-            "mobile_number": "+1234567890",
-            "email": "supervisor@add2farm.local",
-            "type": 3,
-            "type_label": "Supervisor",
-            "status": "Active",
-            "created_by_name": "Admin Name",
-            "created_at": "2026-08-07T10:30:00Z"
-          }
-        }
-    - status: 404
-      content: |-
-        {
-          "success": false,
-          "message": "Supervisor not found."
-        }
+      content: '{"success": true, "message": "Supervisor retrieved successfully.", "data": {"id": 1, "name": "Supervisor Name", "mobile_number": "+1234567890", "email": "supervisor@add2farm.local", "type": 3, "type_label": "Supervisor", "status": "Active"}}'
 
 - httpMethods:
     - PUT
@@ -52,7 +237,7 @@
   metadata:
     groupName: Add2Farm Supervisors (Type 3)
     title: Update a supervisor
-    description: 'Update supervisor details including name, email, status and project assignments. Mobile number and type cannot be changed.'
+    description: 'Update supervisor details including name, email, status and project assignments.'
     authenticated: true
   headers:
     Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
@@ -84,46 +269,9 @@
       required: true
       example: Active
       type: string
-    project_rows:
-      name: project_rows
-      description: Array of project assignments.
-      required: false
-      example:
-        - project_id: 1
-          status: Active
-      type: array
   responses:
     - status: 200
-      content: |-
-        {
-          "success": true,
-          "message": "Supervisor updated successfully.",
-          "data": {
-            "id": 1,
-            "name": "John Supervisor Updated",
-            "mobile_number": "+1234567890",
-            "email": "john.updated@example.com",
-            "type": 3,
-            "type_label": "Supervisor",
-            "status": "Active",
-            "created_by_name": "Admin Name",
-            "created_at": "2026-08-07T10:30:00Z"
-          }
-        }
-    - status: 404
-      content: |-
-        {
-          "success": false,
-          "message": "Supervisor not found."
-        }
-    - status: 422
-      content: |-
-        {
-          "success": false,
-          "errors": {
-            "email": ["The email has already been taken."]
-          }
-        }
+      content: '{"success": true, "message": "Supervisor updated successfully.", "data": {"id": 1, "name": "John Supervisor Updated", "mobile_number": "+1234567890", "email": "john.updated@example.com", "type": 3, "status": "Active"}}'
 
 - httpMethods:
     - DELETE
@@ -146,17 +294,7 @@
       type: integer
   responses:
     - status: 200
-      content: |-
-        {
-          "success": true,
-          "message": "Supervisor deleted successfully."
-        }
-    - status: 404
-      content: |-
-        {
-          "success": false,
-          "message": "Supervisor not found."
-        }
+      content: '{"success": true, "message": "Supervisor deleted successfully."}'
 
 - httpMethods:
     - GET
@@ -179,28 +317,7 @@
       type: integer
   responses:
     - status: 200
-      content: |-
-        {
-          "success": true,
-          "message": "Farmer retrieved successfully.",
-          "data": {
-            "id": 2,
-            "name": "Farmer Name",
-            "mobile_number": "+0987654321",
-            "email": "farmer@add2farm.local",
-            "type": 4,
-            "type_label": "Farmer",
-            "status": "Active",
-            "created_by_name": "Farm Owner Name",
-            "created_at": "2026-08-07T10:30:00Z"
-          }
-        }
-    - status: 404
-      content: |-
-        {
-          "success": false,
-          "message": "Farmer not found."
-        }
+      content: '{"success": true, "message": "Farmer retrieved successfully.", "data": {"id": 2, "name": "Farmer Name", "mobile_number": "+0987654321", "email": "farmer@add2farm.local", "type": 4, "type_label": "Farmer", "status": "Active"}}'
 
 - httpMethods:
     - PUT
@@ -208,7 +325,7 @@
   metadata:
     groupName: Add2Farm Farmers (Type 4)
     title: Update a farmer
-    description: 'Update farmer details including name, email, status and project assignments. Mobile number and type cannot be changed.'
+    description: 'Update farmer details including name, email, status and project assignments.'
     authenticated: true
   headers:
     Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
@@ -240,46 +357,9 @@
       required: true
       example: Active
       type: string
-    project_rows:
-      name: project_rows
-      description: Array of project assignments.
-      required: false
-      example:
-        - project_id: 1
-          status: Active
-      type: array
   responses:
     - status: 200
-      content: |-
-        {
-          "success": true,
-          "message": "Farmer updated successfully.",
-          "data": {
-            "id": 2,
-            "name": "Jane Farmer Updated",
-            "mobile_number": "+0987654321",
-            "email": "jane.updated@example.com",
-            "type": 4,
-            "type_label": "Farmer",
-            "status": "Active",
-            "created_by_name": "Farm Owner Name",
-            "created_at": "2026-08-07T10:30:00Z"
-          }
-        }
-    - status: 404
-      content: |-
-        {
-          "success": false,
-          "message": "Farmer not found."
-        }
-    - status: 422
-      content: |-
-        {
-          "success": false,
-          "errors": {
-            "email": ["The email has already been taken."]
-          }
-        }
+      content: '{"success": true, "message": "Farmer updated successfully.", "data": {"id": 2, "name": "Jane Farmer Updated", "mobile_number": "+0987654321", "email": "jane.updated@example.com", "type": 4, "status": "Active"}}'
 
 - httpMethods:
     - DELETE
@@ -302,17 +382,7 @@
       type: integer
   responses:
     - status: 200
-      content: |-
-        {
-          "success": true,
-          "message": "Farmer deleted successfully."
-        }
-    - status: 404
-      content: |-
-        {
-          "success": false,
-          "message": "Farmer not found."
-        }
+      content: '{"success": true, "message": "Farmer deleted successfully."}'
 
 - httpMethods:
     - GET
@@ -335,29 +405,7 @@
       type: integer
   responses:
     - status: 200
-      content: |-
-        {
-          "success": true,
-          "message": "Farm retrieved successfully.",
-          "data": {
-            "id": 1,
-            "name": "Main Farm",
-            "location": "Village A",
-            "type": "Layer",
-            "number_of_hangars": 5,
-            "assigned_to": 1,
-            "assigned_to_name": "Farmer Name",
-            "created_by": 1,
-            "created_by_name": "Farm Owner Name",
-            "created_at": "2026-08-07T10:30:00Z"
-          }
-        }
-    - status: 404
-      content: |-
-        {
-          "success": false,
-          "message": "Farm not found."
-        }
+      content: '{"success": true, "message": "Farm retrieved successfully.", "data": {"id": 1, "name": "Main Farm", "location": "Village A", "type": "Layer", "number_of_hangars": 5, "assigned_to": 1}}'
 
 - httpMethods:
     - PUT
@@ -403,44 +451,9 @@
       required: true
       example: 5
       type: integer
-    assigned_to:
-      name: assigned_to
-      description: Farmer ID to assign the farm to.
-      required: false
-      example: 2
-      type: integer
   responses:
     - status: 200
-      content: |-
-        {
-          "success": true,
-          "message": "Farm updated successfully.",
-          "data": {
-            "id": 1,
-            "name": "Green Valley Farm Updated",
-            "location": "North Region Updated",
-            "type": "Poultry",
-            "number_of_hangars": 5,
-            "assigned_to": 2,
-            "assigned_to_name": "Farmer Name",
-            "created_by": 1,
-            "created_by_name": "Farm Owner Name",
-            "created_at": "2026-08-07T10:30:00Z",
-            "updated_at": "2026-08-10T14:22:00Z"
-          }
-        }
-    - status: 404
-      content: |-
-        {
-          "success": false,
-          "message": "Farm not found."
-        }
-    - status: 422
-      content: |-
-        {
-          "success": false,
-          "message": "This farmer is already assigned to another farm. Each farmer can be assigned to only 1 farm."
-        }
+      content: '{"success": true, "message": "Farm updated successfully.", "data": {"id": 1, "name": "Green Valley Farm Updated", "location": "North Region Updated", "type": "Poultry", "number_of_hangars": 5}}'
 
 - httpMethods:
     - DELETE
@@ -463,14 +476,240 @@
       type: integer
   responses:
     - status: 200
-      content: |-
-        {
-          "success": true,
-          "message": "Farm deleted successfully."
-        }
-    - status: 404
-      content: |-
-        {
-          "success": false,
-          "message": "Farm not found."
-        }
+      content: '{"success": true, "message": "Farm deleted successfully."}'
+
+- httpMethods:
+    - GET
+  uri: api/add2farm/daily-records
+  metadata:
+    groupName: Add2Farm Daily Records
+    title: List all daily records
+    description: 'Get paginated list of all daily records with search and filtering.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  queryParameters:
+    page:
+      name: page
+      description: 'optional Pagination page number.'
+      required: false
+      example: 1
+      type: integer
+    per_page:
+      name: per_page
+      description: 'optional Items per page. Default: 15.'
+      required: false
+      example: 20
+      type: integer
+    flock_id:
+      name: flock_id
+      description: 'optional Filter by flock ID.'
+      required: false
+      example: 1
+      type: integer
+    farm_id:
+      name: farm_id
+      description: 'optional Filter by farm ID.'
+      required: false
+      example: 1
+      type: integer
+    record_date:
+      name: record_date
+      description: 'optional Filter by record date (format: yyyy-mm-dd).'
+      required: false
+      example: 2026-08-07
+      type: string
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Daily records retrieved successfully.", "data": {"current_page": 1, "data": [{"id": 1, "record_date": "2026-08-07", "farm_id": 1, "farm_name": "Main Farm", "flock_id": 1, "flock_name": "Farm1-Flock4", "hangar_id": 1, "hangar_name": "Farm1-Hangar1", "feed_kg": 450.5, "eggs_tray_30": 12, "eggs_count": 360, "eggs_weight": 18.5, "chicks_weight": 1.85, "mortality": 5}], "total": 50, "last_page": 3}}'
+
+- httpMethods:
+    - POST
+  uri: api/add2farm/daily-records
+  metadata:
+    groupName: Add2Farm Daily Records
+    title: Create a new daily record
+    description: 'Create a new daily record for a flock/hangar combination.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  bodyParameters:
+    record_date:
+      name: record_date
+      description: 'Record date (format: dd-mm-yyyy).'
+      required: true
+      example: 07-08-2026
+      type: string
+    flock_id:
+      name: flock_id
+      description: Flock ID.
+      required: true
+      example: 1
+      type: integer
+    hangar_id:
+      name: hangar_id
+      description: Hangar ID.
+      required: true
+      example: 1
+      type: integer
+    feed_kg:
+      name: feed_kg
+      description: Feed quantity in kg.
+      required: true
+      example: 450.50
+      type: number
+    eggs_tray_30:
+      name: eggs_tray_30
+      description: 'Number of egg trays (30 count).'
+      required: false
+      example: 12
+      type: integer
+    eggs_count:
+      name: eggs_count
+      description: Egg count.
+      required: false
+      example: 360
+      type: integer
+    eggs_weight:
+      name: eggs_weight
+      description: Eggs weight in kg.
+      required: false
+      example: 18.50
+      type: number
+    chicks_weight:
+      name: chicks_weight
+      description: Chicks weight in kg.
+      required: false
+      example: 1.85
+      type: number
+    mortality:
+      name: mortality
+      description: Mortality count.
+      required: false
+      example: 5
+      type: integer
+  responses:
+    - status: 201
+      content: '{"success": true, "message": "Daily record created successfully.", "data": {"id": 1, "record_date": "2026-08-07", "farm_id": 1, "farm_name": "Main Farm", "flock_id": 1, "flock_name": "Farm1-Flock4", "hangar_id": 1, "hangar_name": "Farm1-Hangar1", "feed_kg": 450.5, "eggs_tray_30": 12, "eggs_count": 360, "eggs_weight": 18.5, "chicks_weight": 1.85, "mortality": 5, "created_by": 1, "created_by_name": "Admin Name", "created_at": "2026-08-07T10:30:00Z"}}'
+
+- httpMethods:
+    - GET
+  uri: api/add2farm/daily-records/{daily_record}
+  metadata:
+    groupName: Add2Farm Daily Records
+    title: Get a single daily record
+    description: 'Retrieve detailed information of a specific daily record.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  urlParameters:
+    daily_record:
+      name: daily_record
+      description: 'The daily record ID.'
+      required: true
+      example: 1
+      type: integer
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Daily record retrieved successfully.", "data": {"id": 1, "record_date": "2026-08-07", "farm_id": 1, "farm_name": "Main Farm", "flock_id": 1, "flock_name": "Farm1-Flock4", "hangar_id": 1, "hangar_name": "Farm1-Hangar1", "feed_kg": 450.5, "eggs_tray_30": 12, "eggs_count": 360, "eggs_weight": 18.5, "chicks_weight": 1.85, "mortality": 5, "created_by": 1, "created_by_name": "Admin Name", "created_at": "2026-08-07T10:30:00Z"}}'
+
+- httpMethods:
+    - PUT
+  uri: api/add2farm/daily-records/{daily_record}
+  metadata:
+    groupName: Add2Farm Daily Records
+    title: Update a daily record
+    description: 'Update an existing daily record.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  urlParameters:
+    daily_record:
+      name: daily_record
+      description: 'The daily record ID.'
+      required: true
+      example: 1
+      type: integer
+  bodyParameters:
+    record_date:
+      name: record_date
+      description: 'Record date (format: dd-mm-yyyy).'
+      required: true
+      example: 07-08-2026
+      type: string
+    hangar_id:
+      name: hangar_id
+      description: Hangar ID.
+      required: true
+      example: 1
+      type: integer
+    feed_kg:
+      name: feed_kg
+      description: Feed quantity in kg.
+      required: true
+      example: 450.50
+      type: number
+    eggs_tray_30:
+      name: eggs_tray_30
+      description: 'Number of egg trays (30 count).'
+      required: false
+      example: 12
+      type: integer
+    eggs_count:
+      name: eggs_count
+      description: Egg count.
+      required: false
+      example: 360
+      type: integer
+    eggs_weight:
+      name: eggs_weight
+      description: Eggs weight in kg.
+      required: false
+      example: 18.50
+      type: number
+    chicks_weight:
+      name: chicks_weight
+      description: Chicks weight in kg.
+      required: false
+      example: 1.85
+      type: number
+    mortality:
+      name: mortality
+      description: Mortality count.
+      required: false
+      example: 5
+      type: integer
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Daily record updated successfully.", "data": {"id": 1, "record_date": "2026-08-07", "farm_id": 1, "farm_name": "Main Farm", "flock_id": 1, "flock_name": "Farm1-Flock4", "hangar_id": 1, "hangar_name": "Farm1-Hangar1", "feed_kg": 450.5, "eggs_tray_30": 12, "eggs_count": 360, "eggs_weight": 18.5, "chicks_weight": 1.85, "mortality": 5, "created_by": 1, "created_by_name": "Admin Name", "created_at": "2026-08-07T10:30:00Z"}}'
+
+- httpMethods:
+    - DELETE
+  uri: api/add2farm/daily-records/{daily_record}
+  metadata:
+    groupName: Add2Farm Daily Records
+    title: Delete a daily record
+    description: 'Delete a daily record.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  urlParameters:
+    daily_record:
+      name: daily_record
+      description: 'The daily record ID.'
+      required: true
+      example: 1
+      type: integer
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Daily record deleted successfully."}'

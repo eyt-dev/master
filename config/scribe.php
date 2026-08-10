@@ -37,7 +37,7 @@ return [
         [
             'match' => [
                 // Match only Add2Farm routes except auth and profile
-                'uri_pattern' => '^api/add2farm/(supervisors|farmers|farms)',
+                'uri_pattern' => '^api/add2farm/(supervisors|farmers|farms|flocks|daily-records)',
 
                 // Match only routes whose domains match this pattern (use * as a wildcard to match any characters). Example: 'api.*'.
                 'domains' => ['*'],

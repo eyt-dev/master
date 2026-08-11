@@ -32,6 +32,20 @@
     </div>
 
     <div class="row">
+        <!-- Mobile Number Textbox -->
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="mobile_number" class="form-label">Mobile Number</label>
+                <input type="text" class="form-control" name="mobile_number" id="mobile_number" placeholder="Mobile Number" 
+                    value="{{ old('mobile_number', $farm->mobile_number ?? '') }}" maxlength="20" />
+                @error('mobile_number')
+                    <label id="mobile_number-error" class="error" for="mobile_number">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
         <!-- Location Textarea -->
         <div class="col-sm-12 col-md-12">
             <div class="form-group">

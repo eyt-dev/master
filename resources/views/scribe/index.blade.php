@@ -116,6 +116,22 @@
                             </li>
                                                                         </ul>
                             </ul>
+                    <ul id="tocify-header-add2farm-dropdowns" class="tocify-header">
+                <li class="tocify-item level-1" data-unique="add2farm-dropdowns">
+                    <a href="#add2farm-dropdowns">Add2Farm Dropdowns</a>
+                </li>
+                                    <ul id="tocify-subheader-add2farm-dropdowns" class="tocify-subheader">
+                                                    <li class="tocify-item level-2" data-unique="add2farm-dropdowns-GETapi-add2farm-dropdowns-farms">
+                                <a href="#add2farm-dropdowns-GETapi-add2farm-dropdowns-farms">Get farms dropdown list</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="add2farm-dropdowns-GETapi-add2farm-dropdowns-suppliers">
+                                <a href="#add2farm-dropdowns-GETapi-add2farm-dropdowns-suppliers">Get suppliers dropdown list</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="add2farm-dropdowns-GETapi-add2farm-dropdowns-supervisors">
+                                <a href="#add2farm-dropdowns-GETapi-add2farm-dropdowns-supervisors">Get supervisors dropdown list</a>
+                            </li>
+                                                                        </ul>
+                            </ul>
                     <ul id="tocify-header-add2farm-farmers-type-4" class="tocify-header">
                 <li class="tocify-item level-1" data-unique="add2farm-farmers-type-4">
                     <a href="#add2farm-farmers-type-4">Add2Farm Farmers (Type 4)</a>
@@ -123,6 +139,9 @@
                                     <ul id="tocify-subheader-add2farm-farmers-type-4" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="add2farm-farmers-type-4-GETapi-add2farm-farmers">
                                 <a href="#add2farm-farmers-type-4-GETapi-add2farm-farmers">List all farmers (Type 4)</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="add2farm-farmers-type-4-GETapi-add2farm-farmers">
+                                <a href="#add2farm-farmers-type-4-GETapi-add2farm-farmers">List all farmers</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="add2farm-farmers-type-4-POSTapi-add2farm-farmers">
                                 <a href="#add2farm-farmers-type-4-POSTapi-add2farm-farmers">Create a new farmer</a>
@@ -144,6 +163,12 @@
                 </li>
                                     <ul id="tocify-subheader-add2farm-farms" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="add2farm-farms-GETapi-add2farm-farms">
+                                <a href="#add2farm-farms-GETapi-add2farm-farms">List all farms</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="add2farm-farms-POSTapi-add2farm-farms">
+                                <a href="#add2farm-farms-POSTapi-add2farm-farms">Create a new farm</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="add2farm-farms-GETapi-add2farm-farms">
                                 <a href="#add2farm-farms-GETapi-add2farm-farms">List all farms</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="add2farm-farms-POSTapi-add2farm-farms">
@@ -193,8 +218,8 @@
                                                                                 <li class="tocify-item level-2" data-unique="add2farm-profile-PUTapi-add2farm-profile">
                                 <a href="#add2farm-profile-PUTapi-add2farm-profile">Update user profile</a>
                             </li>
-                                                                                <li class="tocify-item level-2" data-unique="add2farm-profile-PUTapi-add2farm-profile-change-password">
-                                <a href="#add2farm-profile-PUTapi-add2farm-profile-change-password">Change password</a>
+                                                                                <li class="tocify-item level-2" data-unique="add2farm-profile-GETapi-add2farm-profile-change-password">
+                                <a href="#add2farm-profile-GETapi-add2farm-profile-change-password">Change password</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -205,6 +230,9 @@
                                     <ul id="tocify-subheader-add2farm-supervisors-type-3" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="add2farm-supervisors-type-3-GETapi-add2farm-supervisors">
                                 <a href="#add2farm-supervisors-type-3-GETapi-add2farm-supervisors">List all supervisors (Type 3)</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="add2farm-supervisors-type-3-GETapi-add2farm-supervisors">
+                                <a href="#add2farm-supervisors-type-3-GETapi-add2farm-supervisors">List all supervisors</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="add2farm-supervisors-type-3-POSTapi-add2farm-supervisors">
                                 <a href="#add2farm-supervisors-type-3-POSTapi-add2farm-supervisors">Create a new supervisor</a>
@@ -2605,6 +2633,448 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                     </form>
 
+                <h1 id="add2farm-dropdowns">Add2Farm Dropdowns</h1>
+
+    
+
+                                <h2 id="add2farm-dropdowns-GETapi-add2farm-dropdowns-farms">Get farms dropdown list</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Fetch list of farms with id and name only for dropdown/select usage.</p>
+
+<span id="example-requests-GETapi-add2farm-dropdowns-farms">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://admin.eyt.test/api/add2farm/dropdowns/farms" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/dropdowns/farms"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-add2farm-dropdowns-farms">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Farms retrieved successfully.&quot;,
+    &quot;data&quot;: [
+        {
+            &quot;id&quot;: 1,
+            &quot;name&quot;: &quot;Main Farm&quot;
+        },
+        {
+            &quot;id&quot;: 2,
+            &quot;name&quot;: &quot;Secondary Farm&quot;
+        }
+    ]
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-add2farm-dropdowns-farms" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-add2farm-dropdowns-farms"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-add2farm-dropdowns-farms"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-add2farm-dropdowns-farms" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-add2farm-dropdowns-farms">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-add2farm-dropdowns-farms" data-method="GET"
+      data-path="api/add2farm/dropdowns/farms"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-add2farm-dropdowns-farms', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-add2farm-dropdowns-farms"
+                    onclick="tryItOut('GETapi-add2farm-dropdowns-farms');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-add2farm-dropdowns-farms"
+                    onclick="cancelTryOut('GETapi-add2farm-dropdowns-farms');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-add2farm-dropdowns-farms"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/add2farm/dropdowns/farms</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-add2farm-dropdowns-farms"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-add2farm-dropdowns-farms"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-add2farm-dropdowns-farms"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="add2farm-dropdowns-GETapi-add2farm-dropdowns-suppliers">Get suppliers dropdown list</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Fetch list of chicks suppliers with id and name only for dropdown/select usage.</p>
+
+<span id="example-requests-GETapi-add2farm-dropdowns-suppliers">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://admin.eyt.test/api/add2farm/dropdowns/suppliers" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/dropdowns/suppliers"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-add2farm-dropdowns-suppliers">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Suppliers retrieved successfully.&quot;,
+    &quot;data&quot;: [
+        {
+            &quot;id&quot;: 1,
+            &quot;name&quot;: &quot;Al-Rowad Farm&quot;
+        },
+        {
+            &quot;id&quot;: 2,
+            &quot;name&quot;: &quot;Premium Chicks Co&quot;
+        }
+    ]
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-add2farm-dropdowns-suppliers" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-add2farm-dropdowns-suppliers"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-add2farm-dropdowns-suppliers"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-add2farm-dropdowns-suppliers" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-add2farm-dropdowns-suppliers">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-add2farm-dropdowns-suppliers" data-method="GET"
+      data-path="api/add2farm/dropdowns/suppliers"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-add2farm-dropdowns-suppliers', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-add2farm-dropdowns-suppliers"
+                    onclick="tryItOut('GETapi-add2farm-dropdowns-suppliers');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-add2farm-dropdowns-suppliers"
+                    onclick="cancelTryOut('GETapi-add2farm-dropdowns-suppliers');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-add2farm-dropdowns-suppliers"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/add2farm/dropdowns/suppliers</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-add2farm-dropdowns-suppliers"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-add2farm-dropdowns-suppliers"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-add2farm-dropdowns-suppliers"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                    <h2 id="add2farm-dropdowns-GETapi-add2farm-dropdowns-supervisors">Get supervisors dropdown list</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Fetch list of supervisors (Type 3 admins) with id and name only for dropdown/select usage.</p>
+
+<span id="example-requests-GETapi-add2farm-dropdowns-supervisors">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://admin.eyt.test/api/add2farm/dropdowns/supervisors" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/dropdowns/supervisors"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-add2farm-dropdowns-supervisors">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Supervisors retrieved successfully.&quot;,
+    &quot;data&quot;: [
+        {
+            &quot;id&quot;: 1,
+            &quot;name&quot;: &quot;John Supervisor&quot;
+        },
+        {
+            &quot;id&quot;: 3,
+            &quot;name&quot;: &quot;Alice Supervisor&quot;
+        }
+    ]
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-add2farm-dropdowns-supervisors" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-add2farm-dropdowns-supervisors"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-add2farm-dropdowns-supervisors"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-add2farm-dropdowns-supervisors" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-add2farm-dropdowns-supervisors">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-add2farm-dropdowns-supervisors" data-method="GET"
+      data-path="api/add2farm/dropdowns/supervisors"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-add2farm-dropdowns-supervisors', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-add2farm-dropdowns-supervisors"
+                    onclick="tryItOut('GETapi-add2farm-dropdowns-supervisors');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-add2farm-dropdowns-supervisors"
+                    onclick="cancelTryOut('GETapi-add2farm-dropdowns-supervisors');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-add2farm-dropdowns-supervisors"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/add2farm/dropdowns/supervisors</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-add2farm-dropdowns-supervisors"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-add2farm-dropdowns-supervisors"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-add2farm-dropdowns-supervisors"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
                 <h1 id="add2farm-farmers-type-4">Add2Farm Farmers (Type 4)</h1>
 
     <p>CRUD APIs for managing Type 4 (Farmers) in Add2Farm</p>
@@ -2821,15 +3291,210 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                 </form>
 
+                    <h2 id="add2farm-farmers-type-4-GETapi-add2farm-farmers">List all farmers</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Get paginated list of all farmers with search and filtering.</p>
+
+<span id="example-requests-GETapi-add2farm-farmers">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://admin.eyt.test/api/add2farm/farmers?page=1&amp;per_page=20&amp;search=Farmer1" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/farmers"
+);
+
+const params = {
+    "page": "1",
+    "per_page": "20",
+    "search": "Farmer1",
+};
+Object.keys(params)
+    .forEach(key =&gt; url.searchParams.append(key, params[key]));
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-add2farm-farmers">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Farmers retrieved successfully.&quot;,
+    &quot;data&quot;: {
+        &quot;current_page&quot;: 1,
+        &quot;data&quot;: [
+            {
+                &quot;id&quot;: 2,
+                &quot;name&quot;: &quot;Farmer Name&quot;,
+                &quot;mobile_number&quot;: &quot;+0987654321&quot;,
+                &quot;email&quot;: &quot;farmer@add2farm.local&quot;,
+                &quot;type&quot;: 4,
+                &quot;type_label&quot;: &quot;Farmer&quot;,
+                &quot;status&quot;: &quot;Active&quot;
+            }
+        ],
+        &quot;total&quot;: 10,
+        &quot;last_page&quot;: 1
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-add2farm-farmers" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-add2farm-farmers"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-add2farm-farmers"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-add2farm-farmers" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-add2farm-farmers">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-add2farm-farmers" data-method="GET"
+      data-path="api/add2farm/farmers"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-add2farm-farmers', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-add2farm-farmers"
+                    onclick="tryItOut('GETapi-add2farm-farmers');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-add2farm-farmers"
+                    onclick="cancelTryOut('GETapi-add2farm-farmers');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-add2farm-farmers"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/add2farm/farmers</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-add2farm-farmers"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-add2farm-farmers"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-add2farm-farmers"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="page"                data-endpoint="GETapi-add2farm-farmers"
+               value="1"
+               data-component="query">
+    <br>
+<p>optional Pagination page number. Example: <code>1</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>per_page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="per_page"                data-endpoint="GETapi-add2farm-farmers"
+               value="20"
+               data-component="query">
+    <br>
+<p>optional Items per page. Default: 15. Example: <code>20</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>search</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="search"                data-endpoint="GETapi-add2farm-farmers"
+               value="Farmer1"
+               data-component="query">
+    <br>
+<p>optional Search by name or mobile number. Example: <code>Farmer1</code></p>
+            </div>
+                </form>
+
                     <h2 id="add2farm-farmers-type-4-POSTapi-add2farm-farmers">Create a new farmer</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
 </p>
 
-<p>Create a new Type 4 (Farmer) admin account.
-Type is automatically set to 4 and cannot be changed.
-Type 2 (Farm Owner) can only assign 1 project per farmer.</p>
+<p>Create a new farmer account (Type 4).</p>
 
 <span id="example-requests-POSTapi-add2farm-farmers">
 <blockquote>Example request:</blockquote>
@@ -2842,17 +3507,14 @@ Type 2 (Farm Owner) can only assign 1 project per farmer.</p>
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"name\": \"John Farmer\",
-    \"mobile_number\": \"+1987654321\",
-    \"email\": \"john@example.com\",
+    \"mobile_number\": \"+0987654321\",
+    \"name\": \"Jane Farmer\",
+    \"email\": \"farmer@example.com\",
     \"password\": \"password123\",
-    \"project_rows\": [
-        {
-            \"project_id\": 1,
-            \"status\": \"Active\"
-        }
-    ],
-    \"password_confirmation\": \"password123\"
+    \"password_confirmation\": \"password123\",
+    \"notes\": \"Experienced farmer with 5 years background\",
+    \"image\": \"(binary)\",
+    \"status\": \"Active\"
 }"
 </code></pre></div>
 
@@ -2869,17 +3531,14 @@ const headers = {
 };
 
 let body = {
-    "name": "John Farmer",
-    "mobile_number": "+1987654321",
-    "email": "john@example.com",
+    "mobile_number": "+0987654321",
+    "name": "Jane Farmer",
+    "email": "farmer@example.com",
     "password": "password123",
-    "project_rows": [
-        {
-            "project_id": 1,
-            "status": "Active"
-        }
-    ],
-    "password_confirmation": "password123"
+    "password_confirmation": "password123",
+    "notes": "Experienced farmer with 5 years background",
+    "image": "(binary)",
+    "status": "Active"
 };
 
 fetch(url, {
@@ -2901,11 +3560,14 @@ fetch(url, {
     &quot;message&quot;: &quot;Farmer created successfully.&quot;,
     &quot;data&quot;: {
         &quot;id&quot;: 2,
-        &quot;name&quot;: &quot;John Farmer&quot;,
-        &quot;mobile_number&quot;: &quot;+1987654321&quot;,
+        &quot;name&quot;: &quot;Jane Farmer&quot;,
+        &quot;mobile_number&quot;: &quot;+0987654321&quot;,
+        &quot;email&quot;: &quot;farmer@example.com&quot;,
         &quot;type&quot;: 4,
-        &quot;type_label&quot;: &quot;Farmers&quot;,
+        &quot;type_label&quot;: &quot;Farmer&quot;,
         &quot;status&quot;: &quot;Active&quot;,
+        &quot;notes&quot;: &quot;Experienced farmer with 5 years background&quot;,
+        &quot;image&quot;: &quot;uploads/farmers/farmer_image_123.jpg&quot;,
         &quot;created_at&quot;: &quot;2026-08-07T10:30:00Z&quot;
     }
 }</code>
@@ -2920,6 +3582,9 @@ fetch(url, {
     &quot;errors&quot;: {
         &quot;mobile_number&quot;: [
             &quot;The mobile number has already been taken.&quot;
+        ],
+        &quot;email&quot;: [
+            &quot;The email has already been taken.&quot;
         ]
     }
 }</code>
@@ -3010,40 +3675,40 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                                 <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
         <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>name</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="name"                data-endpoint="POSTapi-add2farm-farmers"
-               value="John Farmer"
-               data-component="body">
-    <br>
-<p>Farmer's full name. Example: <code>John Farmer</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>mobile_number</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
                               name="mobile_number"                data-endpoint="POSTapi-add2farm-farmers"
-               value="+1987654321"
+               value="+0987654321"
                data-component="body">
     <br>
-<p>Unique mobile number with country code. Example: <code>+1987654321</code></p>
+<p>Farmer mobile number with country code. Must be unique. Example: <code>+0987654321</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>name</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="name"                data-endpoint="POSTapi-add2farm-farmers"
+               value="Jane Farmer"
+               data-component="body">
+    <br>
+<p>Farmer full name. Example: <code>Jane Farmer</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>email</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
-<i>optional</i> &nbsp;
+ &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
                               name="email"                data-endpoint="POSTapi-add2farm-farmers"
-               value="john@example.com"
+               value="farmer@example.com"
                data-component="body">
     <br>
-<p>optional Email address. Example: <code>john@example.com</code></p>
+<p>Farmer email address. Example: <code>farmer@example.com</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>password</code></b>&nbsp;&nbsp;
@@ -3055,45 +3720,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="password123"
                data-component="body">
     <br>
-<p>Password (min 8 characters). Example: <code>password123</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-        <details>
-            <summary style="padding-bottom: 10px;">
-                <b style="line-height: 2;"><code>project_rows</code></b>&nbsp;&nbsp;
-<small>string[]</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-<br>
-<p>optional Array of project assignments. Type 2 can assign max 1.</p>
-            </summary>
-                                                <div style="margin-left: 14px; clear: unset;">
-                        <b style="line-height: 2;"><code>project_id</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="project_rows.0.project_id"                data-endpoint="POSTapi-add2farm-farmers"
-               value=""
-               data-component="body">
-    <br>
-<p>Must match an existing stored value.</p>
-                    </div>
-                                                                <div style="margin-left: 14px; clear: unset;">
-                        <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="project_rows.0.status"                data-endpoint="POSTapi-add2farm-farmers"
-               value="Active"
-               data-component="body">
-    <br>
-<p>Example: <code>Active</code></p>
-Must be one of:
-<ul style="list-style-type: square;"><li><code>Active</code></li> <li><code>Inactive</code></li> <li><code>Pending</code></li></ul>
-                    </div>
-                                    </details>
+<p>Password (minimum 8 characters). Example: <code>password123</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>password_confirmation</code></b>&nbsp;&nbsp;
@@ -3106,6 +3733,42 @@ Must be one of:
                data-component="body">
     <br>
 <p>Password confirmation. Example: <code>password123</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="notes"                data-endpoint="POSTapi-add2farm-farmers"
+               value="Experienced farmer with 5 years background"
+               data-component="body">
+    <br>
+<p>Optional notes about the farmer. Example: <code>Experienced farmer with 5 years background</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>image</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="image"                data-endpoint="POSTapi-add2farm-farmers"
+               value="(binary)"
+               data-component="body">
+    <br>
+<p>Profile image (jpeg, png, gif). Max 2MB. Example: <code>(binary)</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="status"                data-endpoint="POSTapi-add2farm-farmers"
+               value="Active"
+               data-component="body">
+    <br>
+<p>Status (Active, Inactive, Disable). Example: <code>Active</code></p>
         </div>
         </form>
 
@@ -3288,7 +3951,9 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --data "{
     \"name\": \"Jane Farmer Updated\",
     \"email\": \"jane.updated@example.com\",
-    \"status\": \"Active\"
+    \"status\": \"Active\",
+    \"notes\": \"Updated notes\",
+    \"image\": \"(binary)\"
 }"
 </code></pre></div>
 
@@ -3307,7 +3972,9 @@ const headers = {
 let body = {
     "name": "Jane Farmer Updated",
     "email": "jane.updated@example.com",
-    "status": "Active"
+    "status": "Active",
+    "notes": "Updated notes",
+    "image": "(binary)"
 };
 
 fetch(url, {
@@ -3333,7 +4000,9 @@ fetch(url, {
         &quot;mobile_number&quot;: &quot;+0987654321&quot;,
         &quot;email&quot;: &quot;jane.updated@example.com&quot;,
         &quot;type&quot;: 4,
-        &quot;status&quot;: &quot;Active&quot;
+        &quot;status&quot;: &quot;Active&quot;,
+        &quot;notes&quot;: &quot;Updated notes&quot;,
+        &quot;image&quot;: &quot;uploads/farmers/farmer_image_456.jpg&quot;
     }
 }</code>
  </pre>
@@ -3470,6 +4139,30 @@ You can check the Dev Tools console for debugging information.</code></pre>
                data-component="body">
     <br>
 <p>Status (Active, Inactive, Disable). Example: <code>Active</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="notes"                data-endpoint="PUTapi-add2farm-farmers--farmer-"
+               value="Updated notes"
+               data-component="body">
+    <br>
+<p>Optional notes about the farmer. Example: <code>Updated notes</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>image</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="image"                data-endpoint="PUTapi-add2farm-farmers--farmer-"
+               value="(binary)"
+               data-component="body">
+    <br>
+<p>Profile image (jpeg, png, gif). Max 2MB. Example: <code>(binary)</code></p>
         </div>
         </form>
 
@@ -4099,6 +4792,428 @@ You can check the Dev Tools console for debugging information.</code></pre>
                data-component="body">
     <br>
 <p>optional Admin ID (Type 4 Farmer) to assign this farm to. Example: <code>1</code></p>
+        </div>
+        </form>
+
+                    <h2 id="add2farm-farms-GETapi-add2farm-farms">List all farms</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Get paginated list of all farms with search and filtering.</p>
+
+<span id="example-requests-GETapi-add2farm-farms">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://admin.eyt.test/api/add2farm/farms?page=1&amp;per_page=20&amp;search=Farm1" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/farms"
+);
+
+const params = {
+    "page": "1",
+    "per_page": "20",
+    "search": "Farm1",
+};
+Object.keys(params)
+    .forEach(key =&gt; url.searchParams.append(key, params[key]));
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-add2farm-farms">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Farms retrieved successfully.&quot;,
+    &quot;data&quot;: {
+        &quot;current_page&quot;: 1,
+        &quot;data&quot;: [
+            {
+                &quot;id&quot;: 1,
+                &quot;name&quot;: &quot;Main Farm&quot;,
+                &quot;location&quot;: &quot;Village A&quot;,
+                &quot;type&quot;: &quot;Layer&quot;,
+                &quot;number_of_hangars&quot;: 5,
+                &quot;assigned_to&quot;: 1
+            }
+        ],
+        &quot;total&quot;: 8,
+        &quot;last_page&quot;: 1
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-add2farm-farms" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-add2farm-farms"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-add2farm-farms"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-add2farm-farms" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-add2farm-farms">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-add2farm-farms" data-method="GET"
+      data-path="api/add2farm/farms"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-add2farm-farms', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-add2farm-farms"
+                    onclick="tryItOut('GETapi-add2farm-farms');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-add2farm-farms"
+                    onclick="cancelTryOut('GETapi-add2farm-farms');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-add2farm-farms"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/add2farm/farms</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-add2farm-farms"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-add2farm-farms"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-add2farm-farms"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="page"                data-endpoint="GETapi-add2farm-farms"
+               value="1"
+               data-component="query">
+    <br>
+<p>optional Pagination page number. Example: <code>1</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>per_page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="per_page"                data-endpoint="GETapi-add2farm-farms"
+               value="20"
+               data-component="query">
+    <br>
+<p>optional Items per page. Default: 15. Example: <code>20</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>search</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="search"                data-endpoint="GETapi-add2farm-farms"
+               value="Farm1"
+               data-component="query">
+    <br>
+<p>optional Search by farm name or location. Example: <code>Farm1</code></p>
+            </div>
+                </form>
+
+                    <h2 id="add2farm-farms-POSTapi-add2farm-farms">Create a new farm</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Create a new farm with details.</p>
+
+<span id="example-requests-POSTapi-add2farm-farms">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://admin.eyt.test/api/add2farm/farms" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"name\": \"Green Valley Farm\",
+    \"location\": \"North Region\",
+    \"type\": \"Poultry\",
+    \"number_of_hangars\": 5
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/farms"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "name": "Green Valley Farm",
+    "location": "North Region",
+    "type": "Poultry",
+    "number_of_hangars": 5
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-add2farm-farms">
+            <blockquote>
+            <p>Example response (201):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Farm created successfully.&quot;,
+    &quot;data&quot;: {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;Green Valley Farm&quot;,
+        &quot;location&quot;: &quot;North Region&quot;,
+        &quot;type&quot;: &quot;Poultry&quot;,
+        &quot;number_of_hangars&quot;: 5,
+        &quot;created_by&quot;: 1,
+        &quot;created_by_name&quot;: &quot;Admin Name&quot;,
+        &quot;created_at&quot;: &quot;2026-08-07T10:30:00Z&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;errors&quot;: {
+        &quot;name&quot;: [
+            &quot;The name field is required.&quot;
+        ],
+        &quot;number_of_hangars&quot;: [
+            &quot;The number of hangars must be between 1 and 999.&quot;
+        ]
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-POSTapi-add2farm-farms" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-add2farm-farms"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-add2farm-farms"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-add2farm-farms" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-add2farm-farms">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-add2farm-farms" data-method="POST"
+      data-path="api/add2farm/farms"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-add2farm-farms', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-add2farm-farms"
+                    onclick="tryItOut('POSTapi-add2farm-farms');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-add2farm-farms"
+                    onclick="cancelTryOut('POSTapi-add2farm-farms');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-add2farm-farms"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/add2farm/farms</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-add2farm-farms"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-add2farm-farms"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-add2farm-farms"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>name</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="name"                data-endpoint="POSTapi-add2farm-farms"
+               value="Green Valley Farm"
+               data-component="body">
+    <br>
+<p>Farm name. Example: <code>Green Valley Farm</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>location</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="location"                data-endpoint="POSTapi-add2farm-farms"
+               value="North Region"
+               data-component="body">
+    <br>
+<p>Farm location. Example: <code>North Region</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>type</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="type"                data-endpoint="POSTapi-add2farm-farms"
+               value="Poultry"
+               data-component="body">
+    <br>
+<p>Farm type (Poultry, Layer, Broiler, etc.). Example: <code>Poultry</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>number_of_hangars</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="number_of_hangars"                data-endpoint="POSTapi-add2farm-farms"
+               value="5"
+               data-component="body">
+    <br>
+<p>Number of hangars (1-999). Example: <code>5</code></p>
         </div>
         </form>
 
@@ -6030,7 +7145,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
         </form>
 
-                    <h2 id="add2farm-profile-PUTapi-add2farm-profile-change-password">Change password</h2>
+                    <h2 id="add2farm-profile-GETapi-add2farm-profile-change-password">Change password</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -6038,13 +7153,13 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <p>Change the authenticated user password. Current password verification is required.</p>
 
-<span id="example-requests-PUTapi-add2farm-profile-change-password">
+<span id="example-requests-GETapi-add2farm-profile-change-password">
 <blockquote>Example request:</blockquote>
 
 
 <div class="bash-example">
-    <pre><code class="language-bash">curl --request PUT \
-    "http://admin.eyt.test/api/add2farm/profile/change-password" \
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://admin.eyt.test/api/add2farm/profile/change-password" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -6074,14 +7189,14 @@ let body = {
 };
 
 fetch(url, {
-    method: "PUT",
+    method: "GET",
     headers,
     body: JSON.stringify(body),
 }).then(response =&gt; response.json());</code></pre></div>
 
 </span>
 
-<span id="example-responses-PUTapi-add2farm-profile-change-password">
+<span id="example-responses-GETapi-add2farm-profile-change-password">
             <blockquote>
             <p>Example response (200):</p>
         </blockquote>
@@ -6107,50 +7222,50 @@ fetch(url, {
 }</code>
  </pre>
     </span>
-<span id="execution-results-PUTapi-add2farm-profile-change-password" hidden>
+<span id="execution-results-GETapi-add2farm-profile-change-password" hidden>
     <blockquote>Received response<span
-                id="execution-response-status-PUTapi-add2farm-profile-change-password"></span>:
+                id="execution-response-status-GETapi-add2farm-profile-change-password"></span>:
     </blockquote>
-    <pre class="json"><code id="execution-response-content-PUTapi-add2farm-profile-change-password"
+    <pre class="json"><code id="execution-response-content-GETapi-add2farm-profile-change-password"
       data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
 </span>
-<span id="execution-error-PUTapi-add2farm-profile-change-password" hidden>
+<span id="execution-error-GETapi-add2farm-profile-change-password" hidden>
     <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-PUTapi-add2farm-profile-change-password">
+    <pre><code id="execution-error-message-GETapi-add2farm-profile-change-password">
 
 Tip: Check that you&#039;re properly connected to the network.
 If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
 You can check the Dev Tools console for debugging information.</code></pre>
 </span>
-<form id="form-PUTapi-add2farm-profile-change-password" data-method="PUT"
+<form id="form-GETapi-add2farm-profile-change-password" data-method="GET"
       data-path="api/add2farm/profile/change-password"
       data-authed="1"
       data-hasfiles="0"
       data-isarraybody="0"
       autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('PUTapi-add2farm-profile-change-password', this);">
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-add2farm-profile-change-password', this);">
     <h3>
         Request&nbsp;&nbsp;&nbsp;
                     <button type="button"
                     style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-PUTapi-add2farm-profile-change-password"
-                    onclick="tryItOut('PUTapi-add2farm-profile-change-password');">Try it out ⚡
+                    id="btn-tryout-GETapi-add2farm-profile-change-password"
+                    onclick="tryItOut('GETapi-add2farm-profile-change-password');">Try it out ⚡
             </button>
             <button type="button"
                     style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-PUTapi-add2farm-profile-change-password"
-                    onclick="cancelTryOut('PUTapi-add2farm-profile-change-password');" hidden>Cancel 🛑
+                    id="btn-canceltryout-GETapi-add2farm-profile-change-password"
+                    onclick="cancelTryOut('GETapi-add2farm-profile-change-password');" hidden>Cancel 🛑
             </button>&nbsp;&nbsp;
             <button type="submit"
                     style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-PUTapi-add2farm-profile-change-password"
+                    id="btn-executetryout-GETapi-add2farm-profile-change-password"
                     data-initial-text="Send Request 💥"
                     data-loading-text="⏱ Sending..."
                     hidden>Send Request 💥
             </button>
             </h3>
             <p>
-            <small class="badge badge-darkblue">PUT</small>
+            <small class="badge badge-green">GET</small>
             <b><code>api/add2farm/profile/change-password</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
@@ -6160,7 +7275,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Authorization" class="auth-value"               data-endpoint="PUTapi-add2farm-profile-change-password"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-add2farm-profile-change-password"
                value="Bearer {YOUR_AUTH_TOKEN}"
                data-component="header">
     <br>
@@ -6172,7 +7287,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="PUTapi-add2farm-profile-change-password"
+                              name="Content-Type"                data-endpoint="GETapi-add2farm-profile-change-password"
                value="application/json"
                data-component="header">
     <br>
@@ -6184,7 +7299,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="PUTapi-add2farm-profile-change-password"
+                              name="Accept"                data-endpoint="GETapi-add2farm-profile-change-password"
                value="application/json"
                data-component="header">
     <br>
@@ -6197,7 +7312,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="current_password"                data-endpoint="PUTapi-add2farm-profile-change-password"
+                              name="current_password"                data-endpoint="GETapi-add2farm-profile-change-password"
                value="currentpassword123"
                data-component="body">
     <br>
@@ -6209,7 +7324,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="password"                data-endpoint="PUTapi-add2farm-profile-change-password"
+                              name="password"                data-endpoint="GETapi-add2farm-profile-change-password"
                value="newpassword123"
                data-component="body">
     <br>
@@ -6221,7 +7336,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="password_confirmation"                data-endpoint="PUTapi-add2farm-profile-change-password"
+                              name="password_confirmation"                data-endpoint="GETapi-add2farm-profile-change-password"
                value="newpassword123"
                data-component="body">
     <br>
@@ -6445,14 +7560,210 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                 </form>
 
+                    <h2 id="add2farm-supervisors-type-3-GETapi-add2farm-supervisors">List all supervisors</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Get paginated list of all supervisors with search and filtering.</p>
+
+<span id="example-requests-GETapi-add2farm-supervisors">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://admin.eyt.test/api/add2farm/supervisors?page=1&amp;per_page=20&amp;search=Supervisor1" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://admin.eyt.test/api/add2farm/supervisors"
+);
+
+const params = {
+    "page": "1",
+    "per_page": "20",
+    "search": "Supervisor1",
+};
+Object.keys(params)
+    .forEach(key =&gt; url.searchParams.append(key, params[key]));
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-add2farm-supervisors">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Supervisors retrieved successfully.&quot;,
+    &quot;data&quot;: {
+        &quot;current_page&quot;: 1,
+        &quot;data&quot;: [
+            {
+                &quot;id&quot;: 1,
+                &quot;name&quot;: &quot;Supervisor Name&quot;,
+                &quot;mobile_number&quot;: &quot;+1234567890&quot;,
+                &quot;email&quot;: &quot;supervisor@add2farm.local&quot;,
+                &quot;type&quot;: 3,
+                &quot;type_label&quot;: &quot;Supervisor&quot;,
+                &quot;status&quot;: &quot;Active&quot;
+            }
+        ],
+        &quot;total&quot;: 5,
+        &quot;last_page&quot;: 1
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-add2farm-supervisors" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-add2farm-supervisors"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-add2farm-supervisors"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-add2farm-supervisors" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-add2farm-supervisors">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-add2farm-supervisors" data-method="GET"
+      data-path="api/add2farm/supervisors"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-add2farm-supervisors', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-add2farm-supervisors"
+                    onclick="tryItOut('GETapi-add2farm-supervisors');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-add2farm-supervisors"
+                    onclick="cancelTryOut('GETapi-add2farm-supervisors');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-add2farm-supervisors"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/add2farm/supervisors</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-add2farm-supervisors"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-add2farm-supervisors"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-add2farm-supervisors"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="page"                data-endpoint="GETapi-add2farm-supervisors"
+               value="1"
+               data-component="query">
+    <br>
+<p>optional Pagination page number. Example: <code>1</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>per_page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="per_page"                data-endpoint="GETapi-add2farm-supervisors"
+               value="20"
+               data-component="query">
+    <br>
+<p>optional Items per page. Default: 15. Example: <code>20</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>search</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="search"                data-endpoint="GETapi-add2farm-supervisors"
+               value="Supervisor1"
+               data-component="query">
+    <br>
+<p>optional Search by name or mobile number. Example: <code>Supervisor1</code></p>
+            </div>
+                </form>
+
                     <h2 id="add2farm-supervisors-type-3-POSTapi-add2farm-supervisors">Create a new supervisor</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
 </p>
 
-<p>Create a new Type 3 (Supervisor) admin account.
-Type is automatically set to 3 and cannot be changed.</p>
+<p>Create a new supervisor account (Type 3).</p>
 
 <span id="example-requests-POSTapi-add2farm-supervisors">
 <blockquote>Example request:</blockquote>
@@ -6465,17 +7776,14 @@ Type is automatically set to 3 and cannot be changed.</p>
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"name\": \"John Supervisor\",
     \"mobile_number\": \"+1234567890\",
-    \"email\": \"john@example.com\",
+    \"name\": \"John Supervisor\",
+    \"email\": \"supervisor@example.com\",
     \"password\": \"password123\",
-    \"project_rows\": [
-        {
-            \"project_id\": 1,
-            \"status\": \"Active\"
-        }
-    ],
-    \"password_confirmation\": \"password123\"
+    \"password_confirmation\": \"password123\",
+    \"notes\": \"Senior supervisor with 10 years experience\",
+    \"image\": \"(binary)\",
+    \"status\": \"Active\"
 }"
 </code></pre></div>
 
@@ -6492,17 +7800,14 @@ const headers = {
 };
 
 let body = {
-    "name": "John Supervisor",
     "mobile_number": "+1234567890",
-    "email": "john@example.com",
+    "name": "John Supervisor",
+    "email": "supervisor@example.com",
     "password": "password123",
-    "project_rows": [
-        {
-            "project_id": 1,
-            "status": "Active"
-        }
-    ],
-    "password_confirmation": "password123"
+    "password_confirmation": "password123",
+    "notes": "Senior supervisor with 10 years experience",
+    "image": "(binary)",
+    "status": "Active"
 };
 
 fetch(url, {
@@ -6526,9 +7831,12 @@ fetch(url, {
         &quot;id&quot;: 1,
         &quot;name&quot;: &quot;John Supervisor&quot;,
         &quot;mobile_number&quot;: &quot;+1234567890&quot;,
+        &quot;email&quot;: &quot;supervisor@example.com&quot;,
         &quot;type&quot;: 3,
         &quot;type_label&quot;: &quot;Supervisor&quot;,
         &quot;status&quot;: &quot;Active&quot;,
+        &quot;notes&quot;: &quot;Senior supervisor with 10 years experience&quot;,
+        &quot;image&quot;: &quot;uploads/supervisors/supervisor_image_123.jpg&quot;,
         &quot;created_at&quot;: &quot;2026-08-07T10:30:00Z&quot;
     }
 }</code>
@@ -6543,6 +7851,9 @@ fetch(url, {
     &quot;errors&quot;: {
         &quot;mobile_number&quot;: [
             &quot;The mobile number has already been taken.&quot;
+        ],
+        &quot;email&quot;: [
+            &quot;The email has already been taken.&quot;
         ]
     }
 }</code>
@@ -6633,18 +7944,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                                 <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
         <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>name</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="name"                data-endpoint="POSTapi-add2farm-supervisors"
-               value="John Supervisor"
-               data-component="body">
-    <br>
-<p>Supervisor's full name. Example: <code>John Supervisor</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>mobile_number</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
  &nbsp;
@@ -6654,19 +7953,31 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="+1234567890"
                data-component="body">
     <br>
-<p>Unique mobile number with country code. Example: <code>+1234567890</code></p>
+<p>Supervisor mobile number with country code. Must be unique. Example: <code>+1234567890</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>name</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="name"                data-endpoint="POSTapi-add2farm-supervisors"
+               value="John Supervisor"
+               data-component="body">
+    <br>
+<p>Supervisor full name. Example: <code>John Supervisor</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>email</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
-<i>optional</i> &nbsp;
+ &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
                               name="email"                data-endpoint="POSTapi-add2farm-supervisors"
-               value="john@example.com"
+               value="supervisor@example.com"
                data-component="body">
     <br>
-<p>optional Email address. Example: <code>john@example.com</code></p>
+<p>Supervisor email address. Example: <code>supervisor@example.com</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>password</code></b>&nbsp;&nbsp;
@@ -6678,45 +7989,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="password123"
                data-component="body">
     <br>
-<p>Password (min 8 characters). Example: <code>password123</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-        <details>
-            <summary style="padding-bottom: 10px;">
-                <b style="line-height: 2;"><code>project_rows</code></b>&nbsp;&nbsp;
-<small>string[]</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-<br>
-<p>optional Array of project assignments.</p>
-            </summary>
-                                                <div style="margin-left: 14px; clear: unset;">
-                        <b style="line-height: 2;"><code>project_id</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="project_rows.0.project_id"                data-endpoint="POSTapi-add2farm-supervisors"
-               value=""
-               data-component="body">
-    <br>
-<p>Must match an existing stored value.</p>
-                    </div>
-                                                                <div style="margin-left: 14px; clear: unset;">
-                        <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="project_rows.0.status"                data-endpoint="POSTapi-add2farm-supervisors"
-               value="Active"
-               data-component="body">
-    <br>
-<p>Example: <code>Active</code></p>
-Must be one of:
-<ul style="list-style-type: square;"><li><code>Active</code></li> <li><code>Inactive</code></li> <li><code>Pending</code></li></ul>
-                    </div>
-                                    </details>
+<p>Password (minimum 8 characters). Example: <code>password123</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>password_confirmation</code></b>&nbsp;&nbsp;
@@ -6729,6 +8002,42 @@ Must be one of:
                data-component="body">
     <br>
 <p>Password confirmation. Example: <code>password123</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="notes"                data-endpoint="POSTapi-add2farm-supervisors"
+               value="Senior supervisor with 10 years experience"
+               data-component="body">
+    <br>
+<p>Optional notes about the supervisor. Example: <code>Senior supervisor with 10 years experience</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>image</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="image"                data-endpoint="POSTapi-add2farm-supervisors"
+               value="(binary)"
+               data-component="body">
+    <br>
+<p>Profile image (jpeg, png, gif). Max 2MB. Example: <code>(binary)</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="status"                data-endpoint="POSTapi-add2farm-supervisors"
+               value="Active"
+               data-component="body">
+    <br>
+<p>Status (Active, Inactive, Disable). Example: <code>Active</code></p>
         </div>
         </form>
 
@@ -6911,7 +8220,9 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --data "{
     \"name\": \"John Supervisor Updated\",
     \"email\": \"john.updated@example.com\",
-    \"status\": \"Active\"
+    \"status\": \"Active\",
+    \"notes\": \"Updated notes\",
+    \"image\": \"(binary)\"
 }"
 </code></pre></div>
 
@@ -6930,7 +8241,9 @@ const headers = {
 let body = {
     "name": "John Supervisor Updated",
     "email": "john.updated@example.com",
-    "status": "Active"
+    "status": "Active",
+    "notes": "Updated notes",
+    "image": "(binary)"
 };
 
 fetch(url, {
@@ -6956,7 +8269,9 @@ fetch(url, {
         &quot;mobile_number&quot;: &quot;+1234567890&quot;,
         &quot;email&quot;: &quot;john.updated@example.com&quot;,
         &quot;type&quot;: 3,
-        &quot;status&quot;: &quot;Active&quot;
+        &quot;status&quot;: &quot;Active&quot;,
+        &quot;notes&quot;: &quot;Updated notes&quot;,
+        &quot;image&quot;: &quot;uploads/supervisors/supervisor_image_456.jpg&quot;
     }
 }</code>
  </pre>
@@ -7093,6 +8408,30 @@ You can check the Dev Tools console for debugging information.</code></pre>
                data-component="body">
     <br>
 <p>Status (Active, Inactive, Disable). Example: <code>Active</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>notes</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="notes"                data-endpoint="PUTapi-add2farm-supervisors--supervisor-"
+               value="Updated notes"
+               data-component="body">
+    <br>
+<p>Optional notes about the supervisor. Example: <code>Updated notes</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>image</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="image"                data-endpoint="PUTapi-add2farm-supervisors--supervisor-"
+               value="(binary)"
+               data-component="body">
+    <br>
+<p>Profile image (jpeg, png, gif). Max 2MB. Example: <code>(binary)</code></p>
         </div>
         </form>
 

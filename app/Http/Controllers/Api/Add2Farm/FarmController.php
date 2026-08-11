@@ -183,6 +183,7 @@ class FarmController extends Controller
             'name'               => 'required|string|max:255',
             'location'           => 'required|string|max:255',
             'type'               => 'required|string|max:255',
+            'mobile_number'      => 'nullable|string|max:20',
             'number_of_hangars'  => 'required|integer|min:1|max:999',
             'assigned_to'        => 'nullable|integer|exists:admins,id',
         ]);
@@ -212,6 +213,7 @@ class FarmController extends Controller
                 'name'               => $request->name,
                 'location'           => $request->location,
                 'type'               => $request->type,
+                'mobile_number'      => $request->mobile_number,
                 'number_of_hangars'  => $request->number_of_hangars,
                 'assigned_to'        => $request->assigned_to,
                 'created_by'         => auth()->id(),
@@ -324,6 +326,7 @@ class FarmController extends Controller
             'name'               => 'required|string|max:255',
             'location'           => 'required|string|max:255',
             'type'               => 'required|string|max:255',
+            'mobile_number'      => 'nullable|string|max:20',
             'number_of_hangars'  => 'required|integer|min:1|max:999',
             'assigned_to'        => 'nullable|integer|exists:admins,id',
         ]);
@@ -355,6 +358,7 @@ class FarmController extends Controller
                 'name'               => $request->name,
                 'location'           => $request->location,
                 'type'               => $request->type,
+                'mobile_number'      => $request->mobile_number,
                 'number_of_hangars'  => $request->number_of_hangars,
                 'assigned_to'        => $request->assigned_to,
             ]);
@@ -442,6 +446,7 @@ class FarmController extends Controller
             'name'                  => $farm->name,
             'location'              => $farm->location,
             'type'                  => $farm->type,
+            'mobile_number'         => $farm->mobile_number,
             'number_of_hangars'     => $farm->number_of_hangars,
             'assigned_to'           => $farm->assigned_to,
             'assigned_admin_name'   => $farm->assignedAdmin?->name ?? null,

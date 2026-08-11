@@ -93,9 +93,11 @@ class DropdownController extends Controller
     }
 
     /**
-     * Get all supervisors for dropdown
+     * Get supervisors for dropdown based on logged-in user type
      *
-     * Fetch list of supervisors (Type 3 admins) with id and name only for dropdown/select usage.
+     * Returns different supervisor types based on the logged-in user's type:
+     * - If user type = 2 (PUBLIC_VENDOR): returns supervisors with type 4
+     * - If user type = 1 (ADMIN): returns supervisors with type 3
      *
      * @authenticated
      *
@@ -118,9 +120,18 @@ class DropdownController extends Controller
      *   "message": "Unauthenticated"
      * }
      */
-    public function supervisors()
+    public function supervisors(Request $request)
     {
-        $supervisors = Admin::where('type', 3)
+        $user = auth('admin')->user();
+        
+        // Determine supervisor type based on logged-in user's type
+        $supervisorType = match($user->type) {
+            Admin::PUBLIC_VENDOR => 4,  // type 2 users get type 4 supervisors
+            Admin::ADMIN => 3,           // type 1 users get type 3 supervisors
+            default => 3,                // default to type 3
+        };
+
+        $supervisors = Admin::where('type', $supervisorType)
             ->select('id', 'name')
             ->orderBy('name')
             ->get();

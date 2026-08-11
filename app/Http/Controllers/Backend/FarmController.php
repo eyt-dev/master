@@ -51,7 +51,16 @@ class FarmController extends Controller
 
     public function create()
     {
-        $admins = Admin::where('type', 1)->get();
+        $user = auth()->user();
+        
+        // Get supervisors based on logged-in user type
+        $supervisorType = match($user->type) {
+            2 => 4,  // type 2 users get type 4 supervisors
+            1 => 3,  // type 1 users get type 3 supervisors
+            default => 3,
+        };
+        
+        $admins = Admin::where('type', $supervisorType)->orderBy('name')->get();
         return view('backend.farm.create', compact('admins'));
     }
 
@@ -63,6 +72,7 @@ class FarmController extends Controller
             'number_of_hangars' => 'required|numeric|min:1',
             'assigned_to' => 'required',
             'type' => 'required',
+            'mobile_number' => 'nullable|string|max:20',
         ]);
 
         $createData = [
@@ -71,6 +81,7 @@ class FarmController extends Controller
             'number_of_hangars' => $request->number_of_hangars,
             'assigned_to' => $request->assigned_to,
             'type' => $request->type,
+            'mobile_number' => $request->mobile_number,
             'created_by' => auth()->id()
         ];
         $farm = Farm::create($createData);
@@ -90,7 +101,16 @@ class FarmController extends Controller
     public function edit($siteUrl, $id)
     {
         $farm = Farm::findOrFail($id);
-        $admins = Admin::where('type', 1)->get();
+        $user = auth()->user();
+        
+        // Get supervisors based on logged-in user type
+        $supervisorType = match($user->type) {
+            2 => 4,  // type 2 users get type 4 supervisors
+            1 => 3,  // type 1 users get type 3 supervisors
+            default => 3,
+        };
+        
+        $admins = Admin::where('type', $supervisorType)->orderBy('name')->get();
         return view('backend.farm.create', compact('farm', 'admins'));
     }
 
@@ -104,6 +124,7 @@ class FarmController extends Controller
             'number_of_hangars' => 'required|numeric|min:1',
             'assigned_to' => 'required',
             'type' => 'required',
+            'mobile_number' => 'nullable|string|max:20',
         ]);
 
         $farm->update([
@@ -112,6 +133,7 @@ class FarmController extends Controller
             'number_of_hangars' => $request->number_of_hangars,
             'assigned_to' => $request->assigned_to,
             'type' => $request->type,
+            'mobile_number' => $request->mobile_number,
         ]);
 
         if ($request->expectsJson() || $request->ajax()) {

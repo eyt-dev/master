@@ -52,4 +52,25 @@ Farmers = Users = type:4
 - create farm api -- for add supervisor farm dropdown
 - supplier api -- for add flock figma screen
 ------Queries------
+solution of queries?
 
+- Signup for Feed Supplier and Chicks Supplier: We allowed only farm admin and farm owner to signup  
+    - Signup for Feed supplier and Chicks suppliers will be completed later.
+- Language and Country settings: Do we need to introduce language and country option for logged in user?
+    - ⁠Yes we can include region and language in the profile (User account).
+- Farm: 
+        - In figma needs to add the Type(Opensys, closed sys, cages)- Its added at backend and in API- figma doesnt have this 
+            - ⁠Farm type will be added to the design.
+        - It has Hangars Area and not LayerHens and BroilerHens option to define(In backend we have option to add layerhen and broilerhen - which figma needs to add)
+            - ⁠Yes no need to be shown, it’s only dynamic information for alert only.
+        - Does it mistakenly mobile number in the farm?: In add farm there's mobile number , so do we need to add or its by mistake added in figma?
+            - ⁠No, we need to add mobile number to the farm.
+        - Here its supervisor dropdown so In the backend as well - It should show the supervisors(private vendor) only in the dropdown while adding farm?
+            - ⁠Mentioning Farmer if the account type is “Farms Owner”, And mentioning Supervisor if the account type is “Farms Admin”.
+
+- Farmer: In the figma its confusing that sometimes mentioned as farmer and sometimes its supervisor but
+        both - farmer and supervisor are different. Farmer=Users and Supervisor= Private vendor
+    - ⁠Mentioning Farmer if the account type is “Farms Owner”, And mentioning Supervisor if the account type is “Farms Admin”.
+    
+- Chicken Sale of the backend = Endflock of the figma?
+    - Yesṭ

@@ -13,6 +13,7 @@ class Farm extends Model
         'name',
         'location',
         'type',
+        'mobile_number',
         'number_of_hangars',
         'assigned_to',
         'created_by',

@@ -1,6 +1,225 @@
 # Custom endpoints for Add2Farm resources
-# These are added manually because Scribe's automatic route detection doesn't always
-# pick up resource routes with URI parameters
+# Auth endpoints are added here manually since they're public routes
+
+- httpMethods:
+    - POST
+  uri: api/add2farm/auth/register
+  metadata:
+    groupName: Add2Farm Authentication
+    title: Register a new user
+    description: 'Register a new user account for Add2Farm mobile/web application.'
+    authenticated: false
+  headers:
+    Content-Type: application/json
+    Accept: application/json
+  bodyParameters:
+    mobile_number:
+      name: mobile_number
+      description: 'User mobile number with country code. Must be unique.'
+      required: true
+      example: '+1234567890'
+      type: string
+    name:
+      name: name
+      description: 'User full name. Optional, defaults to Add2Farm User.'
+      required: false
+      example: 'John Doe'
+      type: string
+    password:
+      name: password
+      description: 'Password (minimum 8 characters).'
+      required: true
+      example: 'password123'
+      type: string
+    password_confirmation:
+      name: password_confirmation
+      description: 'Password confirmation.'
+      required: true
+      example: 'password123'
+      type: string
+    type:
+      name: type
+      description: 'User type: 1=SuperAdmin, 2=FarmOwner.'
+      required: true
+      example: 2
+      type: integer
+  responses:
+    - status: 201
+      content: '{"success": true, "message": "OTP sent successfully."}'
+    - status: 422
+      content: '{"success": false, "errors": {"mobile_number": ["The mobile number has already been taken."]}}'
+
+- httpMethods:
+    - POST
+  uri: api/add2farm/auth/login
+  metadata:
+    groupName: Add2Farm Authentication
+    title: Login user
+    description: 'Login to Add2Farm with mobile number and password.'
+    authenticated: false
+  headers:
+    Content-Type: application/json
+    Accept: application/json
+  bodyParameters:
+    mobile_number:
+      name: mobile_number
+      description: 'User mobile number with country code.'
+      required: true
+      example: '+1234567890'
+      type: string
+    password:
+      name: password
+      description: 'User password.'
+      required: true
+      example: 'password123'
+      type: string
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Login successful.", "data": {"user": {"id": 1, "name": "John Doe", "mobile_number": "+1234567890", "type": 2, "type_label": "Farm Owner", "status": "Active"}, "token": "1|abcdefghijklmnopqrstuvwxyz123456789"}}'
+
+- httpMethods:
+    - POST
+  uri: api/add2farm/auth/verify-otp
+  metadata:
+    groupName: Add2Farm Authentication
+    title: Verify OTP
+    description: 'Verify OTP code sent to user mobile number during registration or password reset.'
+    authenticated: false
+  headers:
+    Content-Type: application/json
+    Accept: application/json
+  bodyParameters:
+    mobile_number:
+      name: mobile_number
+      description: 'User mobile number.'
+      required: true
+      example: '+1234567890'
+      type: string
+    otp:
+      name: otp
+      description: 'OTP code (6 digits).'
+      required: true
+      example: '123456'
+      type: string
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "OTP verified successfully.", "data": {"user": {"id": 1, "name": "John Doe", "mobile_number": "+1234567890", "type": 2, "type_label": "Farm Owner", "status": "Active"}, "token": "1|abcdefghijklmnopqrstuvwxyz123456789"}}'
+
+- httpMethods:
+    - POST
+  uri: api/add2farm/auth/resend-otp
+  metadata:
+    groupName: Add2Farm Authentication
+    title: Resend OTP
+    description: 'Resend OTP code to user mobile number.'
+    authenticated: false
+  headers:
+    Content-Type: application/json
+    Accept: application/json
+  bodyParameters:
+    mobile_number:
+      name: mobile_number
+      description: 'User mobile number.'
+      required: true
+      example: '+1234567890'
+      type: string
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "OTP resent successfully."}'
+
+- httpMethods:
+    - POST
+  uri: api/add2farm/auth/forgot-password
+  metadata:
+    groupName: Add2Farm Authentication
+    title: Forgot Password - Step 1
+    description: 'Request password reset by providing mobile number. An OTP will be sent to verify identity before allowing password change.'
+    authenticated: false
+  headers:
+    Content-Type: application/json
+    Accept: application/json
+  bodyParameters:
+    mobile_number:
+      name: mobile_number
+      description: 'User mobile number.'
+      required: true
+      example: '+1234567890'
+      type: string
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "OTP sent to your mobile number. Please verify it to reset your password."}'
+    - status: 404
+      content: '{"success": false, "message": "User not found."}'
+
+- httpMethods:
+    - POST
+  uri: api/add2farm/auth/verify-otp
+  metadata:
+    groupName: Add2Farm Authentication
+    title: Verify OTP - Step 2 (2FA)
+    description: 'Verify OTP code sent during password reset or registration. This is required before you can reset your password or complete registration.'
+    authenticated: false
+  headers:
+    Content-Type: application/json
+    Accept: application/json
+  bodyParameters:
+    mobile_number:
+      name: mobile_number
+      description: 'User mobile number.'
+      required: true
+      example: '+1234567890'
+      type: string
+    otp:
+      name: otp
+      description: 'OTP code (6 digits) sent to mobile number. Required for 2FA.'
+      required: true
+      example: '123456'
+      type: string
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "OTP verified successfully.", "data": {"user": {"id": 1, "name": "John Doe", "mobile_number": "+1234567890", "type": 2, "type_label": "Farm Owner", "status": "Active"}, "token": "1|abcdefghijklmnopqrstuvwxyz123456789"}}'
+    - status: 401
+      content: '{"success": false, "message": "Invalid or expired OTP."}'
+
+- httpMethods:
+    - POST
+  uri: api/add2farm/auth/reset-password
+  metadata:
+    groupName: Add2Farm Authentication
+    title: Reset Password - Step 3
+    description: 'Reset password using token from OTP verification. No mobile number needed - token identifies the user.'
+    authenticated: false
+  headers:
+    Content-Type: application/json
+    Accept: application/json
+  bodyParameters:
+    token:
+      name: token
+      description: 'Token received from verify-otp endpoint (Step 2). Identifies the user - no mobile number needed.'
+      required: true
+      example: '1|abcdefghijklmnopqrstuvwxyz123456789'
+      type: string
+    password:
+      name: password
+      description: 'New password (minimum 8 characters).'
+      required: true
+      example: 'newpassword123'
+      type: string
+    password_confirmation:
+      name: password_confirmation
+      description: 'New password confirmation.'
+      required: true
+      example: 'newpassword123'
+      type: string
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Password reset successfully. Please login with new password."}'
+    - status: 401
+      content: '{"success": false, "message": "Invalid or expired token. Please verify OTP first."}'
+    - status: 404
+      content: '{"success": false, "message": "User not found."}'
+    - status: 422
+      content: '{"success": false, "errors": {"password": ["The password confirmation does not match."]}}'
 
 - httpMethods:
     - GET
@@ -210,6 +429,96 @@
 
 - httpMethods:
     - GET
+  uri: api/add2farm/supervisors
+  metadata:
+    groupName: Add2Farm Supervisors (Type 3)
+    title: List all supervisors
+    description: 'Get paginated list of all supervisors with search and filtering.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  queryParameters:
+    page:
+      name: page
+      description: 'optional Pagination page number.'
+      required: false
+      example: 1
+      type: integer
+    per_page:
+      name: per_page
+      description: 'optional Items per page. Default: 15.'
+      required: false
+      example: 20
+      type: integer
+    search:
+      name: search
+      description: 'optional Search by name or mobile number.'
+      required: false
+      example: Supervisor1
+      type: string
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Supervisors retrieved successfully.", "data": {"current_page": 1, "data": [{"id": 1, "name": "Supervisor Name", "mobile_number": "+1234567890", "email": "supervisor@add2farm.local", "type": 3, "type_label": "Supervisor", "status": "Active"}], "total": 5, "last_page": 1}}'
+
+- httpMethods:
+    - POST
+  uri: api/add2farm/supervisors
+  metadata:
+    groupName: Add2Farm Supervisors (Type 3)
+    title: Create a new supervisor
+    description: 'Create a new supervisor account (Type 3).'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  bodyParameters:
+    mobile_number:
+      name: mobile_number
+      description: 'Supervisor mobile number with country code. Must be unique.'
+      required: true
+      example: '+1234567890'
+      type: string
+    name:
+      name: name
+      description: 'Supervisor full name.'
+      required: true
+      example: 'John Supervisor'
+      type: string
+    email:
+      name: email
+      description: 'Supervisor email address.'
+      required: true
+      example: 'supervisor@example.com'
+      type: string
+    password:
+      name: password
+      description: 'Password (minimum 8 characters).'
+      required: true
+      example: 'password123'
+      type: string
+    password_confirmation:
+      name: password_confirmation
+      description: 'Password confirmation.'
+      required: true
+      example: 'password123'
+      type: string
+    status:
+      name: status
+      description: 'Status (Active, Inactive, Disable).'
+      required: true
+      example: 'Active'
+      type: string
+  responses:
+    - status: 201
+      content: '{"success": true, "message": "Supervisor created successfully.", "data": {"id": 1, "name": "John Supervisor", "mobile_number": "+1234567890", "email": "supervisor@example.com", "type": 3, "type_label": "Supervisor", "status": "Active", "created_at": "2026-08-07T10:30:00Z"}}'
+    - status: 422
+      content: '{"success": false, "errors": {"mobile_number": ["The mobile number has already been taken."], "email": ["The email has already been taken."]}}'
+
+- httpMethods:
+    - GET
   uri: api/add2farm/supervisors/{supervisor}
   metadata:
     groupName: Add2Farm Supervisors (Type 3)
@@ -298,6 +607,96 @@
 
 - httpMethods:
     - GET
+  uri: api/add2farm/farmers
+  metadata:
+    groupName: Add2Farm Farmers (Type 4)
+    title: List all farmers
+    description: 'Get paginated list of all farmers with search and filtering.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  queryParameters:
+    page:
+      name: page
+      description: 'optional Pagination page number.'
+      required: false
+      example: 1
+      type: integer
+    per_page:
+      name: per_page
+      description: 'optional Items per page. Default: 15.'
+      required: false
+      example: 20
+      type: integer
+    search:
+      name: search
+      description: 'optional Search by name or mobile number.'
+      required: false
+      example: Farmer1
+      type: string
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Farmers retrieved successfully.", "data": {"current_page": 1, "data": [{"id": 2, "name": "Farmer Name", "mobile_number": "+0987654321", "email": "farmer@add2farm.local", "type": 4, "type_label": "Farmer", "status": "Active"}], "total": 10, "last_page": 1}}'
+
+- httpMethods:
+    - POST
+  uri: api/add2farm/farmers
+  metadata:
+    groupName: Add2Farm Farmers (Type 4)
+    title: Create a new farmer
+    description: 'Create a new farmer account (Type 4).'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  bodyParameters:
+    mobile_number:
+      name: mobile_number
+      description: 'Farmer mobile number with country code. Must be unique.'
+      required: true
+      example: '+0987654321'
+      type: string
+    name:
+      name: name
+      description: 'Farmer full name.'
+      required: true
+      example: 'Jane Farmer'
+      type: string
+    email:
+      name: email
+      description: 'Farmer email address.'
+      required: true
+      example: 'farmer@example.com'
+      type: string
+    password:
+      name: password
+      description: 'Password (minimum 8 characters).'
+      required: true
+      example: 'password123'
+      type: string
+    password_confirmation:
+      name: password_confirmation
+      description: 'Password confirmation.'
+      required: true
+      example: 'password123'
+      type: string
+    status:
+      name: status
+      description: 'Status (Active, Inactive, Disable).'
+      required: true
+      example: 'Active'
+      type: string
+  responses:
+    - status: 201
+      content: '{"success": true, "message": "Farmer created successfully.", "data": {"id": 2, "name": "Jane Farmer", "mobile_number": "+0987654321", "email": "farmer@example.com", "type": 4, "type_label": "Farmer", "status": "Active", "created_at": "2026-08-07T10:30:00Z"}}'
+    - status: 422
+      content: '{"success": false, "errors": {"mobile_number": ["The mobile number has already been taken."], "email": ["The email has already been taken."]}}'
+
+- httpMethods:
+    - GET
   uri: api/add2farm/farmers/{farmer}
   metadata:
     groupName: Add2Farm Farmers (Type 4)
@@ -383,6 +782,84 @@
   responses:
     - status: 200
       content: '{"success": true, "message": "Farmer deleted successfully."}'
+
+- httpMethods:
+    - GET
+  uri: api/add2farm/farms
+  metadata:
+    groupName: Add2Farm Farms
+    title: List all farms
+    description: 'Get paginated list of all farms with search and filtering.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  queryParameters:
+    page:
+      name: page
+      description: 'optional Pagination page number.'
+      required: false
+      example: 1
+      type: integer
+    per_page:
+      name: per_page
+      description: 'optional Items per page. Default: 15.'
+      required: false
+      example: 20
+      type: integer
+    search:
+      name: search
+      description: 'optional Search by farm name or location.'
+      required: false
+      example: Farm1
+      type: string
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Farms retrieved successfully.", "data": {"current_page": 1, "data": [{"id": 1, "name": "Main Farm", "location": "Village A", "type": "Layer", "number_of_hangars": 5, "assigned_to": 1}], "total": 8, "last_page": 1}}'
+
+- httpMethods:
+    - POST
+  uri: api/add2farm/farms
+  metadata:
+    groupName: Add2Farm Farms
+    title: Create a new farm
+    description: 'Create a new farm with details.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  bodyParameters:
+    name:
+      name: name
+      description: Farm name.
+      required: true
+      example: 'Green Valley Farm'
+      type: string
+    location:
+      name: location
+      description: Farm location.
+      required: true
+      example: 'North Region'
+      type: string
+    type:
+      name: type
+      description: Farm type (Poultry, Layer, Broiler, etc.).
+      required: true
+      example: 'Poultry'
+      type: string
+    number_of_hangars:
+      name: number_of_hangars
+      description: 'Number of hangars (1-999).'
+      required: true
+      example: 5
+      type: integer
+  responses:
+    - status: 201
+      content: '{"success": true, "message": "Farm created successfully.", "data": {"id": 1, "name": "Green Valley Farm", "location": "North Region", "type": "Poultry", "number_of_hangars": 5, "created_by": 1, "created_by_name": "Admin Name", "created_at": "2026-08-07T10:30:00Z"}}'
+    - status: 422
+      content: '{"success": false, "errors": {"name": ["The name field is required."], "number_of_hangars": ["The number of hangars must be between 1 and 999."]}}'
 
 - httpMethods:
     - GET
@@ -713,3 +1190,87 @@
   responses:
     - status: 200
       content: '{"success": true, "message": "Daily record deleted successfully."}'
+
+- httpMethods:
+    - GET
+  uri: api/add2farm/profile
+  metadata:
+    groupName: Add2Farm Profile
+    title: Get user profile
+    description: 'Retrieve the authenticated user profile information.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Profile retrieved successfully.", "data": {"id": 1, "name": "John Doe", "mobile_number": "+1234567890", "email": "john@example.com", "type": 2, "type_label": "Farm Owner", "status": "Active", "created_at": "2026-08-07T10:30:00Z"}}'
+
+- httpMethods:
+    - PUT
+  uri: api/add2farm/profile
+  metadata:
+    groupName: Add2Farm Profile
+    title: Update user profile
+    description: 'Update the authenticated user profile information (name, email).'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  bodyParameters:
+    name:
+      name: name
+      description: 'User full name.'
+      required: false
+      example: 'John Doe Updated'
+      type: string
+    email:
+      name: email
+      description: 'User email address.'
+      required: false
+      example: 'john.updated@example.com'
+      type: string
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Profile updated successfully.", "data": {"id": 1, "name": "John Doe Updated", "mobile_number": "+1234567890", "email": "john.updated@example.com", "type": 2, "type_label": "Farm Owner", "status": "Active", "created_at": "2026-08-07T10:30:00Z"}}'
+    - status: 422
+      content: '{"success": false, "errors": {"email": ["The email has already been taken."]}}'
+
+- httpMethods:
+    - PUT
+  uri: api/add2farm/profile/change-password
+  metadata:
+    groupName: Add2Farm Profile
+    title: Change password
+    description: 'Change the authenticated user password. Current password verification is required.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  bodyParameters:
+    current_password:
+      name: current_password
+      description: 'Current password for verification.'
+      required: true
+      example: 'currentpassword123'
+      type: string
+    password:
+      name: password
+      description: 'New password (minimum 8 characters).'
+      required: true
+      example: 'newpassword123'
+      type: string
+    password_confirmation:
+      name: password_confirmation
+      description: 'New password confirmation.'
+      required: true
+      example: 'newpassword123'
+      type: string
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Password changed successfully."}'
+    - status: 422
+      content: '{"success": false, "errors": {"current_password": ["The current password is incorrect."]}}'

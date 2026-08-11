@@ -1,0 +1,40 @@
+Login: Mobile number and password
+Signup:
+    Mobile number
+    Email (optional)
+    Password
+    Confirm Password
+    Type: Farm Admin, Farm Owner, Feed Supplier, Chicks Supplier
+Verify OTP:
+    Mobile No
+    OTP
+Resend OTP:
+    Mobile No
+Forgot Pass:
+    Mobile No
+Verify OTP again
+Reset Password:
+    Token - which got from verify OTP
+    Password
+    Confirm Password
+User profile Get: Based on logged in Token
+User Profile update
+    Name, Email, Username
+Change Pass:
+    current password, new pass, confirm pass
+
+
+
+
+
+--------------
+
+Farm owner = Public Vendor = type:2
+Farm admin = Admin = type:1
+Supervisor = Private Vendor = type:3
+Farmers = Users = type:4
+
+
+------Queries------
+- Signup for Feed Supplier and Chicks Supplier
+- Language and Coutry settings

@@ -300,14 +300,14 @@ class AdminController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'username' => 'required',            
+            'username' => 'required',
+            'email' => 'required|email|unique:admins,email,' . $id,
             'vat_country_code' => 'required',
             'vat_number' => 'required',
             'project_id' => 'nullable|exists:projects,id',
             'project_rows' => 'nullable|array',
             'project_rows.*.project_id' => 'nullable|exists:projects,id',
             'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
-            // 'email' => 'required|email|unique:admins,email,' . $id,
             // 'status' => 'required_if:type,1|in:Enable,Disable,Pending'
         ]);
 
@@ -327,24 +327,42 @@ class AdminController extends Controller
             'vat_country_code' => $request->vat_country_code,
             'vat_number' => $request->vat_number,
             'password' => $request->filled('password') ? Hash::make($request->password) : $admin->password,
+            'email' => $request->email,
             'project_id' => $request->filled('project_id') ? $request->project_id : null,
         ];
-        $admin->update($updateData);
 
-        if ($request->has('project_rows')) {
-            $admin->syncProjectStatuses($this->normalizeProjectRows($request));
+        try {
+            DB::beginTransaction();
+
+            // Update admin
+            $admin->update($updateData);
+
+            // Sync project statuses if provided
+            if ($request->has('project_rows')) {
+                $admin->syncProjectStatuses($this->normalizeProjectRows($request));
+            }
+
+            // Sync contact information
+            Contact::updateOrCreate(
+                ['email' => $request->email], // condition (unique key)
+                [
+                    'name' => $request->name,
+                    'formal_name' => $request->name,
+                    'vat_country_code' => $request->vat_country_code,
+                    'vat_number' => $request->vat_number,
+                    'created_by' => $admin->id,
+                ]
+            );
+
+            DB::commit();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Admin update error: ' . $e->getMessage());
+            
+            return redirect()->route('admins.edit', ['username' => request()->segment(1), 'admin' => $id])
+                ->with('error', 'Failed to update admin. Please try again.');
         }
-
-        Contact::updateOrCreate(
-            ['email' => $request->email], // condition (unique key)
-            [
-                'name' => $request->name,
-                'formal_name' => $request->name,
-                'vat_country_code' => $request->vat_country_code,
-                'vat_number' => $request->vat_number,
-                'created_by' => $admin->id,
-            ]
-        );
 
         // $admin->assignRole($request->role);
         

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
+use Laravel\Sanctum\PersonalAccessToken;
 
 /**
  * @group Add2Farm Authentication
@@ -48,6 +49,7 @@ class AuthController extends Controller
             'password'      => 'required|string|min:8|confirmed',
             'type'          => 'required|integer|in:1,2',
             'name'          => 'nullable|string|max:255',
+            'email'         => 'required|email|max:255|unique:admins,email',
         ]);
 
         if ($validator->fails()) {
@@ -68,7 +70,7 @@ class AuthController extends Controller
                 'status'        => 'Inactive',
                 'name'          => $request->name ?? 'Add2Farm User',
                 'created_from'  => 3,
-                'email'         => $request->email ?? 'add2farm-' . uniqid() . '@add2farm.local',
+                'email'         => $request->email,
             ]);
 
             // Assign PrivateVendor role
@@ -447,9 +449,8 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'mobile_number' => 'required|string|max:20',
-            'otp'           => 'required|string|size:6|regex:/^\d+$/',
-            'password'      => 'required|string|min:8|confirmed',
+            'token'    => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         if ($validator->fails()) {
@@ -459,8 +460,18 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Find user by mobile number
-        $admin = Admin::where('mobile_number', $request->mobile_number)->first();
+        // Verify token and get user
+        $personalAccessToken = PersonalAccessToken::findToken($request->token);
+
+        if (!$personalAccessToken) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired token. Please verify OTP first.',
+            ], 401);
+        }
+
+        // Get the admin user from the token
+        $admin = $personalAccessToken->tokenable;
 
         if (!$admin) {
             return response()->json([
@@ -469,34 +480,18 @@ class AuthController extends Controller
             ], 404);
         }
 
-        // Check if OTP exists
-        if (!$admin->otp) {
+        // Check if token was created by verify-otp endpoint (has specific name)
+        if ($personalAccessToken->name !== 'add2farm-token') {
             return response()->json([
                 'success' => false,
-                'message' => 'No OTP found. Please request OTP first.',
-            ], 400);
-        }
-
-        // Check if OTP has expired
-        if ($admin->isOtpExpired()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'OTP has expired. Please request a new OTP.',
-            ], 422);
-        }
-
-        // Verify OTP
-        if (!$admin->isOtpValid($request->otp)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid OTP.',
-            ], 400);
+                'message' => 'Invalid token. Please use token from OTP verification.',
+            ], 401);
         }
 
         try {
             DB::beginTransaction();
 
-            // Update password and clear OTP
+            // Update password
             $admin->update([
                 'password' => Hash::make($request->password),
                 'otp' => null,
@@ -504,14 +499,14 @@ class AuthController extends Controller
                 'otp_verified_at' => null,
             ]);
 
-            // Revoke all tokens for security
+            // Revoke all tokens for security (user must login again)
             $admin->tokens()->delete();
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Password reset successfully.',
+                'message' => 'Password reset successfully. Please login with new password.',
             ]);
 
         } catch (\Exception $e) {

@@ -155,6 +155,8 @@ class FarmerController extends Controller
      * @bodyParam email string optional Email address. Example: john@example.com
      * @bodyParam password string required Password (min 8 characters). Example: password123
      * @bodyParam password_confirmation string required Password confirmation. Example: password123
+     * @bodyParam notes string optional Optional notes about the farmer. Example: Experienced farmer with 5 years background
+     * @bodyParam image file optional Profile image (jpeg, png, gif). Max 2MB. Example: (binary)
      * @bodyParam project_rows array optional Array of project assignments. Type 2 can assign max 1. Example: [{"project_id": 1, "status": "Active"}]
      *
      * @response 201 {
@@ -167,6 +169,8 @@ class FarmerController extends Controller
      *     "type": 4,
      *     "type_label": "Farmers",
      *     "status": "Active",
+     *     "notes": "Experienced farmer with 5 years background",
+     *     "image": "farmer_image_123.jpg",
      *     "created_at": "2026-08-07T10:30:00Z"
      *   }
      * }
@@ -184,6 +188,8 @@ class FarmerController extends Controller
             'mobile_number'   => 'required|string|max:20|unique:admins,mobile_number',
             'email'           => 'nullable|email|max:255|unique:admins,email',
             'password'        => 'required|string|min:8|confirmed',
+            'notes'           => 'nullable|string|max:1000',
+            'image'           => 'nullable|image|mimes:jpeg,png,gif|max:2048',
             'project_rows'    => 'nullable|array',
             'project_rows.*.project_id' => 'nullable|exists:projects,id',
             'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
@@ -213,6 +219,18 @@ class FarmerController extends Controller
         try {
             DB::beginTransaction();
 
+            // Handle image upload
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                
+                // Ensure directory exists
+                \Storage::disk('public')->makeDirectory('uploads/farmers', 0755, true);
+                $file->storeAs('uploads/farmers', $filename, 'public');
+                $imagePath = 'uploads/farmers/' . $filename;
+            }
+
             // Create farmer (Type 4)
             $admin = Admin::create([
                 'name'           => $request->name,
@@ -221,6 +239,8 @@ class FarmerController extends Controller
                 'password'       => Hash::make($request->password),
                 'type'           => self::ADMIN_TYPE,
                 'status'         => 'Active',
+                'notes'          => $request->notes ?? null,
+                'image'          => $imagePath,
                 'created_by'     => auth()->id(),
                 'created_from'   => 3,
             ]);
@@ -306,6 +326,8 @@ class FarmerController extends Controller
      * @bodyParam name string required Farmer's full name. Example: Jane Farmer Updated
      * @bodyParam email string optional Email address. Example: jane.updated@example.com
      * @bodyParam status string required Status (Active, Inactive, Disable). Example: Active
+     * @bodyParam notes string optional Optional notes about the farmer. Example: Updated notes
+     * @bodyParam image file optional Profile image (jpeg, png, gif). Max 2MB. Example: (binary)
      * @bodyParam project_rows array optional Array of project assignments. Example: [{"project_id": 1, "status": "Active"}]
      *
      * @response 200 {
@@ -319,6 +341,8 @@ class FarmerController extends Controller
      *     "type": 4,
      *     "type_label": "Farmer",
      *     "status": "Active",
+     *     "notes": "Updated notes",
+     *     "image": "farmer_image_456.jpg",
      *     "created_by_name": "Farm Owner Name",
      *     "created_at": "2026-08-07T10:30:00Z"
      *   }
@@ -349,6 +373,8 @@ class FarmerController extends Controller
             'name'    => 'required|string|max:255',
             'email'   => 'nullable|email|max:255|unique:admins,email,' . $admin->id,
             'status'  => 'required|in:Active,Inactive,Disable',
+            'notes'   => 'nullable|string|max:1000',
+            'image'   => 'nullable|image|mimes:jpeg,png,gif|max:2048',
             'project_rows' => 'nullable|array',
             'project_rows.*.project_id' => 'nullable|exists:projects,id',
             'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
@@ -378,12 +404,36 @@ class FarmerController extends Controller
         try {
             DB::beginTransaction();
 
-            // Update farmer details (excluding type and mobile_number)
-            $admin->update([
+            // Handle image upload
+            $updateData = [
                 'name'   => $request->name,
                 'email'  => $request->email ?? $admin->email,
                 'status' => $request->status,
-            ]);
+            ];
+
+            // Add notes if provided
+            if ($request->filled('notes')) {
+                $updateData['notes'] = $request->notes;
+            }
+
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                // Delete old image if exists
+                if ($admin->image && \Storage::disk('public')->exists($admin->image)) {
+                    \Storage::disk('public')->delete($admin->image);
+                }
+
+                $file = $request->file('image');
+                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                
+                // Ensure directory exists
+                \Storage::disk('public')->makeDirectory('uploads/farmers', 0755, true);
+                $file->storeAs('uploads/farmers', $filename, 'public');
+                $updateData['image'] = 'uploads/farmers/' . $filename;
+            }
+
+            // Update farmer details (excluding type and mobile_number)
+            $admin->update($updateData);
 
             // Update project statuses if provided
             if ($request->filled('project_rows')) {
@@ -501,6 +551,8 @@ class FarmerController extends Controller
             'type'          => $admin->type,
             'type_label'    => $typeLabels[$admin->type] ?? 'Unknown',
             'status'        => $admin->status,
+            'notes'         => $admin->notes ?? null,
+            'image'         => $admin->image ?? null,
             'created_by_name' => $admin->creator?->name ?? null,
             'created_at'    => $admin->created_at,
         ];

@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Add2Farm\FarmerController as Add2FarmFarmerControll
 use App\Http\Controllers\Api\Add2Farm\FarmController as Add2FarmFarmController;
 use App\Http\Controllers\Api\Add2Farm\FlockController as Add2FarmFlockController;
 use App\Http\Controllers\Api\Add2Farm\DailyRecordController as Add2FarmDailyRecordController;
+use App\Http\Controllers\Api\Add2Farm\DropdownController as Add2FarmDropdownController;
 
 /*
 |--------------------------------------------------------------------------
@@ -140,5 +141,12 @@ Route::prefix('add2farm')->group(function () {
         Route::get('daily-records/{daily_record}', [Add2FarmDailyRecordController::class, 'show']);
         Route::put('daily-records/{daily_record}', [Add2FarmDailyRecordController::class, 'update']);
         Route::delete('daily-records/{daily_record}', [Add2FarmDailyRecordController::class, 'destroy']);
+    });
+
+    // Dropdowns - Accessible to authenticated users
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('dropdowns/farms', [Add2FarmDropdownController::class, 'farms']);
+        Route::get('dropdowns/suppliers', [Add2FarmDropdownController::class, 'suppliers']);
+        Route::get('dropdowns/supervisors', [Add2FarmDropdownController::class, 'supervisors']);
     });
 });

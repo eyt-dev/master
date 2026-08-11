@@ -17,14 +17,28 @@ Reset Password:
     Token - which got from verify OTP
     Password
     Confirm Password
+-----------------------------
 User profile Get: Based on logged in Token
 User Profile update
     Name, Email, Username
 Change Pass:
     current password, new pass, confirm pass
+----------------------------
+Farms: (This is basically Farm+Hangar)
+    Name,
+    Location
+    AssignTo
+    Type
+    No. of Hangers(based on this looping for below hangar-details)
+    Hangar area, LayerHens, BroilerHens
 
+Farmers: Its confusing because- Figma mixed farmers with Supervisors
+    Add upload photo option
+    Add notes option
 
+Flock: similar to backend
 
+Daily Records
 
 
 --------------
@@ -34,7 +48,8 @@ Farm admin = Admin = type:1
 Supervisor = Private Vendor = type:3
 Farmers = Users = type:4
 
-
+- create supervisors api-- in the add farm figma dropdown
+- create farm api -- for add supervisor farm dropdown
+- supplier api -- for add flock figma screen
 ------Queries------
-- Signup for Feed Supplier and Chicks Supplier
-- Language and Coutry settings
+

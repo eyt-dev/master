@@ -505,6 +505,18 @@
       required: true
       example: 'password123'
       type: string
+    notes:
+      name: notes
+      description: 'Optional notes about the supervisor.'
+      required: false
+      example: 'Senior supervisor with 10 years experience'
+      type: string
+    image:
+      name: image
+      description: 'Profile image (jpeg, png, gif). Max 2MB.'
+      required: false
+      example: '(binary)'
+      type: string
     status:
       name: status
       description: 'Status (Active, Inactive, Disable).'
@@ -513,7 +525,7 @@
       type: string
   responses:
     - status: 201
-      content: '{"success": true, "message": "Supervisor created successfully.", "data": {"id": 1, "name": "John Supervisor", "mobile_number": "+1234567890", "email": "supervisor@example.com", "type": 3, "type_label": "Supervisor", "status": "Active", "created_at": "2026-08-07T10:30:00Z"}}'
+      content: '{"success": true, "message": "Supervisor created successfully.", "data": {"id": 1, "name": "John Supervisor", "mobile_number": "+1234567890", "email": "supervisor@example.com", "type": 3, "type_label": "Supervisor", "status": "Active", "notes": "Senior supervisor with 10 years experience", "image": "uploads/supervisors/supervisor_image_123.jpg", "created_at": "2026-08-07T10:30:00Z"}}'
     - status: 422
       content: '{"success": false, "errors": {"mobile_number": ["The mobile number has already been taken."], "email": ["The email has already been taken."]}}'
 
@@ -578,9 +590,21 @@
       required: true
       example: Active
       type: string
+    notes:
+      name: notes
+      description: 'Optional notes about the supervisor.'
+      required: false
+      example: 'Updated notes'
+      type: string
+    image:
+      name: image
+      description: 'Profile image (jpeg, png, gif). Max 2MB.'
+      required: false
+      example: '(binary)'
+      type: string
   responses:
     - status: 200
-      content: '{"success": true, "message": "Supervisor updated successfully.", "data": {"id": 1, "name": "John Supervisor Updated", "mobile_number": "+1234567890", "email": "john.updated@example.com", "type": 3, "status": "Active"}}'
+      content: '{"success": true, "message": "Supervisor updated successfully.", "data": {"id": 1, "name": "John Supervisor Updated", "mobile_number": "+1234567890", "email": "john.updated@example.com", "type": 3, "status": "Active", "notes": "Updated notes", "image": "uploads/supervisors/supervisor_image_456.jpg"}}'
 
 - httpMethods:
     - DELETE
@@ -683,6 +707,18 @@
       required: true
       example: 'password123'
       type: string
+    notes:
+      name: notes
+      description: 'Optional notes about the farmer.'
+      required: false
+      example: 'Experienced farmer with 5 years background'
+      type: string
+    image:
+      name: image
+      description: 'Profile image (jpeg, png, gif). Max 2MB.'
+      required: false
+      example: '(binary)'
+      type: string
     status:
       name: status
       description: 'Status (Active, Inactive, Disable).'
@@ -691,7 +727,7 @@
       type: string
   responses:
     - status: 201
-      content: '{"success": true, "message": "Farmer created successfully.", "data": {"id": 2, "name": "Jane Farmer", "mobile_number": "+0987654321", "email": "farmer@example.com", "type": 4, "type_label": "Farmer", "status": "Active", "created_at": "2026-08-07T10:30:00Z"}}'
+      content: '{"success": true, "message": "Farmer created successfully.", "data": {"id": 2, "name": "Jane Farmer", "mobile_number": "+0987654321", "email": "farmer@example.com", "type": 4, "type_label": "Farmer", "status": "Active", "notes": "Experienced farmer with 5 years background", "image": "uploads/farmers/farmer_image_123.jpg", "created_at": "2026-08-07T10:30:00Z"}}'
     - status: 422
       content: '{"success": false, "errors": {"mobile_number": ["The mobile number has already been taken."], "email": ["The email has already been taken."]}}'
 
@@ -756,9 +792,21 @@
       required: true
       example: Active
       type: string
+    notes:
+      name: notes
+      description: 'Optional notes about the farmer.'
+      required: false
+      example: 'Updated notes'
+      type: string
+    image:
+      name: image
+      description: 'Profile image (jpeg, png, gif). Max 2MB.'
+      required: false
+      example: '(binary)'
+      type: string
   responses:
     - status: 200
-      content: '{"success": true, "message": "Farmer updated successfully.", "data": {"id": 2, "name": "Jane Farmer Updated", "mobile_number": "+0987654321", "email": "jane.updated@example.com", "type": 4, "status": "Active"}}'
+      content: '{"success": true, "message": "Farmer updated successfully.", "data": {"id": 2, "name": "Jane Farmer Updated", "mobile_number": "+0987654321", "email": "jane.updated@example.com", "type": 4, "status": "Active", "notes": "Updated notes", "image": "uploads/farmers/farmer_image_456.jpg"}}'
 
 - httpMethods:
     - DELETE
@@ -1239,7 +1287,7 @@
       content: '{"success": false, "errors": {"email": ["The email has already been taken."]}}'
 
 - httpMethods:
-    - PUT
+    - GET
   uri: api/add2farm/profile/change-password
   metadata:
     groupName: Add2Farm Profile
@@ -1274,3 +1322,51 @@
       content: '{"success": true, "message": "Password changed successfully."}'
     - status: 422
       content: '{"success": false, "errors": {"current_password": ["The current password is incorrect."]}}'
+
+- httpMethods:
+    - GET
+  uri: api/add2farm/dropdowns/farms
+  metadata:
+    groupName: Add2Farm Dropdowns
+    title: Get farms dropdown list
+    description: 'Fetch list of farms with id and name only for dropdown/select usage.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Farms retrieved successfully.", "data": [{"id": 1, "name": "Main Farm"}, {"id": 2, "name": "Secondary Farm"}]}'
+
+- httpMethods:
+    - GET
+  uri: api/add2farm/dropdowns/suppliers
+  metadata:
+    groupName: Add2Farm Dropdowns
+    title: Get suppliers dropdown list
+    description: 'Fetch list of chicks suppliers with id and name only for dropdown/select usage.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Suppliers retrieved successfully.", "data": [{"id": 1, "name": "Al-Rowad Farm"}, {"id": 2, "name": "Premium Chicks Co"}]}'
+
+- httpMethods:
+    - GET
+  uri: api/add2farm/dropdowns/supervisors
+  metadata:
+    groupName: Add2Farm Dropdowns
+    title: Get supervisors dropdown list
+    description: 'Fetch list of supervisors (Type 3 admins) with id and name only for dropdown/select usage.'
+    authenticated: true
+  headers:
+    Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+    Content-Type: application/json
+    Accept: application/json
+  responses:
+    - status: 200
+      content: '{"success": true, "message": "Supervisors retrieved successfully.", "data": [{"id": 1, "name": "John Supervisor"}, {"id": 3, "name": "Alice Supervisor"}]}'

@@ -154,6 +154,8 @@ class SupervisorController extends Controller
      * @bodyParam email string optional Email address. Example: john@example.com
      * @bodyParam password string required Password (min 8 characters). Example: password123
      * @bodyParam password_confirmation string required Password confirmation. Example: password123
+     * @bodyParam notes string optional Optional notes about the supervisor. Example: Senior supervisor with 10 years experience
+     * @bodyParam image file optional Profile image (jpeg, png, gif). Max 2MB. Example: (binary)
      * @bodyParam project_rows array optional Array of project assignments. Example: [{"project_id": 1, "status": "Active"}]
      *
      * @response 201 {
@@ -166,6 +168,8 @@ class SupervisorController extends Controller
      *     "type": 3,
      *     "type_label": "Supervisor",
      *     "status": "Active",
+     *     "notes": "Senior supervisor with 10 years experience",
+     *     "image": "supervisor_image_123.jpg",
      *     "created_at": "2026-08-07T10:30:00Z"
      *   }
      * }
@@ -183,6 +187,8 @@ class SupervisorController extends Controller
             'mobile_number'   => 'required|string|max:20|unique:admins,mobile_number',
             'email'           => 'nullable|email|max:255|unique:admins,email',
             'password'        => 'required|string|min:8|confirmed',
+            'notes'           => 'nullable|string|max:1000',
+            'image'           => 'nullable|image|mimes:jpeg,png,gif|max:2048',
             'project_rows'    => 'nullable|array',
             'project_rows.*.project_id' => 'nullable|exists:projects,id',
             'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
@@ -198,6 +204,18 @@ class SupervisorController extends Controller
         try {
             DB::beginTransaction();
 
+            // Handle image upload
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                
+                // Ensure directory exists
+                \Storage::disk('public')->makeDirectory('uploads/supervisors', 0755, true);
+                $file->storeAs('uploads/supervisors', $filename, 'public');
+                $imagePath = 'uploads/supervisors/' . $filename;
+            }
+
             // Create supervisor (Type 3)
             $admin = Admin::create([
                 'name'           => $request->name,
@@ -206,6 +224,8 @@ class SupervisorController extends Controller
                 'password'       => Hash::make($request->password),
                 'type'           => self::ADMIN_TYPE,
                 'status'         => 'Active',
+                'notes'          => $request->notes ?? null,
+                'image'          => $imagePath,
                 'created_by'     => auth()->id(),
                 'created_from'   => 3,
             ]);
@@ -253,35 +273,6 @@ class SupervisorController extends Controller
     /**
      * Update a supervisor
      *
-     * Update supervisor information. Type cannot be changed.
-     *
-     * @authenticated
-     * @urlParam id integer required The supervisor ID. Example: 1
-     * @bodyParam name string required Supervisor's full name. Example: John Supervisor
-     * @bodyParam email string optional Email address. Example: john@example.com
-     * @bodyParam status string required Account status (Active, Inactive, Disable). Example: Active
-     * @bodyParam project_rows array optional Array of project assignments. Example: [{"project_id": 1, "status": "Active"}]
-     *
-     * @response 200 {
-     *   "success": true,
-     *   "message": "Supervisor updated successfully.",
-     *   "data": {
-     *     "id": 1,
-     *     "name": "John Supervisor Updated",
-     *     "mobile_number": "+1234567890",
-     *     "type": 3,
-     *     "type_label": "Supervisor",
-     *     "status": "Active"
-     *   }
-     * }
-     * @response 404 {
-     *   "success": false,
-     *   "message": "Supervisor not found."
-     * }
-     */
-    /**
-     * Update a supervisor
-     *
      * Update supervisor details including name, email, status and project assignments.
      * Mobile number and type cannot be changed.
      *
@@ -290,6 +281,8 @@ class SupervisorController extends Controller
      * @bodyParam name string required Supervisor's full name. Example: John Supervisor Updated
      * @bodyParam email string optional Email address. Example: john.updated@example.com
      * @bodyParam status string required Status (Active, Inactive, Disable). Example: Active
+     * @bodyParam notes string optional Optional notes about the supervisor. Example: Updated notes
+     * @bodyParam image file optional Profile image (jpeg, png, gif). Max 2MB. Example: (binary)
      * @bodyParam project_rows array optional Array of project assignments. Example: [{"project_id": 1, "status": "Active"}]
      *
      * @response 200 {
@@ -303,6 +296,8 @@ class SupervisorController extends Controller
      *     "type": 3,
      *     "type_label": "Supervisor",
      *     "status": "Active",
+     *     "notes": "Updated notes",
+     *     "image": "supervisor_image_456.jpg",
      *     "created_by_name": "Admin Name",
      *     "created_at": "2026-08-07T10:30:00Z"
      *   }
@@ -333,6 +328,8 @@ class SupervisorController extends Controller
             'name'    => 'required|string|max:255',
             'email'   => 'nullable|email|max:255|unique:admins,email,' . $admin->id,
             'status'  => 'required|in:Active,Inactive,Disable',
+            'notes'   => 'nullable|string|max:1000',
+            'image'   => 'nullable|image|mimes:jpeg,png,gif|max:2048',
             'project_rows' => 'nullable|array',
             'project_rows.*.project_id' => 'nullable|exists:projects,id',
             'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
@@ -348,12 +345,36 @@ class SupervisorController extends Controller
         try {
             DB::beginTransaction();
 
-            // Update supervisor details (excluding type and mobile_number)
-            $admin->update([
+            // Handle image upload
+            $updateData = [
                 'name'   => $request->name,
                 'email'  => $request->email ?? $admin->email,
                 'status' => $request->status,
-            ]);
+            ];
+
+            // Add notes if provided
+            if ($request->filled('notes')) {
+                $updateData['notes'] = $request->notes;
+            }
+
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                // Delete old image if exists
+                if ($admin->image && \Storage::disk('public')->exists($admin->image)) {
+                    \Storage::disk('public')->delete($admin->image);
+                }
+
+                $file = $request->file('image');
+                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                
+                // Ensure directory exists
+                \Storage::disk('public')->makeDirectory('uploads/supervisors', 0755, true);
+                $file->storeAs('uploads/supervisors', $filename, 'public');
+                $updateData['image'] = 'uploads/supervisors/' . $filename;
+            }
+
+            // Update supervisor details (excluding type and mobile_number)
+            $admin->update($updateData);
 
             // Update project statuses if provided
             if ($request->filled('project_rows')) {
@@ -471,6 +492,8 @@ class SupervisorController extends Controller
             'type'          => $admin->type,
             'type_label'    => $typeLabels[$admin->type] ?? 'Unknown',
             'status'        => $admin->status,
+            'notes'         => $admin->notes ?? null,
+            'image'         => $admin->image ?? null,
             'created_by_name' => $admin->creator?->name ?? null,
             'created_at'    => $admin->created_at,
         ];

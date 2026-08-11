@@ -29,7 +29,7 @@ class Admin extends Authenticatable
     protected $fillable = [
         'name', 'email', 'password', 'type', 'status', 'created_by', 'username', 'parent_id',
         'vat_country_code', 'vat_number', 'created_from', 'url', 'project_id',
-        'mobile_number', 'otp', 'otp_expires_at', 'otp_verified_at'
+        'mobile_number', 'otp', 'otp_expires_at', 'otp_verified_at', 'notes', 'image'
     ];
 
     /**

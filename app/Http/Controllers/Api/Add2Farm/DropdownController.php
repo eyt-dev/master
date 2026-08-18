@@ -50,7 +50,7 @@ class DropdownController extends Controller
             'success' => true,
             'message' => 'Farms retrieved successfully.',
             'data' => $farms,
-        ]);
+        ], 200);
     }
 
     /**
@@ -89,7 +89,7 @@ class DropdownController extends Controller
             'success' => true,
             'message' => 'Suppliers retrieved successfully.',
             'data' => $suppliers,
-        ]);
+        ], 200);
     }
 
     /**
@@ -140,6 +140,6 @@ class DropdownController extends Controller
             'success' => true,
             'message' => 'Supervisors retrieved successfully.',
             'data' => $supervisors,
-        ]);
+        ], 200);
     }
 }

@@ -29,4 +29,10 @@ class Farm extends Model
     {
         return $this->belongsTo(Admin::class, 'created_by');
     }
+
+    // Define Relationship with hangars
+    public function hangars()
+    {
+        return $this->hasMany(Hangar::class, 'farm_id');
+    }
 }

@@ -20,6 +20,8 @@ use App\Models\CountryRegion;
 use App\Models\Contact;
 use App\Models\Project;
 use App\Models\AdminProjectStatus;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
@@ -167,11 +169,14 @@ class AdminController extends Controller
     {      
         $request->validate([
             'name' => 'required',
-            'username' => 'required',
+            'username' => 'nullable|string',
             'email' => 'required|email|unique:admins',
             'password' => 'required|min:6',
-            'vat_country_code' => 'required',
-            'vat_number' => 'required',
+            'mobile_number' => 'nullable|string|max:20|unique:admins,mobile_number',
+            'vat_country_code' => 'nullable',
+            'vat_number' => 'nullable',
+            'notes' => 'nullable|string|max:1000',
+            'image' => 'nullable|image|mimes:jpeg,png,gif|max:2048',
             'project_id' => 'nullable|exists:projects,id',
             'project_rows' => 'nullable|array',
             'project_rows.*.project_id' => 'nullable|exists:projects,id',
@@ -187,86 +192,123 @@ class AdminController extends Controller
             1 => 'Admin',
             2 => 'PublicVendor',
             3 => 'PrivateVendor',
+            4 => 'Farmer',
             default => 'Admin',
         };
+
+        try {
+            DB::beginTransaction();
+
+            // Handle image upload
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $uploadDir = $adminType == 4 ? 'uploads/farmers' : 'uploads/admins';
+                Storage::disk('public')->makeDirectory($uploadDir, 0755, true);
+                $file->storeAs($uploadDir, $filename, 'public');
+                $imagePath = $uploadDir . '/' . $filename;
+            }
     
-        $addData = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'username' => $request->username,
-            'password' => Hash::make($request->password),
-            'type' => $adminType,
-            'created_by' => auth()->user()->id,
-            'parent_id' => auth()->user()->id,
-            'vat_country_code' => $request->vat_country_code,
-            'vat_number' => $request->vat_number,
-            'created_from' => 1,
-        ];
-
-        if ($request->filled('project_id')) {
-            $addData['project_id'] = $request->project_id;
-        }
-        $admin = Admin::create($addData);
-
-        if ($request->filled('project_rows')) {
-            $admin->syncProjectStatuses($this->normalizeProjectRows($request));
-        }
-
-        if(empty($admin)) {
-            Session::flash('errorMSg', 'Somethig went wrong.');
-        
-            return redirect()->url("/e/admins/{$request->type}");
-        }
-
-        $role = Role::where(['name' => $prefix])->first();
-        $admin->assignRole([$role->id]);
-
-        $createData = [
-            'domain' => config('domains.main_domain') . "/" . $request->username,
-            'admin_domain' => config('domains.admin_subdomain') . "/" . $request->username,
-
-            'dark_logo' => 'dark-logo.png',
-            'light_logo' => 'light-logo.png',
-            'footer_logo' => 'footer-logo.png',
-            'favicon' => 'favicon.ico',
-
-            'primary_text_color' => '#000000',
-            'secondary_text_color' => '#666666',
-
-            'primary_button_background' => '#007bff',
-            'secondary_button_background' => '#6c757d',
-            'primary_button_text_color' => '#ffffff',
-            'secondary_button_text_color' => '#ffffff',
-
-            'created_by' => $admin->id,
-            'theme' => 2,
-        ];
-        Setting::create($createData);
-
-        Contact::updateOrCreate(
-            ['email' => $request->email], // condition (unique key)
-            [
+            $addData = [
                 'name' => $request->name,
-                'formal_name' => $request->name,
-                'vat_country_code' => $request->vat_country_code,
-                'vat_number' => $request->vat_number,
-                'created_by' => $admin->id,
-            ]
-        );
+                'email' => $request->email,
+                'username' => $request->username ?? 'farmer-' . uniqid(),
+                'password' => Hash::make($request->password),
+                'type' => $adminType,
+                'created_by' => auth()->user()->id,
+                'parent_id' => auth()->user()->id,
+                'created_from' => 1,
+            ];
 
-        Session::flash('successMsg', "$prefix inserted successfully.");
-        
-        // At the beginning of the update method, determine the route based on admin type
-        $routeName = 'admins.index'; // Default to admin index
+            // Add fields only for non-farmer types or when provided for farmers
+            if ($adminType != 4) {
+                $addData['vat_country_code'] = $request->vat_country_code;
+                $addData['vat_number'] = $request->vat_number;
+            }
 
-        if ($adminType == 2) {
-            $routeName = 'admins.publicVendor';
-        } elseif ($adminType == 3) {
-            $routeName = 'admins.privateVendor';
+            // Add optional fields for all types
+            $addData['mobile_number'] = $request->mobile_number;
+            $addData['notes'] = $request->notes ?? null;
+            $addData['image'] = $imagePath;
+
+            if ($request->filled('project_id')) {
+                $addData['project_id'] = $request->project_id;
+            }
+
+            $admin = Admin::create($addData);
+
+            if ($request->filled('project_rows')) {
+                $admin->syncProjectStatuses($this->normalizeProjectRows($request));
+            }
+
+            if(empty($admin)) {
+                Session::flash('errorMSg', 'Something went wrong.');
+                DB::rollBack();
+                return redirect()->back();
+            }
+
+            $role = Role::where(['name' => $prefix])->first();
+            if ($role) {
+                $admin->assignRole([$role->id]);
+            }
+
+            // Only create settings for non-farmer types
+            if ($adminType != 4) {
+                $createData = [
+                    'domain' => config('domains.main_domain') . "/" . $request->username,
+                    'admin_domain' => config('domains.admin_subdomain') . "/" . $request->username,
+
+                    'dark_logo' => 'dark-logo.png',
+                    'light_logo' => 'light-logo.png',
+                    'footer_logo' => 'footer-logo.png',
+                    'favicon' => 'favicon.ico',
+
+                    'primary_text_color' => '#000000',
+                    'secondary_text_color' => '#666666',
+
+                    'primary_button_background' => '#007bff',
+                    'secondary_button_background' => '#6c757d',
+                    'primary_button_text_color' => '#ffffff',
+                    'secondary_button_text_color' => '#ffffff',
+
+                    'created_by' => $admin->id,
+                    'theme' => 2,
+                ];
+                Setting::create($createData);
+
+                Contact::updateOrCreate(
+                    ['email' => $request->email],
+                    [
+                        'name' => $request->name,
+                        'formal_name' => $request->name,
+                        'vat_country_code' => $request->vat_country_code,
+                        'vat_number' => $request->vat_number,
+                        'created_by' => $admin->id,
+                    ]
+                );
+            }
+
+            DB::commit();
+
+            Session::flash('successMsg', "$prefix inserted successfully.");
+            
+            // Determine redirect route based on admin type
+            $routeName = match ($adminType) {
+                2 => 'admins.publicVendor',
+                3 => 'admins.privateVendor',
+                4 => 'admins.users',
+                default => 'admins.index',
+            };
+
+            return redirect()->route($routeName, ['username' => request()->get('username', request()->segment(1))]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Admin creation error: ' . $e->getMessage());
+            Session::flash('errorMsg', 'Failed to create ' . strtolower($prefix) . '.');
+            return redirect()->back()->withInput();
         }
-
-        // Then update the return statement
-        return redirect()->route($routeName, ['username' => request()->get('username', request()->segment(1))]);
     }
 
     /**
@@ -298,41 +340,68 @@ class AdminController extends Controller
      */
     public function update(Request $request, $siteUrl, $id)
     {
-        $request->validate([
-            'name' => 'required',
-            'username' => 'required',
-            'email' => 'required|email|unique:admins,email,' . $id,
-            'vat_country_code' => 'required',
-            'vat_number' => 'required',
-            'project_id' => 'nullable|exists:projects,id',
-            'project_rows' => 'nullable|array',
-            'project_rows.*.project_id' => 'nullable|exists:projects,id',
-            'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
-            // 'status' => 'required_if:type,1|in:Enable,Disable,Pending'
-        ]);
-
-        $this->validateProjectRows($request);
-
         $admin = Admin::find($id);
 
         if(empty($admin)){
             return redirect()->route('admins.index', ['username' => request()->get('username', request()->segment(1))]);
         }
 
-        // Update the admin's name and email
-        $admin->update();
-        $updateData = [
-            'name' => $request->name,
-            'username' => $request->username,
-            'vat_country_code' => $request->vat_country_code,
-            'vat_number' => $request->vat_number,
-            'password' => $request->filled('password') ? Hash::make($request->password) : $admin->password,
-            'email' => $request->email,
-            'project_id' => $request->filled('project_id') ? $request->project_id : null,
-        ];
+        $request->validate([
+            'name' => 'required',
+            'username' => 'nullable|string',
+            'email' => 'required|email|unique:admins,email,' . $id,
+            'vat_country_code' => 'nullable',
+            'vat_number' => 'nullable',
+            'password' => 'nullable|min:6',
+            'mobile_number' => 'nullable|string|max:20|unique:admins,mobile_number,' . $id,
+            'notes' => 'nullable|string|max:1000',
+            'image' => 'nullable|image|mimes:jpeg,png,gif|max:2048',
+            'project_id' => 'nullable|exists:projects,id',
+            'project_rows' => 'nullable|array',
+            'project_rows.*.project_id' => 'nullable|exists:projects,id',
+            'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
+        ]);
+
+        $this->validateProjectRows($request);
 
         try {
             DB::beginTransaction();
+
+            $updateData = [
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => $request->filled('password') ? Hash::make($request->password) : $admin->password,
+            ];
+
+            // Add fields for non-farmer types
+            if ($admin->type != 4) {
+                $updateData['username'] = $request->username;
+                $updateData['vat_country_code'] = $request->vat_country_code;
+                $updateData['vat_number'] = $request->vat_number;
+            }
+
+            // Add optional fields for all types
+            $updateData['mobile_number'] = $request->mobile_number;
+            $updateData['notes'] = $request->notes ?? $admin->notes;
+
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                // Delete old image if exists
+                if ($admin->image && Storage::disk('public')->exists($admin->image)) {
+                    Storage::disk('public')->delete($admin->image);
+                }
+
+                $file = $request->file('image');
+                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $uploadDir = $admin->type == 4 ? 'uploads/farmers' : 'uploads/admins';
+                Storage::disk('public')->makeDirectory($uploadDir, 0755, true);
+                $file->storeAs($uploadDir, $filename, 'public');
+                $updateData['image'] = $uploadDir . '/' . $filename;
+            }
+
+            if ($request->filled('project_id')) {
+                $updateData['project_id'] = $request->project_id;
+            }
 
             // Update admin
             $admin->update($updateData);
@@ -342,17 +411,19 @@ class AdminController extends Controller
                 $admin->syncProjectStatuses($this->normalizeProjectRows($request));
             }
 
-            // Sync contact information
-            Contact::updateOrCreate(
-                ['email' => $request->email], // condition (unique key)
-                [
-                    'name' => $request->name,
-                    'formal_name' => $request->name,
-                    'vat_country_code' => $request->vat_country_code,
-                    'vat_number' => $request->vat_number,
-                    'created_by' => $admin->id,
-                ]
-            );
+            // Sync contact information for non-farmer types
+            if ($admin->type != 4) {
+                Contact::updateOrCreate(
+                    ['email' => $request->email],
+                    [
+                        'name' => $request->name,
+                        'formal_name' => $request->name,
+                        'vat_country_code' => $request->vat_country_code,
+                        'vat_number' => $request->vat_number,
+                        'created_by' => $admin->id,
+                    ]
+                );
+            }
 
             DB::commit();
 
@@ -364,18 +435,14 @@ class AdminController extends Controller
                 ->with('error', 'Failed to update admin. Please try again.');
         }
 
-        // $admin->assignRole($request->role);
-        
-        // At the beginning of the update method, determine the route based on admin type
-        $routeName = 'admins.index'; // Default to admin index
+        // Determine redirect route based on admin type
+        $routeName = match ($admin->type) {
+            2 => 'admins.publicVendor',
+            3 => 'admins.privateVendor',
+            4 => 'admins.users',
+            default => 'admins.index',
+        };
 
-        if ($admin->type == 2) {
-            $routeName = 'admins.publicVendor';
-        } elseif ($admin->type == 3) {
-            $routeName = 'admins.privateVendor';
-        }
-
-        // Then update the return statement
         return redirect()->route($routeName, ['username' => request()->get('username', request()->segment(1))]);
     }
 
@@ -397,48 +464,70 @@ class AdminController extends Controller
     public function users(Request $request, $siteUrl)
     {
         if ($request->ajax()) {
-            // $data = Admin::where('type', 4)
-            //     ->when(!auth('admin')->user()->hasRole('SuperAdmin'), function($query) {
-            //         return $query->where('parent_id', auth('admin')->id());
-            //     })
-            //     ->with('creator')
-            //     ->orderBy('created_at', 'desc')
-            //     ->get();
-            $data = [];
+            $admin = auth()->user();
+            $query = Admin::query()->where('type', 4)->with(['creator', 'projectStatuses.project']);
 
-            return datatables()->of($data)
+            // Super Admin sees all farmers, others see only created farmers
+            if ($admin->type != Admin::SUPER_ADMIN) {
+                $query->where(function ($q) use ($admin) {
+                    $q->where('created_by', $admin->id)
+                        ->orWhere('parent_id', $admin->id);
+                });
+            }
+
+            return datatables()->of($query->select('*'))
+                ->addColumn('mobile_number', function($row) {
+                    return $row->mobile_number ?? 'N/A';
+                })
+                ->addColumn('notes_preview', function($row) {
+                    $notes = $row->notes ?? '';
+                    return strlen($notes) > 50 ? substr($notes, 0, 50) . '...' : $notes;
+                })
+                ->addColumn('image_thumbnail', function($row) {
+                    if ($row->image && Storage::disk('public')->exists($row->image)) {
+                        $url = asset('storage/' . $row->image);
+                        return '<img src="' . $url . '" alt="' . $row->name . '" style="height: 40px; width: 40px; border-radius: 50%; object-fit: cover;">';
+                    }
+                    return '<div style="height: 40px; width: 40px; border-radius: 50%; background: #ddd; display: flex; align-items: center; justify-content: center;"><i class="fa fa-user"></i></div>';
+                })
                 ->addColumn('status', function($row) {
                     $statusClass = [
                         'Active' => 'badge-success',
-                        'Inactive' => 'badge-danger'
+                        'Inactive' => 'badge-danger',
+                        'Disable' => 'badge-secondary'
                     ][$row->status] ?? 'badge-secondary';
                     return '<span class="badge ' . $statusClass . '">' . $row->status . '</span>';
                 })
                 ->addColumn('created_by_name', function ($row) {
-                    return $row->parent ? $row->parent->username : 'N/A';
+                    return $row->creator ? $row->creator->name : ($row->parent ? $row->parent->name : 'N/A');
                 })
-                ->addColumn('action', function ($row) {
-                    $statuses = [
-                        'Active' => 'Active',
-                        'Inactive' => 'Inactive'
-                    ];
+                ->addColumn('action', function ($row) use ($admin) {
+                    $btn = '';
                     
-                    $html = '<select class="form-control status-dropdown" data-id="'.$row->id.'">';
-                    foreach ($statuses as $value => $label) {
-                        $selected = $row->status == $value ? 'selected' : '';
-                        $html .= '<option value="'.$value.'" '.$selected.'>'.$label.'</option>';
+                    // Allow edit/delete if user created the farmer or is super admin
+                    if ($row->created_by == $admin->id || $admin->type == Admin::SUPER_ADMIN) {
+                        $btn .= '<a class="edit-admin edit_form btn btn-icon btn-success mr-1 white" 
+                                    data-path="' . route('admins.edit', ['username' => request()->get('username', request()->segment(1)), 'admin' => $row->id]) . '" 
+                                    data-name="' . $row->name . '" 
+                                    data-id=' . $row->id . ' title="Edit"> 
+                                    <i class="fa fa-edit"></i> 
+                                </a>';
+                        $btn .= '<a class="btn btn-icon btn-danger mr-1 white delete-admin" 
+                                    data-id="' . $row->id . '" title="Delete"> 
+                                    <i class="fa fa-trash-o"></i> 
+                                </a>';
                     }
-                    $html .= '</select>';
                     
-                    return $html;
+                    return $btn;
                 })
-                ->rawColumns(['action', 'status'])
+                ->rawColumns(['action', 'status', 'image_thumbnail'])
                 ->addIndexColumn()
                 ->make(true);
         }
 
         $countries = CountryRegion::orderBy('name')->get();
-        return view('backend.admins.user', compact('countries'));
+        $projects = $this->getAllProjects();
+        return view('backend.admins.user', compact('countries', 'projects'));
     }
 
     private function validateProjectRows(Request $request): void

@@ -83,11 +83,11 @@ Route::prefix('add2farm/auth')->group(function () {
     Route::post('verify-otp', [Add2FarmAuthController::class, 'verifyOtp']);
     Route::post('resend-otp', [Add2FarmAuthController::class, 'resendOtp']);
     Route::post('forgot-password', [Add2FarmAuthController::class, 'forgotPassword']);
-    Route::post('reset-password', [Add2FarmAuthController::class, 'resetPassword']);
+    Route::post('reset-password', [Add2FarmAuthController::class, 'resetPassword'])->middleware('validate.password.reset.token');
 });
 
 // Add2Farm protected routes — require a valid Sanctum token
-Route::prefix('add2farm')->group(function () {
+Route::prefix('add2farm')->middleware('reject.password.reset.token')->group(function () {
     // Public endpoints (no auth required for Scribe)
     Route::post('auth/logout', [Add2FarmAuthController::class, 'logout'])->middleware('auth:sanctum');
 
@@ -127,6 +127,7 @@ Route::prefix('add2farm')->group(function () {
 
     // Flocks - Accessible to authenticated users
     Route::middleware('auth:sanctum')->group(function () {
+        Route::get('flocks/available', [Add2FarmFlockController::class, 'available']);
         Route::get('flocks', [Add2FarmFlockController::class, 'index']);
         Route::post('flocks', [Add2FarmFlockController::class, 'store']);
         Route::get('flocks/{flock}', [Add2FarmFlockController::class, 'show']);

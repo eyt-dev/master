@@ -85,6 +85,46 @@
             </div>
         </div>
 
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="mobile_number" class="form-label">Mobile Number</label>
+                <input type="tel" class="form-control" placeholder="Mobile Number" name="mobile_number" id="mobile_number" value="{{ old('mobile_number', $admin->mobile_number ?? '') }}" maxlength="20">
+                @error('mobile_number')
+                    <label id="mobile_number-error" class="error" for="mobile_number">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="image" class="form-label">Profile Photo</label>
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" name="image" id="image" accept="image/*" onchange="previewImage(this)">
+                    <label class="custom-file-label" for="image">Choose file</label>
+                </div>
+                <small class="form-text text-muted d-block mt-2">Accepted formats: JPEG, PNG, GIF (Max 2MB)</small>
+                @if($admin->image ?? null)
+                    <div class="mt-2">
+                        <img src="{{ asset('storage/' . $admin->image) }}" alt="Profile" class="img-thumbnail" style="max-width: 100px; max-height: 100px;">
+                    </div>
+                @endif
+                @error('image')
+                    <label id="image-error" class="error" for="image">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
+
+        <div class="col-sm-12">
+            <div class="form-group">
+                <label for="notes" class="form-label">Notes</label>
+                <textarea class="form-control" placeholder="Additional notes" name="notes" id="notes" rows="3" maxlength="1000">{{ old('notes', $admin->notes ?? '') }}</textarea>
+                <small class="form-text text-muted d-block mt-1">Max 1000 characters</small>
+                @error('notes')
+                    <label id="notes-error" class="error" for="notes">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
+
         <div class="col-sm-12">
             <div class="form-group">
                 <!-- Section Header -->
@@ -165,6 +205,25 @@
 </form>
 
 <script>
+    function previewImage(input) {
+        const file = input.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.createElement('div');
+                preview.className = 'mt-2';
+                preview.innerHTML = `<img src="${e.target.result}" alt="Profile" class="img-thumbnail" style="max-width: 100px; max-height: 100px;">`;
+
+                const existingPreview = input.parentElement.querySelector('.mt-2');
+                if (existingPreview) {
+                    existingPreview.remove();
+                }
+                input.parentElement.appendChild(preview);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
     (function () {
         const form = document.getElementById('admin_form');
         const container = document.getElementById('project-status-container');

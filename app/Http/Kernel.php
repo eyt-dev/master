@@ -70,6 +70,8 @@ class Kernel extends HttpKernel
         'identify.tenant' => \App\Http\Middleware\IdentifyTenant::class,
         'identify.tenant.front' => \App\Http\Middleware\IdentifyTenantFront::class,
         'check.admin.type' => \App\Http\Middleware\CheckAdminType::class,
+        'validate.password.reset.token' => \App\Http\Middleware\ValidatePasswordResetToken::class,
+        'reject.password.reset.token' => \App\Http\Middleware\RejectPasswordResetToken::class,
         // 'admin.domain.access' => \App\Http\Middleware\AdminDomainAccess::class,
     ];
 }

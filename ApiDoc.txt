@@ -73,4 +73,19 @@ solution of queries?
     - ⁠Mentioning Farmer if the account type is “Farms Owner”, And mentioning Supervisor if the account type is “Farms Admin”.
     
 - Chicken Sale of the backend = Endflock of the figma?
-    - Yesṭ
+    - Yes
+
+-------------------
+
+Changes are completed except the Language and Country setting. 
+    
+Below are the further changes (EYT Backend): 
+* Language and Country settings (EYT and Add2Farm API)
+* Users: Make changes for Users. Farmers=Users
+* Based on the API changes, make update in the backend:
+           - Based on Supervisor form of figma and API, add these fields in backend: Image(Profile photo), Mobile No, Notes
+
+Suggestion: Project Setting Module: In which we can change label of the module in the Menu. 
+    So Instead of Admin, Public Vendor, Private Vendor, Users - It may have ability to Show Farm Admin, Farm Owner, Supervisor, Farmers
+
+

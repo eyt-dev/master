@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(php -l resources/views/backend/admins/index.blade.php)",
-      "Bash(php -l resources/views/backend/admins/create.blade.php)"
+      "Bash(php -l resources/views/backend/admins/create.blade.php)",
+      "Read(//c/Users/Dell/Downloads/**)",
+      "PowerShell(Copy-Item \"c:\\\\Users\\\\Dell\\\\Downloads\\\\Add2Farm_API_Enhanced.postman_collection.json\" \"c:\\\\Users\\\\Dell\\\\Downloads\\\\Add2Farm_API.postman_collection.json\" -Force)",
+      "Bash(python3 -m json.tool \"c:\\\\Users\\\\Dell\\\\Downloads\\\\Add2Farm_API.postman_collection.json\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Dell\\Desktop",
+      "c:\\Users\\Dell\\Downloads"
     ]
   }
 }

@@ -213,6 +213,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'mobile_number' => 'required|string|max:20',
             'otp'           => 'required|string|size:6|regex:/^\d+$/',
+            'context'       => 'nullable|string|in:registration,forgot_password',
         ]);
 
         if ($validator->fails()) {
@@ -262,6 +263,23 @@ class AuthController extends Controller
             // Mark OTP as verified and clear it
             $admin->markOtpVerified();
 
+            $context = $request->input('context', 'registration');
+
+            // For forgot password flow: return only verification token, don't login user
+            if ($context === 'forgot_password') {
+                // Generate a temporary verification token for password reset
+                $token = $admin->createToken('password-reset-token')->plainTextToken;
+
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'OTP verified successfully. You can now reset your password.',
+                    'token'   => $token,
+                ]);
+            }
+
+            // For registration flow: login the user
             // Update account status to Active if Inactive
             if ($admin->status === 'Inactive') {
                 $admin->update(['status' => 'Active']);
@@ -480,8 +498,8 @@ class AuthController extends Controller
             ], 404);
         }
 
-        // Check if token was created by verify-otp endpoint (has specific name)
-        if ($personalAccessToken->name !== 'add2farm-token') {
+        // Check if token is a password-reset-token
+        if ($personalAccessToken->name !== 'password-reset-token') {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid token. Please use token from OTP verification.',
@@ -533,7 +551,25 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not authenticated.',
+            ], 401);
+        }
+
+        $token = $user->currentAccessToken();
+
+        if (!$token) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired token. Please login again.',
+            ], 401);
+        }
+
+        $token->delete();
 
         return response()->json([
             'success' => true,

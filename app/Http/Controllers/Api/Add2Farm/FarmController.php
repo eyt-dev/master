@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Add2Farm;
 use App\Http\Controllers\Controller;
 use App\Models\Farm;
 use App\Models\Admin;
+use App\Models\Hangar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -180,18 +181,31 @@ class FarmController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name'               => 'required|string|max:255',
-            'location'           => 'required|string|max:255',
-            'type'               => 'required|string|max:255',
-            'mobile_number'      => 'nullable|string|max:20',
-            'number_of_hangars'  => 'required|integer|min:1|max:999',
-            'assigned_to'        => 'nullable|integer|exists:admins,id',
+            'name'                      => 'required|string|max:255',
+            'location'                  => 'required|string|max:255',
+            'type'                      => 'required|string|max:255',
+            'mobile_number'             => 'nullable|string|max:20',
+            'number_of_hangars'         => 'required|integer|min:1|max:999',
+            'assigned_to'               => 'nullable|integer|exists:admins,id',
+            'hangars'                   => 'nullable|array',
+            'hangars.*.name'            => 'required_with:hangars|string|max:255',
+            'hangars.*.area_sqm'        => 'nullable|numeric|min:0',
+            'hangars.*.layer_hens'      => 'nullable|integer|min:0',
+            'hangars.*.broiler_hens'    => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        // Validate hangars count matches number_of_hangars
+        if ($request->filled('hangars') && count($request->hangars) !== $request->number_of_hangars) {
+            return response()->json([
+                'success' => false,
+                'message' => "Number of hangars provided (" . count($request->hangars) . ") does not match the specified count (" . $request->number_of_hangars . ").",
             ], 422);
         }
 
@@ -219,9 +233,23 @@ class FarmController extends Controller
                 'created_by'         => auth()->id(),
             ]);
 
+            // Create hangars if provided
+            if ($request->filled('hangars')) {
+                foreach ($request->hangars as $hangarData) {
+                    Hangar::create([
+                        'farm_id'       => $farm->id,
+                        'name'          => $hangarData['name'],
+                        'area_sqm'      => $hangarData['area_sqm'] ?? null,
+                        'layer_hens'    => $hangarData['layer_hens'] ?? null,
+                        'broiler_hens'  => $hangarData['broiler_hens'] ?? null,
+                        'created_by'    => auth()->id(),
+                    ]);
+                }
+            }
+
             DB::commit();
 
-            $farm->load('assignedAdmin', 'creator');
+            $farm->load('assignedAdmin', 'creator', 'hangars');
 
             return response()->json([
                 'success' => true,
@@ -323,18 +351,32 @@ class FarmController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name'               => 'required|string|max:255',
-            'location'           => 'required|string|max:255',
-            'type'               => 'required|string|max:255',
-            'mobile_number'      => 'nullable|string|max:20',
-            'number_of_hangars'  => 'required|integer|min:1|max:999',
-            'assigned_to'        => 'nullable|integer|exists:admins,id',
+            'name'                      => 'required|string|max:255',
+            'location'                  => 'required|string|max:255',
+            'type'                      => 'required|string|max:255',
+            'mobile_number'             => 'nullable|string|max:20',
+            'number_of_hangars'         => 'required|integer|min:1|max:999',
+            'assigned_to'               => 'nullable|integer|exists:admins,id',
+            'hangars'                   => 'nullable|array',
+            'hangars.*.id'              => 'nullable|integer|exists:hangars,id',
+            'hangars.*.name'            => 'required_with:hangars|string|max:255',
+            'hangars.*.area_sqm'        => 'nullable|numeric|min:0',
+            'hangars.*.layer_hens'      => 'nullable|integer|min:0',
+            'hangars.*.broiler_hens'    => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        // Validate hangars count matches number_of_hangars
+        if ($request->filled('hangars') && count($request->hangars) !== $request->number_of_hangars) {
+            return response()->json([
+                'success' => false,
+                'message' => "Number of hangars provided (" . count($request->hangars) . ") does not match the specified count (" . $request->number_of_hangars . ").",
             ], 422);
         }
 
@@ -363,9 +405,41 @@ class FarmController extends Controller
                 'assigned_to'        => $request->assigned_to,
             ]);
 
+            // Update hangars if provided
+            if ($request->filled('hangars')) {
+                // Delete hangars not in the new list
+                $providedHangarIds = array_filter(array_column($request->hangars, 'id'));
+                Hangar::where('farm_id', $farm->id)
+                    ->whereNotIn('id', $providedHangarIds)
+                    ->delete();
+
+                // Create or update hangars
+                foreach ($request->hangars as $hangarData) {
+                    if (isset($hangarData['id'])) {
+                        // Update existing hangar
+                        Hangar::where('id', $hangarData['id'])->update([
+                            'name'          => $hangarData['name'],
+                            'area_sqm'      => $hangarData['area_sqm'] ?? null,
+                            'layer_hens'    => $hangarData['layer_hens'] ?? null,
+                            'broiler_hens'  => $hangarData['broiler_hens'] ?? null,
+                        ]);
+                    } else {
+                        // Create new hangar
+                        Hangar::create([
+                            'farm_id'       => $farm->id,
+                            'name'          => $hangarData['name'],
+                            'area_sqm'      => $hangarData['area_sqm'] ?? null,
+                            'layer_hens'    => $hangarData['layer_hens'] ?? null,
+                            'broiler_hens'  => $hangarData['broiler_hens'] ?? null,
+                            'created_by'    => auth()->id(),
+                        ]);
+                    }
+                }
+            }
+
             DB::commit();
 
-            $farm->load('assignedAdmin', 'creator');
+            $farm->load('assignedAdmin', 'creator', 'hangars');
 
             return response()->json([
                 'success' => true,
@@ -423,7 +497,7 @@ class FarmController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Farm deleted successfully.',
-            ]);
+            ], 200);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -441,6 +515,19 @@ class FarmController extends Controller
      */
     private function formatFarm(Farm $farm): array
     {
+        $hangars = null;
+        if ($farm->relationLoaded('hangars') && $farm->hangars) {
+            $hangars = $farm->hangars->map(function ($hangar) {
+                return [
+                    'id'            => $hangar->id,
+                    'name'          => $hangar->name,
+                    'area_sqm'      => $hangar->area_sqm,
+                    'layer_hens'    => $hangar->layer_hens,
+                    'broiler_hens'  => $hangar->broiler_hens,
+                ];
+            })->toArray();
+        }
+
         return [
             'id'                    => $farm->id,
             'name'                  => $farm->name,
@@ -451,6 +538,7 @@ class FarmController extends Controller
             'assigned_to'           => $farm->assigned_to,
             'assigned_admin_name'   => $farm->assignedAdmin?->name ?? null,
             'created_by_name'       => $farm->creator?->name ?? null,
+            'hangars'               => $hangars,
             'created_at'            => $farm->created_at,
         ];
     }

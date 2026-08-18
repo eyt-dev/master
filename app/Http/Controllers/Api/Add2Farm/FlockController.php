@@ -17,6 +17,66 @@ use Illuminate\Support\Facades\DB;
 class FlockController extends Controller
 {
     /**
+     * Get available flocks for logged-in user
+     *
+     * Get simplified list of all flocks available to the logged-in user.
+     * Useful for dropdowns and quick selection in Daily Records.
+     *
+     * @authenticated
+     * @queryParam farm_id integer optional Filter by farm ID. Example: 1
+     * @queryParam status string optional Filter by status. Example: Active
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Available flocks retrieved successfully.",
+     *   "data": [
+     *     {
+     *       "flock_id": 1,
+     *       "flock_name": "Farm1-Flock4",
+     *       "farm": {
+     *         "farm_id": 1,
+     *         "farm_name": "Main Farm"
+     *       }
+     *     },
+     *     {
+     *       "flock_id": 2,
+     *       "flock_name": "Farm2-Flock1",
+     *       "farm": {
+     *         "farm_id": 2,
+     *         "farm_name": "Secondary Farm"
+     *       }
+     *     }
+     *   ]
+     * }
+     */
+    public function available(Request $request)
+    {
+        $flocks = Flock::when($request->farm_id, function ($q) use ($request) {
+                return $q->where('farm_id', $request->farm_id);
+            })
+            ->with('farm')
+            ->orderBy('name', 'asc')
+            ->get();
+
+        $data = $flocks->map(function ($flock) {
+            return [
+                'flock_id' => $flock->id,
+                'flock_name' => $flock->name,
+                'farm' => [
+                    'farm_id' => $flock->farm?->id,
+                    'farm_name' => $flock->farm?->name,
+                ]
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Available flocks retrieved successfully.',
+            'data' => $data,
+        ]);
+    }
+
+    /**
      * List all flocks
      *
      * Get paginated list of all flocks with search and filtering.
@@ -428,7 +488,7 @@ class FlockController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Flock deleted successfully.',
-            ]);
+            ], 200);
 
         } catch (\Exception $e) {
             DB::rollBack();

@@ -110,6 +110,7 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('edit/{admin}', 'edit')->name('admins.edit');
                         Route::get('destroy/{admin}', 'destroy')->name('admins.destroy');
                         Route::get('/users', 'users')->name('admins.users')->middleware('permission:view.admin');
+                        // Route::get('/farmers', 'users')->name('admins.farmers')->middleware('permission:view.farmer'); // Not used - use admins.users instead
                         Route::post('update-project-status', 'updateProjectStatus')->name('admins.update-project-status');
                         Route::post('{admin}', 'update')->name('admins.update');
                     });

@@ -122,7 +122,7 @@ class DropdownController extends Controller
      */
     public function supervisors(Request $request)
     {
-        $user = auth('admin')->user();
+        $user = auth()->user();
         
         // Determine supervisor type based on logged-in user's type
         $supervisorType = match($user->type) {

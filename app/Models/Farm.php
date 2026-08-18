@@ -35,4 +35,10 @@ class Farm extends Model
     {
         return $this->hasMany(Hangar::class, 'farm_id');
     }
+
+    // Define Relationship with flocks
+    public function flocks()
+    {
+        return $this->hasMany(Flock::class, 'farm_id');
+    }
 }

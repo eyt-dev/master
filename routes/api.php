@@ -77,7 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
 */
 
 // Add2Farm public authentication routes
-Route::prefix('add2farm/auth')->group(function () {
+Route::prefix('add2farm/auth')->middleware('set.add2farm.language')->group(function () {
     Route::post('register', [Add2FarmAuthController::class, 'register']);
     Route::post('login', [Add2FarmAuthController::class, 'login']);
     Route::post('verify-otp', [Add2FarmAuthController::class, 'verifyOtp']);
@@ -87,7 +87,7 @@ Route::prefix('add2farm/auth')->group(function () {
 });
 
 // Add2Farm protected routes — require a valid Sanctum token
-Route::prefix('add2farm')->middleware('reject.password.reset.token')->group(function () {
+Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2farm.language'])->group(function () {
     // Public endpoints (no auth required for Scribe)
     Route::post('auth/logout', [Add2FarmAuthController::class, 'logout'])->middleware('auth:sanctum');
 

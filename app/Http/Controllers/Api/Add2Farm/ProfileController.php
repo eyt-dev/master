@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Services\Add2Farm\TranslationService;
 
 /**
  * @group Add2Farm User Management
@@ -13,6 +14,12 @@ use Illuminate\Support\Facades\Validator;
  */
 class ProfileController extends Controller
 {
+    protected TranslationService $translationService;
+
+    public function __construct(TranslationService $translationService)
+    {
+        $this->translationService = $translationService;
+    }
     /**
      * Get user profile
      *
@@ -90,7 +97,7 @@ class ProfileController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Profile updated successfully.',
+            'message' => $this->translationService->get('profile_updated_successfully'),
             'user'    => $this->formatUser($user),
         ]);
     }
@@ -138,7 +145,7 @@ class ProfileController extends Controller
         if (!Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Current password is incorrect.',
+                'message' => $this->translationService->get('current_password_incorrect'),
             ], 401);
         }
 
@@ -148,7 +155,7 @@ class ProfileController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Password changed successfully.',
+            'message' => $this->translationService->get('password_changed_successfully'),
         ]);
     }
 
@@ -159,13 +166,7 @@ class ProfileController extends Controller
      */
     private function getTypeLabel($type): string
     {
-        $types = [
-            1 => 'Farm Admin',
-            2 => 'Farm Owner',
-            3 => 'Supervisor',
-            4 => 'Farmers',
-        ];
-        return $types[$type] ?? 'Unknown';
+        return $this->translationService->getTypeLabel($type);
     }
 
     private function formatUser($user): array
@@ -179,7 +180,16 @@ class ProfileController extends Controller
             'type'          => $user->type,
             'type_label'    => $this->getTypeLabel($user->type),
             'status'        => $user->status,
+            'status_label'  => $this->getStatusLabel($user->status),
             'created_by_name' => $user->creator?->name ?? null,
         ];
+    }
+
+    /**
+     * Get status label based on status value
+     */
+    private function getStatusLabel($status): string
+    {
+        return $this->translationService->getStatusLabel($status);
     }
 }

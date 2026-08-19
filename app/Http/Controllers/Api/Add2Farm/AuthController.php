@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Laravel\Sanctum\PersonalAccessToken;
+use App\Services\Add2Farm\TranslationService;
 
 /**
  * @group Add2Farm Authentication
@@ -18,6 +19,12 @@ use Laravel\Sanctum\PersonalAccessToken;
  */
 class AuthController extends Controller
 {
+    protected TranslationService $translationService;
+
+    public function __construct(TranslationService $translationService)
+    {
+        $this->translationService = $translationService;
+    }
     /**
      * Register a new Add2Farm user
      *
@@ -89,7 +96,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'OTP sent successfully.',
+                'message' => $this->translationService->get('otp_sent_successfully'),
             ], 201);
 
         } catch (\Exception $e) {
@@ -98,7 +105,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Registration failed.',
+                'message' => $this->translationService->get('registration_failed'),
             ], 500);
         }
     }
@@ -146,7 +153,7 @@ class AuthController extends Controller
         if (!$admin || !Hash::check($request->password, $admin->password)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid credentials.',
+                'message' => $this->translationService->get('invalid_credentials'),
             ], 401);
         }
 
@@ -154,7 +161,7 @@ class AuthController extends Controller
         if ($admin->status === 'Disable') {
             return response()->json([
                 'success' => false,
-                'message' => 'Your account has been disabled.',
+                'message' => $this->translationService->get('account_disabled'),
             ], 403);
         }
 
@@ -165,7 +172,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'OTP sent successfully.',
+            'message' => $this->translationService->get('otp_sent_successfully'),
         ]);
     }
 
@@ -230,7 +237,7 @@ class AuthController extends Controller
         if (!$admin) {
             return response()->json([
                 'success' => false,
-                'message' => 'User not found.',
+                'message' => $this->translationService->get('user_not_found'),
             ], 404);
         }
 
@@ -238,7 +245,7 @@ class AuthController extends Controller
         if (!$admin->otp) {
             return response()->json([
                 'success' => false,
-                'message' => 'No OTP found. Please request OTP first.',
+                'message' => $this->translationService->get('no_otp_found'),
             ], 400);
         }
 
@@ -246,7 +253,7 @@ class AuthController extends Controller
         if ($admin->isOtpExpired()) {
             return response()->json([
                 'success' => false,
-                'message' => 'OTP has expired. Please request a new OTP.',
+                'message' => $this->translationService->get('otp_expired'),
             ], 422);
         }
 
@@ -254,7 +261,7 @@ class AuthController extends Controller
         if (!$admin->isOtpValid($request->otp)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid OTP.',
+                'message' => $this->translationService->get('invalid_otp'),
             ], 400);
         }
 
@@ -275,7 +282,7 @@ class AuthController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'OTP verified successfully. You can now reset your password.',
+                    'message' => $this->translationService->get('otp_verified_password_reset'),
                     'token'   => $token,
                 ]);
             }
@@ -296,7 +303,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'OTP verified successfully.',
+                'message' => $this->translationService->get('otp_verified_successfully'),
                 'token'   => $token,
                 'user'    => $this->formatUser($admin->fresh()),
             ]);
@@ -307,7 +314,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'OTP verification failed.',
+                'message' => $this->translationService->get('otp_verification_failed'),
             ], 500);
         }
     }
@@ -349,7 +356,7 @@ class AuthController extends Controller
         if (!$admin) {
             return response()->json([
                 'success' => false,
-                'message' => 'User not found.',
+                'message' => $this->translationService->get('user_not_found'),
             ], 404);
         }
 
@@ -361,7 +368,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'OTP sent successfully.',
+                'message' => $this->translationService->get('otp_sent_successfully'),
             ]);
 
         } catch (\Exception $e) {
@@ -369,7 +376,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to resend OTP.',
+                'message' => $this->translationService->get('failed_to_resend_otp'),
             ], 500);
         }
     }
@@ -411,7 +418,7 @@ class AuthController extends Controller
         if (!$admin) {
             return response()->json([
                 'success' => false,
-                'message' => 'User not found.',
+                'message' => $this->translationService->get('user_not_found'),
             ], 404);
         }
 
@@ -423,7 +430,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'OTP sent successfully.',
+                'message' => $this->translationService->get('otp_sent_successfully'),
             ]);
 
         } catch (\Exception $e) {
@@ -431,7 +438,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send OTP.',
+                'message' => $this->translationService->get('failed_to_send_otp'),
             ], 500);
         }
     }
@@ -485,7 +492,7 @@ class AuthController extends Controller
         if (!$personalAccessToken) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid or expired token. Please verify OTP first.',
+                'message' => $this->translationService->get('invalid_or_expired_token_otp'),
             ], 401);
         }
 
@@ -495,7 +502,7 @@ class AuthController extends Controller
         if (!$admin) {
             return response()->json([
                 'success' => false,
-                'message' => 'User not found.',
+                'message' => $this->translationService->get('user_not_found'),
             ], 404);
         }
 
@@ -503,7 +510,7 @@ class AuthController extends Controller
         if ($personalAccessToken->name !== 'password-reset-token') {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid token. Please use token from OTP verification.',
+                'message' => $this->translationService->get('invalid_token_use_otp'),
             ], 401);
         }
 
@@ -525,7 +532,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Password reset successfully. Please login with new password.',
+                'message' => $this->translationService->get('password_reset_successfully'),
             ]);
 
         } catch (\Exception $e) {
@@ -534,7 +541,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Password reset failed.',
+                'message' => $this->translationService->get('password_reset_failed'),
             ], 500);
         }
     }
@@ -557,7 +564,7 @@ class AuthController extends Controller
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'User not authenticated.',
+                'message' => $this->translationService->get('user_not_authenticated'),
             ], 401);
         }
 
@@ -566,7 +573,7 @@ class AuthController extends Controller
         if (!$token) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid or expired token. Please login again.',
+                'message' => $this->translationService->get('invalid_or_expired_token'),
             ], 401);
         }
 
@@ -574,7 +581,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Logged out successfully.',
+            'message' => $this->translationService->get('logged_out_successfully'),
         ]);
     }
 
@@ -583,13 +590,7 @@ class AuthController extends Controller
      */
     private function getTypeLabel($type): string
     {
-        $types = [
-            1 => 'Farm Admin',
-            2 => 'Farm Owner',
-            3 => 'Supervisor',
-            4 => 'Farmers',
-        ];
-        return $types[$type] ?? 'Unknown';
+        return $this->translationService->getTypeLabel($type);
     }
 
     /**
@@ -604,8 +605,17 @@ class AuthController extends Controller
             'type'          => $admin->type,
             'type_label'    => $this->getTypeLabel($admin->type),
             'status'        => $admin->status,
+            'status_label'  => $this->getStatusLabel($admin->status),
             'created_by_name' => $admin->creator?->name ?? null,
             'created_at'    => $admin->created_at,
         ];
+    }
+
+    /**
+     * Get status label based on status value
+     */
+    private function getStatusLabel($status): string
+    {
+        return $this->translationService->getStatusLabel($status);
     }
 }

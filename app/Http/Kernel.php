@@ -72,6 +72,7 @@ class Kernel extends HttpKernel
         'check.admin.type' => \App\Http\Middleware\CheckAdminType::class,
         'validate.password.reset.token' => \App\Http\Middleware\ValidatePasswordResetToken::class,
         'reject.password.reset.token' => \App\Http\Middleware\RejectPasswordResetToken::class,
+        'set.add2farm.language' => \App\Http\Middleware\SetAdd2FarmLanguage::class,
         // 'admin.domain.access' => \App\Http\Middleware\AdminDomainAccess::class,
     ];
 }

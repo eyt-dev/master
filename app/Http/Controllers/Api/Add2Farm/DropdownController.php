@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers\Api\Add2Farm;
 
-use App\Http\Controllers\Controller;
 use App\Models\Farm;
 use App\Models\ChicksSupplier;
 use App\Models\Admin;
-use Illuminate\Http\Request;
 
 /**
  * @group Add2Farm Dropdowns
@@ -42,6 +40,15 @@ class DropdownController extends BaseController
      */
     public function farms()
     {
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('user_not_authenticated'),
+            ], 401);
+        }
+
         $farms = Farm::select('id', 'name')
             ->orderBy('name')
             ->get();
@@ -81,6 +88,15 @@ class DropdownController extends BaseController
      */
     public function suppliers()
     {
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('user_not_authenticated'),
+            ], 401);
+        }
+
         $suppliers = ChicksSupplier::select('id', 'name')
             ->orderBy('name')
             ->get();
@@ -120,10 +136,17 @@ class DropdownController extends BaseController
      *   "message": "Unauthenticated"
      * }
      */
-    public function supervisors(Request $request)
+    public function supervisors()
     {
         $user = auth()->user();
-        
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('user_not_authenticated'),
+            ], 401);
+        }
+
         // Determine supervisor type based on logged-in user's type
         $supervisorType = match($user->type) {
             Admin::PUBLIC_VENDOR => 4,  // type 2 users get type 4 supervisors

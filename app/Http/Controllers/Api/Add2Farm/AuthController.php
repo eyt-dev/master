@@ -30,6 +30,7 @@ class AuthController extends Controller
      * @bodyParam password_confirmation string required Password confirmation. Example: password123
      * @bodyParam type integer required User type (1=Farm Admin, 2=Farm Owner). Example: 1
      * @bodyParam name string optional User's full name. Example: John Doe
+     * @bodyParam email string optional User's email address. Example: john@example.com
      *
      * @response 201 {
      *   "success": true,
@@ -49,7 +50,7 @@ class AuthController extends Controller
             'password'      => 'required|string|min:8|confirmed',
             'type'          => 'required|integer|in:1,2',
             'name'          => 'nullable|string|max:255',
-            'email'         => 'required|email|max:255|unique:admins,email',
+            'email'         => 'nullable|email|max:255|unique:admins,email',
         ]);
 
         if ($validator->fails()) {

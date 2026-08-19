@@ -228,7 +228,7 @@ class FarmController extends Controller
             'type'                      => 'required|string|in:closed_system,open_system,cages',
             'mobile_number'             => 'nullable|string|max:20',
             'number_of_hangars'         => 'required|integer|min:1|max:999',
-            'assigned_to'               => 'nullable|integer|exists:admins,id',
+            'assigned_to'               => 'required|integer|exists:admins,id',
             'hangars'                   => 'required|array|min:1',
             'hangars.*.name'            => 'required|string|max:255',
             'hangars.*.area_sqm'        => 'required|numeric|min:0',

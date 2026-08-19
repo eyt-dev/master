@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
  * @group Add2Farm Daily Records
  * CRUD APIs for managing daily records for flocks and hangars in Add2Farm
  */
-class DailyRecordController extends Controller
+class DailyRecordController extends BaseController
 {
     /**
      * List all daily records
@@ -84,7 +84,7 @@ class DailyRecordController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Daily records retrieved successfully.',
+            'message' => $this->translationService->get('daily_records_retrieved_successfully'),
             'data' => $records,
         ]);
     }
@@ -132,13 +132,13 @@ class DailyRecordController extends Controller
         if (!$record) {
             return response()->json([
                 'success' => false,
-                'message' => 'Daily record not found.',
+                'message' => $this->translationService->get('daily_record_not_found'),
             ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Daily record retrieved successfully.',
+            'message' => $this->translationService->get('daily_record_retrieved_successfully'),
             'data' => $this->formatDailyRecord($record),
         ]);
     }
@@ -239,7 +239,7 @@ class DailyRecordController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Daily record created successfully.',
+                'message' => $this->translationService->get('daily_record_created_successfully'),
                 'data'    => $this->formatDailyRecord($record),
             ], 201);
 
@@ -311,7 +311,7 @@ class DailyRecordController extends Controller
         if (!$record) {
             return response()->json([
                 'success' => false,
-                'message' => 'Daily record not found.',
+                'message' => $this->translationService->get('daily_record_not_found'),
             ], 404);
         }
 
@@ -356,7 +356,7 @@ class DailyRecordController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Daily record updated successfully.',
+                'message' => $this->translationService->get('daily_record_updated_successfully'),
                 'data'    => $this->formatDailyRecord($record),
             ]);
 
@@ -395,7 +395,7 @@ class DailyRecordController extends Controller
         if (!$record) {
             return response()->json([
                 'success' => false,
-                'message' => 'Daily record not found.',
+                'message' => $this->translationService->get('daily_record_not_found'),
             ], 404);
         }
 
@@ -408,7 +408,7 @@ class DailyRecordController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Daily record deleted successfully.',
+                'message' => $this->translationService->get('daily_record_deleted_successfully'),
             ]);
 
         } catch (\Exception $e) {

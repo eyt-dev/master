@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
  * @group Add2Farm Flocks
  * CRUD APIs for managing flocks in Add2Farm
  */
-class FlockController extends Controller
+class FlockController extends BaseController
 {
     /**
      * Get available flocks for logged-in user
@@ -133,7 +133,7 @@ class FlockController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Flocks retrieved successfully.',
+            'message' => $this->translationService->get('flocks_retrieved_successfully'),
             'data' => $flocks,
         ]);
     }
@@ -185,7 +185,7 @@ class FlockController extends Controller
         if (!$flock) {
             return response()->json([
                 'success' => false,
-                'message' => 'Flock not found.',
+                'message' => $this->translationService->get('flock_not_found'),
             ], 404);
         }
 
@@ -200,7 +200,7 @@ class FlockController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Flock retrieved successfully.',
+            'message' => $this->translationService->get('flock_retrieved_successfully'),
             'data' => $data,
         ]);
     }
@@ -305,7 +305,7 @@ class FlockController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Flock created successfully.',
+                'message' => $this->translationService->get('flock_created_successfully'),
                 'data'    => $this->formatFlock($flock),
             ], 201);
 
@@ -368,7 +368,7 @@ class FlockController extends Controller
         if (!$flock) {
             return response()->json([
                 'success' => false,
-                'message' => 'Flock not found.',
+                'message' => $this->translationService->get('flock_not_found'),
             ], 404);
         }
 
@@ -431,7 +431,7 @@ class FlockController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Flock updated successfully.',
+                'message' => $this->translationService->get('flock_updated_successfully'),
                 'data'    => $this->formatFlock($flock),
             ]);
 
@@ -470,7 +470,7 @@ class FlockController extends Controller
         if (!$flock) {
             return response()->json([
                 'success' => false,
-                'message' => 'Flock not found.',
+                'message' => $this->translationService->get('flock_not_found'),
             ], 404);
         }
 
@@ -487,7 +487,7 @@ class FlockController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Flock deleted successfully.',
+                'message' => $this->translationService->get('flock_deleted_successfully'),
             ], 200);
 
         } catch (\Exception $e) {

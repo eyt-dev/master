@@ -42,6 +42,13 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('user_not_authenticated'),
+            ], 401);
+        }
+
         return response()->json([
             'success' => true,
             'user'    => $this->formatUser($user),
@@ -79,6 +86,13 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('user_not_authenticated'),
+            ], 401);
+        }
 
         $validator = Validator::make($request->all(), [
             'name'     => 'sometimes|required|string|max:255',
@@ -129,6 +143,13 @@ class ProfileController extends Controller
     public function changePassword(Request $request)
     {
         $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('user_not_authenticated'),
+            ], 401);
+        }
 
         $validator = Validator::make($request->all(), [
             'current_password' => 'required|string',

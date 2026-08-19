@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
  * @group Add2Farm Dropdowns
  * APIs for fetching dropdown data (farms, suppliers, supervisors)
  */
-class DropdownController extends Controller
+class DropdownController extends BaseController
 {
     /**
      * Get all farms for dropdown
@@ -48,7 +48,7 @@ class DropdownController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Farms retrieved successfully.',
+            'message' => $this->translationService->get('farms_retrieved_successfully'),
             'data' => $farms,
         ], 200);
     }
@@ -87,7 +87,7 @@ class DropdownController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Suppliers retrieved successfully.',
+            'message' => $this->translationService->get('suppliers_retrieved_successfully'),
             'data' => $suppliers,
         ], 200);
     }
@@ -138,7 +138,7 @@ class DropdownController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Supervisors retrieved successfully.',
+            'message' => $this->translationService->get('supervisors_retrieved_successfully'),
             'data' => $supervisors,
         ], 200);
     }

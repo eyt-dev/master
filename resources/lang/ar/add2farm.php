@@ -49,6 +49,17 @@ return [
         'daily_record_not_found' => 'لم يتم العثور على السجل اليومي.',
         'unauthorized_action' => 'أنت غير مصرح بإجراء هذا الإجراء.',
         'operation_failed' => 'فشلت العملية. يرجى المحاولة مرة أخرى.',
+        'supervisors_retrieved_successfully' => 'تم استرجاع قائمة المشرفين بنجاح.',
+        'supervisor_retrieved_successfully' => 'تم استرجاع بيانات المشرف بنجاح.',
+        'farmers_retrieved_successfully' => 'تم استرجاع قائمة المزارعين بنجاح.',
+        'farmer_retrieved_successfully' => 'تم استرجاع بيانات المزارع بنجاح.',
+        'farms_retrieved_successfully' => 'تم استرجاع قائمة المزارع بنجاح.',
+        'farm_retrieved_successfully' => 'تم استرجاع بيانات المزرعة بنجاح.',
+        'flocks_retrieved_successfully' => 'تم استرجاع قائمة الأقطيع بنجاح.',
+        'flock_retrieved_successfully' => 'تم استرجاع بيانات القطيع بنجاح.',
+        'daily_records_retrieved_successfully' => 'تم استرجاع السجلات اليومية بنجاح.',
+        'daily_record_retrieved_successfully' => 'تم استرجاع السجل اليومي بنجاح.',
+        'suppliers_retrieved_successfully' => 'تم استرجاع قائمة الموردين بنجاح.',
     ],
 
     // Type labels

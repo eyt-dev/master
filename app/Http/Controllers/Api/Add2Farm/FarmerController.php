@@ -15,7 +15,7 @@ use Spatie\Permission\Models\Role;
  * @group Add2Farm Farmers (Type 4)
  * CRUD APIs for managing Type 4 (Farmers) in Add2Farm
  */
-class FarmerController extends Controller
+class FarmerController extends BaseController
 {
     const ADMIN_TYPE = 4;
 
@@ -73,7 +73,7 @@ class FarmerController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Farmers retrieved successfully.',
+            'message' => $this->translationService->get('farmers_retrieved_successfully'),
             'data' => $farmers,
         ]);
     }
@@ -122,7 +122,7 @@ class FarmerController extends Controller
         if (!$admin) {
             return response()->json([
                 'success' => false,
-                'message' => 'Farmer not found.',
+                'message' => $this->translationService->get('farmer_not_found'),
             ], 404);
         }
 
@@ -137,7 +137,7 @@ class FarmerController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Farmer retrieved successfully.',
+            'message' => $this->translationService->get('farmer_retrieved_successfully'),
             'data' => $data,
         ]);
     }
@@ -270,7 +270,7 @@ class FarmerController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Farmer created successfully.',
+                'message' => $this->translationService->get('farmer_created_successfully'),
                 'data'    => $this->formatAdmin($admin),
             ], 201);
 
@@ -365,7 +365,7 @@ class FarmerController extends Controller
         if (!$admin) {
             return response()->json([
                 'success' => false,
-                'message' => 'Farmer not found.',
+                'message' => $this->translationService->get('farmer_not_found'),
             ], 404);
         }
 
@@ -458,7 +458,7 @@ class FarmerController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Farmer updated successfully.',
+                'message' => $this->translationService->get('farmer_updated_successfully'),
                 'data'    => $this->formatAdmin($admin->fresh()),
             ]);
 
@@ -497,7 +497,7 @@ class FarmerController extends Controller
         if (!$admin) {
             return response()->json([
                 'success' => false,
-                'message' => 'Farmer not found.',
+                'message' => $this->translationService->get('farmer_not_found'),
             ], 404);
         }
 
@@ -517,7 +517,7 @@ class FarmerController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Farmer deleted successfully.',
+                'message' => $this->translationService->get('farmer_deleted_successfully'),
             ]);
 
         } catch (\Exception $e) {
@@ -536,21 +536,15 @@ class FarmerController extends Controller
      */
     private function formatAdmin(Admin $admin): array
     {
-        $typeLabels = [
-            1 => 'Farm Admin',
-            2 => 'Farm Owner',
-            3 => 'Supervisor',
-            4 => 'Farmers',
-        ];
-
         return [
             'id'            => $admin->id,
             'name'          => $admin->name,
             'mobile_number' => $admin->mobile_number,
             'email'         => $admin->email,
             'type'          => $admin->type,
-            'type_label'    => $typeLabels[$admin->type] ?? 'Unknown',
+            'type_label'    => $this->getTypeLabel($admin->type),
             'status'        => $admin->status,
+            'status_label'  => $this->getStatusLabel($admin->status),
             'notes'         => $admin->notes ?? null,
             'image'         => $admin->image ?? null,
             'created_by_name' => $admin->creator?->name ?? null,

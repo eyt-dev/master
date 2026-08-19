@@ -146,6 +146,15 @@ return [
     |
     */
 
-    'attributes' => [],
+    'attributes' => [
+        'name' => 'Name',
+        'email' => 'Email',
+        'mobile_number' => 'Mobile Number',
+        'password' => 'Password',
+        'password_confirmation' => 'Password Confirmation',
+        'username' => 'Username',
+        'current_password' => 'Current Password',
+        'otp' => 'OTP',
+    ],
 
 ];

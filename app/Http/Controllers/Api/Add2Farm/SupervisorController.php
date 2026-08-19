@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\Add2Farm;
 
-use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\AdminProjectStatus;
 use Illuminate\Http\Request;
@@ -15,7 +14,7 @@ use Spatie\Permission\Models\Role;
  * @group Add2Farm Supervisors (Type 3)
  * CRUD APIs for managing Type 3 (Supervisors) in Add2Farm
  */
-class SupervisorController extends Controller
+class SupervisorController extends BaseController
 {
     const ADMIN_TYPE = 3;
 
@@ -73,7 +72,7 @@ class SupervisorController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Supervisors retrieved successfully.',
+            'message' => $this->translationService->get('supervisors_retrieved_successfully'),
             'data' => $supervisors,
         ]);
     }
@@ -122,7 +121,7 @@ class SupervisorController extends Controller
         if (!$admin) {
             return response()->json([
                 'success' => false,
-                'message' => 'Supervisor not found.',
+                'message' => $this->translationService->get('supervisor_not_found'),
             ], 404);
         }
 
@@ -137,7 +136,7 @@ class SupervisorController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Supervisor retrieved successfully.',
+            'message' => $this->translationService->get('supervisor_retrieved_successfully'),
             'data' => $data,
         ]);
     }
@@ -255,7 +254,7 @@ class SupervisorController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Supervisor created successfully.',
+                'message' => $this->translationService->get('supervisor_created_successfully'),
                 'data'    => $this->formatAdmin($admin),
             ], 201);
 
@@ -265,7 +264,7 @@ class SupervisorController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create supervisor.',
+                'message' => $this->translationService->get('operation_failed'),
             ], 500);
         }
     }
@@ -320,7 +319,7 @@ class SupervisorController extends Controller
         if (!$admin) {
             return response()->json([
                 'success' => false,
-                'message' => 'Supervisor not found.',
+                'message' => $this->translationService->get('supervisor_not_found'),
             ], 404);
         }
 
@@ -399,7 +398,7 @@ class SupervisorController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Supervisor updated successfully.',
+                'message' => $this->translationService->get('supervisor_updated_successfully'),
                 'data'    => $this->formatAdmin($admin->fresh()),
             ]);
 
@@ -438,7 +437,7 @@ class SupervisorController extends Controller
         if (!$admin) {
             return response()->json([
                 'success' => false,
-                'message' => 'Supervisor not found.',
+                'message' => $this->translationService->get('supervisor_not_found'),
             ], 404);
         }
 
@@ -458,7 +457,7 @@ class SupervisorController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Supervisor deleted successfully.',
+                'message' => $this->translationService->get('supervisor_deleted_successfully'),
             ]);
 
         } catch (\Exception $e) {
@@ -477,21 +476,15 @@ class SupervisorController extends Controller
      */
     private function formatAdmin(Admin $admin): array
     {
-        $typeLabels = [
-            1 => 'Farm Admin',
-            2 => 'Farm Owner',
-            3 => 'Supervisor',
-            4 => 'Farmers',
-        ];
-
         return [
             'id'            => $admin->id,
             'name'          => $admin->name,
             'mobile_number' => $admin->mobile_number,
             'email'         => $admin->email,
             'type'          => $admin->type,
-            'type_label'    => $typeLabels[$admin->type] ?? 'Unknown',
+            'type_label'    => $this->getTypeLabel($admin->type),
             'status'        => $admin->status,
+            'status_label'  => $this->getStatusLabel($admin->status),
             'notes'         => $admin->notes ?? null,
             'image'         => $admin->image ?? null,
             'created_by_name' => $admin->creator?->name ?? null,

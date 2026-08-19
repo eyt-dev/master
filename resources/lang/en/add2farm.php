@@ -49,6 +49,17 @@ return [
         'daily_record_not_found' => 'Daily record not found.',
         'unauthorized_action' => 'You are not authorized to perform this action.',
         'operation_failed' => 'Operation failed. Please try again.',
+        'supervisors_retrieved_successfully' => 'Supervisors retrieved successfully.',
+        'supervisor_retrieved_successfully' => 'Supervisor retrieved successfully.',
+        'farmers_retrieved_successfully' => 'Farmers retrieved successfully.',
+        'farmer_retrieved_successfully' => 'Farmer retrieved successfully.',
+        'farms_retrieved_successfully' => 'Farms retrieved successfully.',
+        'farm_retrieved_successfully' => 'Farm retrieved successfully.',
+        'flocks_retrieved_successfully' => 'Flocks retrieved successfully.',
+        'flock_retrieved_successfully' => 'Flock retrieved successfully.',
+        'daily_records_retrieved_successfully' => 'Daily records retrieved successfully.',
+        'daily_record_retrieved_successfully' => 'Daily record retrieved successfully.',
+        'suppliers_retrieved_successfully' => 'Suppliers retrieved successfully.',
     ],
 
     // Type labels

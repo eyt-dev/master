@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
  * @group Add2Farm Farms
  * CRUD APIs for managing Farms - Accessible to Type 2 (Farm Owner) and Type 3 (Supervisor)
  */
-class FarmController extends Controller
+class FarmController extends BaseController
 {
     /**
      * List all farms
@@ -79,7 +79,7 @@ class FarmController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Farms retrieved successfully.',
+            'message' => $this->translationService->get('farms_retrieved_successfully'),
             'total_farms' => $totalFarms,
             'active_farms' => $activeFarms,
             'inactive_farms' => $inactiveFarms,
@@ -122,13 +122,13 @@ class FarmController extends Controller
         if (!$farm) {
             return response()->json([
                 'success' => false,
-                'message' => 'Farm not found.',
+                'message' => $this->translationService->get('farm_not_found'),
             ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Farm retrieved successfully.',
+            'message' => $this->translationService->get('farm_retrieved_successfully'),
             'data' => $this->formatFarm($farm),
         ]);
     }
@@ -293,7 +293,7 @@ class FarmController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Farm created successfully.',
+                'message' => $this->translationService->get('farm_created_successfully'),
                 'data'    => $this->formatFarm($farm),
             ], 201);
 
@@ -405,7 +405,7 @@ class FarmController extends Controller
         if (!$farm) {
             return response()->json([
                 'success' => false,
-                'message' => 'Farm not found.',
+                'message' => $this->translationService->get('farm_not_found'),
             ], 404);
         }
 
@@ -500,7 +500,7 @@ class FarmController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Farm updated successfully.',
+                'message' => $this->translationService->get('farm_updated_successfully'),
                 'data'    => $this->formatFarm($farm),
             ]);
 
@@ -554,7 +554,7 @@ class FarmController extends Controller
         if (!$farm) {
             return response()->json([
                 'success' => false,
-                'message' => 'Farm not found.',
+                'message' => $this->translationService->get('farm_not_found'),
             ], 404);
         }
 
@@ -568,7 +568,7 @@ class FarmController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Farm deleted successfully.',
+                'message' => $this->translationService->get('farm_deleted_successfully'),
             ], 200);
 
         } catch (\Illuminate\Database\QueryException $e) {

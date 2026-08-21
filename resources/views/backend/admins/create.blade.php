@@ -55,8 +55,7 @@
                 <select class="form-control" name="vat_country_code" id="vat_country_code">
                     <option value="">Select Country</option>
                     @foreach($countries as $country)
-                    @php $iso = strtoupper(substr($country->name,0,2)); @endphp
-                        <option value="{{ $iso }}" {{ (old('vat_country_code')??$admin->vat_country_code) == $iso ? 'selected' : '' }}>
+                        <option value="{{ $country->id }}" data-dial-code="{{ $country->dial_code ?? '' }}" data-iso-code="{{ strtoupper(substr($country->name,0,2)) }}" {{ (old('vat_country_code')??$admin->vat_country_code) == $country->id ? 'selected' : '' }}>
                             {{ $country->name }}
                         </option>
                     @endforeach
@@ -69,10 +68,7 @@
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="vat_code" class="form-label">VAT Code <span class="text-red">*</span></label>
-                <input type="text" class="form-control" placeholder="VAT Code" name="vat_code" id="vat_code" value="{{ old('vat_code') }}" readonly>
-                @error('vat_code')
-                    <label id="vat_code-error" class="error" for="vat_code">{{ $message }}</label>
-                @enderror
+                <input type="text" class="form-control" placeholder="VAT Code" id="vat_code" value="" readonly>
             </div>
         </div>
         <div class="col-sm-6 col-md-6">
@@ -81,6 +77,17 @@
                 <input type="text" class="form-control" placeholder="VAT Number" name="vat_number" id="vat_number" value="{{ old('vat_number')??$admin->vat_number }}">
                 @error('vat_number')
                     <label id="vat_number-error" class="error" for="vat_number">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="phone_code" class="form-label">Phone Code</label>
+                <input type="text" class="form-control" placeholder="Phone Code" id="phone_code" value="{{ old('phone_code', ($admin->phone_code ?? '') ? (str_starts_with($admin->phone_code, '+') ? $admin->phone_code : '+' . $admin->phone_code) : '') }}" readonly autocomplete="off">
+                <input type="hidden" name="phone_code" id="phone_code_hidden" value="{{ old('phone_code', $admin->phone_code ?? '') }}">
+                @error('phone_code')
+                    <label id="phone_code-error" class="error" for="phone_code">{{ $message }}</label>
                 @enderror
             </div>
         </div>
@@ -224,9 +231,58 @@
         }
     }
 
+    // Function to update VAT code and phone code based on selected country
+    function updateVatAndPhoneCode() {
+        var countrySelect = document.getElementById('vat_country_code');
+        if (!countrySelect) {
+            console.log('Country select not found');
+            return;
+        }
+
+        var selectedOption = countrySelect.options[countrySelect.selectedIndex];
+        var isoCode = selectedOption ? selectedOption.getAttribute('data-iso-code') : '';
+        var dialCode = selectedOption ? selectedOption.getAttribute('data-dial-code') : '';
+
+        console.log('ISO Code:', isoCode);
+        console.log('Dial Code:', dialCode);
+
+        var vatCodeField = document.getElementById('vat_code');
+        var phoneCodeField = document.getElementById('phone_code');
+        var phoneCodeHiddenField = document.getElementById('phone_code_hidden');
+
+        if (vatCodeField) {
+            vatCodeField.value = isoCode || '';
+            console.log('VAT Code updated:', vatCodeField.value);
+        }
+
+        if (phoneCodeField && phoneCodeHiddenField) {
+            // Add + prefix to dial code if it exists and doesn't already have it
+            var formattedDialCode = dialCode && dialCode.trim() ? (dialCode.startsWith('+') ? dialCode : '+' + dialCode) : '';
+            phoneCodeField.value = formattedDialCode;
+            
+            // Store the raw dial code (without +) in the hidden field for submission
+            phoneCodeHiddenField.value = dialCode || '';
+            console.log('Phone Code displayed:', formattedDialCode);
+            console.log('Phone Code hidden (for submission):', phoneCodeHiddenField.value);
+        }
+    }
+
     (function () {
         const form = document.getElementById('admin_form');
         const container = document.getElementById('project-status-container');
+        const countrySelect = document.getElementById('vat_country_code');
+
+        // Initialize phone code and VAT code on page load
+        if (countrySelect && countrySelect.value) {
+            updateVatAndPhoneCode();
+        }
+
+        // Update on country selection change
+        if (countrySelect) {
+            countrySelect.addEventListener('change', function() {
+                updateVatAndPhoneCode();
+            });
+        }
 
         // Update select styling when status changes
         if (container) {
@@ -253,28 +309,25 @@
         }
 
         // Form validation on submit
-        form?.addEventListener('submit', function (event) {
-            const statusSelects = container?.querySelectorAll('select[name$="[status]"]') || [];
+        if (form) {
+            form.addEventListener('submit', function (event) {
+                const statusSelects = container?.querySelectorAll('select[name$="[status]"]') || [];
 
-            // Count how many projects have a status selected
-            let assignedCount = 0;
-            statusSelects.forEach(function (select) {
-                if (select.value && select.value !== '') {
-                    assignedCount++;
+                // Count how many projects have a status selected
+                let assignedCount = 0;
+                statusSelects.forEach(function (select) {
+                    if (select.value && select.value !== '') {
+                        assignedCount++;
+                    }
+                });
+
+                // Show message if no projects assigned
+                if (assignedCount === 0) {
+                    event.preventDefault();
+                    alert('Please select at least one project with a status (Active or Inactive).');
+                    return false;
                 }
             });
-
-            // Show message if no projects assigned
-            if (assignedCount === 0) {
-                swal({
-                    title: 'Validation Error',
-                    text: 'Please select at least one project with a status (Active or Inactive).',
-                    icon: 'warning',
-                    button: 'OK'
-                });
-                event.preventDefault();
-                return false;
-            }
-        });
+        }
     })();
 </script>

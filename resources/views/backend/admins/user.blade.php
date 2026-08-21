@@ -221,26 +221,44 @@
                 return value.indexOf(" ") < 0 && value !== "";
             }, "Spaces are not allowed.");
 
-            $('#vat_country_code').on('change', function () {
-                updateVatNumber();
+            // Attach change event listener to country dropdown
+            $(document).off('change', '#vat_country_code').on('change', '#vat_country_code', function () {
+                updateVatAndPhoneCode();
             });
 
-            // Set initial VAT number if old value exists
-            if ($('#vat_country_code').val()) {
-                updateVatNumber();
+            // Initialize values if country is already selected
+            var countryValue = $('#vat_country_code').val();
+            if (countryValue) {
+                updateVatAndPhoneCode();
             }
         }
 
-        // Function to update VAT number
-        function updateVatNumber() {
-            var countryCode = $('#vat_country_code').val();
+        // Function to update VAT code and phone code based on selected country
+        function updateVatAndPhoneCode() {
+            var countrySelect = document.getElementById('vat_country_code');
+            if (!countrySelect) {
+                console.log('Country select not found');
+                return;
+            }
 
-            if (countryCode) {
-                $('#vat_code')
-                    .val(countryCode)
-                    .trigger('keyup');
-            } else {
-                $('#vat_code').val('');
+            var selectedOption = countrySelect.options[countrySelect.selectedIndex];
+            var countryCode = selectedOption ? selectedOption.value : '';
+            var dialCode = selectedOption ? selectedOption.getAttribute('data-dial-code') : '';
+
+            console.log('Country Code:', countryCode);
+            console.log('Dial Code:', dialCode);
+
+            var vatCodeField = document.getElementById('vat_code');
+            var phoneCodeField = document.getElementById('phone_code');
+
+            if (vatCodeField) {
+                vatCodeField.value = countryCode || '';
+                console.log('VAT Code updated:', vatCodeField.value);
+            }
+
+            if (phoneCodeField) {
+                phoneCodeField.value = dialCode || '';
+                console.log('Phone Code updated:', phoneCodeField.value);
             }
         }
     </script>

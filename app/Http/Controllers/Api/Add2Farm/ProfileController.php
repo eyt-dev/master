@@ -117,6 +117,112 @@ class ProfileController extends Controller
     }
 
     /**
+     * Get user profile settings
+     *
+     * Retrieve the authenticated user's profile settings (language, country, phone code).
+     *
+     * @authenticated
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "language": "en",
+     *     "country_id": 1,
+     *     "country_name": "United States",
+     *     "phone_code": "+1"
+     *   }
+     * }
+     * @response 401 {
+     *   "success": false,
+     *   "message": "Unauthenticated"
+     * }
+     */
+    public function getSettings(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('user_not_authenticated'),
+            ], 401);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'language' => $user->language ?? 'en',
+                'country_id' => $user->country_id,
+                'country_name' => $user->country?->name ?? null,
+                'phone_code' => $user->phone_code,
+            ],
+        ]);
+    }
+
+    /**
+     * Update user profile settings
+     *
+     * Update the authenticated user's profile settings (language, country, phone code).
+     *
+     * @authenticated
+     * @bodyParam language string The user's preferred language code (e.g., 'en', 'ar', 'fr'). Example: en
+     * @bodyParam country_id integer The ID of the user's country. Example: 1
+     * @bodyParam phone_code string The phone code for the selected country. Example: +1
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Settings updated successfully.",
+     *   "data": {
+     *     "language": "en",
+     *     "country_id": 1,
+     *     "country_name": "United States",
+     *     "phone_code": "+1"
+     *   }
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "errors": {
+     *     "country_id": ["The country_id must exist in the countries table."]
+     *   }
+     * }
+     */
+    public function updateSettings(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('user_not_authenticated'),
+            ], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'language' => 'sometimes|required|string|max:10',
+            'country_id' => 'sometimes|required|integer|exists:countries,id',
+            'phone_code' => 'sometimes|required|string|max:10',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user->update($request->only(['language', 'country_id', 'phone_code']));
+
+        return response()->json([
+            'success' => true,
+            'message' => $this->translationService->get('profile_updated_successfully'),
+            'data' => [
+                'language' => $user->language ?? 'en',
+                'country_id' => $user->country_id,
+                'country_name' => $user->country?->name ?? null,
+                'phone_code' => $user->phone_code,
+            ],
+        ]);
+    }
+
+    /**
      * Change user password
      *
      * Change the authenticated user's password. Requires providing the current password for verification.

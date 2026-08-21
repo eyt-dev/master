@@ -14,7 +14,8 @@
       "Bash(sed -i 's/'\\\\''Farms retrieved successfully\\\\.'\\\\''/$this->translationService->get\\('\\\\''farms_retrieved_successfully'\\\\''\\)/g' e:/xampp/htdocs/eyt-master/app/Http/Controllers/Api/Add2Farm/FarmController.php)",
       "Bash(sed -i 's/'\\\\''Farm retrieved successfully\\\\.'\\\\''/$this->translationService->get\\('\\\\''farm_retrieved_successfully'\\\\''\\)/g' e:/xampp/htdocs/eyt-master/app/Http/Controllers/Api/Add2Farm/FarmController.php)",
       "Bash(sed -i 's/'\\\\''Farm not found\\\\.'\\\\''/$this->translationService->get\\('\\\\''farm_not_found'\\\\''\\)/g' e:/xampp/htdocs/eyt-master/app/Http/Controllers/Api/Add2Farm/FarmController.php)",
-      "Bash(sed -i 's/'\\\\''Farm created successfully\\\\.'\\\\''/$this->translationService->get\\('\\\\''farm_created_successfully'\\\\''\\)/g' e:/xampp/htdocs/eyt-master/app/Http/Controllers/Api/Add2Farm/FarmController.php)"
+      "Bash(sed -i 's/'\\\\''Farm created successfully\\\\.'\\\\''/$this->translationService->get\\('\\\\''farm_created_successfully'\\\\''\\)/g' e:/xampp/htdocs/eyt-master/app/Http/Controllers/Api/Add2Farm/FarmController.php)",
+      "PowerShell(cd \"e:\\\\xampp\\\\htdocs\\\\eyt-master\"; php -r \"require 'vendor/autoload.php'; require 'bootstrap/app.php'; \\\\$countries = \\\\App\\\\Models\\\\Country::select\\('name', 'dial_code'\\)->limit\\(5\\)->get\\(\\); \\\\$countries->each\\(function\\(\\\\$c\\) { echo \\\\$c->name . ' => ' . \\\\$c->dial_code . \\\\\"\\\\n\\\\\"; }\\);\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\Dell\\Desktop",

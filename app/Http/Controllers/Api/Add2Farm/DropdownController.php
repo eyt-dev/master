@@ -40,15 +40,6 @@ class DropdownController extends BaseController
      */
     public function farms()
     {
-        $user = auth()->user();
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => $this->translationService->get('user_not_authenticated'),
-            ], 401);
-        }
-
         $farms = Farm::select('id', 'name')
             ->orderBy('name')
             ->get();
@@ -88,15 +79,6 @@ class DropdownController extends BaseController
      */
     public function suppliers()
     {
-        $user = auth()->user();
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => $this->translationService->get('user_not_authenticated'),
-            ], 401);
-        }
-
         $suppliers = ChicksSupplier::select('id', 'name')
             ->orderBy('name')
             ->get();
@@ -139,13 +121,6 @@ class DropdownController extends BaseController
     public function supervisors()
     {
         $user = auth()->user();
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => $this->translationService->get('user_not_authenticated'),
-            ], 401);
-        }
 
         // Determine supervisor type based on logged-in user's type
         $supervisorType = match($user->type) {

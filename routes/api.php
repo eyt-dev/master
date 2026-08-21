@@ -96,6 +96,8 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
         Route::get('/', [Add2FarmProfileController::class, 'show']);
         Route::put('/', [Add2FarmProfileController::class, 'update']);
         Route::put('change-password', [Add2FarmProfileController::class, 'changePassword']);
+        Route::get('settings', [Add2FarmProfileController::class, 'getSettings']);
+        Route::put('settings', [Add2FarmProfileController::class, 'updateSettings']);
     });
 
     // Supervisors (Type 3) - Only Type 1 (Farm Admin) can access

@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use App\Models\CountryRegion;
+use App\Models\Country;
 use App\Models\Contact;
 use App\Models\Project;
 use App\Models\AdminProjectStatus;
@@ -154,7 +155,7 @@ class AdminController extends Controller
      */
     public function create($siteUrl, $type = null)
     {
-        $countries = CountryRegion::orderBy('name')->get();
+        $countries = Country::orderBy('name')->get();
         $projects = $this->getProjectsForAdmin();
         return view('backend.admins.create', ['admin' => new Admin(), 'type' => $type, 'countries' => $countries, 'projects' => $projects]);
     }
@@ -175,6 +176,7 @@ class AdminController extends Controller
             'mobile_number' => 'nullable|string|max:20|unique:admins,mobile_number',
             'vat_country_code' => 'nullable',
             'vat_number' => 'nullable',
+            'phone_code' => 'nullable|string|max:10',
             'notes' => 'nullable|string|max:1000',
             'image' => 'nullable|image|mimes:jpeg,png,gif|max:2048',
             'project_id' => 'nullable|exists:projects,id',
@@ -228,6 +230,7 @@ class AdminController extends Controller
             }
 
             // Add optional fields for all types
+            $addData['phone_code'] = $request->phone_code;
             $addData['mobile_number'] = $request->mobile_number;
             $addData['notes'] = $request->notes ?? null;
             $addData['image'] = $imagePath;
@@ -319,9 +322,9 @@ class AdminController extends Controller
      */
     public function edit($siteUrl, $id)
     {
-        $admin = Admin::findOrFail($id); 
-        $countries = CountryRegion::orderBy('name')->get();
-     
+        $admin = Admin::findOrFail($id);
+        $countries = Country::orderBy('name')->get();
+
        if(empty($admin)){
             return redirect()->route('admins.index', ['username' => request()->get('username', request()->segment(1))]);
         }
@@ -352,6 +355,7 @@ class AdminController extends Controller
             'email' => 'required|email|unique:admins,email,' . $id,
             'vat_country_code' => 'nullable',
             'vat_number' => 'nullable',
+            'phone_code' => 'nullable|string|max:10',
             'password' => 'nullable|min:6',
             'mobile_number' => 'nullable|string|max:20|unique:admins,mobile_number,' . $id,
             'notes' => 'nullable|string|max:1000',
@@ -381,6 +385,7 @@ class AdminController extends Controller
             }
 
             // Add optional fields for all types
+            $updateData['phone_code'] = $request->phone_code;
             $updateData['mobile_number'] = $request->mobile_number;
             $updateData['notes'] = $request->notes ?? $admin->notes;
 

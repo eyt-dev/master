@@ -28,8 +28,8 @@ class Admin extends Authenticatable
      */
     protected $fillable = [
         'name', 'email', 'password', 'type', 'status', 'created_by', 'username', 'parent_id',
-        'vat_country_code', 'vat_number', 'created_from', 'url', 'project_id',
-        'mobile_number', 'otp', 'otp_expires_at', 'otp_verified_at', 'notes', 'image'
+        'vat_country_code', 'vat_number', 'phone_code', 'created_from', 'url', 'project_id',
+        'mobile_number', 'otp', 'otp_expires_at', 'otp_verified_at', 'notes', 'image', 'language', 'country_id'
     ];
 
     /**
@@ -68,6 +68,11 @@ class Admin extends Authenticatable
     public function project()
     {
         return $this->belongsTo(Project::class, 'project_id');
+    }
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class, 'country_id');
     }
 
     public function projectStatuses()

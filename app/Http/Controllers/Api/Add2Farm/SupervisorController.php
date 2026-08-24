@@ -325,10 +325,10 @@ class SupervisorController extends BaseController
         }
 
         $validator = Validator::make($request->all(), [
-            'name'            => 'required|string|max:255',
+            'name'            => 'sometimes|required|string|max:255',
             'mobile_number'   => 'nullable|string|max:20|unique:admins,mobile_number,' . $admin->id,
             'email'           => 'nullable|email|max:255|unique:admins,email,' . $admin->id,
-            'status'          => 'required|in:Active,Inactive,Disable',
+            'status'          => 'sometimes|required|in:Active,Inactive,Disable',
             'notes'           => 'nullable|string|max:1000',
             'image'           => 'nullable|image|mimes:jpeg,png,gif|max:2048',
             'farm_id'         => 'nullable|integer|exists:farms,id',
@@ -345,11 +345,22 @@ class SupervisorController extends BaseController
             DB::beginTransaction();
 
             // Handle image upload
-            $updateData = [
-                'name'   => $request->name,
-                'email'  => $request->email ?? $admin->email,
-                'status' => $request->status,
-            ];
+            $updateData = [];
+
+            // Add name if provided
+            if ($request->filled('name')) {
+                $updateData['name'] = $request->name;
+            }
+
+            // Add email if provided
+            if ($request->filled('email')) {
+                $updateData['email'] = $request->email;
+            }
+
+            // Add status if provided
+            if ($request->filled('status')) {
+                $updateData['status'] = $request->status;
+            }
 
             // Add mobile_number if provided
             if ($request->filled('mobile_number')) {
@@ -404,7 +415,8 @@ class SupervisorController extends BaseController
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update supervisor.',
+                'message' => $this->translationService->get('operation_failed'),
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }

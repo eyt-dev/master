@@ -374,9 +374,9 @@ class FarmerController extends BaseController
         }
 
         $validator = Validator::make($request->all(), [
-            'name'    => 'required|string|max:255',
+            'name'    => 'sometimes|required|string|max:255',
             'email'   => 'nullable|email|max:255|unique:admins,email,' . $admin->id,
-            'status'  => 'required|in:Active,Inactive,Disable',
+            'status'  => 'sometimes|required|in:Active,Inactive,Disable',
             'notes'   => 'nullable|string|max:1000',
             'image'   => 'nullable|image|mimes:jpeg,png,gif|max:2048',
             'project_rows' => 'nullable|array',
@@ -408,12 +408,23 @@ class FarmerController extends BaseController
         try {
             DB::beginTransaction();
 
-            // Handle image upload
-            $updateData = [
-                'name'   => $request->name,
-                'email'  => $request->email ?? $admin->email,
-                'status' => $request->status,
-            ];
+            // Build update data with only provided fields
+            $updateData = [];
+
+            // Add name if provided
+            if ($request->filled('name')) {
+                $updateData['name'] = $request->name;
+            }
+
+            // Add email if provided
+            if ($request->filled('email')) {
+                $updateData['email'] = $request->email;
+            }
+
+            // Add status if provided
+            if ($request->filled('status')) {
+                $updateData['status'] = $request->status;
+            }
 
             // Add notes if provided
             if ($request->filled('notes')) {

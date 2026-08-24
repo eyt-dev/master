@@ -75,7 +75,7 @@ class AuthController extends Controller
             $admin = Admin::create([
                 'mobile_number' => $request->mobile_number,
                 'password'      => Hash::make($request->password),
-                'type'          => Admin::PRIVATE_VENDOR,
+                'type'          => $request->type,
                 'status'        => 'Inactive',
                 'name'          => $request->name ?? 'Add2Farm User',
                 'created_from'  => 3,

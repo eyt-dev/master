@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
+use App\Helpers\ProjectHelper;
 
 /**
  * @group Add2Farm Supervisors (Type 3)
@@ -233,12 +234,15 @@ class SupervisorController extends BaseController
                 $admin->assignRole($role);
             }
 
-            // Auto-assign to Add2Farm project (ID: 8) with Active status
-            AdminProjectStatus::create([
-                'admin_id'   => $admin->id,
-                'project_id' => 8, // Add2Farm project
-                'status'     => 'Active',
-            ]);
+            // Auto-assign to Add2Farm project with Active status
+            $add2FarmProjectId = ProjectHelper::getAdd2FarmProjectId();
+            if ($add2FarmProjectId) {
+                AdminProjectStatus::create([
+                    'admin_id'   => $admin->id,
+                    'project_id' => $add2FarmProjectId,
+                    'status'     => 'Active',
+                ]);
+            }
 
             // Assign supervisor to farm if farm_id provided
             if ($request->filled('farm_id')) {

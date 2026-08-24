@@ -60,6 +60,7 @@ return [
         'daily_records_retrieved_successfully' => 'تم استرجاع السجلات اليومية بنجاح.',
         'daily_record_retrieved_successfully' => 'تم استرجاع السجل اليومي بنجاح.',
         'suppliers_retrieved_successfully' => 'تم استرجاع قائمة الموردين بنجاح.',
+        'project_access_not_active' => 'الوصول الخاص بك إلى مشروع Add2Farm غير نشط. يرجى التواصل مع مسؤول النظام لتفعيل المشروع.',
     ],
 
     // Type labels

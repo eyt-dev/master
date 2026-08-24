@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Laravel\Sanctum\PersonalAccessToken;
 use App\Services\Add2Farm\TranslationService;
+use App\Helpers\ProjectHelper;
 
 /**
  * @group Add2Farm Authentication
@@ -114,6 +115,11 @@ class AuthController extends Controller
      * Login user with mobile number and password
      *
      * Authenticate using mobile number and password.
+     * Requires:
+     * - Valid credentials (mobile number + password)
+     * - Account status must be Active (not Disable)
+     * - User must have Active project assignment to Add2Farm
+     *
      * OTP is generated and sent. User must verify OTP to obtain auth token.
      *
      * @unauthenticated
@@ -130,7 +136,7 @@ class AuthController extends Controller
      * }
      * @response 403 {
      *   "success": false,
-     *   "message": "Your account has been disabled."
+     *   "message": "Your account has been disabled. OR Your access to Add2Farm project is not active."
      * }
      */
     public function login(Request $request)
@@ -162,6 +168,28 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $this->translationService->get('account_disabled'),
+            ], 403);
+        }
+
+        // Check if admin has active project assignment to Add2Farm
+        $add2FarmProjectId = ProjectHelper::getAdd2FarmProjectId();
+
+        if (!$add2FarmProjectId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Add2Farm project configuration not found. Please contact administrator.',
+            ], 500);
+        }
+
+        $projectStatus = \App\Models\AdminProjectStatus::where('admin_id', $admin->id)
+            ->where('project_id', $add2FarmProjectId)
+            ->where('status', 'Active')
+            ->first();
+
+        if (!$projectStatus) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('project_access_not_active'),
             ], 403);
         }
 

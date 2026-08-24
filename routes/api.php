@@ -119,7 +119,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
     });
 
     // Farms - Type 2 (Farm Owner) and Type 3 (Supervisor) can access
-    Route::middleware(['auth:sanctum', 'check.admin.type:2,3'])->group(function () {
+    Route::middleware(['auth:sanctum', 'check.admin.type:1,2,3'])->group(function () {
         Route::get('farms', [Add2FarmFarmController::class, 'index']);
         Route::post('farms', [Add2FarmFarmController::class, 'store']);
         Route::get('farms/{farm}', [Add2FarmFarmController::class, 'show']);

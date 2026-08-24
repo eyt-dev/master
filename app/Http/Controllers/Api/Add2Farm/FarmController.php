@@ -17,9 +17,12 @@ use Illuminate\Support\Facades\DB;
 class FarmController extends BaseController
 {
     /**
-     * List all farms
+     * List farms for current user
      *
-     * Get paginated list of all farms with search and filtering.
+     * Get paginated list of farms created by the user or assigned to them as supervisor.
+     * - Type 2 (Farm Owner) sees: farms they created
+     * - Type 3 (Supervisor) sees: farms where they are assigned
+     *
      * Accessible to Type 2 (Farm Owner) and Type 3 (Supervisor).
      *
      * @authenticated
@@ -54,12 +57,23 @@ class FarmController extends BaseController
      */
     public function index(Request $request)
     {
-        // Get total, active, and inactive farm counts
-        $totalFarms = Farm::count();
-        $activeFarms = Farm::whereHas('flocks')->count();
+        $user = auth()->user();
+
+        // Filter by user's own farms or assigned farms
+        // Type 2 (Farm Owner) sees farms they created
+        // Type 3 (Supervisor) sees farms where they are assigned
+        $userFarms = Farm::where(function ($q) use ($user) {
+            $q->where('created_by', $user->id)
+              ->orWhere('assigned_to', $user->id);
+        });
+
+        // Get total, active, and inactive farm counts for this user
+        $totalFarms = (clone $userFarms)->count();
+        $activeFarms = (clone $userFarms)->whereHas('flocks')->count();
         $inactiveFarms = $totalFarms - $activeFarms;
 
-        $farms = Farm::when($request->search, function ($q) use ($request) {
+        $farms = (clone $userFarms)
+            ->when($request->search, function ($q) use ($request) {
                 return $q->where('name', 'like', "%{$request->search}%")
                     ->orWhere('location', 'like', "%{$request->search}%");
             })

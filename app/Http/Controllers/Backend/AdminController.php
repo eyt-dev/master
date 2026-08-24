@@ -480,6 +480,9 @@ class AdminController extends Controller
                 });
             }
 
+            // Get all projects for dynamic columns
+            $allProjects = $this->getAllProjects();
+
             return datatables()->of($query->select('*'))
                 ->addColumn('mobile_number', function($row) {
                     return $row->mobile_number ?? 'N/A';
@@ -495,6 +498,25 @@ class AdminController extends Controller
                     }
                     return '<div style="height: 40px; width: 40px; border-radius: 50%; background: #ddd; display: flex; align-items: center; justify-content: center;"><i class="fa fa-user"></i></div>';
                 })
+                ->addColumn('project_statuses_json', function ($row) use ($allProjects) {
+                    try {
+                        $statuses = [];
+                        foreach ($allProjects as $project) {
+                            $projectStatus = $row->projectStatuses->firstWhere('project_id', $project->id);
+                            $statuses[$project->id] = $projectStatus?->status ?? null;
+                        }
+                        $json = json_encode($statuses);
+                        // Ensure it's valid JSON
+                        if (json_last_error() !== JSON_ERROR_NONE) {
+                            \Log::warning('JSON encoding error: ' . json_last_error_msg(), ['statuses' => $statuses]);
+                            return json_encode([]);
+                        }
+                        return $json;
+                    } catch (\Exception $e) {
+                        \Log::error('Error generating project_statuses_json: ' . $e->getMessage());
+                        return json_encode([]);
+                    }
+                })
                 ->addColumn('status', function($row) {
                     $statusClass = [
                         'Active' => 'badge-success',
@@ -508,25 +530,26 @@ class AdminController extends Controller
                 })
                 ->addColumn('action', function ($row) use ($admin) {
                     $btn = '';
-                    
+
                     // Allow edit/delete if user created the farmer or is super admin
                     if ($row->created_by == $admin->id || $admin->type == Admin::SUPER_ADMIN) {
-                        $btn .= '<a class="edit-admin edit_form btn btn-icon btn-success mr-1 white" 
-                                    data-path="' . route('admins.edit', ['username' => request()->get('username', request()->segment(1)), 'admin' => $row->id]) . '" 
-                                    data-name="' . $row->name . '" 
-                                    data-id=' . $row->id . ' title="Edit"> 
-                                    <i class="fa fa-edit"></i> 
+                        $btn .= '<a class="edit-admin edit_form btn btn-icon btn-success mr-1 white"
+                                    data-path="' . route('admins.edit', ['username' => request()->get('username', request()->segment(1)), 'admin' => $row->id]) . '"
+                                    data-name="' . $row->name . '"
+                                    data-id=' . $row->id . ' title="Edit">
+                                    <i class="fa fa-edit"></i>
                                 </a>';
-                        $btn .= '<a class="btn btn-icon btn-danger mr-1 white delete-admin" 
-                                    data-id="' . $row->id . '" title="Delete"> 
-                                    <i class="fa fa-trash-o"></i> 
+                        $btn .= '<a class="btn btn-icon btn-danger mr-1 white delete-admin"
+                                    data-id="' . $row->id . '" title="Delete">
+                                    <i class="fa fa-trash-o"></i>
                                 </a>';
                     }
-                    
+
                     return $btn;
                 })
-                ->rawColumns(['action', 'status', 'image_thumbnail'])
+                ->rawColumns(['action', 'status', 'image_thumbnail', 'project_statuses_json'])
                 ->addIndexColumn()
+                ->with('projects', $allProjects)
                 ->make(true);
         }
 

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 
 /**
@@ -224,11 +225,14 @@ class FarmerController extends BaseController
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
                 $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                
+
                 // Ensure directory exists
-                \Storage::disk('public')->makeDirectory('uploads/farmers', 0755, true);
-                $file->storeAs('uploads/farmers', $filename, 'public');
-                $imagePath = 'uploads/farmers/' . $filename;
+                $uploadDir = 'uploads/farmers';
+                if (!Storage::disk('public')->exists($uploadDir)) {
+                    Storage::disk('public')->makeDirectory($uploadDir, 0755, true);
+                }
+                $file->storeAs($uploadDir, $filename, 'public');
+                $imagePath = $uploadDir . '/' . $filename;
             }
 
             // Create farmer (Type 4)
@@ -419,17 +423,20 @@ class FarmerController extends BaseController
             // Handle image upload
             if ($request->hasFile('image')) {
                 // Delete old image if exists
-                if ($admin->image && \Storage::disk('public')->exists($admin->image)) {
-                    \Storage::disk('public')->delete($admin->image);
+                if ($admin->image && Storage::disk('public')->exists($admin->image)) {
+                    Storage::disk('public')->delete($admin->image);
                 }
 
                 $file = $request->file('image');
                 $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                
+
                 // Ensure directory exists
-                \Storage::disk('public')->makeDirectory('uploads/farmers', 0755, true);
-                $file->storeAs('uploads/farmers', $filename, 'public');
-                $updateData['image'] = 'uploads/farmers/' . $filename;
+                $uploadDir = 'uploads/farmers';
+                if (!Storage::disk('public')->exists($uploadDir)) {
+                    Storage::disk('public')->makeDirectory($uploadDir, 0755, true);
+                }
+                $file->storeAs($uploadDir, $filename, 'public');
+                $updateData['image'] = $uploadDir . '/' . $filename;
             }
 
             // Update farmer details (excluding type and mobile_number)

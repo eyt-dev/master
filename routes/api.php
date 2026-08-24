@@ -152,4 +152,23 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
         Route::get('dropdowns/suppliers', [Add2FarmDropdownController::class, 'suppliers']);
         Route::get('dropdowns/supervisors', [Add2FarmDropdownController::class, 'supervisors']);
     });
+
+    // File serving route - Public access to uploaded images
+    Route::get('files/{path}', function ($path) {
+        $filePath = storage_path('app/public/' . urldecode($path));
+
+        // Security check - ensure the file is within the allowed directory
+        $realPath = realpath($filePath);
+        $allowedPath = realpath(storage_path('app/public'));
+
+        if (!$realPath || strpos($realPath, $allowedPath) !== 0) {
+            abort(404, 'File not found');
+        }
+
+        if (!file_exists($filePath)) {
+            abort(404, 'File not found');
+        }
+
+        return response()->file($filePath);
+    })->where('path', '.*')->name('api.files');
 });

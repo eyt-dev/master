@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('admins', function (Blueprint $table) {
-            $table->string('language')->nullable()->default('en')->after('phone_code');
+            $table->string('language')->nullable()->default('en')->after('vat_number');
             $table->unsignedBigInteger('country_id')->nullable()->after('language');
             $table->foreign('country_id')->references('id')->on('countries')->onDelete('set null');
         });

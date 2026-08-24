@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 
 /**
@@ -115,7 +116,7 @@ class SupervisorController extends BaseController
     public function show($id)
     {
         $admin = Admin::where('type', self::ADMIN_TYPE)
-            ->with('creator', 'projectStatuses')
+            ->with('creator')
             ->find($id);
 
         if (!$admin) {
@@ -126,13 +127,6 @@ class SupervisorController extends BaseController
         }
 
         $data = $this->formatAdmin($admin);
-        $data['project_statuses'] = $admin->projectStatuses->map(function ($ps) {
-            return [
-                'id' => $ps->id,
-                'project_id' => $ps->project_id,
-                'status' => $ps->status,
-            ];
-        });
 
         return response()->json([
             'success' => true,
@@ -146,6 +140,7 @@ class SupervisorController extends BaseController
      *
      * Create a new Type 3 (Supervisor) admin account.
      * Type is automatically set to 3 and cannot be changed.
+     * Supervisor is automatically assigned to Add2Farm project.
      *
      * @authenticated
      * @bodyParam name string required Supervisor's full name. Example: John Supervisor
@@ -155,7 +150,7 @@ class SupervisorController extends BaseController
      * @bodyParam password_confirmation string required Password confirmation. Example: password123
      * @bodyParam notes string optional Optional notes about the supervisor. Example: Senior supervisor with 10 years experience
      * @bodyParam image file optional Profile image (jpeg, png, gif). Max 2MB. Example: (binary)
-     * @bodyParam project_rows array optional Array of project assignments. Example: [{"project_id": 1, "status": "Active"}]
+     * @bodyParam farm_id integer optional Farm ID to assign this supervisor to. Example: 1
      *
      * @response 201 {
      *   "success": true,
@@ -169,6 +164,8 @@ class SupervisorController extends BaseController
      *     "status": "Active",
      *     "notes": "Senior supervisor with 10 years experience",
      *     "image": "supervisor_image_123.jpg",
+     *     "farm_id": 1,
+     *     "farm_name": "Main Farm",
      *     "created_at": "2026-08-07T10:30:00Z"
      *   }
      * }
@@ -188,9 +185,7 @@ class SupervisorController extends BaseController
             'password'        => 'required|string|min:8|confirmed',
             'notes'           => 'nullable|string|max:1000',
             'image'           => 'nullable|image|mimes:jpeg,png,gif|max:2048',
-            'project_rows'    => 'nullable|array',
-            'project_rows.*.project_id' => 'nullable|exists:projects,id',
-            'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
+            'farm_id'         => 'nullable|integer|exists:farms,id',
         ]);
 
         if ($validator->fails()) {
@@ -208,11 +203,14 @@ class SupervisorController extends BaseController
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
                 $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                
+
                 // Ensure directory exists
-                \Storage::disk('public')->makeDirectory('uploads/supervisors', 0755, true);
-                $file->storeAs('uploads/supervisors', $filename, 'public');
-                $imagePath = 'uploads/supervisors/' . $filename;
+                $uploadDir = 'uploads/supervisors';
+                if (!Storage::disk('public')->exists($uploadDir)) {
+                    Storage::disk('public')->makeDirectory($uploadDir, 0755, true);
+                }
+                $file->storeAs($uploadDir, $filename, 'public');
+                $imagePath = $uploadDir . '/' . $filename;
             }
 
             // Create supervisor (Type 3)
@@ -235,19 +233,18 @@ class SupervisorController extends BaseController
                 $admin->assignRole($role);
             }
 
-            // Create project status records if provided
-            if ($request->filled('project_rows')) {
-                $projectRows = array_filter($request->project_rows, function ($row) {
-                    return !empty($row['project_id']);
-                });
+            // Auto-assign to Add2Farm project (ID: 8) with Active status
+            AdminProjectStatus::create([
+                'admin_id'   => $admin->id,
+                'project_id' => 8, // Add2Farm project
+                'status'     => 'Active',
+            ]);
 
-                foreach ($projectRows as $row) {
-                    AdminProjectStatus::create([
-                        'admin_id'   => $admin->id,
-                        'project_id' => $row['project_id'],
-                        'status'     => $row['status'] ?? 'Active',
-                    ]);
-                }
+            // Assign supervisor to farm if farm_id provided
+            if ($request->filled('farm_id')) {
+                \App\Models\Farm::findOrFail($request->farm_id)->update([
+                    'assigned_to' => $admin->id,
+                ]);
             }
 
             DB::commit();
@@ -324,14 +321,13 @@ class SupervisorController extends BaseController
         }
 
         $validator = Validator::make($request->all(), [
-            'name'    => 'required|string|max:255',
-            'email'   => 'nullable|email|max:255|unique:admins,email,' . $admin->id,
-            'status'  => 'required|in:Active,Inactive,Disable',
-            'notes'   => 'nullable|string|max:1000',
-            'image'   => 'nullable|image|mimes:jpeg,png,gif|max:2048',
-            'project_rows' => 'nullable|array',
-            'project_rows.*.project_id' => 'nullable|exists:projects,id',
-            'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
+            'name'            => 'required|string|max:255',
+            'mobile_number'   => 'nullable|string|max:20|unique:admins,mobile_number,' . $admin->id,
+            'email'           => 'nullable|email|max:255|unique:admins,email,' . $admin->id,
+            'status'          => 'required|in:Active,Inactive,Disable',
+            'notes'           => 'nullable|string|max:1000',
+            'image'           => 'nullable|image|mimes:jpeg,png,gif|max:2048',
+            'farm_id'         => 'nullable|integer|exists:farms,id',
         ]);
 
         if ($validator->fails()) {
@@ -351,6 +347,11 @@ class SupervisorController extends BaseController
                 'status' => $request->status,
             ];
 
+            // Add mobile_number if provided
+            if ($request->filled('mobile_number')) {
+                $updateData['mobile_number'] = $request->mobile_number;
+            }
+
             // Add notes if provided
             if ($request->filled('notes')) {
                 $updateData['notes'] = $request->notes;
@@ -359,39 +360,30 @@ class SupervisorController extends BaseController
             // Handle image upload
             if ($request->hasFile('image')) {
                 // Delete old image if exists
-                if ($admin->image && \Storage::disk('public')->exists($admin->image)) {
-                    \Storage::disk('public')->delete($admin->image);
+                if ($admin->image && Storage::disk('public')->exists($admin->image)) {
+                    Storage::disk('public')->delete($admin->image);
                 }
 
                 $file = $request->file('image');
                 $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                
+
                 // Ensure directory exists
-                \Storage::disk('public')->makeDirectory('uploads/supervisors', 0755, true);
-                $file->storeAs('uploads/supervisors', $filename, 'public');
-                $updateData['image'] = 'uploads/supervisors/' . $filename;
+                $uploadDir = 'uploads/supervisors';
+                if (!Storage::disk('public')->exists($uploadDir)) {
+                    Storage::disk('public')->makeDirectory($uploadDir, 0755, true);
+                }
+                $file->storeAs($uploadDir, $filename, 'public');
+                $updateData['image'] = $uploadDir . '/' . $filename;
             }
 
             // Update supervisor details (excluding type and mobile_number)
             $admin->update($updateData);
 
-            // Update project statuses if provided
-            if ($request->filled('project_rows')) {
-                // Delete existing project statuses
-                $admin->projectStatuses()->delete();
-
-                // Create new ones
-                $projectRows = array_filter($request->project_rows, function ($row) {
-                    return !empty($row['project_id']);
-                });
-
-                foreach ($projectRows as $row) {
-                    AdminProjectStatus::create([
-                        'admin_id'   => $admin->id,
-                        'project_id' => $row['project_id'],
-                        'status'     => $row['status'] ?? 'Active',
-                    ]);
-                }
+            // Assign supervisor to farm if farm_id provided
+            if ($request->filled('farm_id')) {
+                \App\Models\Farm::findOrFail($request->farm_id)->update([
+                    'assigned_to' => $admin->id,
+                ]);
             }
 
             DB::commit();
@@ -476,6 +468,14 @@ class SupervisorController extends BaseController
      */
     private function formatAdmin(Admin $admin): array
     {
+        $imageUrl = null;
+        if ($admin->image) {
+            $imageUrl = route('api.files', ['path' => $admin->image]);
+        }
+
+        // Load assigned farm if exists
+        $farm = \App\Models\Farm::where('assigned_to', $admin->id)->first();
+
         return [
             'id'            => $admin->id,
             'name'          => $admin->name,
@@ -487,6 +487,9 @@ class SupervisorController extends BaseController
             'status_label'  => $this->getStatusLabel($admin->status),
             'notes'         => $admin->notes ?? null,
             'image'         => $admin->image ?? null,
+            'image_url'     => $imageUrl,
+            'farm_id'       => $farm?->id ?? null,
+            'farm_name'     => $farm?->name ?? null,
             'created_by_name' => $admin->creator?->name ?? null,
             'created_at'    => $admin->created_at,
         ];

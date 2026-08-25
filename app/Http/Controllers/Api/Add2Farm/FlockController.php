@@ -53,6 +53,22 @@ class FlockController extends BaseController
     {
         $user = auth()->user();
 
+        // Calculate total_qty and total_farms for available flocks
+        $allFlocks = Flock::whereHas('farm', function ($q) use ($user) {
+                $q->where(function ($q) use ($user) {
+                    $q->where('created_by', $user->id)
+                      ->orWhere('assigned_to', $user->id);
+                });
+            })
+            ->when($request->farm_id, function ($q) use ($request) {
+                return $q->where('farm_id', $request->farm_id);
+            })
+            ->select('id', 'farm_id', 'total_quantity')
+            ->get();
+
+        $totalQty = $allFlocks->sum('total_quantity');
+        $totalFarms = $allFlocks->pluck('farm_id')->unique()->count();
+
         $flocks = Flock::whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
@@ -62,24 +78,19 @@ class FlockController extends BaseController
             ->when($request->farm_id, function ($q) use ($request) {
                 return $q->where('farm_id', $request->farm_id);
             })
-            ->with('farm')
+            ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar')
             ->orderBy('name', 'asc')
             ->get();
 
         $data = $flocks->map(function ($flock) {
-            return [
-                'flock_id' => $flock->id,
-                'flock_name' => $flock->name,
-                'farm' => [
-                    'farm_id' => $flock->farm?->id,
-                    'farm_name' => $flock->farm?->name,
-                ]
-            ];
+            return $this->formatFlock($flock);
         });
 
         return response()->json([
             'success' => true,
             'message' => 'Available flocks retrieved successfully.',
+            'total_qty' => $totalQty,
+            'total_farms' => $totalFarms,
             'data' => $data,
         ]);
     }

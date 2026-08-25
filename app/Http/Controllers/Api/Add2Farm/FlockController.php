@@ -745,6 +745,7 @@ class FlockController extends BaseController
             'breed'                 => $flock->breed,
             'start_date'            => $flock->start_date?->format('Y-m-d'),
             'end_date'              => now()->format('Y-m-d'),
+            'status'                => 'Active',
             'age'                   => 'Day0',
             'avg_weight'            => '1.85 kg',
             'total_quantity'        => $flock->total_quantity,

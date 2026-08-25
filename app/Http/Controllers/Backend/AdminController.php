@@ -89,6 +89,28 @@ class AdminController extends Controller
             $allProjects = $this->getAllProjects();
 
             return datatables()->of($query->select('*'))
+                ->addColumn('mobile_with_code', function ($row) {
+                    $phoneCode = $row->phone_code ?? '';
+                    $mobileNumber = $row->mobile_number ?? '';
+
+                    if ($phoneCode && $mobileNumber) {
+                        // Normalize phone code to always have + prefix
+                        $normalizedPhoneCode = $phoneCode;
+                        if (!str_starts_with($phoneCode, '+')) {
+                            $normalizedPhoneCode = '+' . $phoneCode;
+                        }
+                        return $normalizedPhoneCode . ' ' . $mobileNumber;
+                    } elseif ($mobileNumber) {
+                        return $mobileNumber;
+                    } elseif ($phoneCode) {
+                        // Normalize phone code to always have + prefix
+                        if (!str_starts_with($phoneCode, '+')) {
+                            return '+' . $phoneCode;
+                        }
+                        return $phoneCode;
+                    }
+                    return 'N/A';
+                })
                 ->addColumn('created_by_name', function ($row) {
                     return ucfirst($row->parent_id != null ? ($row->parent->username ?? 'N/A') :  ($row->creator->username ?? 'N/A'));
                 })
@@ -124,7 +146,7 @@ class AdminController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_by_name', 'project_statuses_json'])
+                ->rawColumns(['action', 'created_by_name', 'project_statuses_json', 'mobile_with_code'])
                 ->addIndexColumn()
                 ->with('projects', $allProjects)
                 ->make(true);

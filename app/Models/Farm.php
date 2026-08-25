@@ -13,6 +13,7 @@ class Farm extends Model
         'name',
         'location',
         'type',
+        'phone_code',
         'mobile_number',
         'number_of_hangars',
         'assigned_to',
@@ -40,5 +41,18 @@ class Farm extends Model
     public function flocks()
     {
         return $this->hasMany(Flock::class, 'farm_id');
+    }
+
+    public function getFullPhoneNumber(): ?string
+    {
+        if (!$this->mobile_number) {
+            return null;
+        }
+
+        if ($this->phone_code) {
+            return $this->phone_code . $this->mobile_number;
+        }
+
+        return $this->mobile_number;
     }
 }

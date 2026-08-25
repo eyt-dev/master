@@ -303,11 +303,12 @@ class ProfileController extends Controller
             'name'          => $user->name,
             'email'         => $user->email,
             'username'      => $user->username,
-            'mobile_number' => $user->mobile_number,
+            'mobile_number' => $user->getFullPhoneNumber(),
             'type'          => $user->type,
             'type_label'    => $this->getTypeLabel($user->type),
             'status'        => $user->status,
             'status_label'  => $this->getStatusLabel($user->status),
+            'assignment'    => $user->hasAssignment(),
             'created_by_name' => $user->creator?->name ?? null,
         ];
     }

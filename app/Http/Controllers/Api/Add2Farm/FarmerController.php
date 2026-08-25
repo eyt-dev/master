@@ -57,6 +57,7 @@ class FarmerController extends BaseController
     public function index(Request $request)
     {
         $farmers = Admin::where('type', self::ADMIN_TYPE)
+            ->where('created_by', auth()->id())
             ->when($request->search, function ($q) use ($request) {
                 return $q->where('name', 'like', "%{$request->search}%")
                     ->orWhere('mobile_number', 'like', "%{$request->search}%");
@@ -117,6 +118,7 @@ class FarmerController extends BaseController
     public function show($id)
     {
         $admin = Admin::where('type', self::ADMIN_TYPE)
+            ->where('created_by', auth()->id())
             ->with('creator', 'projectStatuses')
             ->find($id);
 
@@ -149,13 +151,13 @@ class FarmerController extends BaseController
      * Create a new Type 4 (Farmer) admin account.
      * Type is automatically set to 4 and cannot be changed.
      * Type 2 (Farm Owner) can only assign 1 project per farmer.
+     * Default password: "Password123" (will be set automatically, no need to provide)
      *
      * @authenticated
      * @bodyParam name string required Farmer's full name. Example: John Farmer
-     * @bodyParam mobile_number string required Unique mobile number with country code. Example: +1987654321
+     * @bodyParam phone_code string required Phone country code. Example: +1
+     * @bodyParam mobile_number string required Unique mobile number (without country code). Example: 1987654321
      * @bodyParam email string optional Email address. Example: john@example.com
-     * @bodyParam password string required Password (min 8 characters). Example: password123
-     * @bodyParam password_confirmation string required Password confirmation. Example: password123
      * @bodyParam notes string optional Optional notes about the farmer. Example: Experienced farmer with 5 years background
      * @bodyParam image file optional Profile image (jpeg, png, gif). Max 2MB. Example: (binary)
      * @bodyParam project_rows array optional Array of project assignments. Type 2 can assign max 1. Example: [{"project_id": 1, "status": "Active"}]
@@ -186,9 +188,9 @@ class FarmerController extends BaseController
     {
         $validator = Validator::make($request->all(), [
             'name'            => 'required|string|max:255',
+            'phone_code'      => 'required|string|max:10',
             'mobile_number'   => 'required|string|max:20|unique:admins,mobile_number',
             'email'           => 'nullable|email|max:255|unique:admins,email',
-            'password'        => 'required|string|min:8|confirmed',
             'notes'           => 'nullable|string|max:1000',
             'image'           => 'nullable|image|mimes:jpeg,png,gif|max:2048',
             'project_rows'    => 'nullable|array',
@@ -238,9 +240,10 @@ class FarmerController extends BaseController
             // Create farmer (Type 4)
             $admin = Admin::create([
                 'name'           => $request->name,
+                'phone_code'     => $request->phone_code,
                 'mobile_number'  => $request->mobile_number,
                 'email'          => $request->email ?? 'farmer-' . uniqid() . '@add2farm.local',
-                'password'       => Hash::make($request->password),
+                'password'       => Hash::make('Password123'),
                 'type'           => self::ADMIN_TYPE,
                 'status'         => 'Active',
                 'notes'          => $request->notes ?? null,
@@ -253,6 +256,16 @@ class FarmerController extends BaseController
             $role = Role::where('name', 'Farmer')->first();
             if ($role) {
                 $admin->assignRole($role);
+            }
+
+            // Auto-assign to Add2Farm project with Active status
+            $add2FarmProjectId = \App\Helpers\ProjectHelper::getAdd2FarmProjectId();
+            if ($add2FarmProjectId) {
+                AdminProjectStatus::create([
+                    'admin_id'   => $admin->id,
+                    'project_id' => $add2FarmProjectId,
+                    'status'     => 'Active',
+                ]);
             }
 
             // Create project status records if provided
@@ -292,42 +305,14 @@ class FarmerController extends BaseController
     /**
      * Update a farmer
      *
-     * Update farmer information. Type cannot be changed.
-     * Type 2 (Farm Owner) can only assign 1 project per farmer.
-     *
-     * @authenticated
-     * @urlParam id integer required The farmer ID. Example: 2
-     * @bodyParam name string required Farmer's full name. Example: John Farmer
-     * @bodyParam email string optional Email address. Example: john@example.com
-     * @bodyParam status string required Account status (Active, Inactive, Disable). Example: Active
-     * @bodyParam project_rows array optional Array of project assignments. Type 2 can assign max 1. Example: [{"project_id": 1, "status": "Active"}]
-     *
-     * @response 200 {
-     *   "success": true,
-     *   "message": "Farmer updated successfully.",
-     *   "data": {
-     *     "id": 2,
-     *     "name": "John Farmer Updated",
-     *     "mobile_number": "+1987654321",
-     *     "type": 4,
-     *     "type_label": "Farmers",
-     *     "status": "Active"
-     *   }
-     * }
-     * @response 404 {
-     *   "success": false,
-     *   "message": "Farmer not found."
-     * }
-     */
-    /**
-     * Update a farmer
-     *
      * Update farmer details including name, email, status and project assignments.
-     * Mobile number and type cannot be changed.
+     * Type cannot be changed. Password is not updatable.
      *
      * @authenticated
      * @urlParam id integer required The farmer ID. Example: 2
      * @bodyParam name string required Farmer's full name. Example: Jane Farmer Updated
+     * @bodyParam phone_code string optional Phone country code. Example: +1
+     * @bodyParam mobile_number string optional Mobile number (without country code). Example: 1987654321
      * @bodyParam email string optional Email address. Example: jane.updated@example.com
      * @bodyParam status string required Status (Active, Inactive, Disable). Example: Active
      * @bodyParam notes string optional Optional notes about the farmer. Example: Updated notes
@@ -364,7 +349,9 @@ class FarmerController extends BaseController
      */
     public function update(Request $request, $id)
     {
-        $admin = Admin::where('type', self::ADMIN_TYPE)->find($id);
+        $admin = Admin::where('type', self::ADMIN_TYPE)
+            ->where('created_by', auth()->id())
+            ->find($id);
 
         if (!$admin) {
             return response()->json([
@@ -375,6 +362,8 @@ class FarmerController extends BaseController
 
         $validator = Validator::make($request->all(), [
             'name'    => 'sometimes|required|string|max:255',
+            'phone_code' => 'nullable|string|max:10',
+            'mobile_number' => 'nullable|string|max:20|unique:admins,mobile_number,' . $admin->id,
             'email'   => 'nullable|email|max:255|unique:admins,email,' . $admin->id,
             'status'  => 'sometimes|required|in:Active,Inactive,Disable',
             'notes'   => 'nullable|string|max:1000',
@@ -414,6 +403,16 @@ class FarmerController extends BaseController
             // Add name if provided
             if ($request->filled('name')) {
                 $updateData['name'] = $request->name;
+            }
+
+            // Add phone_code if provided
+            if ($request->filled('phone_code')) {
+                $updateData['phone_code'] = $request->phone_code;
+            }
+
+            // Add mobile_number if provided
+            if ($request->filled('mobile_number')) {
+                $updateData['mobile_number'] = $request->mobile_number;
             }
 
             // Add email if provided
@@ -510,7 +509,9 @@ class FarmerController extends BaseController
      */
     public function destroy($id)
     {
-        $admin = Admin::where('type', self::ADMIN_TYPE)->find($id);
+        $admin = Admin::where('type', self::ADMIN_TYPE)
+            ->where('created_by', auth()->id())
+            ->find($id);
 
         if (!$admin) {
             return response()->json([
@@ -557,12 +558,13 @@ class FarmerController extends BaseController
         return [
             'id'            => $admin->id,
             'name'          => $admin->name,
-            'mobile_number' => $admin->mobile_number,
+            'mobile_number' => $admin->getFullPhoneNumber(),
             'email'         => $admin->email,
             'type'          => $admin->type,
             'type_label'    => $this->getTypeLabel($admin->type),
             'status'        => $admin->status,
             'status_label'  => $this->getStatusLabel($admin->status),
+            'assignment'    => $admin->hasAssignment(),
             'notes'         => $admin->notes ?? null,
             'image'         => $admin->image ?? null,
             'created_by_name' => $admin->creator?->name ?? null,

@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Farm;
 use App\Models\Admin;
+use App\Models\Country;
 use Illuminate\Support\Facades\Session;
 
 class FarmController extends Controller
@@ -52,16 +53,21 @@ class FarmController extends Controller
     public function create()
     {
         $user = auth()->user();
-        
+
         // Get supervisors based on logged-in user type
         $supervisorType = match($user->type) {
             2 => 4,  // type 2 users get type 4 supervisors
             1 => 3,  // type 1 users get type 3 supervisors
             default => 3,
         };
-        
+
         $admins = Admin::where('type', $supervisorType)->orderBy('name')->get();
-        return view('backend.farm.create', compact('admins'));
+        $countries = Country::select('id', 'name', 'dial_code')->orderBy('name')->get()
+            ->map(function ($country) {
+                $country->dial_code_with_plus = '+' . $country->dial_code;
+                return $country;
+            });
+        return view('backend.farm.create', compact('admins', 'countries'));
     }
 
     public function store(Request $request, $siteUrl)
@@ -72,6 +78,7 @@ class FarmController extends Controller
             'number_of_hangars' => 'required|numeric|min:1',
             'assigned_to' => 'required',
             'type' => 'required',
+            'phone_code' => 'nullable|string|max:10',
             'mobile_number' => 'nullable|string|max:20',
         ]);
 
@@ -81,6 +88,7 @@ class FarmController extends Controller
             'number_of_hangars' => $request->number_of_hangars,
             'assigned_to' => $request->assigned_to,
             'type' => $request->type,
+            'phone_code' => $request->phone_code,
             'mobile_number' => $request->mobile_number,
             'created_by' => auth()->id()
         ];
@@ -102,28 +110,34 @@ class FarmController extends Controller
     {
         $farm = Farm::findOrFail($id);
         $user = auth()->user();
-        
+
         // Get supervisors based on logged-in user type
         $supervisorType = match($user->type) {
             2 => 4,  // type 2 users get type 4 supervisors
             1 => 3,  // type 1 users get type 3 supervisors
             default => 3,
         };
-        
+
         $admins = Admin::where('type', $supervisorType)->orderBy('name')->get();
-        return view('backend.farm.create', compact('farm', 'admins'));
+        $countries = Country::select('id', 'name', 'dial_code')->orderBy('name')->get()
+            ->map(function ($country) {
+                $country->dial_code_with_plus = '+' . $country->dial_code;
+                return $country;
+            });
+        return view('backend.farm.create', compact('farm', 'admins', 'countries'));
     }
 
     public function update(Request $request, $siteUrl, $id)
     {
         $farm = Farm::findOrFail($id);
-        
+
         $validated = $request->validate([
             'name' => 'required|unique:farms,name,' . $farm->id,
             'location' => 'required',
             'number_of_hangars' => 'required|numeric|min:1',
             'assigned_to' => 'required',
             'type' => 'required',
+            'phone_code' => 'nullable|string|max:10',
             'mobile_number' => 'nullable|string|max:20',
         ]);
 
@@ -133,6 +147,7 @@ class FarmController extends Controller
             'number_of_hangars' => $request->number_of_hangars,
             'assigned_to' => $request->assigned_to,
             'type' => $request->type,
+            'phone_code' => $request->phone_code,
             'mobile_number' => $request->mobile_number,
         ]);
 

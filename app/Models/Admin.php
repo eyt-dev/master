@@ -214,4 +214,26 @@ class Admin extends Authenticatable
         return !$this->otp_expires_at || now()->isAfter($this->otp_expires_at);
     }
 
+    /**
+     * Get full phone number (phone_code + mobile_number)
+     * Returns format: "+91 09033487938" or just mobile_number if phone_code is missing
+     *
+     * @return string|null
+     */
+    public function getFullPhoneNumber(): ?string
+    {
+        if ($this->phone_code && $this->mobile_number) {
+            return $this->phone_code . ' ' . $this->mobile_number;
+        }
+        return $this->mobile_number;
+    }
+
+    public function hasAssignment(): int
+    {
+        return Farm::where(function ($q) {
+            $q->where('created_by', $this->id)
+              ->orWhere('assigned_to', $this->id);
+        })->exists() ? 1 : 0;
+    }
+
 }

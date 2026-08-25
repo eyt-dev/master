@@ -78,6 +78,7 @@
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Username</th>
+                                    <th>Mobile Number</th>
                                     <th>Type</th>
                                     <th>Created By</th>
                                     @foreach($projects as $project)
@@ -183,6 +184,12 @@
             { data: 'name', name: 'name' },
             { data: 'email', name: 'email' },
             { data: 'username', name: 'username' },
+            {
+                data: 'mobile_with_code',
+                name: 'mobile_with_code',
+                orderable: false,
+                searchable: false
+            },
             {
                 data: 'created_from',
                 name: 'created_from',

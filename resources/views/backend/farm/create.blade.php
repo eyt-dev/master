@@ -32,11 +32,29 @@
     </div>
 
     <div class="row">
+        <!-- Phone Code Dropdown -->
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="phone_code" class="form-label">Phone Code</label>
+                <select class="form-control" name="phone_code" id="phone_code">
+                    <option value="">Select Phone Code</option>
+                    @foreach($countries as $country)
+                        <option value="{{ $country->dial_code_with_plus }}" {{ old('phone_code', $farm->phone_code ?? '') == $country->dial_code_with_plus ? 'selected' : '' }}>
+                            {{ $country->name }} ({{ $country->dial_code_with_plus }})
+                        </option>
+                    @endforeach
+                </select>
+                @error('phone_code')
+                    <label id="phone_code-error" class="error" for="phone_code">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
+
         <!-- Mobile Number Textbox -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="mobile_number" class="form-label">Mobile Number</label>
-                <input type="text" class="form-control" name="mobile_number" id="mobile_number" placeholder="Mobile Number" 
+                <input type="text" class="form-control" name="mobile_number" id="mobile_number" placeholder="Mobile Number"
                     value="{{ old('mobile_number', $farm->mobile_number ?? '') }}" maxlength="20" />
                 @error('mobile_number')
                     <label id="mobile_number-error" class="error" for="mobile_number">{{ $message }}</label>

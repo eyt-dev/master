@@ -51,7 +51,15 @@ class FlockController extends BaseController
      */
     public function available(Request $request)
     {
-        $flocks = Flock::when($request->farm_id, function ($q) use ($request) {
+        $user = auth()->user();
+
+        $flocks = Flock::whereHas('farm', function ($q) use ($user) {
+                $q->where(function ($q) use ($user) {
+                    $q->where('created_by', $user->id)
+                      ->orWhere('assigned_to', $user->id);
+                });
+            })
+            ->when($request->farm_id, function ($q) use ($request) {
                 return $q->where('farm_id', $request->farm_id);
             })
             ->with('farm')
@@ -117,7 +125,15 @@ class FlockController extends BaseController
      */
     public function index(Request $request)
     {
-        $flocks = Flock::when($request->search, function ($q) use ($request) {
+        $user = auth()->user();
+
+        $flocks = Flock::whereHas('farm', function ($q) use ($user) {
+                $q->where(function ($q) use ($user) {
+                    $q->where('created_by', $user->id)
+                      ->orWhere('assigned_to', $user->id);
+                });
+            })
+            ->when($request->search, function ($q) use ($request) {
                 return $q->where('name', 'like', "%{$request->search}%");
             })
             ->when($request->farm_id, function ($q) use ($request) {
@@ -179,7 +195,15 @@ class FlockController extends BaseController
      */
     public function show($id)
     {
-        $flock = Flock::with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar')
+        $user = auth()->user();
+
+        $flock = Flock::whereHas('farm', function ($q) use ($user) {
+                $q->where(function ($q) use ($user) {
+                    $q->where('created_by', $user->id)
+                      ->orWhere('assigned_to', $user->id);
+                });
+            })
+            ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar')
             ->find($id);
 
         if (!$flock) {
@@ -363,7 +387,15 @@ class FlockController extends BaseController
      */
     public function update(Request $request, $id)
     {
-        $flock = Flock::find($id);
+        $user = auth()->user();
+
+        $flock = Flock::whereHas('farm', function ($q) use ($user) {
+                $q->where(function ($q) use ($user) {
+                    $q->where('created_by', $user->id)
+                      ->orWhere('assigned_to', $user->id);
+                });
+            })
+            ->find($id);
 
         if (!$flock) {
             return response()->json([
@@ -465,7 +497,15 @@ class FlockController extends BaseController
      */
     public function destroy($id)
     {
-        $flock = Flock::find($id);
+        $user = auth()->user();
+
+        $flock = Flock::whereHas('farm', function ($q) use ($user) {
+                $q->where(function ($q) use ($user) {
+                    $q->where('created_by', $user->id)
+                      ->orWhere('assigned_to', $user->id);
+                });
+            })
+            ->find($id);
 
         if (!$flock) {
             return response()->json([

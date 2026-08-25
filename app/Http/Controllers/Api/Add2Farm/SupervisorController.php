@@ -57,6 +57,7 @@ class SupervisorController extends BaseController
     public function index(Request $request)
     {
         $supervisors = Admin::where('type', self::ADMIN_TYPE)
+            ->where('created_by', auth()->id())
             ->when($request->search, function ($q) use ($request) {
                 return $q->where('name', 'like', "%{$request->search}%")
                     ->orWhere('mobile_number', 'like', "%{$request->search}%");
@@ -117,6 +118,7 @@ class SupervisorController extends BaseController
     public function show($id)
     {
         $admin = Admin::where('type', self::ADMIN_TYPE)
+            ->where('created_by', auth()->id())
             ->with('creator')
             ->find($id);
 
@@ -142,13 +144,13 @@ class SupervisorController extends BaseController
      * Create a new Type 3 (Supervisor) admin account.
      * Type is automatically set to 3 and cannot be changed.
      * Supervisor is automatically assigned to Add2Farm project.
+     * Default password: "Password123" (will be set automatically, no need to provide)
      *
      * @authenticated
      * @bodyParam name string required Supervisor's full name. Example: John Supervisor
-     * @bodyParam mobile_number string required Unique mobile number with country code. Example: +1234567890
+     * @bodyParam phone_code string required Phone country code. Example: +1
+     * @bodyParam mobile_number string required Unique mobile number (without country code). Example: 1234567890
      * @bodyParam email string optional Email address. Example: john@example.com
-     * @bodyParam password string required Password (min 8 characters). Example: password123
-     * @bodyParam password_confirmation string required Password confirmation. Example: password123
      * @bodyParam notes string optional Optional notes about the supervisor. Example: Senior supervisor with 10 years experience
      * @bodyParam image file optional Profile image (jpeg, png, gif). Max 2MB. Example: (binary)
      * @bodyParam farm_id integer optional Farm ID to assign this supervisor to. Example: 1
@@ -181,9 +183,9 @@ class SupervisorController extends BaseController
     {
         $validator = Validator::make($request->all(), [
             'name'            => 'required|string|max:255',
+            'phone_code'      => 'required|string|max:10',
             'mobile_number'   => 'required|string|max:20|unique:admins,mobile_number',
             'email'           => 'nullable|email|max:255|unique:admins,email',
-            'password'        => 'required|string|min:8|confirmed',
             'notes'           => 'nullable|string|max:1000',
             'image'           => 'nullable|image|mimes:jpeg,png,gif|max:2048',
             'farm_id'         => 'nullable|integer|exists:farms,id',
@@ -217,9 +219,10 @@ class SupervisorController extends BaseController
             // Create supervisor (Type 3)
             $admin = Admin::create([
                 'name'           => $request->name,
+                'phone_code'     => $request->phone_code,
                 'mobile_number'  => $request->mobile_number,
                 'email'          => $request->email ?? 'supervisor-' . uniqid() . '@add2farm.local',
-                'password'       => Hash::make($request->password),
+                'password'       => Hash::make('Password123'),
                 'type'           => self::ADMIN_TYPE,
                 'status'         => 'Active',
                 'notes'          => $request->notes ?? null,
@@ -274,16 +277,18 @@ class SupervisorController extends BaseController
      * Update a supervisor
      *
      * Update supervisor details including name, email, status and project assignments.
-     * Mobile number and type cannot be changed.
+     * Type cannot be changed. Password is not updatable.
      *
      * @authenticated
      * @urlParam id integer required The supervisor ID. Example: 1
      * @bodyParam name string required Supervisor's full name. Example: John Supervisor Updated
+     * @bodyParam phone_code string optional Phone country code. Example: +1
+     * @bodyParam mobile_number string optional Mobile number (without country code). Example: 1234567890
      * @bodyParam email string optional Email address. Example: john.updated@example.com
      * @bodyParam status string required Status (Active, Inactive, Disable). Example: Active
      * @bodyParam notes string optional Optional notes about the supervisor. Example: Updated notes
      * @bodyParam image file optional Profile image (jpeg, png, gif). Max 2MB. Example: (binary)
-     * @bodyParam project_rows array optional Array of project assignments. Example: [{"project_id": 1, "status": "Active"}]
+     * @bodyParam farm_id integer optional Farm ID to assign this supervisor to. Example: 1
      *
      * @response 200 {
      *   "success": true,
@@ -315,7 +320,9 @@ class SupervisorController extends BaseController
      */
     public function update(Request $request, $id)
     {
-        $admin = Admin::where('type', self::ADMIN_TYPE)->find($id);
+        $admin = Admin::where('type', self::ADMIN_TYPE)
+            ->where('created_by', auth()->id())
+            ->find($id);
 
         if (!$admin) {
             return response()->json([
@@ -326,6 +333,7 @@ class SupervisorController extends BaseController
 
         $validator = Validator::make($request->all(), [
             'name'            => 'sometimes|required|string|max:255',
+            'phone_code'      => 'nullable|string|max:10',
             'mobile_number'   => 'nullable|string|max:20|unique:admins,mobile_number,' . $admin->id,
             'email'           => 'nullable|email|max:255|unique:admins,email,' . $admin->id,
             'status'          => 'sometimes|required|in:Active,Inactive,Disable',
@@ -360,6 +368,11 @@ class SupervisorController extends BaseController
             // Add status if provided
             if ($request->filled('status')) {
                 $updateData['status'] = $request->status;
+            }
+
+            // Add phone_code if provided
+            if ($request->filled('phone_code')) {
+                $updateData['phone_code'] = $request->phone_code;
             }
 
             // Add mobile_number if provided
@@ -440,7 +453,9 @@ class SupervisorController extends BaseController
      */
     public function destroy($id)
     {
-        $admin = Admin::where('type', self::ADMIN_TYPE)->find($id);
+        $admin = Admin::where('type', self::ADMIN_TYPE)
+            ->where('created_by', auth()->id())
+            ->find($id);
 
         if (!$admin) {
             return response()->json([
@@ -495,12 +510,13 @@ class SupervisorController extends BaseController
         return [
             'id'            => $admin->id,
             'name'          => $admin->name,
-            'mobile_number' => $admin->mobile_number,
+            'mobile_number' => $admin->getFullPhoneNumber(),
             'email'         => $admin->email,
             'type'          => $admin->type,
             'type_label'    => $this->getTypeLabel($admin->type),
             'status'        => $admin->status,
             'status_label'  => $this->getStatusLabel($admin->status),
+            'assignment'    => $admin->hasAssignment(),
             'notes'         => $admin->notes ?? null,
             'image'         => $admin->image ?? null,
             'image_url'     => $imageUrl,

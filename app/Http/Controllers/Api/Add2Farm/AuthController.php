@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Add2Farm;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Models\AdminProjectStatus;
 use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -88,6 +89,16 @@ class AuthController extends Controller
                 $admin->assignRole($role);
             }
 
+            // Auto-assign to Add2Farm project with Active status
+            $add2FarmProjectId = ProjectHelper::getAdd2FarmProjectId();
+            if ($add2FarmProjectId) {
+                AdminProjectStatus::create([
+                    'admin_id'   => $admin->id,
+                    'project_id' => $add2FarmProjectId,
+                    'status'     => 'Active',
+                ]);
+            }
+
             // Generate OTP
             $otp = $admin->generateOtp();
 
@@ -122,8 +133,13 @@ class AuthController extends Controller
      *
      * OTP is generated and sent. User must verify OTP to obtain auth token.
      *
+     * Mobile number format:
+     * - Can include phone code: "+1 1234567890" or "+11234567890"
+     * - Or just the number: "1234567890"
+     * - System will automatically parse and match both formats
+     *
      * @unauthenticated
-     * @bodyParam mobile_number string required User's mobile number. Example: +1234567890
+     * @bodyParam mobile_number string required User's mobile number (with or without phone code). Example: +1 1234567890
      * @bodyParam password string required User's password. Example: password123
      *
      * @response 200 {
@@ -142,7 +158,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'mobile_number' => 'required|string|max:20',
+            'mobile_number' => 'required|string|max:50',
             'password'      => 'required|string',
         ]);
 
@@ -153,8 +169,8 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Find user by mobile number
-        $admin = Admin::where('mobile_number', $request->mobile_number)->first();
+        // Parse mobile number (could be "+1 1234567890" or "+11234567890" or "1234567890")
+        $admin = $this->findAdminByMobileNumber($request->mobile_number);
 
         if (!$admin || !Hash::check($request->password, $admin->password)) {
             return response()->json([
@@ -215,8 +231,13 @@ class AuthController extends Controller
      *
      * Development Override: OTP '000000' is accepted for testing.
      *
+     * Mobile number format:
+     * - Can include phone code: "+91 09033487938" or "+9109033487938"
+     * - Or just the number: "09033487938"
+     * - System will automatically parse and match both formats
+     *
      * @unauthenticated
-     * @bodyParam mobile_number string required User's mobile number. Example: +1234567890
+     * @bodyParam mobile_number string required User's mobile number (with or without phone code). Example: +91 09033487938
      * @bodyParam otp string required 6-digit OTP code. Example: 123456
      *
      * @response 200 {
@@ -247,7 +268,7 @@ class AuthController extends Controller
     public function verifyOtp(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'mobile_number' => 'required|string|max:20',
+            'mobile_number' => 'required|string|max:50',
             'otp'           => 'required|string|size:6|regex:/^\d+$/',
             'context'       => 'nullable|string|in:registration,forgot_password',
         ]);
@@ -259,8 +280,8 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Find user by mobile number
-        $admin = Admin::where('mobile_number', $request->mobile_number)->first();
+        // Find user by mobile number (supports both "+91 09033487938" and "09033487938" formats)
+        $admin = $this->findAdminByMobileNumber($request->mobile_number);
 
         if (!$admin) {
             return response()->json([
@@ -353,8 +374,13 @@ class AuthController extends Controller
      * Generate a new OTP and send it to the user's registered mobile number.
      * This endpoint resets the OTP expiry to 10 minutes from current time.
      *
+     * Mobile number format:
+     * - Can include phone code: "+91 09033487938" or "+9109033487938"
+     * - Or just the number: "09033487938"
+     * - System will automatically parse and match both formats
+     *
      * @unauthenticated
-     * @bodyParam mobile_number string required User's mobile number. Example: +1234567890
+     * @bodyParam mobile_number string required User's mobile number (with or without phone code). Example: +91 09033487938
      *
      * @response 200 {
      *   "success": true,
@@ -368,7 +394,7 @@ class AuthController extends Controller
     public function resendOtp(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'mobile_number' => 'required|string|max:20',
+            'mobile_number' => 'required|string|max:50',
         ]);
 
         if ($validator->fails()) {
@@ -378,8 +404,8 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Find user by mobile number
-        $admin = Admin::where('mobile_number', $request->mobile_number)->first();
+        // Find user by mobile number (supports both "+91 09033487938" and "09033487938" formats)
+        $admin = $this->findAdminByMobileNumber($request->mobile_number);
 
         if (!$admin) {
             return response()->json([
@@ -415,8 +441,13 @@ class AuthController extends Controller
      * Initiate forgot password flow by providing mobile number.
      * OTP is generated and sent to verify identity.
      *
+     * Mobile number format:
+     * - Can include phone code: "+91 09033487938" or "+9109033487938"
+     * - Or just the number: "09033487938"
+     * - System will automatically parse and match both formats
+     *
      * @unauthenticated
-     * @bodyParam mobile_number string required User's mobile number. Example: +1234567890
+     * @bodyParam mobile_number string required User's mobile number (with or without phone code). Example: +91 09033487938
      *
      * @response 200 {
      *   "success": true,
@@ -430,7 +461,7 @@ class AuthController extends Controller
     public function forgotPassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'mobile_number' => 'required|string|max:20',
+            'mobile_number' => 'required|string|max:50',
         ]);
 
         if ($validator->fails()) {
@@ -440,8 +471,8 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Find user by mobile number
-        $admin = Admin::where('mobile_number', $request->mobile_number)->first();
+        // Find user by mobile number (supports both "+91 09033487938" and "09033487938" formats)
+        $admin = $this->findAdminByMobileNumber($request->mobile_number);
 
         if (!$admin) {
             return response()->json([
@@ -629,11 +660,12 @@ class AuthController extends Controller
         return [
             'id'            => $admin->id,
             'name'          => $admin->name,
-            'mobile_number' => $admin->mobile_number,
+            'mobile_number' => $admin->getFullPhoneNumber(),
             'type'          => $admin->type,
             'type_label'    => $this->getTypeLabel($admin->type),
             'status'        => $admin->status,
             'status_label'  => $this->getStatusLabel($admin->status),
+            'assignment'    => $admin->hasAssignment(),
             'created_by_name' => $admin->creator?->name ?? null,
             'created_at'    => $admin->created_at,
         ];
@@ -645,5 +677,64 @@ class AuthController extends Controller
     private function getStatusLabel($status): string
     {
         return $this->translationService->getStatusLabel($status);
+    }
+
+    /**
+     * Find admin by mobile number
+     * Handles formats: "+1 1234567890", "+11234567890", "1234567890"
+     * If phone_code exists, it tries to match both phone_code + mobile_number
+     */
+    private function findAdminByMobileNumber($input): ?Admin
+    {
+        // First, try exact match (for backwards compatibility)
+        $admin = Admin::where('mobile_number', $input)->first();
+        if ($admin) {
+            return $admin;
+        }
+
+        // Check if input starts with + (international format)
+        if (strpos($input, '+') === 0) {
+            // Remove spaces first
+            $cleaned = str_replace(' ', '', $input);
+
+            // Remove the + for easier parsing
+            $digitsOnly = ltrim($cleaned, '+');
+
+            // Try different phone code lengths (1, 2, 3 digits)
+            // This handles variable-length country codes like +1, +91, +297, etc.
+            for ($codeLength = 1; $codeLength <= 3; $codeLength++) {
+                if (strlen($digitsOnly) <= $codeLength) {
+                    continue; // Skip if remaining would be too short
+                }
+
+                $phoneCode = substr($digitsOnly, 0, $codeLength);
+                $mobileNumber = substr($digitsOnly, $codeLength);
+
+                // Try to find with this combination
+                // Try without + in phone code
+                $admin = Admin::where('phone_code', $phoneCode)
+                    ->where('mobile_number', $mobileNumber)
+                    ->first();
+                if ($admin) {
+                    return $admin;
+                }
+
+                // Also try with + in phone code
+                $admin = Admin::where('phone_code', '+' . $phoneCode)
+                    ->where('mobile_number', $mobileNumber)
+                    ->first();
+                if ($admin) {
+                    return $admin;
+                }
+            }
+
+            // If no match found with phone code, try the entire number as mobile_number
+            $admin = Admin::where('mobile_number', $digitsOnly)->first();
+            if ($admin) {
+                return $admin;
+            }
+        }
+
+        return null;
     }
 }

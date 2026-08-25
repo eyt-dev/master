@@ -159,7 +159,8 @@ class FarmController extends BaseController
      * @bodyParam name string required Farm name. Example: Main Farm
      * @bodyParam location string required Farm location. Example: Village A
      * @bodyParam type string required Farm type (closed_system, open_system, or cages). Example: closed_system
-     * @bodyParam mobile_number string optional Farm phone number. Example: +92300123456
+     * @bodyParam phone_code string optional Farm phone country code. Example: +92
+     * @bodyParam mobile_number string optional Farm phone number (without country code). Example: 3001234567
      * @bodyParam number_of_hangars integer required Number of hangars (must match hangars array length). Example: 3
      * @bodyParam assigned_to integer optional Admin ID (Type 4 Farmer) to assign this farm to. Example: 1
      * @bodyParam hangars array required Array of hangar objects (length must equal number_of_hangars). Example: [{"name": "Hangar 1", "area_sqm": 1000, "layer_hens": 5000}, {"name": "Hangar 2", "area_sqm": 1200, "layer_hens": 6000}, {"name": "Hangar 3", "area_sqm": 1100, "layer_hens": 5500}]
@@ -240,6 +241,7 @@ class FarmController extends BaseController
             'name'                      => 'required|string|max:255',
             'location'                  => 'required|string|max:255',
             'type'                      => 'required|string|in:closed_system,open_system,cages',
+            'phone_code'                => 'nullable|string|max:10',
             'mobile_number'             => 'nullable|string|max:20',
             'number_of_hangars'         => 'required|integer|min:1|max:999',
             'assigned_to'               => 'required|integer|exists:admins,id',
@@ -283,6 +285,7 @@ class FarmController extends BaseController
                 'name'               => $request->name,
                 'location'           => $request->location,
                 'type'               => $request->type,
+                'phone_code'         => $request->phone_code,
                 'mobile_number'      => $request->mobile_number,
                 'number_of_hangars'  => $request->number_of_hangars,
                 'assigned_to'        => $request->assigned_to,
@@ -340,7 +343,7 @@ class FarmController extends BaseController
     /**
      * Update a farm
      *
-     * Update farm details and hangars. 
+     * Update farm details and hangars.
      * - To update existing hangars, include their ID
      * - To create new hangars, omit the ID
      * - Hangars not included in the array will be deleted
@@ -351,7 +354,8 @@ class FarmController extends BaseController
      * @bodyParam name string required Farm name. Example: Updated Farm Name
      * @bodyParam location string required Farm location. Example: Updated Location
      * @bodyParam type string required Farm type (closed_system, open_system, or cages). Example: open_system
-     * @bodyParam mobile_number string optional Farm phone number. Example: +92300123456
+     * @bodyParam phone_code string optional Farm phone country code. Example: +92
+     * @bodyParam mobile_number string optional Farm phone number (without country code). Example: 3001234567
      * @bodyParam number_of_hangars integer required Number of hangars (must match hangars array length). Example: 3
      * @bodyParam assigned_to integer optional Farmer ID to assign the farm to. Example: 2
      * @bodyParam hangars array required Array of hangar objects (length must equal number_of_hangars). Example: [{"id": 1, "name": "Hangar 1 Updated", "area_sqm": 1100, "layer_hens": 5500}, {"id": 2, "name": "Hangar 2 Updated", "area_sqm": 1300, "layer_hens": 6500}, {"name": "Hangar 3 New", "area_sqm": 1000, "layer_hens": 5000}]
@@ -427,6 +431,7 @@ class FarmController extends BaseController
             'name'                      => 'required|string|max:255',
             'location'                  => 'required|string|max:255',
             'type'                      => 'required|string|in:closed_system,open_system,cages',
+            'phone_code'                => 'nullable|string|max:10',
             'mobile_number'             => 'nullable|string|max:20',
             'number_of_hangars'         => 'required|integer|min:1|max:999',
             'assigned_to'               => 'nullable|integer|exists:admins,id',
@@ -473,6 +478,7 @@ class FarmController extends BaseController
                 'name'               => $request->name,
                 'location'           => $request->location,
                 'type'               => $request->type,
+                'phone_code'         => $request->phone_code,
                 'mobile_number'      => $request->mobile_number,
                 'number_of_hangars'  => $request->number_of_hangars,
                 'assigned_to'        => $request->assigned_to,
@@ -634,7 +640,7 @@ class FarmController extends BaseController
             'name'                  => $farm->name,
             'location'              => $farm->location,
             'type'                  => $farm->type,
-            'mobile_number'         => $farm->mobile_number,
+            'mobile_number'         => $farm->getFullPhoneNumber(),
             'number_of_hangars'     => $farm->number_of_hangars,
             'assigned_to'           => $farm->assigned_to,
             'assigned_admin_name'   => $farm->assignedAdmin?->name ?? null,

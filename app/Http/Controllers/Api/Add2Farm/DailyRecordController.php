@@ -61,7 +61,8 @@ class DailyRecordController extends BaseController
      */
     public function index(Request $request)
     {
-        $records = DailyRecord::when($request->flock_id, function ($q) use ($request) {
+        $records = DailyRecord::where('created_by', auth()->id())
+            ->when($request->flock_id, function ($q) use ($request) {
                 return $q->where('flock_id', $request->flock_id);
             })
             ->when($request->farm_id, function ($q) use ($request) {
@@ -127,7 +128,9 @@ class DailyRecordController extends BaseController
      */
     public function show($id)
     {
-        $record = DailyRecord::with('farm', 'flock', 'hangar', 'creator')->find($id);
+        $record = DailyRecord::where('created_by', auth()->id())
+            ->with('farm', 'flock', 'hangar', 'creator')
+            ->find($id);
 
         if (!$record) {
             return response()->json([
@@ -306,7 +309,7 @@ class DailyRecordController extends BaseController
      */
     public function update(Request $request, $id)
     {
-        $record = DailyRecord::find($id);
+        $record = DailyRecord::where('created_by', auth()->id())->find($id);
 
         if (!$record) {
             return response()->json([
@@ -390,7 +393,7 @@ class DailyRecordController extends BaseController
      */
     public function destroy($id)
     {
-        $record = DailyRecord::find($id);
+        $record = DailyRecord::where('created_by', auth()->id())->find($id);
 
         if (!$record) {
             return response()->json([

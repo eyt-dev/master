@@ -5,17 +5,21 @@ namespace App\Http\Controllers\Api\Add2Farm;
 use App\Models\Farm;
 use App\Models\ChicksSupplier;
 use App\Models\Admin;
+use Illuminate\Http\Request;
 
 /**
  * @group Add2Farm Dropdowns
  * APIs for fetching dropdown data (farms, suppliers, supervisors)
+ * All dropdown APIs require authentication
  */
 class DropdownController extends BaseController
 {
     /**
-     * Get all farms for dropdown
+     * Get farms for dropdown
      *
-     * Fetch list of farms with id and name only for dropdown/select usage.
+     * Fetch list of farms created by the logged-in user with id and name only for dropdown/select usage.
+     * - Type 2 (Farm Owner) sees: farms they created
+     * - Type 3 (Supervisor) sees: farms where they are assigned
      *
      * @authenticated
      *
@@ -38,9 +42,22 @@ class DropdownController extends BaseController
      *   "message": "Unauthenticated"
      * }
      */
-    public function farms()
+    public function farms(Request $request)
     {
-        $farms = Farm::select('id', 'name')
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('user_not_authenticated'),
+            ], 401);
+        }
+
+        $farms = Farm::where(function ($q) use ($user) {
+            $q->where('created_by', $user->id)
+              ->orWhere('assigned_to', $user->id);
+        })
+            ->select('id', 'name')
             ->orderBy('name')
             ->get();
 
@@ -54,7 +71,8 @@ class DropdownController extends BaseController
     /**
      * Get all chicks suppliers for dropdown
      *
-     * Fetch list of chicks suppliers with id and name only for dropdown/select usage.
+     * Fetch list of all chicks suppliers with id and name only for dropdown/select usage.
+     * Returns all available suppliers (not filtered by user).
      *
      * @authenticated
      *
@@ -77,8 +95,17 @@ class DropdownController extends BaseController
      *   "message": "Unauthenticated"
      * }
      */
-    public function suppliers()
+    public function suppliers(Request $request)
     {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('user_not_authenticated'),
+            ], 401);
+        }
+
         $suppliers = ChicksSupplier::select('id', 'name')
             ->orderBy('name')
             ->get();
@@ -91,11 +118,12 @@ class DropdownController extends BaseController
     }
 
     /**
-     * Get supervisors for dropdown based on logged-in user type
+     * Get supervisors for dropdown
      *
+     * Returns supervisors created by the logged-in user.
      * Returns different supervisor types based on the logged-in user's type:
-     * - If user type = 2 (PUBLIC_VENDOR): returns supervisors with type 4
-     * - If user type = 1 (ADMIN): returns supervisors with type 3
+     * - If user type = 2 (Farm Owner): returns farmers (type 4) created by this user
+     * - If user type = 1 or 3 (Admin/Supervisor): returns supervisors (type 3) created by this user
      *
      * @authenticated
      *
@@ -118,9 +146,9 @@ class DropdownController extends BaseController
      *   "message": "Unauthenticated"
      * }
      */
-    public function supervisors()
+    public function supervisors(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         if (!$user) {
             return response()->json([
@@ -131,12 +159,13 @@ class DropdownController extends BaseController
 
         // Determine supervisor type based on logged-in user's type
         $supervisorType = match($user->type) {
-            Admin::PUBLIC_VENDOR => 4,  // type 2 users get type 4 supervisors
+            Admin::PUBLIC_VENDOR => 4,  // type 2 users get type 4 supervisors (farmers)
             Admin::ADMIN => 3,           // type 1 users get type 3 supervisors
             default => 3,                // default to type 3
         };
 
         $supervisors = Admin::where('type', $supervisorType)
+            ->where('created_by', $user->id)
             ->select('id', 'name')
             ->orderBy('name')
             ->get();

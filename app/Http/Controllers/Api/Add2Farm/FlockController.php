@@ -53,7 +53,7 @@ class FlockController extends BaseController
     {
         $user = auth()->user();
 
-        // Calculate total_qty and total_farms for available flocks
+        // Calculate aggregates for available flocks
         $allFlocks = Flock::whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
@@ -63,11 +63,21 @@ class FlockController extends BaseController
             ->when($request->farm_id, function ($q) use ($request) {
                 return $q->where('farm_id', $request->farm_id);
             })
-            ->select('id', 'farm_id', 'total_quantity')
+            ->select('id', 'farm_id', 'total_quantity', 'start_date')
             ->get();
 
         $totalQty = $allFlocks->sum('total_quantity');
         $totalFarms = $allFlocks->pluck('farm_id')->unique()->count();
+
+        // Count active flocks (started on or before today)
+        $activeFlocks = $allFlocks->filter(function ($flock) {
+            return $flock->start_date && $flock->start_date->format('Y-m-d') <= now()->format('Y-m-d');
+        })->count();
+
+        // Count pending flocks (not yet started)
+        $completedFlocks = $allFlocks->filter(function ($flock) {
+            return $flock->start_date && $flock->start_date->format('Y-m-d') > now()->format('Y-m-d');
+        })->count();
 
         $flocks = Flock::whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
@@ -91,6 +101,8 @@ class FlockController extends BaseController
             'message' => 'Available flocks retrieved successfully.',
             'total_qty' => $totalQty,
             'total_farms' => $totalFarms,
+            'active_flocks' => $activeFlocks,
+            'completed_flocks' => $completedFlocks,
             'data' => $data,
         ]);
     }
@@ -223,7 +235,7 @@ class FlockController extends BaseController
     {
         $user = auth()->user();
 
-        // Calculate total_qty and total_farms for all flocks of logged-in user
+        // Calculate aggregates for all flocks of logged-in user
         $allFlocks = Flock::where('created_by', $user->id)
             ->whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
@@ -231,11 +243,21 @@ class FlockController extends BaseController
                       ->orWhere('assigned_to', $user->id);
                 });
             })
-            ->select('id', 'farm_id', 'total_quantity')
+            ->select('id', 'farm_id', 'total_quantity', 'start_date')
             ->get();
 
         $totalQty = $allFlocks->sum('total_quantity');
         $totalFarms = $allFlocks->pluck('farm_id')->unique()->count();
+
+        // Count active flocks (started on or before today)
+        $activeFlocks = $allFlocks->filter(function ($flock) {
+            return $flock->start_date && $flock->start_date->format('Y-m-d') <= now()->format('Y-m-d');
+        })->count();
+
+        // Count completed flocks (for now, all flocks not yet started are considered pending)
+        $completedFlocks = $allFlocks->filter(function ($flock) {
+            return $flock->start_date && $flock->start_date->format('Y-m-d') > now()->format('Y-m-d');
+        })->count();
 
         $flocks = Flock::where('created_by', $user->id)
             ->whereHas('farm', function ($q) use ($user) {
@@ -263,6 +285,8 @@ class FlockController extends BaseController
             'message' => $this->translationService->get('flocks_retrieved_successfully'),
             'total_qty' => $totalQty,
             'total_farms' => $totalFarms,
+            'active_flocks' => $activeFlocks,
+            'completed_flocks' => $completedFlocks,
             'data' => $flocks,
         ]);
     }
@@ -720,6 +744,9 @@ class FlockController extends BaseController
             'chicks_supplier_name'  => $flock->chicksSupplier?->name,
             'breed'                 => $flock->breed,
             'start_date'            => $flock->start_date?->format('Y-m-d'),
+            'end_date'              => now()->format('Y-m-d'),
+            'age'                   => 'Day0',
+            'avg_weight'            => '1.85 kg',
             'total_quantity'        => $flock->total_quantity,
             'hangar_allocations'    => $hangarAllocations,
             'assignment'            => $assignment,

@@ -212,6 +212,20 @@ class FlockController extends BaseController
     {
         $user = auth()->user();
 
+        // Calculate total_qty and total_farms for all flocks of logged-in user
+        $allFlocks = Flock::where('created_by', $user->id)
+            ->whereHas('farm', function ($q) use ($user) {
+                $q->where(function ($q) use ($user) {
+                    $q->where('created_by', $user->id)
+                      ->orWhere('assigned_to', $user->id);
+                });
+            })
+            ->select('id', 'farm_id', 'total_quantity')
+            ->get();
+
+        $totalQty = $allFlocks->sum('total_quantity');
+        $totalFarms = $allFlocks->pluck('farm_id')->unique()->count();
+
         $flocks = Flock::where('created_by', $user->id)
             ->whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
@@ -225,7 +239,7 @@ class FlockController extends BaseController
             ->when($request->farm_id, function ($q) use ($request) {
                 return $q->where('farm_id', $request->farm_id);
             })
-            ->with('farm', 'chicksSupplier', 'creator')
+            ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar')
             ->orderBy('created_at', 'desc')
             ->paginate($request->per_page ?? 15);
 
@@ -236,6 +250,8 @@ class FlockController extends BaseController
         return response()->json([
             'success' => true,
             'message' => $this->translationService->get('flocks_retrieved_successfully'),
+            'total_qty' => $totalQty,
+            'total_farms' => $totalFarms,
             'data' => $flocks,
         ]);
     }
@@ -666,8 +682,23 @@ class FlockController extends BaseController
 
     private function formatFlock(Flock $flock): array
     {
+        // Load flockHangarAllocations if not already loaded
+        if (!$flock->relationLoaded('flockHangarAllocations')) {
+            $flock->load('flockHangarAllocations.hangar');
+        }
+
         // Check if logged-in user created this flock
         $assignment = (auth()->check() && $flock->created_by === auth()->id()) ? 1 : 0;
+
+        // Format hangar allocations with details
+        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) {
+            return [
+                'hangar_id'     => $allocation->hangar_id,
+                'hangar_name'   => $allocation->hangar?->name,
+                'quantity'      => $allocation->quantity,
+                'area_sqm'      => $allocation->hangar?->area_sqm,
+            ];
+        })->toArray();
 
         return [
             'id'                    => $flock->id,
@@ -679,6 +710,7 @@ class FlockController extends BaseController
             'breed'                 => $flock->breed,
             'start_date'            => $flock->start_date?->format('Y-m-d'),
             'total_quantity'        => $flock->total_quantity,
+            'hangar_allocations'    => $hangarAllocations,
             'assignment'            => $assignment,
             'created_by'            => $flock->created_by,
             'created_by_name'       => $flock->creator?->name,

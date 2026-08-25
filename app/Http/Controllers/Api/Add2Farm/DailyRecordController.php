@@ -427,6 +427,9 @@ class DailyRecordController extends BaseController
 
     private function formatDailyRecord(DailyRecord $record): array
     {
+        // Check if logged-in user created this record
+        $assignment = (auth()->check() && $record->created_by === auth()->id()) ? 1 : 0;
+
         return [
             'id'              => $record->id,
             'record_date'     => $record->record_date?->format('Y-m-d'),
@@ -442,6 +445,7 @@ class DailyRecordController extends BaseController
             'eggs_weight'     => (float) $record->eggs_weight,
             'chicks_weight'   => (float) $record->chicks_weight,
             'mortality'       => (int) $record->mortality,
+            'assignment'      => $assignment,
             'created_by'      => $record->created_by,
             'created_by_name' => $record->creator?->name,
             'created_at'      => $record->created_at,

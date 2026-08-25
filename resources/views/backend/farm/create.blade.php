@@ -80,9 +80,9 @@
         <!-- Assigned To Dropdown -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="assigned_to" class="form-label">Assigned To <span class="text-red">*</span></label>
-                <select class="form-control" name="assigned_to" id="assigned_to" required="">
-                    <option value="">Select Admin</option>
+                <label for="assigned_to" class="form-label">Assigned To</label>
+                <select class="form-control" name="assigned_to" id="assigned_to">
+                    <option value="">Select Admin (Optional)</option>
                     @foreach($admins as $admin)
                         <option value="{{ $admin->id }}" {{ old('assigned_to', $farm->assigned_to ?? '') == $admin->id ? 'selected' : '' }}>
                             {{ $admin->name }}

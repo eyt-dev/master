@@ -176,4 +176,72 @@ class DropdownController extends BaseController
             'data' => $supervisors,
         ], 200);
     }
+
+    /**
+     * Get chicken breeds for dropdown
+     *
+     * Returns available chicken breeds organized by category (Broiler and Layer).
+     * Used for flock creation form.
+     *
+     * @authenticated
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Breeds retrieved successfully.",
+     *   "data": [
+     *     {
+     *       "category": "Broiler",
+     *       "breeds": [
+     *         "Ross 308",
+     *         "Cobb 500"
+     *       ]
+     *     },
+     *     {
+     *       "category": "Layer",
+     *       "breeds": [
+     *         "Lohmann Brown",
+     *         "Lohmann White"
+     *       ]
+     *     }
+     *   ]
+     * }
+     * @response 401 {
+     *   "success": false,
+     *   "message": "Unauthenticated"
+     * }
+     */
+    public function breeds(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('user_not_authenticated'),
+            ], 401);
+        }
+
+        $breeds = [
+            [
+                'category' => 'Broiler',
+                'breeds' => [
+                    'Ross 308',
+                    'Cobb 500',
+                ],
+            ],
+            [
+                'category' => 'Layer',
+                'breeds' => [
+                    'Lohmann Brown',
+                    'Lohmann White',
+                ],
+            ],
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => $this->translationService->get('breeds_retrieved_successfully'),
+            'data' => $breeds,
+        ], 200);
+    }
 }

@@ -60,6 +60,7 @@ return [
         'daily_records_retrieved_successfully' => 'Daily records retrieved successfully.',
         'daily_record_retrieved_successfully' => 'Daily record retrieved successfully.',
         'suppliers_retrieved_successfully' => 'Suppliers retrieved successfully.',
+        'breeds_retrieved_successfully' => 'Breeds retrieved successfully.',
         'project_access_not_active' => 'Your access to Add2Farm project is not active. Please contact your administrator for project activation.',
     ],
 

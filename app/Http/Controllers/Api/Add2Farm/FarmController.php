@@ -244,7 +244,7 @@ class FarmController extends BaseController
             'phone_code'                => 'nullable|string|max:10',
             'mobile_number'             => 'nullable|string|max:20',
             'number_of_hangars'         => 'required|integer|min:1|max:999',
-            'assigned_to'               => 'required|integer|exists:admins,id',
+            'assigned_to'               => 'nullable|integer|exists:admins,id',
             'hangars'                   => 'required|array|min:1',
             'hangars.*.name'            => 'required|string|max:255',
             'hangars.*.area_sqm'        => 'required|numeric|min:0',
@@ -635,6 +635,19 @@ class FarmController extends BaseController
         // Check if farm has flocks
         $hasFlocks = $farm->flocks()->exists();
 
+        // Check if logged-in user created or is assigned to this farm
+        $assignment = (auth()->check() &&
+            ($farm->created_by === auth()->id() || $farm->assigned_to === auth()->id())) ? 1 : 0;
+
+        // Calculate total hangars count
+        $totalHangars = $farm->hangars->count();
+
+        // Calculate total area from all hangars
+        $totalArea = $farm->hangars->sum('area_sqm');
+
+        // Calculate total birds from all flocks
+        $totalBirds = $farm->flocks()->sum('total_quantity') ?? 0;
+
         return [
             'id'                    => $farm->id,
             'name'                  => $farm->name,
@@ -645,8 +658,12 @@ class FarmController extends BaseController
             'assigned_to'           => $farm->assigned_to,
             'assigned_admin_name'   => $farm->assignedAdmin?->name ?? null,
             'created_by_name'       => $farm->creator?->name ?? null,
+            'assignment'            => $assignment,
             'has_flocks'            => $hasFlocks,
             'status'                => $hasFlocks ? 'Active' : 'Inactive',
+            'hangars_count'         => $totalHangars,
+            'area'                  => $totalArea,
+            'birds'                 => $totalBirds,
             'hangars'               => $hangars,
             'created_at'            => $farm->created_at,
         ];

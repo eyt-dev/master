@@ -43,7 +43,10 @@ class HangarController extends Controller
 
     public function create()
     {
-        $farms = Farm::get();
+        $user = auth()->user();
+        $farms = Farm::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
+            $query->where('created_by', $user->id);
+        })->get();
         return view('backend.hangar.create', compact('farms'));
     }
 
@@ -73,13 +76,25 @@ class HangarController extends Controller
 
     public function edit($siteUrl, $id)
     {
-        $hangar = Hangar::findOrFail($id);
-        $farms = Farm::get();
+        $user = auth()->user();
+        $hangar = Hangar::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
+            $query->where('created_by', $user->id);
+        })->findOrFail($id);
+
+        $farms = Farm::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
+            $query->where('created_by', $user->id);
+        })->get();
+
         return view('backend.hangar.create', compact('hangar', 'farms'));
     }
 
     public function update(Request $request, $siteUrl, $id)
     {
+        $user = auth()->user();
+        $hangar = Hangar::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
+            $query->where('created_by', $user->id);
+        })->findOrFail($id);
+
         $request->validate([
             'farm_id' => 'required',
             'name' => 'required|string',
@@ -88,7 +103,6 @@ class HangarController extends Controller
             'broiler_hens' => 'required|integer',
         ]);
 
-        $hangar = Hangar::findOrFail($id);
         $hangar->update([
             'farm_id' => $request->farm_id,
             'name' => $request->name,
@@ -103,7 +117,12 @@ class HangarController extends Controller
 
     public function destroy($siteUrl, $id)
     {
-        Hangar::findOrFail($id)->delete();
+        $user = auth()->user();
+        $hangar = Hangar::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
+            $query->where('created_by', $user->id);
+        })->findOrFail($id);
+
+        $hangar->delete();
         return response()->json(['msg' => 'Hangar deleted successfully.']);
     }
 }

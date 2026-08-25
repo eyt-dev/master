@@ -40,7 +40,10 @@
       "Bash(curl -s -X PUT http://admin.eyt.test/api/add2farm/supervisors/39 -H 'Authorization: Bearer 45|pfbH3Bd5pRJQn8A9RDFbx4O7085jh233jCZEgDuob5c8e50c' -H 'Accept: application/json' -F 'name=Final Test Supervisor Updated' -F status=Active -F email=final.test.super@example.com -F 'notes=Updated notes')",
       "Bash(curl -s -X POST http://admin.eyt.test/api/add2farm/supervisors/39 --header 'Authorization: Bearer 45|pfbH3Bd5pRJQn8A9RDFbx4O7085jh233jCZEgDuob5c8e50c' --header 'Accept: application/json' --form _method=PUT --form 'name=John Supervisor11' --form mobile_number=+123456789011 --form email=john.supervisor@example.com11 --form status=Active --form 'notes=Senior supervisor with 10 years experience' --form farm_id=1)",
       "Bash(curl -s -X POST http://admin.eyt.test/api/add2farm/supervisors/39 --header 'Authorization: Bearer 45|pfbH3Bd5pRJQn8A9RDFbx4O7085jh233jCZEgDuob5c8e50c' --header 'Accept: application/json' --form _method=PUT --form 'name=John Supervisor11' --form mobile_number=+123456789011 --form email=john.supervisor.updated@example.com --form status=Active --form 'notes=Senior supervisor with 10 years experience' --form farm_id=1)",
-      "Bash(curl -s -X POST http://admin.eyt.test/api/add2farm/supervisors/39 --header 'Authorization: Bearer 45|pfbH3Bd5pRJQn8A9RDFbx4O7085jh233jCZEgDuob5c8e50c' --header 'Accept: application/json' --form _method=PUT --form 'name=John Supervisor11' --form mobile_number=+999888777666 --form email=john.supervisor.updated99@example.com --form status=Active --form 'notes=Senior supervisor with 10 years experience' --form farm_id=1)"
+      "Bash(curl -s -X POST http://admin.eyt.test/api/add2farm/supervisors/39 --header 'Authorization: Bearer 45|pfbH3Bd5pRJQn8A9RDFbx4O7085jh233jCZEgDuob5c8e50c' --header 'Accept: application/json' --form _method=PUT --form 'name=John Supervisor11' --form mobile_number=+999888777666 --form email=john.supervisor.updated99@example.com --form status=Active --form 'notes=Senior supervisor with 10 years experience' --form farm_id=1)",
+      "Bash(git diff *)",
+      "Bash(cat)",
+      "Read(//tmp/**)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Dell\\Desktop",

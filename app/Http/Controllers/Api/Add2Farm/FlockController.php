@@ -85,6 +85,91 @@ class FlockController extends BaseController
     }
 
     /**
+     * Get farm hangars with allocation status
+     *
+     * Get all hangars for a farm with their allocation status in existing flocks.
+     * Shows which hangars are already allocated and their quantities.
+     *
+     * @authenticated
+     * @urlParam farm_id integer required The farm ID. Example: 1
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Farm hangars retrieved successfully.",
+     *   "data": {
+     *     "farm_id": 1,
+     *     "farm_name": "Main Farm",
+     *     "hangars": [
+     *       {
+     *         "hangar_id": 1,
+     *         "hangar_name": "Farm1-Hangar1",
+     *         "is_allocated": true,
+     *         "allocated_quantity": 10,
+     *         "allocated_to_flock_id": 1,
+     *         "allocated_to_flock_name": "Flock1"
+     *       },
+     *       {
+     *         "hangar_id": 2,
+     *         "hangar_name": "Farm1-Hangar2",
+     *         "is_allocated": false,
+     *         "allocated_quantity": 0,
+     *         "allocated_to_flock_id": null,
+     *         "allocated_to_flock_name": null
+     *       }
+     *     ]
+     *   }
+     * }
+     */
+    public function farmHangars($farmId)
+    {
+        $user = auth()->user();
+
+        // Verify user has access to this farm
+        $farm = Farm::where(function ($q) use ($user) {
+            $q->where('created_by', $user->id)
+              ->orWhere('assigned_to', $user->id);
+        })->find($farmId);
+
+        if (!$farm) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('farm_not_found'),
+            ], 404);
+        }
+
+        // Get all hangars for the farm
+        $hangars = $farm->hangars()->get();
+
+        // Get allocations for all flocks in this farm
+        $allocations = FlockHangar::whereHas('flock', function ($q) use ($farmId) {
+            $q->where('farm_id', $farmId);
+        })->with('flock')->get()->keyBy('hangar_id');
+
+        $data = $hangars->map(function ($hangar) use ($allocations) {
+            $allocation = $allocations->get($hangar->id);
+
+            return [
+                'hangar_id' => $hangar->id,
+                'hangar_name' => $hangar->name,
+                'is_allocated' => $allocation ? true : false,
+                'allocated_quantity' => $allocation?->quantity ?? 0,
+                'allocated_to_flock_id' => $allocation?->flock?->id ?? null,
+                'allocated_to_flock_name' => $allocation?->flock?->name ?? null,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Farm hangars retrieved successfully.',
+            'data' => [
+                'farm_id' => $farm->id,
+                'farm_name' => $farm->name,
+                'hangars' => $data,
+            ],
+        ]);
+    }
+
+    /**
      * List all flocks
      *
      * Get paginated list of all flocks with search and filtering.
@@ -127,7 +212,8 @@ class FlockController extends BaseController
     {
         $user = auth()->user();
 
-        $flocks = Flock::whereHas('farm', function ($q) use ($user) {
+        $flocks = Flock::where('created_by', $user->id)
+            ->whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
                       ->orWhere('assigned_to', $user->id);
@@ -197,7 +283,8 @@ class FlockController extends BaseController
     {
         $user = auth()->user();
 
-        $flock = Flock::whereHas('farm', function ($q) use ($user) {
+        $flock = Flock::where('created_by', $user->id)
+            ->whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
                       ->orWhere('assigned_to', $user->id);
@@ -279,7 +366,7 @@ class FlockController extends BaseController
             'total_quantity'        => 'required|integer|min:1',
             'hangar_allocations'    => 'required|array|min:1',
             'hangar_allocations.*.hangar_id' => 'required|integer|exists:hangars,id',
-            'hangar_allocations.*.quantity' => 'required|integer|min:1',
+            'hangar_allocations.*.quantity' => 'required|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -295,6 +382,22 @@ class FlockController extends BaseController
             return response()->json([
                 'success' => false,
                 'message' => 'Sum of hangar quantities must equal total quantity.',
+            ], 422);
+        }
+
+        // Validate that hangars aren't already allocated to other flocks in the same farm
+        $allocatedHangars = FlockHangar::whereHas('flock', function ($q) use ($request) {
+            $q->where('farm_id', $request->farm_id);
+        })->pluck('hangar_id')->toArray();
+
+        $requestHangarIds = array_column($request->hangar_allocations, 'hangar_id');
+        $doubleAllocated = array_intersect($requestHangarIds, $allocatedHangars);
+
+        if (!empty($doubleAllocated)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'One or more hangars are already allocated to another flock in this farm.',
+                'already_allocated_hangar_ids' => $doubleAllocated,
             ], 422);
         }
 
@@ -389,7 +492,8 @@ class FlockController extends BaseController
     {
         $user = auth()->user();
 
-        $flock = Flock::whereHas('farm', function ($q) use ($user) {
+        $flock = Flock::where('created_by', $user->id)
+            ->whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
                       ->orWhere('assigned_to', $user->id);
@@ -412,7 +516,7 @@ class FlockController extends BaseController
             'total_quantity'        => 'required|integer|min:1',
             'hangar_allocations'    => 'required|array|min:1',
             'hangar_allocations.*.hangar_id' => 'required|integer|exists:hangars,id',
-            'hangar_allocations.*.quantity' => 'required|integer|min:1',
+            'hangar_allocations.*.quantity' => 'required|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -428,6 +532,24 @@ class FlockController extends BaseController
             return response()->json([
                 'success' => false,
                 'message' => 'Sum of hangar quantities must equal total quantity.',
+            ], 422);
+        }
+
+        // Validate that hangars aren't already allocated to other flocks in the same farm
+        // (excluding the current flock being updated)
+        $allocatedHangars = FlockHangar::whereHas('flock', function ($q) use ($flock) {
+            $q->where('farm_id', $flock->farm_id)
+              ->where('id', '!=', $flock->id);
+        })->pluck('hangar_id')->toArray();
+
+        $requestHangarIds = array_column($request->hangar_allocations, 'hangar_id');
+        $doubleAllocated = array_intersect($requestHangarIds, $allocatedHangars);
+
+        if (!empty($doubleAllocated)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'One or more hangars are already allocated to another flock in this farm.',
+                'already_allocated_hangar_ids' => $doubleAllocated,
             ], 422);
         }
 
@@ -499,7 +621,8 @@ class FlockController extends BaseController
     {
         $user = auth()->user();
 
-        $flock = Flock::whereHas('farm', function ($q) use ($user) {
+        $flock = Flock::where('created_by', $user->id)
+            ->whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
                       ->orWhere('assigned_to', $user->id);
@@ -543,6 +666,9 @@ class FlockController extends BaseController
 
     private function formatFlock(Flock $flock): array
     {
+        // Check if logged-in user created this flock
+        $assignment = (auth()->check() && $flock->created_by === auth()->id()) ? 1 : 0;
+
         return [
             'id'                    => $flock->id,
             'name'                  => $flock->name,
@@ -553,6 +679,7 @@ class FlockController extends BaseController
             'breed'                 => $flock->breed,
             'start_date'            => $flock->start_date?->format('Y-m-d'),
             'total_quantity'        => $flock->total_quantity,
+            'assignment'            => $assignment,
             'created_by'            => $flock->created_by,
             'created_by_name'       => $flock->creator?->name,
             'created_at'            => $flock->created_at,

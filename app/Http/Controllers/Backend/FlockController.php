@@ -23,6 +23,10 @@ class FlockController extends Controller
                     $query->where('created_by', auth()->id());
                 })
                 ->orderBy('created_at', 'desc')->get();
+
+            $totalQty = $data->sum('total_quantity');
+            $totalFarms = $data->pluck('farm_id')->unique()->count();
+
             return datatables()->of($data)
                 ->addColumn('farm', function($row) {
                     return $row->farm->name ?? 'N/A';
@@ -35,6 +39,12 @@ class FlockController extends Controller
                 })
                 ->addColumn('start_date', function($row) {
                     return date('Y-m-d', strtotime($row->start_date));
+                })
+                ->addColumn('total_qty', function($row) use ($totalQty) {
+                    return $totalQty;
+                })
+                ->addColumn('total_farm', function($row) use ($totalFarms) {
+                    return $totalFarms;
                 })
                 ->addColumn('created_by', function($row) {
                     return $row->creator->name ?? 'N/A';
@@ -87,7 +97,7 @@ class FlockController extends Controller
                          .'<a class="delete-flock btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action'])   
+                ->rawColumns(['action'])
                 ->make(true);
         }
         return view('backend.flock.index');
@@ -209,11 +219,15 @@ class FlockController extends Controller
 
     public function edit($siteUrl, $id)
     {
-        $flock = Flock::findOrFail($id);
+        $user = auth()->user();
+        $flock = Flock::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
+            $query->where('created_by', $user->id);
+        })->findOrFail($id);
+
         $farms = Farm::where('created_by', auth()->id())->orWhere('created_by', function($query) {
             $query->select('id')->from('admins')->where('type', 0);
         })->get();
-        
+
         if (auth()->user()->role === 'SuperAdmin') {
             $farms = Farm::all();
         }
@@ -235,7 +249,10 @@ class FlockController extends Controller
             'hangar_quantities_json' => 'required|json',
         ]);
 
-        $flock = Flock::findOrFail($id);
+        $user = auth()->user();
+        $flock = Flock::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
+            $query->where('created_by', $user->id);
+        })->findOrFail($id);
 
         // Check if another flock with the same farm, chicks_supplier, breed, and start_date exists (exclude current flock)
         $existingFlock = Flock::where('farm_id', $request->farm_id)
@@ -296,7 +313,12 @@ class FlockController extends Controller
 
     public function destroy($siteUrl, $id)
     {
-        Flock::findOrFail($id)->delete();
+        $user = auth()->user();
+        $flock = Flock::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
+            $query->where('created_by', $user->id);
+        })->findOrFail($id);
+
+        $flock->delete();
         return response()->json(['msg' => 'Flock deleted successfully.']);
     }
 }

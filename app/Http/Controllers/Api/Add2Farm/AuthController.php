@@ -34,7 +34,8 @@ class AuthController extends Controller
      * User is created with Inactive status. OTP is generated and must be verified.
      *
      * @unauthenticated
-     * @bodyParam mobile_number string required User's mobile number. Example: +1234567890
+     * @bodyParam phone_code string optional Country phone code. Example: +91
+     * @bodyParam mobile_number string required User's mobile number. Example: 9033487938
      * @bodyParam password string required Password (min 8 characters). Example: password123
      * @bodyParam password_confirmation string required Password confirmation. Example: password123
      * @bodyParam type integer required User type (1=Farm Admin, 2=Farm Owner). Example: 1
@@ -55,6 +56,7 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'phone_code'    => 'nullable|string|max:5',
             'mobile_number' => 'required|string|max:20|unique:admins,mobile_number',
             'password'      => 'required|string|min:8|confirmed',
             'type'          => 'required|integer|in:1,2',
@@ -72,8 +74,15 @@ class AuthController extends Controller
         try {
             DB::beginTransaction();
 
+            // Normalize phone_code to include + prefix if provided
+            $phoneCode = null;
+            if ($request->phone_code) {
+                $phoneCode = strpos($request->phone_code, '+') === 0 ? $request->phone_code : '+' . $request->phone_code;
+            }
+
             // Create admin account with Inactive status
             $admin = Admin::create([
+                'phone_code'    => $phoneCode,
                 'mobile_number' => $request->mobile_number,
                 'password'      => Hash::make($request->password),
                 'type'          => $request->type,

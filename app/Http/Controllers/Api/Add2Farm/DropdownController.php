@@ -122,6 +122,13 @@ class DropdownController extends BaseController
     {
         $user = auth()->user();
 
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('user_not_authenticated'),
+            ], 401);
+        }
+
         // Determine supervisor type based on logged-in user's type
         $supervisorType = match($user->type) {
             Admin::PUBLIC_VENDOR => 4,  // type 2 users get type 4 supervisors

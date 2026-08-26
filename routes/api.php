@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\Add2Farm\FarmController as Add2FarmFarmController;
 use App\Http\Controllers\Api\Add2Farm\FlockController as Add2FarmFlockController;
 use App\Http\Controllers\Api\Add2Farm\DailyRecordController as Add2FarmDailyRecordController;
 use App\Http\Controllers\Api\Add2Farm\DropdownController as Add2FarmDropdownController;
+use App\Http\Controllers\Api\Add2Farm\CountryController as Add2FarmCountryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -84,6 +85,13 @@ Route::prefix('add2farm/auth')->middleware('set.add2farm.language')->group(funct
     Route::post('resend-otp', [Add2FarmAuthController::class, 'resendOtp']);
     Route::post('forgot-password', [Add2FarmAuthController::class, 'forgotPassword']);
     Route::post('reset-password', [Add2FarmAuthController::class, 'resetPassword'])->middleware('validate.password.reset.token');
+});
+
+// Add2Farm public data routes (countries, dropdowns, etc.)
+Route::prefix('add2farm')->middleware('set.add2farm.language')->group(function () {
+    Route::get('countries', [Add2FarmCountryController::class, 'index']);
+    Route::get('countries/dropdown', [Add2FarmCountryController::class, 'dropdown']);
+    Route::get('countries/{id}', [Add2FarmCountryController::class, 'show']);
 });
 
 // Add2Farm protected routes — require a valid Sanctum token

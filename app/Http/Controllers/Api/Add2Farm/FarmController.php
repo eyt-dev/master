@@ -322,16 +322,18 @@ class FarmController extends BaseController
             DB::rollBack();
             \Log::error('Farm creation database error: ' . $e->getMessage());
 
-            $message = 'Database error occurred.';
+            $statusCode = 500;
+            $message = 'Failed to create farm.';
+
             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                $message = 'Farm name already exists.';
+                $statusCode = 422;
+                $message = 'A farm with this name already exists. Please use a different name.';
             }
 
             return response()->json([
                 'success' => false,
                 'message' => $message,
-                'error'   => env('APP_DEBUG') ? $e->getMessage() : null,
-            ], 500);
+            ], $statusCode);
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Farm creation error: ' . $e->getMessage());
@@ -339,7 +341,6 @@ class FarmController extends BaseController
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create farm.',
-                'error'   => env('APP_DEBUG') ? $e->getMessage() : null,
             ], 500);
         }
     }
@@ -536,16 +537,18 @@ class FarmController extends BaseController
             DB::rollBack();
             \Log::error('Farm update database error: ' . $e->getMessage());
 
-            $message = 'Database error occurred.';
+            $statusCode = 500;
+            $message = 'Failed to update farm.';
+
             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                $message = 'Farm name already exists.';
+                $statusCode = 422;
+                $message = 'A farm with this name already exists. Please use a different name.';
             }
 
             return response()->json([
                 'success' => false,
                 'message' => $message,
-                'error'   => env('APP_DEBUG') ? $e->getMessage() : null,
-            ], 500);
+            ], $statusCode);
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Farm update error: ' . $e->getMessage());
@@ -553,7 +556,6 @@ class FarmController extends BaseController
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update farm.',
-                'error'   => env('APP_DEBUG') ? $e->getMessage() : null,
             ], 500);
         }
     }

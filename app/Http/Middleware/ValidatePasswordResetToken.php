@@ -17,20 +17,28 @@ class ValidatePasswordResetToken
      */
     public function handle(Request $request, Closure $next)
     {
-        // Get the token from the Authorization header
-        $token = $request->bearerToken();
+        // Get the token from the request body (not Authorization header)
+        $token = $request->input('token');
 
         if (!$token) {
             return response()->json([
                 'success' => false,
-                'message' => 'Missing authentication token.',
-            ], 401);
+                'message' => 'Missing password reset token in request body.',
+            ], 400);
         }
+
+        // Trim token to remove any whitespace
+        $token = trim($token);
 
         // Find the token in the database
         $personalAccessToken = PersonalAccessToken::findToken($token);
 
         if (!$personalAccessToken) {
+            \Log::warning('Password reset token not found in middleware', [
+                'token_length' => strlen($token),
+                'token_preview' => substr($token, 0, 20) . '...'
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid or expired token.',

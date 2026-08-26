@@ -187,7 +187,7 @@ class SupervisorController extends BaseController
             'mobile_number'   => 'required|string|max:20|unique:admins,mobile_number',
             'email'           => 'nullable|email|max:255|unique:admins,email',
             'notes'           => 'nullable|string|max:1000',
-            'image'           => 'nullable|image|mimes:jpeg,png,gif|max:2048',
+            'image'           => 'nullable|image|mimes:jpeg,png,gif,webp|max:2048',
             'farm_id'         => 'nullable|integer|exists:farms,id',
         ]);
 

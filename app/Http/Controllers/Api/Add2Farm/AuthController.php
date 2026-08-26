@@ -333,6 +333,9 @@ class AuthController extends Controller
 
             // For forgot password flow: return only verification token, don't login user
             if ($context === 'forgot_password') {
+                // Delete old password-reset tokens for this user
+                $admin->tokens()->where('name', 'password-reset-token')->delete();
+
                 // Generate a temporary verification token for password reset
                 $token = $admin->createToken('password-reset-token')->plainTextToken;
 
@@ -554,10 +557,19 @@ class AuthController extends Controller
             ], 422);
         }
 
+        // Trim token to remove any whitespace
+        $tokenInput = trim($request->token);
+
         // Verify token and get user
-        $personalAccessToken = PersonalAccessToken::findToken($request->token);
+        $personalAccessToken = PersonalAccessToken::findToken($tokenInput);
 
         if (!$personalAccessToken) {
+            // Log for debugging
+            \Log::warning('Password reset token not found', [
+                'token_length' => strlen($tokenInput),
+                'token_preview' => substr($tokenInput, 0, 20) . '...'
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => $this->translationService->get('invalid_or_expired_token_otp'),

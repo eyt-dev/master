@@ -240,6 +240,8 @@ class FarmController extends BaseController
         $validator = Validator::make($request->all(), [
             'name'                      => 'required|string|max:255',
             'location'                  => 'required|string|max:255',
+            'latitude'                  => 'nullable|numeric|between:-90,90',
+            'longitude'                 => 'nullable|numeric|between:-180,180',
             'type'                      => 'required|string|in:closed_system,open_system,cages',
             'phone_code'                => 'nullable|string|max:10',
             'mobile_number'             => 'nullable|string|max:20',
@@ -284,6 +286,8 @@ class FarmController extends BaseController
             $farm = Farm::create([
                 'name'               => $request->name,
                 'location'           => $request->location,
+                'latitude'           => $request->latitude,
+                'longitude'          => $request->longitude,
                 'type'               => $request->type,
                 'phone_code'         => $request->phone_code,
                 'mobile_number'      => $request->mobile_number,
@@ -430,6 +434,8 @@ class FarmController extends BaseController
         $validator = Validator::make($request->all(), [
             'name'                      => 'required|string|max:255',
             'location'                  => 'required|string|max:255',
+            'latitude'                  => 'nullable|numeric|between:-90,90',
+            'longitude'                 => 'nullable|numeric|between:-180,180',
             'type'                      => 'required|string|in:closed_system,open_system,cages',
             'phone_code'                => 'nullable|string|max:10',
             'mobile_number'             => 'nullable|string|max:20',
@@ -477,6 +483,8 @@ class FarmController extends BaseController
             $farm->update([
                 'name'               => $request->name,
                 'location'           => $request->location,
+                'latitude'           => $request->latitude,
+                'longitude'          => $request->longitude,
                 'type'               => $request->type,
                 'phone_code'         => $request->phone_code,
                 'mobile_number'      => $request->mobile_number,
@@ -652,6 +660,8 @@ class FarmController extends BaseController
             'id'                    => $farm->id,
             'name'                  => $farm->name,
             'location'              => $farm->location,
+            'latitude'              => $farm->latitude,
+            'longitude'             => $farm->longitude,
             'type'                  => $farm->type,
             'mobile_number'         => $farm->getFullPhoneNumber(),
             'number_of_hangars'     => $farm->number_of_hangars,

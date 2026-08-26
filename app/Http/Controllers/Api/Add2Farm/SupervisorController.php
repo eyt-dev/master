@@ -56,6 +56,25 @@ class SupervisorController extends BaseController
      */
     public function index(Request $request)
     {
+        // Get all supervisors for counting
+        $allSupervisors = Admin::where('type', self::ADMIN_TYPE)
+            ->where('created_by', auth()->id())
+            ->get();
+
+        // Count total, active (with farm), and inactive (without farm)
+        $totalSupervisors = $allSupervisors->count();
+        $activeSupervisors = 0;
+        $inactiveSupervisors = 0;
+
+        foreach ($allSupervisors as $supervisor) {
+            $farm = \App\Models\Farm::where('assigned_to', $supervisor->id)->first();
+            if ($farm) {
+                $activeSupervisors++;
+            } else {
+                $inactiveSupervisors++;
+            }
+        }
+
         $supervisors = Admin::where('type', self::ADMIN_TYPE)
             ->where('created_by', auth()->id())
             ->when($request->search, function ($q) use ($request) {
@@ -76,6 +95,9 @@ class SupervisorController extends BaseController
         return response()->json([
             'success' => true,
             'message' => $this->translationService->get('supervisors_retrieved_successfully'),
+            'total_supervisors' => $totalSupervisors,
+            'active' => $activeSupervisors,
+            'inactive' => $inactiveSupervisors,
             'data' => $supervisors,
         ]);
     }
@@ -507,6 +529,9 @@ class SupervisorController extends BaseController
         // Load assigned farm if exists
         $farm = \App\Models\Farm::where('assigned_to', $admin->id)->first();
 
+        // Status is Active if farm assigned, otherwise Inactive
+        $displayStatus = $farm ? 'Active' : 'Inactive';
+
         return [
             'id'            => $admin->id,
             'name'          => $admin->name,
@@ -514,8 +539,8 @@ class SupervisorController extends BaseController
             'email'         => $admin->email,
             'type'          => $admin->type,
             'type_label'    => $this->getTypeLabel($admin->type),
-            'status'        => $admin->status,
-            'status_label'  => $this->getStatusLabel($admin->status),
+            'status'        => $displayStatus,
+            'status_label'  => $this->getStatusLabel($displayStatus),
             'assignment'    => $admin->hasAssignment(),
             'notes'         => $admin->notes ?? null,
             'image'         => $admin->image ?? null,

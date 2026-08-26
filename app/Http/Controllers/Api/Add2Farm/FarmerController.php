@@ -56,6 +56,25 @@ class FarmerController extends BaseController
      */
     public function index(Request $request)
     {
+        // Get all farmers for counting
+        $allFarmers = Admin::where('type', self::ADMIN_TYPE)
+            ->where('created_by', auth()->id())
+            ->get();
+
+        // Count total, active (with farm), and inactive (without farm)
+        $totalFarmers = $allFarmers->count();
+        $activeFarmers = 0;
+        $inactiveFarmers = 0;
+
+        foreach ($allFarmers as $farmer) {
+            $farm = \App\Models\Farm::where('assigned_to', $farmer->id)->first();
+            if ($farm) {
+                $activeFarmers++;
+            } else {
+                $inactiveFarmers++;
+            }
+        }
+
         $farmers = Admin::where('type', self::ADMIN_TYPE)
             ->where('created_by', auth()->id())
             ->when($request->search, function ($q) use ($request) {
@@ -76,6 +95,9 @@ class FarmerController extends BaseController
         return response()->json([
             'success' => true,
             'message' => $this->translationService->get('farmers_retrieved_successfully'),
+            'total_farmers' => $totalFarmers,
+            'active' => $activeFarmers,
+            'inactive' => $inactiveFarmers,
             'data' => $farmers,
         ]);
     }
@@ -555,6 +577,17 @@ class FarmerController extends BaseController
      */
     private function formatAdmin(Admin $admin): array
     {
+        $imageUrl = null;
+        if ($admin->image) {
+            $imageUrl = route('api.files', ['path' => $admin->image]);
+        }
+
+        // Load assigned farm if exists
+        $farm = \App\Models\Farm::where('assigned_to', $admin->id)->first();
+
+        // Status is Active if farm assigned, otherwise Inactive
+        $displayStatus = $farm ? 'Active' : 'Inactive';
+
         return [
             'id'            => $admin->id,
             'name'          => $admin->name,
@@ -562,11 +595,14 @@ class FarmerController extends BaseController
             'email'         => $admin->email,
             'type'          => $admin->type,
             'type_label'    => $this->getTypeLabel($admin->type),
-            'status'        => $admin->status,
-            'status_label'  => $this->getStatusLabel($admin->status),
+            'status'        => $displayStatus,
+            'status_label'  => $this->getStatusLabel($displayStatus),
             'assignment'    => $admin->hasAssignment(),
             'notes'         => $admin->notes ?? null,
             'image'         => $admin->image ?? null,
+            'image_url'     => $imageUrl,
+            'farm_id'       => $farm?->id ?? null,
+            'farm_name'     => $farm?->name ?? null,
             'created_by_name' => $admin->creator?->name ?? null,
             'created_at'    => $admin->created_at,
         ];

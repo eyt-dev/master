@@ -12,6 +12,8 @@ class Farm extends Model
     protected $fillable = [
         'name',
         'location',
+        'latitude',
+        'longitude',
         'type',
         'phone_code',
         'mobile_number',

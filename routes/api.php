@@ -139,6 +139,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('flocks/available', [Add2FarmFlockController::class, 'available']);
         Route::get('farms/{farm_id}/hangars', [Add2FarmFlockController::class, 'farmHangars']);
+        Route::get('flocks/{flock_id}/hangars', [Add2FarmFlockController::class, 'flockHangars']);
         Route::get('flocks', [Add2FarmFlockController::class, 'index']);
         Route::post('flocks', [Add2FarmFlockController::class, 'store']);
         Route::get('flocks/{flock}', [Add2FarmFlockController::class, 'show']);
@@ -161,6 +162,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
         Route::get('dropdowns/suppliers', [Add2FarmDropdownController::class, 'suppliers']);
         Route::get('dropdowns/supervisors', [Add2FarmDropdownController::class, 'supervisors']);
         Route::get('dropdowns/breeds', [Add2FarmDropdownController::class, 'breeds']);
+        Route::get('dropdowns/slaughterers', [Add2FarmDropdownController::class, 'slaughterers']);
     });
 
     // File serving route - Public access to uploaded images

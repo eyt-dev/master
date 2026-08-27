@@ -115,6 +115,79 @@ class FlockController extends BaseController
     }
 
     /**
+     * Get hangars for a specific flock
+     *
+     * Get all hangars allocated to a specific flock with their allocated quantities.
+     * Used for end flock form to select hangar and enter final quantity.
+     *
+     * @authenticated
+     * @urlParam flock_id integer required The flock ID. Example: 4
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Flock hangars retrieved successfully.",
+     *   "data": [
+     *     {
+     *       "hangar_id": 12,
+     *       "hangar_name": "Hangar 1",
+     *       "allocated_qty": 300
+     *     },
+     *     {
+     *       "hangar_id": 13,
+     *       "hangar_name": "Hangar 2",
+     *       "allocated_qty": 200
+     *     }
+     *   ]
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Flock not found."
+     * }
+     */
+    public function flockHangars($flockId)
+    {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
+        $user = auth()->user();
+
+        $flock = Flock::where('created_by', $user->id)
+            ->whereHas('farm', function ($q) use ($user) {
+                $q->where(function ($q) use ($user) {
+                    $q->where('created_by', $user->id)
+                      ->orWhere('assigned_to', $user->id);
+                });
+            })
+            ->with('flockHangarAllocations.hangar')
+            ->find($flockId);
+
+        if (!$flock) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('flock_not_found'),
+            ], 404);
+        }
+
+        $hangars = $flock->flockHangarAllocations->map(function ($allocation) {
+            return [
+                'hangar_id' => $allocation->hangar_id,
+                'hangar_name' => $allocation->hangar->name,
+                'allocated_qty' => $allocation->quantity,
+            ];
+        })->values();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Flock hangars retrieved successfully.',
+            'data' => $hangars,
+        ]);
+    }
+
+    /**
      * Get farm hangars with allocation status
      *
      * Get all hangars for a farm with their allocation status in existing flocks.

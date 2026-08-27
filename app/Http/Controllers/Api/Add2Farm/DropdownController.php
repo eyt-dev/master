@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Add2Farm;
 use App\Models\Farm;
 use App\Models\ChicksSupplier;
 use App\Models\Admin;
+use App\Models\Slaughter;
 use Illuminate\Http\Request;
 
 /**
@@ -242,6 +243,55 @@ class DropdownController extends BaseController
             'success' => true,
             'message' => $this->translationService->get('breeds_retrieved_successfully'),
             'data' => $breeds,
+        ], 200);
+    }
+
+    /**
+     * Get slaughter houses for dropdown
+     *
+     * Fetch list of all slaughter houses/buyers for end flock sales.
+     * Returns slaughter house id and name for dropdown usage.
+     *
+     * @authenticated
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Slaughter houses retrieved successfully.",
+     *   "data": [
+     *     {
+     *       "id": 1,
+     *       "name": "Al Saeed Trading Co."
+     *     },
+     *     {
+     *       "id": 2,
+     *       "name": "Premium Poultry Ltd"
+     *     }
+     *   ]
+     * }
+     * @response 401 {
+     *   "success": false,
+     *   "message": "Unauthenticated"
+     * }
+     */
+    public function slaughterers(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('user_not_authenticated'),
+            ], 401);
+        }
+
+        $slaughterers = Slaughter::select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Slaughter houses retrieved successfully.',
+            'data' => $slaughterers,
         ], 200);
     }
 }

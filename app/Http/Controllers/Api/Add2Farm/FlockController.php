@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Flock;
 use App\Models\Farm;
 use App\Models\FlockHangar;
+use App\Models\FlockEnd;
+use App\Models\FlockEndDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -844,6 +846,198 @@ class FlockController extends BaseController
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete flock.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Record a harvest/sale for a flock
+     *
+     * Record a harvest/sale event for a hangar in a flock.
+     * Multiple harvests can be recorded for the same flock over time.
+     *
+     * @authenticated
+     * @urlParam flock_id integer required The flock ID. Example: 4
+     * @bodyParam slaughter_id integer optional Slaughter house ID. Example: 1
+     * @bodyParam sale_date date required Sale date (format: Y-m-d). Example: 2026-08-27
+     * @bodyParam hangar_id integer required Hangar ID. Example: 12
+     * @bodyParam cages_count integer required Number of cages. Example: 120
+     * @bodyParam cages_weight decimal required Weight per cage (kg). Example: 1.85
+     * @bodyParam birds_per_cage integer required Birds per cage (1-25). Example: 20
+     * @bodyParam batch_weights array required Array of batch weights. Example: [5.2, 5.1, 5.0, 4.8]
+     * @bodyParam notes string optional Additional notes
+     *
+     * @response 201 {
+     *   "success": true,
+     *   "message": "Harvest recorded successfully.",
+     *   "data": {
+     *     "flock_end_id": 1,
+     *     "flock_id": 4,
+     *     "flock_name": "flock1",
+     *     "hangar_id": 12,
+     *     "hangar_name": "Hangar 1",
+     *     "sale_date": "2026-08-27",
+     *     "cages_count": 120,
+     *     "birds_per_cage": 20,
+     *     "total_birds_harvested": 2400,
+     *     "available_birds": 300,
+     *     "remaining_birds": 0,
+     *     "cages_weight": "1.85",
+     *     "total_weight": "20.10",
+     *     "avg_weight_per_bird": "0.0084"
+     *   }
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "errors": {"cages_count": ["The cages count must be at least 1."]}
+     * }
+     */
+    public function end($flockId, Request $request)
+    {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
+        $user = auth()->user();
+
+        $flock = Flock::where('created_by', $user->id)
+            ->whereHas('farm', function ($q) use ($user) {
+                $q->where(function ($q) use ($user) {
+                    $q->where('created_by', $user->id)
+                      ->orWhere('assigned_to', $user->id);
+                });
+            })
+            ->with('flockHangarAllocations.hangar')
+            ->find($flockId);
+
+        if (!$flock) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('flock_not_found'),
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'sale_date' => 'required|date_format:Y-m-d',
+            'slaughter_id' => 'nullable|integer|exists:slaughters,id',
+            'hangar_id' => 'required|integer|exists:hangars,id',
+            'cages_count' => 'required|integer|min:1',
+            'cages_weight' => 'required|numeric|min:0.1',
+            'birds_per_cage' => 'required|integer|min:1|max:25',
+            'batch_weights' => 'required|array|min:1|max:4',
+            'batch_weights.*' => 'numeric|min:0',
+            'notes' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Find hangar allocation for this flock
+            $hangarAllocation = $flock->flockHangarAllocations
+                ->where('hangar_id', $request->hangar_id)
+                ->first();
+
+            if (!$hangarAllocation) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => "Hangar is not allocated to this flock.",
+                ], 422);
+            }
+
+            // Calculate available birds (original allocation - all previous harvests from this hangar)
+            $previousHarvests = FlockEnd::where('flock_id', $flock->id)
+                ->where('hangar_id', $request->hangar_id)
+                ->sum('total_birds_harvested');
+
+            $availableBirds = $hangarAllocation->quantity - $previousHarvests;
+
+            // Calculate total birds harvested
+            $totalBirdsHarvested = $request->cages_count * $request->birds_per_cage;
+
+            if ($totalBirdsHarvested > $availableBirds) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => "Cannot harvest {$totalBirdsHarvested} birds. Only {$availableBirds} birds available.",
+                ], 422);
+            }
+
+            // Calculate total weight
+            $totalWeight = array_sum($request->batch_weights);
+            $avgWeightPerBird = $totalBirdsHarvested > 0 ? $totalWeight / $totalBirdsHarvested : 0;
+
+            // Calculate remaining birds
+            $remainingBirds = $availableBirds - $totalBirdsHarvested;
+
+            // Create FlockEnd record (harvest event)
+            $flockEnd = FlockEnd::create([
+                'flock_id' => $flock->id,
+                'slaughter_id' => $request->slaughter_id,
+                'hangar_id' => $request->hangar_id,
+                'sale_date' => $request->sale_date,
+                'cages_count' => $request->cages_count,
+                'cages_weight' => $request->cages_weight,
+                'birds_per_cage' => $request->birds_per_cage,
+                'total_birds_harvested' => $totalBirdsHarvested,
+                'available_birds' => $availableBirds,
+                'remaining_birds' => $remainingBirds,
+                'total_weight' => $totalWeight,
+                'avg_weight_per_bird' => $avgWeightPerBird,
+                'notes' => $request->notes,
+                'ended_by' => auth()->id(),
+            ]);
+
+            // Create FlockEndDetail records for each batch weight
+            foreach ($request->batch_weights as $index => $weight) {
+                FlockEndDetail::create([
+                    'flock_end_id' => $flockEnd->id,
+                    'batch_number' => $index + 1,
+                    'batch_weight' => $weight,
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Harvest recorded successfully.',
+                'data' => [
+                    'flock_end_id' => $flockEnd->id,
+                    'flock_id' => $flock->id,
+                    'flock_name' => $flock->name,
+                    'hangar_id' => $hangarAllocation->hangar_id,
+                    'hangar_name' => $hangarAllocation->hangar->name,
+                    'sale_date' => $flockEnd->sale_date->format('Y-m-d'),
+                    'cages_count' => $flockEnd->cages_count,
+                    'birds_per_cage' => $flockEnd->birds_per_cage,
+                    'total_birds_harvested' => $flockEnd->total_birds_harvested,
+                    'available_birds' => $flockEnd->available_birds,
+                    'remaining_birds' => $flockEnd->remaining_birds,
+                    'cages_weight' => $flockEnd->cages_weight,
+                    'total_weight' => $flockEnd->total_weight,
+                    'avg_weight_per_bird' => round($flockEnd->avg_weight_per_bird, 4),
+                ],
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Flock harvest error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to record harvest.',
                 'error' => $e->getMessage(),
             ], 500);
         }

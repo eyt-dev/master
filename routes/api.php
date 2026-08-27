@@ -140,6 +140,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
         Route::get('flocks/available', [Add2FarmFlockController::class, 'available']);
         Route::get('farms/{farm_id}/hangars', [Add2FarmFlockController::class, 'farmHangars']);
         Route::get('flocks/{flock_id}/hangars', [Add2FarmFlockController::class, 'flockHangars']);
+        Route::post('flocks/{flock_id}/end', [Add2FarmFlockController::class, 'end']);
         Route::get('flocks', [Add2FarmFlockController::class, 'index']);
         Route::post('flocks', [Add2FarmFlockController::class, 'store']);
         Route::get('flocks/{flock}', [Add2FarmFlockController::class, 'show']);

@@ -55,8 +55,8 @@
                                     <th>#</th>
                                     <th>Name</th>
                                     <th>Location</th>
-                                    <th>Address</th>
                                     <th>Contact Person</th>
+                                    <th>Phone Code</th>
                                     <th>Mobile Number</th>
                                     <th>Created By</th>
                                     <th>Created At</th>
@@ -124,8 +124,8 @@
                 { data: 'id', name: 'id' },
                 { data: 'name', name: 'name' },
                 { data: 'location', name: 'location' },
-                { data: 'address', name: 'address' },
                 { data: 'contact_person', name: 'contact_person' },
+                { data: 'phone_code', name: 'phone_code' },
                 { data: 'mobile_number', name: 'mobile_number' },
                 { data: 'creator' },
                 { data: 'created_at', name: 'created_at' },

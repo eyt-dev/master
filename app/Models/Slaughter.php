@@ -12,10 +12,17 @@ class Slaughter extends Model
     protected $fillable = [
         'name',
         'location',
-        'address',
         'contact_person',
         'mobile_number',
+        'phone_code',
+        'latitude',
+        'longitude',
         'created_by',
+    ];
+
+    protected $casts = [
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
     ];
 
     public function creator()

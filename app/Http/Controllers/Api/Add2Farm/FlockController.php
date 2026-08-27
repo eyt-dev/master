@@ -877,15 +877,29 @@ class FlockController extends BaseController
      *     "flock_name": "flock1",
      *     "hangar_id": 12,
      *     "hangar_name": "Hangar 1",
+     *     "slaughter_id": 1,
+     *     "slaughter_name": "Al Saeed Trading Co.",
      *     "sale_date": "2026-08-27",
      *     "cages_count": 120,
      *     "birds_per_cage": 20,
-     *     "total_birds_harvested": 2400,
-     *     "available_birds": 300,
-     *     "remaining_birds": 0,
      *     "cages_weight": "1.85",
+     *     "available_birds": 300,
+     *     "total_birds_harvested": 240,
+     *     "mortality_birds": 60,
+     *     "mortality_rate": 20.0,
+     *     "remaining_birds": 0,
      *     "total_weight": "20.10",
-     *     "avg_weight_per_bird": "0.0084"
+     *     "avg_weight_per_bird": "0.0838",
+     *     "notes": "Grade A birds",
+     *     "ended_by_id": 6,
+     *     "ended_by_name": "Dean Lindsay",
+     *     "created_at": "2026-08-27 11:44:45",
+     *     "batch_weights": [
+     *       {"batch_number": 1, "batch_weight": 5.2},
+     *       {"batch_number": 2, "batch_weight": 5.1},
+     *       {"batch_number": 3, "batch_weight": 5.0},
+     *       {"batch_number": 4, "batch_weight": 4.8}
+     *     ]
      *   }
      * }
      * @response 422 {
@@ -1010,6 +1024,21 @@ class FlockController extends BaseController
 
             DB::commit();
 
+            // Load relationships
+            $flockEnd->load('batchWeights', 'slaughter', 'endedBy');
+
+            // Calculate mortality
+            $mortality = $availableBirds - $totalBirdsHarvested;
+            $mortalityRate = $availableBirds > 0 ? ($mortality / $availableBirds) * 100 : 0;
+
+            // Format batch weights
+            $batchWeights = $flockEnd->batchWeights->map(function ($detail) {
+                return [
+                    'batch_number' => $detail->batch_number,
+                    'batch_weight' => $detail->batch_weight,
+                ];
+            })->values();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Harvest recorded successfully.',
@@ -1019,15 +1048,24 @@ class FlockController extends BaseController
                     'flock_name' => $flock->name,
                     'hangar_id' => $hangarAllocation->hangar_id,
                     'hangar_name' => $hangarAllocation->hangar->name,
+                    'slaughter_id' => $flockEnd->slaughter_id,
+                    'slaughter_name' => $flockEnd->slaughter?->name ?? null,
                     'sale_date' => $flockEnd->sale_date->format('Y-m-d'),
                     'cages_count' => $flockEnd->cages_count,
                     'birds_per_cage' => $flockEnd->birds_per_cage,
-                    'total_birds_harvested' => $flockEnd->total_birds_harvested,
-                    'available_birds' => $flockEnd->available_birds,
-                    'remaining_birds' => $flockEnd->remaining_birds,
                     'cages_weight' => $flockEnd->cages_weight,
+                    'available_birds' => $flockEnd->available_birds,
+                    'total_birds_harvested' => $flockEnd->total_birds_harvested,
+                    'mortality_birds' => $mortality,
+                    'mortality_rate' => round($mortalityRate, 2),
+                    'remaining_birds' => $flockEnd->remaining_birds,
                     'total_weight' => $flockEnd->total_weight,
                     'avg_weight_per_bird' => round($flockEnd->avg_weight_per_bird, 4),
+                    'notes' => $flockEnd->notes,
+                    'ended_by_id' => $flockEnd->ended_by,
+                    'ended_by_name' => $flockEnd->endedBy?->name ?? null,
+                    'created_at' => $flockEnd->created_at->format('Y-m-d H:i:s'),
+                    'batch_weights' => $batchWeights,
                 ],
             ], 201);
 

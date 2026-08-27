@@ -51,6 +51,13 @@ class FlockController extends BaseController
      */
     public function available(Request $request)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $user = auth()->user();
 
         // Calculate aggregates for available flocks
@@ -145,6 +152,13 @@ class FlockController extends BaseController
      */
     public function farmHangars($farmId)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $user = auth()->user();
 
         // Verify user has access to this farm
@@ -233,6 +247,13 @@ class FlockController extends BaseController
      */
     public function index(Request $request)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $user = auth()->user();
 
         // Calculate aggregates for all flocks of logged-in user
@@ -332,6 +353,13 @@ class FlockController extends BaseController
      */
     public function show($id)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $user = auth()->user();
 
         $flock = Flock::where('created_by', $user->id)
@@ -408,6 +436,13 @@ class FlockController extends BaseController
      */
     public function store(Request $request)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $validator = Validator::make($request->all(), [
             'name'                  => 'required|string|max:255',
             'farm_id'               => 'required|integer|exists:farms,id',
@@ -494,6 +529,7 @@ class FlockController extends BaseController
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create flock.',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -541,6 +577,13 @@ class FlockController extends BaseController
      */
     public function update(Request $request, $id)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $user = auth()->user();
 
         $flock = Flock::where('created_by', $user->id)
@@ -647,6 +690,7 @@ class FlockController extends BaseController
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update flock.',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -670,6 +714,13 @@ class FlockController extends BaseController
      */
     public function destroy($id)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $user = auth()->user();
 
         $flock = Flock::where('created_by', $user->id)
@@ -711,6 +762,7 @@ class FlockController extends BaseController
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete flock.',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

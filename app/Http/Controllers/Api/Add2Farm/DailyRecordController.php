@@ -61,6 +61,13 @@ class DailyRecordController extends BaseController
      */
     public function index(Request $request)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $records = DailyRecord::where('created_by', auth()->id())
             ->when($request->flock_id, function ($q) use ($request) {
                 return $q->where('flock_id', $request->flock_id);
@@ -128,6 +135,13 @@ class DailyRecordController extends BaseController
      */
     public function show($id)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $record = DailyRecord::where('created_by', auth()->id())
             ->with('farm', 'flock', 'hangar', 'creator')
             ->find($id);
@@ -194,6 +208,13 @@ class DailyRecordController extends BaseController
      */
     public function store(Request $request)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $validator = Validator::make($request->all(), [
             'record_date'    => 'required|date_format:d-m-Y',
             'flock_id'       => 'required|integer|exists:flocks,id',
@@ -309,6 +330,13 @@ class DailyRecordController extends BaseController
      */
     public function update(Request $request, $id)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $record = DailyRecord::where('created_by', auth()->id())->find($id);
 
         if (!$record) {
@@ -393,6 +421,13 @@ class DailyRecordController extends BaseController
      */
     public function destroy($id)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $record = DailyRecord::where('created_by', auth()->id())->find($id);
 
         if (!$record) {

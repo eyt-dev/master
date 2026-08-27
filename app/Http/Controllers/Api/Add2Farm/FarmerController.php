@@ -56,6 +56,13 @@ class FarmerController extends BaseController
      */
     public function index(Request $request)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         // Get all farmers for counting
         $allFarmers = Admin::where('type', self::ADMIN_TYPE)
             ->where('created_by', auth()->id())
@@ -139,6 +146,13 @@ class FarmerController extends BaseController
      */
     public function show($id)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $admin = Admin::where('type', self::ADMIN_TYPE)
             ->where('created_by', auth()->id())
             ->with('creator', 'projectStatuses')
@@ -208,6 +222,13 @@ class FarmerController extends BaseController
      */
     public function store(Request $request)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $validator = Validator::make($request->all(), [
             'name'            => 'required|string|max:255',
             'phone_code'      => 'required|string|max:10',
@@ -379,6 +400,13 @@ class FarmerController extends BaseController
      */
     public function update(Request $request, $id)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $admin = Admin::where('type', self::ADMIN_TYPE)
             ->where('created_by', auth()->id())
             ->find($id);
@@ -547,6 +575,13 @@ class FarmerController extends BaseController
      */
     public function destroy($id)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $admin = Admin::where('type', self::ADMIN_TYPE)
             ->where('created_by', auth()->id())
             ->find($id);

@@ -56,6 +56,13 @@ class SupervisorController extends BaseController
      */
     public function index(Request $request)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         // Get all supervisors for counting
         $allSupervisors = Admin::where('type', self::ADMIN_TYPE)
             ->where('created_by', auth()->id())
@@ -139,6 +146,13 @@ class SupervisorController extends BaseController
      */
     public function show($id)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $admin = Admin::where('type', self::ADMIN_TYPE)
             ->where('created_by', auth()->id())
             ->with('creator')
@@ -203,6 +217,13 @@ class SupervisorController extends BaseController
      */
     public function store(Request $request)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $validator = Validator::make($request->all(), [
             'name'            => 'required|string|max:255',
             'phone_code'      => 'required|string|max:10',
@@ -351,6 +372,13 @@ class SupervisorController extends BaseController
      */
     public function update(Request $request, $id)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         \Log::info('Supervisor update - request data', [
             'supervisor_id' => $id,
             'request_all' => $request->all(),
@@ -494,6 +522,13 @@ class SupervisorController extends BaseController
      */
     public function destroy($id)
     {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
         $admin = Admin::where('type', self::ADMIN_TYPE)
             ->where('created_by', auth()->id())
             ->find($id);

@@ -131,7 +131,18 @@ class FarmController extends BaseController
      */
     public function show($id)
     {
-        $farm = Farm::with('assignedAdmin', 'creator', 'hangars')->find($id);
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
+        $user = auth()->user();
+        $farm = Farm::where(function ($q) use ($user) {
+            $q->where('created_by', $user->id)
+              ->orWhere('assigned_to', $user->id);
+        })->with('assignedAdmin', 'creator', 'hangars')->find($id);
 
         if (!$farm) {
             return response()->json([
@@ -423,7 +434,18 @@ class FarmController extends BaseController
      */
     public function update(Request $request, $id)
     {
-        $farm = Farm::find($id);
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
+        $user = auth()->user();
+        $farm = Farm::where(function ($q) use ($user) {
+            $q->where('created_by', $user->id)
+              ->orWhere('assigned_to', $user->id);
+        })->find($id);
 
         if (!$farm) {
             return response()->json([
@@ -579,7 +601,18 @@ class FarmController extends BaseController
      */
     public function destroy($id)
     {
-        $farm = Farm::find($id);
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
+        $user = auth()->user();
+        $farm = Farm::where(function ($q) use ($user) {
+            $q->where('created_by', $user->id)
+              ->orWhere('assigned_to', $user->id);
+        })->find($id);
 
         if (!$farm) {
             return response()->json([

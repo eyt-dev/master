@@ -271,9 +271,18 @@ class SupervisorController extends BaseController
 
             // Assign supervisor to farm if farm_id provided
             if ($request->filled('farm_id')) {
-                \App\Models\Farm::findOrFail($request->farm_id)->update([
-                    'assigned_to' => $admin->id,
-                ]);
+                $farm = \App\Models\Farm::findOrFail($request->farm_id);
+
+                // Check if farm is already assigned to another supervisor
+                if ($farm->assigned_to !== null) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This farm is already assigned to another supervisor.',
+                    ], 422);
+                }
+
+                $farm->update(['assigned_to' => $admin->id]);
             }
 
             DB::commit();
@@ -342,6 +351,13 @@ class SupervisorController extends BaseController
      */
     public function update(Request $request, $id)
     {
+        \Log::info('Supervisor update - request data', [
+            'supervisor_id' => $id,
+            'request_all' => $request->all(),
+            'has_farm_id' => $request->has('farm_id'),
+            'filled_farm_id' => $request->filled('farm_id'),
+        ]);
+
         $admin = Admin::where('type', self::ADMIN_TYPE)
             ->where('created_by', auth()->id())
             ->find($id);
@@ -360,7 +376,7 @@ class SupervisorController extends BaseController
             'email'           => 'nullable|email|max:255|unique:admins,email,' . $admin->id,
             'status'          => 'sometimes|required|in:Active,Inactive,Disable',
             'notes'           => 'nullable|string|max:1000',
-            'image'           => 'nullable|image|mimes:jpeg,png,gif|max:2048',
+            'image'           => 'nullable|image|mimes:jpeg,png,gif,webp|max:2048',
             'farm_id'         => 'nullable|integer|exists:farms,id',
         ]);
 
@@ -387,9 +403,12 @@ class SupervisorController extends BaseController
                 $updateData['email'] = $request->email;
             }
 
-            // Add status if provided
+            // Add status if provided (default to current status if not provided)
             if ($request->filled('status')) {
                 $updateData['status'] = $request->status;
+            } else {
+                // Keep existing status if not provided
+                $updateData['status'] = $admin->status;
             }
 
             // Add phone_code if provided
@@ -426,10 +445,10 @@ class SupervisorController extends BaseController
                 $updateData['image'] = $uploadDir . '/' . $filename;
             }
 
-            // Update supervisor details (excluding type and mobile_number)
+            // Update supervisor details
             $admin->update($updateData);
 
-            // Assign supervisor to farm if farm_id provided
+            // Handle farm assignment (same as store method)
             if ($request->filled('farm_id')) {
                 \App\Models\Farm::findOrFail($request->farm_id)->update([
                     'assigned_to' => $admin->id,

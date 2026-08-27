@@ -215,6 +215,7 @@ class FarmerController extends BaseController
             'email'           => 'nullable|email|max:255|unique:admins,email',
             'notes'           => 'nullable|string|max:1000',
             'image'           => 'nullable|image|mimes:jpeg,png,gif,webp|max:2048',
+            'farm_id'         => 'nullable|integer|exists:farms,id',
             'project_rows'    => 'nullable|array',
             'project_rows.*.project_id' => 'nullable|exists:projects,id',
             'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
@@ -287,6 +288,13 @@ class FarmerController extends BaseController
                     'admin_id'   => $admin->id,
                     'project_id' => $add2FarmProjectId,
                     'status'     => 'Active',
+                ]);
+            }
+
+            // Assign farmer to farm if farm_id provided
+            if ($request->filled('farm_id')) {
+                \App\Models\Farm::findOrFail($request->farm_id)->update([
+                    'assigned_to' => $admin->id,
                 ]);
             }
 
@@ -389,7 +397,8 @@ class FarmerController extends BaseController
             'email'   => 'nullable|email|max:255|unique:admins,email,' . $admin->id,
             'status'  => 'sometimes|required|in:Active,Inactive,Disable',
             'notes'   => 'nullable|string|max:1000',
-            'image'   => 'nullable|image|mimes:jpeg,png,gif|max:2048',
+            'image'   => 'nullable|image|mimes:jpeg,png,gif,webp|max:2048',
+            'farm_id' => 'nullable|integer|exists:farms,id',
             'project_rows' => 'nullable|array',
             'project_rows.*.project_id' => 'nullable|exists:projects,id',
             'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
@@ -473,6 +482,13 @@ class FarmerController extends BaseController
 
             // Update farmer details (excluding type and mobile_number)
             $admin->update($updateData);
+
+            // Handle farm assignment
+            if ($request->filled('farm_id')) {
+                \App\Models\Farm::findOrFail($request->farm_id)->update([
+                    'assigned_to' => $admin->id,
+                ]);
+            }
 
             // Update project statuses if provided
             if ($request->filled('project_rows')) {

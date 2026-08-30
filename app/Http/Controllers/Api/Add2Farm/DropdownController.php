@@ -6,6 +6,7 @@ use App\Models\Farm;
 use App\Models\ChicksSupplier;
 use App\Models\Admin;
 use App\Models\Slaughter;
+use App\Models\MaterialName;
 use Illuminate\Http\Request;
 
 /**
@@ -243,6 +244,83 @@ class DropdownController extends BaseController
             'success' => true,
             'message' => $this->translationService->get('breeds_retrieved_successfully'),
             'data' => $breeds,
+        ], 200);
+    }
+
+    /**
+     * Get material names for dropdown
+     *
+     * Fetch list of all material names for feed and ingredients dropdown.
+     * Returns material id and name for dropdown usage.
+     *
+     * @authenticated
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Material names retrieved successfully.",
+     *   "data": [
+     *     {
+     *       "id": 1,
+     *       "name": "Starter feed"
+     *     },
+     *     {
+     *       "id": 2,
+     *       "name": "Grower feed"
+     *     },
+     *     {
+     *       "id": 3,
+     *       "name": "Finisher feed"
+     *     },
+     *     {
+     *       "id": 4,
+     *       "name": "Corn"
+     *     },
+     *     {
+     *       "id": 5,
+     *       "name": "Soybean meal"
+     *     },
+     *     {
+     *       "id": 6,
+     *       "name": "Wheat"
+     *     },
+     *     {
+     *       "id": 7,
+     *       "name": "Barley"
+     *     },
+     *     {
+     *       "id": 8,
+     *       "name": "Premix"
+     *     },
+     *     {
+     *       "id": 9,
+     *       "name": "Limestone"
+     *     }
+     *   ]
+     * }
+     * @response 401 {
+     *   "success": false,
+     *   "message": "Unauthenticated"
+     * }
+     */
+    public function materialNames(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->translationService->get('user_not_authenticated'),
+            ], 401);
+        }
+
+        $materials = MaterialName::select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Material names retrieved successfully.',
+            'data' => $materials,
         ], 200);
     }
 

@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\Add2Farm\FlockController as Add2FarmFlockController
 use App\Http\Controllers\Api\Add2Farm\DailyRecordController as Add2FarmDailyRecordController;
 use App\Http\Controllers\Api\Add2Farm\DropdownController as Add2FarmDropdownController;
 use App\Http\Controllers\Api\Add2Farm\CountryController as Add2FarmCountryController;
+use App\Http\Controllers\Api\Add2Farm\FeedStockController as Add2FarmFeedStockController;
 
 /*
 |--------------------------------------------------------------------------
@@ -157,6 +158,15 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
         Route::delete('daily-records/{daily_record}', [Add2FarmDailyRecordController::class, 'destroy']);
     });
 
+    // Feed Stocks (Material Stock) - Accessible to authenticated users
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('feed-stocks', [Add2FarmFeedStockController::class, 'index']);
+        Route::post('feed-stocks', [Add2FarmFeedStockController::class, 'store']);
+        Route::get('feed-stocks/{id}', [Add2FarmFeedStockController::class, 'show']);
+        Route::put('feed-stocks/{id}', [Add2FarmFeedStockController::class, 'update']);
+        Route::delete('feed-stocks/{id}', [Add2FarmFeedStockController::class, 'destroy']);
+    });
+
     // Dropdowns - Accessible to authenticated users
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('dropdowns/farms', [Add2FarmDropdownController::class, 'farms']);
@@ -164,6 +174,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
         Route::get('dropdowns/supervisors', [Add2FarmDropdownController::class, 'supervisors']);
         Route::get('dropdowns/breeds', [Add2FarmDropdownController::class, 'breeds']);
         Route::get('dropdowns/slaughterers', [Add2FarmDropdownController::class, 'slaughterers']);
+        Route::get('dropdowns/material-names', [Add2FarmDropdownController::class, 'materialNames']);
     });
 
     // File serving route - Public access to uploaded images

@@ -43,11 +43,13 @@
       "Bash(curl -s -X POST http://admin.eyt.test/api/add2farm/supervisors/39 --header 'Authorization: Bearer 45|pfbH3Bd5pRJQn8A9RDFbx4O7085jh233jCZEgDuob5c8e50c' --header 'Accept: application/json' --form _method=PUT --form 'name=John Supervisor11' --form mobile_number=+999888777666 --form email=john.supervisor.updated99@example.com --form status=Active --form 'notes=Senior supervisor with 10 years experience' --form farm_id=1)",
       "Bash(git diff *)",
       "Bash(cat)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(rm -f \"e:\\\\xampp\\\\htdocs\\\\eyt-master\\\\app\\\\Models\\\\FeedStock.php\" \"e:\\\\xampp\\\\htdocs\\\\eyt-master\\\\app\\\\Models\\\\FeedStockHangar.php\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\Dell\\Desktop",
-      "c:\\Users\\Dell\\Downloads"
+      "c:\\Users\\Dell\\Downloads",
+      "e:\\xampp\\htdocs\\eyt-master\\app\\Models"
     ]
   }
 }

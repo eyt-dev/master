@@ -225,6 +225,7 @@ class DailyRecordController extends BaseController
             'eggs_weight'    => 'nullable|numeric|min:0',
             'chicks_weight'  => 'nullable|numeric|min:0',
             'mortality'      => 'nullable|integer|min:0',
+            'notes'          => 'nullable|string|max:1000',
         ]);
 
         if ($validator->fails()) {
@@ -254,6 +255,7 @@ class DailyRecordController extends BaseController
                 'eggs_weight'   => $request->eggs_weight ?? 0,
                 'chicks_weight' => $request->chicks_weight ?? 0,
                 'mortality'     => $request->mortality ?? 0,
+                'notes'         => $request->notes ?? null,
                 'created_by'    => auth()->id(),
             ]);
 
@@ -355,6 +357,7 @@ class DailyRecordController extends BaseController
             'eggs_weight'    => 'nullable|numeric|min:0',
             'chicks_weight'  => 'nullable|numeric|min:0',
             'mortality'      => 'nullable|integer|min:0',
+            'notes'          => 'nullable|string|max:1000',
         ]);
 
         if ($validator->fails()) {
@@ -379,6 +382,7 @@ class DailyRecordController extends BaseController
                 'eggs_weight'   => $request->eggs_weight ?? 0,
                 'chicks_weight' => $request->chicks_weight ?? 0,
                 'mortality'     => $request->mortality ?? 0,
+                'notes'         => $request->notes ?? null,
             ]);
 
             DB::commit();

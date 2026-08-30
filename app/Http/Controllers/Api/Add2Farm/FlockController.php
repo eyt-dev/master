@@ -8,6 +8,7 @@ use App\Models\Farm;
 use App\Models\FlockHangar;
 use App\Models\FlockEnd;
 use App\Models\FlockEndDetail;
+use App\Models\DailyRecord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -457,19 +458,41 @@ class FlockController extends BaseController
         $totalBird = $flock->flockHangarAllocations->sum('quantity');
         $age = $this->calculateFlockAge($flock->start_date);
 
+        // Fetch daily records for this flock
+        $dailyRecords = DailyRecord::where('flock_id', $flock->id)->get();
+
+        // Calculate dynamic metrics
+        $totalMortality = $dailyRecords->sum('mortality');
+        $totalEggs = $dailyRecords->sum('eggs_count');
+        $totalFeedKg = $dailyRecords->sum('feed_kg');
+        $avgWeight = $dailyRecords->avg('chicks_weight');
+        $recordCount = $dailyRecords->count();
+
+        // Calculate mortality rate
+        $mortalityRate = $totalBird > 0 ? ($totalMortality / $totalBird) * 100 : 0;
+
+        // Calculate average production (eggs per bird as percentage)
+        $avgProduction = $totalBird > 0 && $recordCount > 0 ? ($totalEggs / ($totalBird * $recordCount)) * 100 : 0;
+
+        // Calculate FCR (Feed Conversion Ratio) - feed_kg per egg
+        $fcr = $totalEggs > 0 ? round($totalFeedKg / $totalEggs, 2) : 0;
+
+        // Calculate live birds
+        $liveBirds = $totalBird - $totalMortality;
+
         $data = [
             'flock_name' => $flock->name,
             'breed' => $flock->breed,
             'total_bird' => $totalBird,
             'start_date' => $flock->start_date->format('Y-m-d'),
             'age' => $age,
-            'live_birds' => $totalBird,
-            'mortality_rate' => 1.62,
-            'avg_production' => '86%',
-            'total_eggs' => 124500,
-            'feed_consumed' => '21,300 kg',
-            'fcr' => '2.40%',
-            'avg_weight' => '1.85 kg',
+            'live_birds' => $liveBirds,
+            'mortality_rate' => round($mortalityRate, 2),
+            'avg_production' => round($avgProduction, 2) . '%',
+            'total_eggs' => $totalEggs,
+            'feed_consumed' => number_format($totalFeedKg, 2) . ' kg',
+            'fcr' => $fcr,
+            'avg_weight' => $avgWeight ? round($avgWeight, 2) . ' kg' : 'N/A',
         ];
 
         return response()->json([

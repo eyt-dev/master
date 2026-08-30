@@ -15,6 +15,7 @@ class Hangar extends Model
         'area_sqm',
         'layer_hens',
         'broiler_hens',
+        'status',
         'created_by',
     ];
 

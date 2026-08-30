@@ -174,11 +174,12 @@ class FarmController extends BaseController
      * @bodyParam mobile_number string optional Farm phone number (without country code). Example: 3001234567
      * @bodyParam number_of_hangars integer required Number of hangars (must match hangars array length). Example: 3
      * @bodyParam assigned_to integer optional Admin ID (Type 4 Farmer) to assign this farm to. Example: 1
-     * @bodyParam hangars array required Array of hangar objects (length must equal number_of_hangars). Example: [{"name": "Hangar 1", "area_sqm": 1000, "layer_hens": 5000}, {"name": "Hangar 2", "area_sqm": 1200, "layer_hens": 6000}, {"name": "Hangar 3", "area_sqm": 1100, "layer_hens": 5500}]
+     * @bodyParam hangars array required Array of hangar objects (length must equal number_of_hangars). Example: [{"name": "Hangar 1", "area_sqm": 1000, "layer_hens": 5000, "status": "Active"}, {"name": "Hangar 2", "area_sqm": 1200, "layer_hens": 6000, "status": "Active"}, {"name": "Hangar 3", "area_sqm": 1100, "layer_hens": 5500, "status": "Inactive"}]
      * @bodyParam hangars[].name string required Hangar name. Example: Hangar 1
      * @bodyParam hangars[].area_sqm numeric optional Hangar area in square meters. Example: 1000
      * @bodyParam hangars[].layer_hens integer optional Number of layer hens. Example: 5000
      * @bodyParam hangars[].broiler_hens integer optional Number of broiler hens. Example: 0
+     * @bodyParam hangars[].status string optional Hangar status (Active or Inactive). Default: Active. Example: Active
      *
      * @response 201 {
      *   "success": true,
@@ -201,21 +202,24 @@ class FarmController extends BaseController
      *         "name": "Hangar 1",
      *         "area_sqm": 1000,
      *         "layer_hens": 5000,
-     *         "broiler_hens": null
+     *         "broiler_hens": null,
+     *         "status": "Active"
      *       },
      *       {
      *         "id": 2,
      *         "name": "Hangar 2",
      *         "area_sqm": 1200,
      *         "layer_hens": 6000,
-     *         "broiler_hens": null
+     *         "broiler_hens": null,
+     *         "status": "Active"
      *       },
      *       {
      *         "id": 3,
      *         "name": "Hangar 3",
      *         "area_sqm": 1100,
      *         "layer_hens": 5500,
-     *         "broiler_hens": null
+     *         "broiler_hens": null,
+     *         "status": "Inactive"
      *       }
      *     ],
      *     "created_at": "2026-08-07T10:30:00Z"
@@ -263,6 +267,7 @@ class FarmController extends BaseController
             'hangars.*.area_sqm'        => 'required|numeric|min:0',
             'hangars.*.layer_hens'      => 'nullable|integer|min:0',
             'hangars.*.broiler_hens'    => 'nullable|integer|min:0',
+            'hangars.*.status'          => 'nullable|string|in:Active,Inactive',
         ]);
 
         if ($validator->fails()) {
@@ -315,6 +320,7 @@ class FarmController extends BaseController
                     'area_sqm'      => $hangarData['area_sqm'] ?? null,
                     'layer_hens'    => $hangarData['layer_hens'] ?? null,
                     'broiler_hens'  => $hangarData['broiler_hens'] ?? null,
+                    'status'        => $hangarData['status'] ?? 'Active',
                     'created_by'    => auth()->id(),
                 ]);
             }
@@ -374,12 +380,13 @@ class FarmController extends BaseController
      * @bodyParam mobile_number string optional Farm phone number (without country code). Example: 3001234567
      * @bodyParam number_of_hangars integer required Number of hangars (must match hangars array length). Example: 3
      * @bodyParam assigned_to integer optional Farmer ID to assign the farm to. Example: 2
-     * @bodyParam hangars array required Array of hangar objects (length must equal number_of_hangars). Example: [{"id": 1, "name": "Hangar 1 Updated", "area_sqm": 1100, "layer_hens": 5500}, {"id": 2, "name": "Hangar 2 Updated", "area_sqm": 1300, "layer_hens": 6500}, {"name": "Hangar 3 New", "area_sqm": 1000, "layer_hens": 5000}]
+     * @bodyParam hangars array required Array of hangar objects (length must equal number_of_hangars). Example: [{"id": 1, "name": "Hangar 1 Updated", "area_sqm": 1100, "layer_hens": 5500, "status": "Active"}, {"id": 2, "name": "Hangar 2 Updated", "area_sqm": 1300, "layer_hens": 6500, "status": "Inactive"}, {"name": "Hangar 3 New", "area_sqm": 1000, "layer_hens": 5000, "status": "Active"}]
      * @bodyParam hangars[].id integer optional Hangar ID (if updating existing hangar). Example: 1
      * @bodyParam hangars[].name string required Hangar name. Example: Hangar 1 Updated
      * @bodyParam hangars[].area_sqm numeric optional Hangar area in square meters. Example: 1100
      * @bodyParam hangars[].layer_hens integer optional Number of layer hens. Example: 5500
      * @bodyParam hangars[].broiler_hens integer optional Number of broiler hens. Example: 0
+     * @bodyParam hangars[].status string optional Hangar status (Active or Inactive). Default: Active. Example: Active
      *
      * @response 200 {
      *   "success": true,
@@ -402,21 +409,24 @@ class FarmController extends BaseController
      *         "name": "Hangar 1 Updated",
      *         "area_sqm": 1100,
      *         "layer_hens": 5500,
-     *         "broiler_hens": null
+     *         "broiler_hens": null,
+     *         "status": "Active"
      *       },
      *       {
      *         "id": 2,
      *         "name": "Hangar 2 Updated",
      *         "area_sqm": 1300,
      *         "layer_hens": 6500,
-     *         "broiler_hens": null
+     *         "broiler_hens": null,
+     *         "status": "Active"
      *       },
      *       {
      *         "id": 3,
      *         "name": "Hangar 3 New",
      *         "area_sqm": 1000,
      *         "layer_hens": 5000,
-     *         "broiler_hens": null
+     *         "broiler_hens": null,
+     *         "status": "Active"
      *       }
      *     ],
      *     "created_at": "2026-08-07T10:30:00Z",
@@ -470,6 +480,7 @@ class FarmController extends BaseController
             'hangars.*.area_sqm'        => 'required|numeric|min:0',
             'hangars.*.layer_hens'      => 'nullable|integer|min:0',
             'hangars.*.broiler_hens'    => 'nullable|integer|min:0',
+            'hangars.*.status'          => 'nullable|string|in:Active,Inactive',
         ]);
 
         if ($validator->fails()) {
@@ -531,6 +542,7 @@ class FarmController extends BaseController
                         'area_sqm'      => $hangarData['area_sqm'] ?? null,
                         'layer_hens'    => $hangarData['layer_hens'] ?? null,
                         'broiler_hens'  => $hangarData['broiler_hens'] ?? null,
+                        'status'        => $hangarData['status'] ?? 'Active',
                     ]);
                 } else {
                     // Create new hangar
@@ -540,6 +552,7 @@ class FarmController extends BaseController
                         'area_sqm'      => $hangarData['area_sqm'] ?? null,
                         'layer_hens'    => $hangarData['layer_hens'] ?? null,
                         'broiler_hens'  => $hangarData['broiler_hens'] ?? null,
+                        'status'        => $hangarData['status'] ?? 'Active',
                         'created_by'    => auth()->id(),
                     ]);
                 }
@@ -672,6 +685,7 @@ class FarmController extends BaseController
                 'area_sqm'      => $hangar->area_sqm,
                 'layer_hens'    => $hangar->layer_hens,
                 'broiler_hens'  => $hangar->broiler_hens,
+                'status'        => $hangar->status,
             ];
         })->toArray();
 

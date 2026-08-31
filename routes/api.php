@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Add2Farm\SupervisorController as Add2FarmSupervisor
 use App\Http\Controllers\Api\Add2Farm\FarmerController as Add2FarmFarmerController;
 use App\Http\Controllers\Api\Add2Farm\FarmController as Add2FarmFarmController;
 use App\Http\Controllers\Api\Add2Farm\FlockController as Add2FarmFlockController;
+use App\Http\Controllers\Api\Add2Farm\FlockEndController as Add2FarmFlockEndController;
 use App\Http\Controllers\Api\Add2Farm\DailyRecordController as Add2FarmDailyRecordController;
 use App\Http\Controllers\Api\Add2Farm\DropdownController as Add2FarmDropdownController;
 use App\Http\Controllers\Api\Add2Farm\CountryController as Add2FarmCountryController;
@@ -141,12 +142,20 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
         Route::get('flocks/available', [Add2FarmFlockController::class, 'available']);
         Route::get('farms/{farm_id}/hangars', [Add2FarmFlockController::class, 'farmHangars']);
         Route::get('flocks/{flock_id}/hangars', [Add2FarmFlockController::class, 'flockHangars']);
-        Route::post('flocks/{flock_id}/end', [Add2FarmFlockController::class, 'end']);
         Route::get('flocks', [Add2FarmFlockController::class, 'index']);
         Route::post('flocks', [Add2FarmFlockController::class, 'store']);
         Route::get('flocks/{flock}', [Add2FarmFlockController::class, 'show']);
         Route::put('flocks/{flock}', [Add2FarmFlockController::class, 'update']);
         Route::delete('flocks/{flock}', [Add2FarmFlockController::class, 'destroy']);
+    });
+
+    // Flock Harvest/End Records - Accessible to authenticated users
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('flock-ends', [Add2FarmFlockEndController::class, 'index']);
+        Route::post('flock-ends', [Add2FarmFlockEndController::class, 'store']);
+        Route::get('flock-ends/{id}', [Add2FarmFlockEndController::class, 'show']);
+        Route::put('flock-ends/{id}', [Add2FarmFlockEndController::class, 'update']);
+        Route::delete('flock-ends/{id}', [Add2FarmFlockEndController::class, 'destroy']);
     });
 
     // Daily Records - Accessible to authenticated users

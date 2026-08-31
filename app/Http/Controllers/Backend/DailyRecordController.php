@@ -32,12 +32,16 @@ class DailyRecordController extends Controller
                 ->map(function($group) {
                     $firstRecord = $group->first();
                     $flockLabel = $firstRecord->flock ? \App\Helpers\FlockHelper::getFlockLabel($firstRecord->flock) : 'N/A';
-                    
+                    $breedType = $firstRecord->flock ? $this->extractBreedType($firstRecord->flock->breed) : 'Layer';
+                    $breedName = $firstRecord->flock ? $this->extractBreedName($firstRecord->flock->breed) : 'N/A';
+
                     return [
                         'id' => $firstRecord->id,
                         'record_date' => $firstRecord->record_date,
                         'flock_id' => $firstRecord->flock_id,
                         'flock_label' => $flockLabel,
+                        'breed_type' => $breedType,
+                        'breed_name' => $breedName,
                         'farm' => $firstRecord->farm->name ?? 'N/A',
                         'created_by' => $firstRecord->creator->name ?? 'N/A',
                         'created_at' => $firstRecord->created_at,
@@ -68,7 +72,7 @@ class DailyRecordController extends Controller
                     return date('Y-m-d', strtotime($row['record_date']));
                 })
                 ->addColumn('flock', function($row) {
-                    return $row['flock_label'];
+                    return $row['flock_label'] . '<br><small style="color: #666;">' . $row['breed_type'] . ' (' . $row['breed_name'] . ')</small>';
                 })
                 ->addColumn('farm', function($row) {
                     return $row['farm'];
@@ -80,41 +84,41 @@ class DailyRecordController extends Controller
                     return date('Y-m-d', strtotime($row['created_at']));
                 })
                 ->addColumn('hangar1', function($row) {
-                    return $this->formatHangarData($row, 0);
-                })
-                ->addColumn('hangar2', function($row) {
                     return $this->formatHangarData($row, 1);
                 })
-                ->addColumn('hangar3', function($row) {
+                ->addColumn('hangar2', function($row) {
                     return $this->formatHangarData($row, 2);
                 })
-                ->addColumn('hangar4', function($row) {
+                ->addColumn('hangar3', function($row) {
                     return $this->formatHangarData($row, 3);
                 })
-                ->addColumn('hangar5', function($row) {
+                ->addColumn('hangar4', function($row) {
                     return $this->formatHangarData($row, 4);
                 })
-                ->addColumn('hangar6', function($row) {
+                ->addColumn('hangar5', function($row) {
                     return $this->formatHangarData($row, 5);
                 })
-                ->addColumn('hangar7', function($row) {
+                ->addColumn('hangar6', function($row) {
                     return $this->formatHangarData($row, 6);
                 })
-                ->addColumn('hangar8', function($row) {
+                ->addColumn('hangar7', function($row) {
                     return $this->formatHangarData($row, 7);
                 })
-                ->addColumn('hangar9', function($row) {
+                ->addColumn('hangar8', function($row) {
                     return $this->formatHangarData($row, 8);
                 })
-                ->addColumn('hangar10', function($row) {
+                ->addColumn('hangar9', function($row) {
                     return $this->formatHangarData($row, 9);
+                })
+                ->addColumn('hangar10', function($row) {
+                    return $this->formatHangarData($row, 10);
                 })
                 ->addColumn('action', function($row) {
                     return '<a class="edit-daily-record btn btn-sm btn-success mr-1" data-id="'.$row['id'].'" data-path="'.route('daily-record.edit', ['username' => request()->segment(1), 'daily_record' => $row['id']]).'" title="Edit"><i class="fa fa-edit"></i></a>'
                          .'<a class="delete-daily-record btn btn-sm btn-danger" data-id="'.$row['id'].'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action', 'hangar1', 'hangar2', 'hangar3', 'hangar4', 'hangar5', 'hangar6', 'hangar7', 'hangar8', 'hangar9', 'hangar10'])   
+                ->rawColumns(['flock', 'action', 'hangar1', 'hangar2', 'hangar3', 'hangar4', 'hangar5', 'hangar6', 'hangar7', 'hangar8', 'hangar9', 'hangar10'])
                 ->make(true);
         }
         return view('backend.daily-record.index');
@@ -158,25 +162,41 @@ class DailyRecordController extends Controller
         return trim($breedString);
     }
 
-    private function formatHangarData($row, $index)
+    private function formatHangarData($row, $columnNumber)
     {
-        if (!isset($row['hangars'][$index])) {
+        // Find hangar by matching hangar number from name
+        $hangar = null;
+        foreach ($row['hangars'] as $h) {
+            preg_match('/(\d+)/', $h['hangar_name'], $matches);
+            if (!empty($matches[1]) && intval($matches[1]) === $columnNumber) {
+                $hangar = $h;
+                break;
+            }
+        }
+
+        if (!$hangar) {
             return 'N/A';
         }
 
-        $hangar = $row['hangars'][$index];
+        $breedType = $row['breed_type'] ?? 'Layer';
         $feedKg = number_format((float) $hangar['feed_kg'], 2, ',', '.');
         $eggsWeight = number_format((float) $hangar['eggs_weight'], 2, ',', '.');
         $chicksWeight = number_format((float) $hangar['chicks_weight'], 2, ',', '.');
 
-        return '<strong>' . $hangar['hangar_name'] . '</strong><br>' .
-               '<span style="color: #666; font-size: 0.9em;">Qty: ' . $hangar['allocated_quantity'] . '</span><br>' .
-               'Feed: ' . $feedKg . ' kg<br>' .
-               'Eggs(T): ' . $hangar['eggs_tray_30'] . '<br>' .
-               'Eggs(C): ' . $hangar['eggs_count'] . '<br>' .
-               'Eggs Weight: ' . $eggsWeight . ' kg<br>' .
-               'Chicks Weight: ' . $chicksWeight . ' kg<br>' .
-               'Mortality: ' . $hangar['mortality'];
+        $html = 'Qty: ' . $hangar['allocated_quantity'] . '<br>' .
+                'Feed: ' . $feedKg . ' kg<br>' .
+                'Mortality: ' . $hangar['mortality'];
+
+        // Show breed-specific fields
+        if ($breedType === 'Layer') {
+            $html .= '<br>Eggs(T): ' . $hangar['eggs_tray_30'] .
+                     '<br>Eggs(C): ' . $hangar['eggs_count'] .
+                     '<br>Eggs Weight: ' . $eggsWeight . ' kg';
+        } else {
+            $html .= '<br>Chicks Weight: ' . $chicksWeight . ' kg';
+        }
+
+        return $html;
     }
 
     public function create()
@@ -231,8 +251,13 @@ class DailyRecordController extends Controller
         $request->validate([
             'record_date' => 'required|date',
             'flock_id' => 'required|exists:flocks,id',
-            'hangar_records' => 'required|json',
+            'hangar_records' => 'nullable|json',
         ]);
+
+        // Check if hangar_records is present and valid
+        if (!$request->has('hangar_records') || !$request->hangar_records) {
+            return back()->withErrors(['hangar_records' => 'Please add at least one hangar record.']);
+        }
 
         // Get farm_id and breed from the selected flock
         $flock = Flock::findOrFail($request->flock_id);
@@ -245,24 +270,18 @@ class DailyRecordController extends Controller
 
         // Validate based on breed type
         foreach ($hangarRecords as $record) {
-            if ($breedType === 'Broiler') {
-                // For broiler: feed and mortality are required
-                if (!isset($record['feed_kg']) || $record['feed_kg'] === '' || $record['feed_kg'] === null) {
-                    return back()->withErrors(['hangar_records' => 'Feed (kg) is required for Broiler breeds.']);
-                }
-                if (!isset($record['mortality']) || $record['mortality'] === '') {
-                    return back()->withErrors(['hangar_records' => 'Mortality is required for Broiler breeds.']);
-                }
-            } else {
-                // For layer: feed, eggs_weight, and mortality are required
-                if (!isset($record['feed_kg']) || $record['feed_kg'] === '' || $record['feed_kg'] === null) {
-                    return back()->withErrors(['hangar_records' => 'Feed (kg) is required for Layer breeds.']);
-                }
+            // Check required fields: feed_kg and mortality
+            if (!isset($record['feed_kg']) || $record['feed_kg'] === '' || $record['feed_kg'] === null) {
+                return back()->withErrors(['hangar_records' => 'Feed (kg) is required.']);
+            }
+            if (!isset($record['mortality']) || $record['mortality'] === '' || $record['mortality'] === null) {
+                return back()->withErrors(['hangar_records' => 'Mortality is required.']);
+            }
+
+            // For Layer: eggs_weight is also required
+            if ($breedType === 'Layer') {
                 if (!isset($record['eggs_weight']) || $record['eggs_weight'] === '' || $record['eggs_weight'] === null) {
                     return back()->withErrors(['hangar_records' => 'Eggs Weight is required for Layer breeds.']);
-                }
-                if (!isset($record['mortality']) || $record['mortality'] === '') {
-                    return back()->withErrors(['hangar_records' => 'Mortality is required for Layer breeds.']);
                 }
             }
         }
@@ -319,20 +338,44 @@ class DailyRecordController extends Controller
         $request->validate([
             'record_date' => 'required|date',
             'flock_id' => 'required|exists:flocks,id',
-            'hangar_records' => 'required|json',
+            'hangar_records' => 'nullable|json',
         ]);
 
-        // Get farm_id from the selected flock
+        // Check if hangar_records is present and valid
+        if (!$request->has('hangar_records') || !$request->hangar_records) {
+            return back()->withErrors(['hangar_records' => 'Please add at least one hangar record.']);
+        }
+
+        // Get farm_id and breed from the selected flock
         $flock = Flock::findOrFail($request->flock_id);
-        
+        $breedType = $this->extractBreedType($flock->breed);
+
         $hangarRecords = json_decode($request->hangar_records, true);
-        
+
         if (empty($hangarRecords)) {
             return back()->withErrors(['hangar_records' => 'Please add at least one hangar record.']);
         }
 
+        // Validate based on breed type (same as CREATE)
+        foreach ($hangarRecords as $record) {
+            // Check required fields: feed_kg and mortality
+            if (!isset($record['feed_kg']) || $record['feed_kg'] === '' || $record['feed_kg'] === null) {
+                return back()->withErrors(['hangar_records' => 'Feed (kg) is required.']);
+            }
+            if (!isset($record['mortality']) || $record['mortality'] === '' || $record['mortality'] === null) {
+                return back()->withErrors(['hangar_records' => 'Mortality is required.']);
+            }
+
+            // For Layer: eggs_weight is also required
+            if ($breedType === 'Layer') {
+                if (!isset($record['eggs_weight']) || $record['eggs_weight'] === '' || $record['eggs_weight'] === null) {
+                    return back()->withErrors(['hangar_records' => 'Eggs Weight is required for Layer breeds.']);
+                }
+            }
+        }
+
         $dailyRecord = DailyRecord::findOrFail($id);
-        
+
         // Delete old records for this flock on this date
         DailyRecord::where('flock_id', $request->flock_id)
             ->where('record_date', $request->record_date)

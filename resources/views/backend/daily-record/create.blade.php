@@ -249,25 +249,29 @@
 
         // Form submission
         $('#daily_record_form').on('submit', function(e) {
+            e.preventDefault();
+
             var container = $('#hangars_container');
             var hangarRecords = [];
-            
+
             container.find('.hangar-record-row').each(function() {
                 var hangarId = $(this).data('hangar-id');
-                // Convert comma to dot for decimal values
-                var feedValue = $(this).find('.feed-input').val().replace(',', '.');
+
+                // Convert comma to dot for decimal values - safely handle undefined
+                var feedValue = ($(this).find('.feed-input').val() || '').replace(',', '.');
                 var feedKg = parseFloat(feedValue) || 0;
+
                 var eggsTray = parseInt($(this).find('.eggs-tray-input').val()) || 0;
                 var eggsCount = parseInt($(this).find('.eggs-count-input').val()) || 0;
-                
-                var eggsWeightValue = $(this).find('.eggs-weight-input').val().replace(',', '.');
+
+                var eggsWeightValue = ($(this).find('.eggs-weight-input').val() || '').replace(',', '.');
                 var eggsWeight = parseFloat(eggsWeightValue) || 0;
-                
-                var chicksWeightValue = $(this).find('.chicks-weight-input').val().replace(',', '.');
+
+                var chicksWeightValue = ($(this).find('.chicks-weight-input').val() || '').replace(',', '.');
                 var chicksWeight = parseFloat(chicksWeightValue) || 0;
-                
+
                 var mortality = parseInt($(this).find('.mortality-input').val()) || 0;
-                
+
                 hangarRecords.push({
                     hangar_id: hangarId,
                     feed_kg: feedKg,
@@ -278,9 +282,8 @@
                     mortality: mortality
                 });
             });
-            
+
             if (hangarRecords.length === 0) {
-                e.preventDefault();
                 swal({
                     title: 'Validation Error',
                     text: 'Please select a flock and enter hangar details.',
@@ -289,13 +292,19 @@
                 });
                 return false;
             }
-            
+
+            // Remove any existing hangar_records input
+            $('input[name="hangar_records"]').remove();
+
             // Store hangar records as JSON
             $('<input>').attr({
                 type: 'hidden',
                 name: 'hangar_records',
                 value: JSON.stringify(hangarRecords)
             }).appendTo('#daily_record_form');
+
+            // Now submit the form (won't trigger submit event again)
+            this.submit();
         });
 
         // Trigger flock loading on page load if in edit mode

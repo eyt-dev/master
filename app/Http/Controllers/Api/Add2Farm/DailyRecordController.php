@@ -224,7 +224,7 @@ class DailyRecordController extends BaseController
             'eggs_count'     => 'nullable|integer|min:0',
             'eggs_weight'    => 'nullable|numeric|min:0',
             'chicks_weight'  => 'nullable|numeric|min:0',
-            'mortality'      => 'nullable|integer|min:0',
+            'mortality'      => 'required|integer|min:0',
             'notes'          => 'nullable|string|max:1000',
         ]);
 
@@ -238,8 +238,20 @@ class DailyRecordController extends BaseController
         try {
             DB::beginTransaction();
 
-            // Get flock to retrieve farm_id
+            // Get flock to retrieve farm_id and breed type
             $flock = Flock::findOrFail($request->flock_id);
+            $breedType = $this->extractBreedType($flock->breed);
+
+            // For Layer breeds, eggs_weight is required
+            if ($breedType === 'Layer') {
+                if (!$request->eggs_weight || $request->eggs_weight === '') {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'errors'  => ['eggs_weight' => ['The eggs weight field is required for Layer breeds.']],
+                    ], 422);
+                }
+            }
 
             // Convert date format from dd-mm-yyyy to yyyy-mm-dd
             $recordDate = \Carbon\Carbon::createFromFormat('d-m-Y', $request->record_date);
@@ -356,7 +368,7 @@ class DailyRecordController extends BaseController
             'eggs_count'     => 'nullable|integer|min:0',
             'eggs_weight'    => 'nullable|numeric|min:0',
             'chicks_weight'  => 'nullable|numeric|min:0',
-            'mortality'      => 'nullable|integer|min:0',
+            'mortality'      => 'required|integer|min:0',
             'notes'          => 'nullable|string|max:1000',
         ]);
 
@@ -369,6 +381,21 @@ class DailyRecordController extends BaseController
 
         try {
             DB::beginTransaction();
+
+            // Get flock to check breed type
+            $flock = Flock::findOrFail($record->flock_id);
+            $breedType = $this->extractBreedType($flock->breed);
+
+            // For Layer breeds, eggs_weight is required
+            if ($breedType === 'Layer') {
+                if (!$request->eggs_weight || $request->eggs_weight === '') {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'errors'  => ['eggs_weight' => ['The eggs weight field is required for Layer breeds.']],
+                    ], 422);
+                }
+            }
 
             // Convert date format from dd-mm-yyyy to yyyy-mm-dd
             $recordDate = \Carbon\Carbon::createFromFormat('d-m-Y', $request->record_date);
@@ -491,5 +518,25 @@ class DailyRecordController extends BaseController
         ];
 
         return $data;
+    }
+
+    private function extractBreedType($breedString)
+    {
+        $breedType = 'Layer';
+
+        if (!empty($breedString)) {
+            if (strpos($breedString, ',') !== false) {
+                $breedParts = explode(',', $breedString);
+                $breedType = trim($breedParts[0]);
+            } else {
+                if (stripos($breedString, 'cobb') !== false || stripos($breedString, 'ross') !== false) {
+                    $breedType = 'Broiler';
+                } elseif (stripos($breedString, 'lohmann') !== false || stripos($breedString, 'hy-line') !== false) {
+                    $breedType = 'Layer';
+                }
+            }
+        }
+
+        return $breedType;
     }
 }

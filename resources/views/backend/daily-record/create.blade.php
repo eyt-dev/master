@@ -199,7 +199,7 @@
                                         ${breedType === 'Broiler' ? `
                                             <div class="col-md-3">
                                                 <div class="form-group mb-0">
-                                                    <label class="form-label mb-1" style="font-size: 0.85rem;">Chicks Weight (Kg) <small class="text-muted">(Optional)</small></label>
+                                                    <label class="form-label mb-1" style="font-size: 0.85rem;">Chicks Weight (Kg)</label>
                                                     <input type="text" class="form-control chicks-weight-input" name="hangar_chicks_weight[${hangar.id}]"
                                                         value="${chicksWeightValue}" placeholder="0,00" data-hangar-id="${hangar.id}" />
                                                 </div>

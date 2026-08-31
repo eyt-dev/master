@@ -30,7 +30,13 @@ class ChickenSalesController extends Controller
                     return $row->farm->name ?? 'N/A';
                 })
                 ->addColumn('flock', function($row) {
-                    return $row->flock->breed ?? 'N/A';
+                    if (!$row->flock) {
+                        return 'N/A';
+                    }
+                    $breedType = $this->extractBreedType($row->flock->breed);
+                    $breedName = $this->extractBreedName($row->flock->breed);
+                    $badgeClass = ($breedType === 'Broiler') ? 'badge-danger' : 'badge-info';
+                    return '<span class="badge ' . $badgeClass . '">' . $breedType . ' (' . $breedName . ')</span>';
                 })
                 ->addColumn('hangar', function($row) {
                     return $row->hangar->name ?? 'N/A';
@@ -55,7 +61,7 @@ class ChickenSalesController extends Controller
                          .'<a class="delete-chicken-sale btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action'])   
+                ->rawColumns(['action', 'flock'])
                 ->make(true);
         }
         return view('backend.chicken-sale.index');
@@ -196,5 +202,43 @@ class ChickenSalesController extends Controller
     {
         ChickenSale::findOrFail($id)->delete();
         return response()->json(['msg' => 'Chicken sale deleted successfully.']);
+    }
+
+    private function extractBreedType($breedString)
+    {
+        $breedType = 'Layer'; // Default
+
+        if (!empty($breedString)) {
+            if (strpos($breedString, ',') !== false) {
+                // Format: "Type,BreedName"
+                $breedParts = explode(',', $breedString);
+                $breedType = trim($breedParts[0]);
+            } else {
+                // Format: "BreedName" only - infer type from known breed names
+                if (stripos($breedString, 'cobb') !== false || stripos($breedString, 'ross') !== false) {
+                    $breedType = 'Broiler';
+                } elseif (stripos($breedString, 'lohmann') !== false || stripos($breedString, 'hy-line') !== false) {
+                    $breedType = 'Layer';
+                }
+            }
+        }
+
+        return $breedType;
+    }
+
+    private function extractBreedName($breedString)
+    {
+        if (empty($breedString)) {
+            return 'N/A';
+        }
+
+        if (strpos($breedString, ',') !== false) {
+            // Format: "Type,BreedName"
+            $breedParts = explode(',', $breedString);
+            return trim($breedParts[1] ?? 'N/A');
+        }
+
+        // Format: "BreedName" only
+        return trim($breedString);
     }
 }

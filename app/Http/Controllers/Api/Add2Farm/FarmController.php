@@ -678,11 +678,14 @@ class FarmController extends BaseController
             $farm->load('hangars');
         }
 
-        $hangars = $farm->hangars->map(function ($hangar) {
+        // Filter to only Active hangars
+        $activeHangars = $farm->hangars->where('status', 'Active');
+
+        $hangars = $activeHangars->map(function ($hangar) {
             return [
                 'id'            => $hangar->id,
                 'name'          => $hangar->name,
-                'area_sqm'      => $hangar->area_sqm,
+                'area_sqm'      => $this->formatDecimal($hangar->area_sqm),
                 'layer_hens'    => $hangar->layer_hens,
                 'broiler_hens'  => $hangar->broiler_hens,
                 'status'        => $hangar->status,

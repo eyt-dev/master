@@ -165,7 +165,7 @@ class FeedStockController extends BaseController
             }
 
             // Validate all hangars belong to this farm
-            $farmHangarIds = Hangar::where('farm_id', $request->farm_id)->pluck('id')->toArray();
+            $farmHangarIds = Hangar::where('farm_id', $request->farm_id)->where('status', 'Active')->pluck('id')->toArray();
             $requestHangarIds = array_column($request->hangar_allocations, 'hangar_id');
             $invalidHangars = array_diff($requestHangarIds, $farmHangarIds);
 
@@ -366,14 +366,14 @@ class FeedStockController extends BaseController
             'farm_id' => $record->farm_id,
             'farm_name' => $record->farm->name,
             'name' => $record->name,
-            'quantity' => $record->quantity,
+            'quantity' => $this->formatDecimal($record->quantity),
             'supplier_id' => $record->supplier_id,
             'supplier_name' => $record->supplier->name,
             'hangar_allocations' => $record->materialStockHangarAllocations->map(fn($a) => [
                 'hangar_id' => $a->hangar_id,
                 'hangar_name' => $a->hangar->name,
-                'quantity' => $a->quantity,
-                'remaining_quantity' => $a->remaining_quantity,
+                'quantity' => $this->formatDecimal($a->quantity),
+                'remaining_quantity' => $this->formatDecimal($a->remaining_quantity),
             ]),
             'created_by' => $record->created_by,
             'created_by_name' => $record->creator->name,

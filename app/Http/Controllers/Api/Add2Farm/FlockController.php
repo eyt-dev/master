@@ -250,8 +250,8 @@ class FlockController extends BaseController
             ], 404);
         }
 
-        // Get all hangars for the farm
-        $hangars = $farm->hangars()->get();
+        // Get all ACTIVE hangars for the farm
+        $hangars = $farm->hangars()->where('status', 'Active')->get();
 
         // Get allocations for all flocks in this farm
         $allocations = FlockHangar::whereHas('flock', function ($q) use ($farmId) {
@@ -885,10 +885,12 @@ class FlockController extends BaseController
      * @bodyParam slaughter_id integer optional Slaughter house ID. Example: 1
      * @bodyParam sale_date date required Sale date (format: Y-m-d). Example: 2026-08-27
      * @bodyParam hangar_id integer required Hangar ID. Example: 12
-     * @bodyParam cages_count integer required Number of cages. Example: 120
+     * @bodyParam cages_count integer required Number of cages. Example: 10
      * @bodyParam cages_weight decimal required Weight per cage (kg). Example: 1.85
      * @bodyParam birds_per_cage integer required Birds per cage (1-25). Example: 20
-     * @bodyParam batch_weights array required Array of batch weights. Example: [5.2, 5.1, 5.0, 4.8]
+     * @bodyParam batch_weight decimal required Total batch weight (kg). Example: 450
+     * @bodyParam net_weight decimal required Net weight after processing (kg). Example: 431.5
+     * @bodyParam avg_weight decimal required Average weight per bird (kg). Example: 10.5
      * @bodyParam notes string optional Additional notes
      *
      * @response 201 {
@@ -903,26 +905,21 @@ class FlockController extends BaseController
      *     "slaughter_id": 1,
      *     "slaughter_name": "Al Saeed Trading Co.",
      *     "sale_date": "2026-08-27",
-     *     "cages_count": 120,
+     *     "cages_count": 10,
      *     "birds_per_cage": 20,
-     *     "cages_weight": "1.85",
-     *     "available_birds": 300,
-     *     "total_birds_harvested": 240,
-     *     "mortality_birds": 60,
-     *     "mortality_rate": 20.0,
+     *     "cages_weight": "1,85",
+     *     "total_birds": 200,
+     *     "total_birds_harvested": 200,
+     *     "mortality_birds": 0,
+     *     "mortality_rate": 0,
      *     "remaining_birds": 0,
-     *     "total_weight": "20.10",
-     *     "avg_weight_per_bird": "0.0838",
+     *     "batch_weight": 450,
+     *     "net_weight": 431.5,
+     *     "avg_weight": 10.5,
      *     "notes": "Grade A birds",
      *     "ended_by_id": 6,
      *     "ended_by_name": "Dean Lindsay",
-     *     "created_at": "2026-08-27 11:44:45",
-     *     "batch_weights": [
-     *       {"batch_number": 1, "batch_weight": 5.2},
-     *       {"batch_number": 2, "batch_weight": 5.1},
-     *       {"batch_number": 3, "batch_weight": 5.0},
-     *       {"batch_number": 4, "batch_weight": 4.8}
-     *     ]
+     *     "created_at": "2026-08-27 11:44:45"
      *   }
      * }
      * @response 422 {
@@ -965,8 +962,9 @@ class FlockController extends BaseController
             'cages_count' => 'required|integer|min:1',
             'cages_weight' => 'required|numeric|min:0.1',
             'birds_per_cage' => 'required|integer|min:1|max:25',
-            'batch_weights' => 'required|array|min:1|max:4',
-            'batch_weights.*' => 'numeric|min:0',
+            'batch_weight' => 'required|numeric|min:0',
+            'net_weight' => 'required|numeric|min:0',
+            'avg_weight' => 'required|numeric|min:0',
             'notes' => 'nullable|string',
         ]);
 
@@ -1011,10 +1009,6 @@ class FlockController extends BaseController
                 ], 422);
             }
 
-            // Calculate total weight
-            $totalWeight = array_sum($request->batch_weights);
-            $avgWeightPerBird = $totalBirdsHarvested > 0 ? $totalWeight / $totalBirdsHarvested : 0;
-
             // Calculate remaining birds
             $remainingBirds = $availableBirds - $totalBirdsHarvested;
 
@@ -1030,37 +1024,20 @@ class FlockController extends BaseController
                 'total_birds_harvested' => $totalBirdsHarvested,
                 'available_birds' => $availableBirds,
                 'remaining_birds' => $remainingBirds,
-                'total_weight' => $totalWeight,
-                'avg_weight_per_bird' => $avgWeightPerBird,
+                'total_weight' => $request->batch_weight,
+                'avg_weight_per_bird' => $request->avg_weight,
                 'notes' => $request->notes,
                 'ended_by' => auth()->id(),
             ]);
 
-            // Create FlockEndDetail records for each batch weight
-            foreach ($request->batch_weights as $index => $weight) {
-                FlockEndDetail::create([
-                    'flock_end_id' => $flockEnd->id,
-                    'batch_number' => $index + 1,
-                    'batch_weight' => $weight,
-                ]);
-            }
-
             DB::commit();
 
             // Load relationships
-            $flockEnd->load('batchWeights', 'slaughter', 'endedBy');
+            $flockEnd->load('slaughter', 'endedBy');
 
             // Calculate mortality
             $mortality = $availableBirds - $totalBirdsHarvested;
             $mortalityRate = $availableBirds > 0 ? ($mortality / $availableBirds) * 100 : 0;
-
-            // Format batch weights
-            $batchWeights = $flockEnd->batchWeights->map(function ($detail) {
-                return [
-                    'batch_number' => $detail->batch_number,
-                    'batch_weight' => $detail->batch_weight,
-                ];
-            })->values();
 
             return response()->json([
                 'success' => true,
@@ -1076,19 +1053,19 @@ class FlockController extends BaseController
                     'sale_date' => $flockEnd->sale_date->format('Y-m-d'),
                     'cages_count' => $flockEnd->cages_count,
                     'birds_per_cage' => $flockEnd->birds_per_cage,
-                    'cages_weight' => $flockEnd->cages_weight,
-                    'available_birds' => $flockEnd->available_birds,
+                    'cages_weight' => $this->formatDecimal($flockEnd->cages_weight),
+                    'total_birds' => $flockEnd->available_birds,
                     'total_birds_harvested' => $flockEnd->total_birds_harvested,
                     'mortality_birds' => $mortality,
-                    'mortality_rate' => round($mortalityRate, 2),
+                    'mortality_rate' => $this->formatDecimal($mortalityRate),
                     'remaining_birds' => $flockEnd->remaining_birds,
-                    'total_weight' => $flockEnd->total_weight,
-                    'avg_weight_per_bird' => round($flockEnd->avg_weight_per_bird, 4),
+                    'batch_weight' => $this->formatDecimal($flockEnd->total_weight),
+                    'net_weight' => $this->formatDecimal($request->net_weight),
+                    'avg_weight' => $this->formatDecimal($request->avg_weight),
                     'notes' => $flockEnd->notes,
                     'ended_by_id' => $flockEnd->ended_by,
                     'ended_by_name' => $flockEnd->endedBy?->name ?? null,
                     'created_at' => $flockEnd->created_at->format('Y-m-d H:i:s'),
-                    'batch_weights' => $batchWeights,
                 ],
             ], 201);
 

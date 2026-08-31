@@ -469,7 +469,7 @@ class DailyRecordController extends BaseController
         // Check if logged-in user created this record
         $assignment = (auth()->check() && $record->created_by === auth()->id()) ? 1 : 0;
 
-        return [
+        $data = [
             'id'              => $record->id,
             'record_date'     => $record->record_date?->format('Y-m-d'),
             'farm_id'         => $record->farm_id,
@@ -478,16 +478,18 @@ class DailyRecordController extends BaseController
             'flock_name'      => $record->flock?->name,
             'hangar_id'       => $record->hangar_id,
             'hangar_name'     => $record->hangar?->name,
-            'feed_kg'         => (float) $record->feed_kg,
+            'feed_kg'         => $this->formatDecimal($record->feed_kg),
             'eggs_tray_30'    => (int) $record->eggs_tray_30,
             'eggs_count'      => (int) $record->eggs_count,
-            'eggs_weight'     => (float) $record->eggs_weight,
-            'chicks_weight'   => (float) $record->chicks_weight,
+            'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
+            'chicks_weight'   => $this->formatDecimal($record->chicks_weight),
             'mortality'       => (int) $record->mortality,
             'assignment'      => $assignment,
             'created_by'      => $record->created_by,
             'created_by_name' => $record->creator?->name,
             'created_at'      => $record->created_at,
         ];
+
+        return $data;
     }
 }

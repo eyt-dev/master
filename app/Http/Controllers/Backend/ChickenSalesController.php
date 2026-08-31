@@ -36,7 +36,7 @@ class ChickenSalesController extends Controller
                     $breedType = $this->extractBreedType($row->flock->breed);
                     $breedName = $this->extractBreedName($row->flock->breed);
                     $badgeClass = ($breedType === 'Broiler') ? 'badge-danger' : 'badge-info';
-                    return '<span class="badge ' . $badgeClass . '">' . $breedType . ' (' . $breedName . ')</span>';
+                    return '<strong>' . $row->flock->name . '</strong><br><span class="badge ' . $badgeClass . '">' . $breedType . ' (' . $breedName . ')</span>';
                 })
                 ->addColumn('hangar', function($row) {
                     return $row->hangar->name ?? 'N/A';
@@ -104,16 +104,17 @@ class ChickenSalesController extends Controller
             'flock_id' => 'required|exists:flocks,id',
             'hangar_id' => 'required|exists:hangars,id',
             'slaughter_id' => 'required|exists:slaughters,id',
-            'quantity' => 'required|numeric|min:1',
-            'total_weight' => 'required|numeric|min:0',
-            'gross_weight' => 'required|numeric|min:0',
-            'no_of_cages' => 'required|integer|min:1',
-            'no_of_birds' => 'required|numeric|min:1|unique:chicken_sales',
+            'batch_weight' => 'required|numeric|min:0',
+            'cages_weight' => 'required|numeric|min:0',
+            'cages_count' => 'required|integer|min:1',
+            'birds_per_cage' => 'required|integer|min:1',
             'net_weight' => 'required|numeric|min:0',
             'notes' => 'nullable|string',
         ]);
 
-        $avgWeightPerBird = $request->net_weight / $request->no_of_birds;
+        // Auto-calculate quantity
+        $quantity = $request->cages_count * $request->birds_per_cage;
+        $avgWeightPerBird = $request->net_weight / $quantity;
 
         ChickenSale::create([
             'sale_date' => $request->sale_date,
@@ -121,11 +122,11 @@ class ChickenSalesController extends Controller
             'flock_id' => $request->flock_id,
             'hangar_id' => $request->hangar_id,
             'slaughter_id' => $request->slaughter_id,
-            'quantity' => $request->quantity,
-            'total_weight' => $request->total_weight,
-            'gross_weight' => $request->gross_weight,
-            'no_of_cages' => $request->no_of_cages,
-            'no_of_birds' => $request->no_of_birds,
+            'quantity' => $quantity,
+            'total_weight' => $request->batch_weight,
+            'gross_weight' => $request->cages_weight,
+            'no_of_cages' => $request->cages_count,
+            'no_of_birds' => $quantity,
             'net_weight' => $request->net_weight,
             'avg_weight_per_bird' => $avgWeightPerBird,
             'notes' => $request->notes,
@@ -167,16 +168,17 @@ class ChickenSalesController extends Controller
             'flock_id' => 'required|exists:flocks,id',
             'hangar_id' => 'required|exists:hangars,id',
             'slaughter_id' => 'required|exists:slaughters,id',
-            'quantity' => 'required|numeric|min:1',
-            'total_weight' => 'required|numeric|min:0',
-            'gross_weight' => 'required|numeric|min:0',
-            'no_of_cages' => 'required|integer|min:1',
-            'no_of_birds' => 'required|numeric|min:1|unique:chicken_sales,no_of_birds,' . $id,
+            'batch_weight' => 'required|numeric|min:0',
+            'cages_weight' => 'required|numeric|min:0',
+            'cages_count' => 'required|integer|min:1',
+            'birds_per_cage' => 'required|integer|min:1',
             'net_weight' => 'required|numeric|min:0',
             'notes' => 'nullable|string',
         ]);
 
-        $avgWeightPerBird = $request->net_weight / $request->no_of_birds;
+        // Auto-calculate quantity
+        $quantity = $request->cages_count * $request->birds_per_cage;
+        $avgWeightPerBird = $request->net_weight / $quantity;
 
         $chickenSale->update([
             'sale_date' => $request->sale_date,
@@ -184,11 +186,11 @@ class ChickenSalesController extends Controller
             'flock_id' => $request->flock_id,
             'hangar_id' => $request->hangar_id,
             'slaughter_id' => $request->slaughter_id,
-            'quantity' => $request->quantity,
-            'total_weight' => $request->total_weight,
-            'gross_weight' => $request->gross_weight,
-            'no_of_cages' => $request->no_of_cages,
-            'no_of_birds' => $request->no_of_birds,
+            'quantity' => $quantity,
+            'total_weight' => $request->batch_weight,
+            'gross_weight' => $request->cages_weight,
+            'no_of_cages' => $request->cages_count,
+            'no_of_birds' => $quantity,
             'net_weight' => $request->net_weight,
             'avg_weight_per_bird' => $avgWeightPerBird,
             'notes' => $request->notes,

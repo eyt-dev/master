@@ -49,7 +49,7 @@
                     @if(isset($flocks))
                         @foreach($flocks as $flock)
                             <option value="{{ $flock->id }}" {{ old('flock_id', $chickenSale->flock_id ?? '') == $flock->id ? 'selected' : '' }}>
-                                {{ $flock->breed }}
+                                {{ $flock->name }} - {{ $flock->breed }}
                             </option>
                         @endforeach
                     @endif
@@ -114,53 +114,65 @@
     </div>
 
     <div class="row">
-        <!-- Total Weight -->
+        <!-- Batch Weight -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="total_weight" class="form-label">Total Weight <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="total_weight" id="total_weight" placeholder="Total Weight" 
-                    value="{{ old('total_weight', $chickenSale->total_weight ?? '') }}" required="" step="0.01" min="0" />
-                @error('total_weight')
-                    <label id="total_weight-error" class="error" for="total_weight">{{ $message }}</label>
+                <label for="batch_weight" class="form-label">Batch Weight <span class="text-red">*</span></label>
+                <input type="number" class="form-control" name="batch_weight" id="batch_weight" placeholder="Batch Weight"
+                    value="{{ old('batch_weight', $chickenSale->total_weight ?? '') }}" required="" step="0.01" min="0" />
+                @error('batch_weight')
+                    <label id="batch_weight-error" class="error" for="batch_weight">{{ $message }}</label>
                 @enderror
             </div>
         </div>
 
-        <!-- Gross Weight -->
+        <!-- Caged Weight -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="gross_weight" class="form-label">Cage's Weight <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="gross_weight" id="gross_weight" placeholder="Gross Weight" 
-                    value="{{ old('gross_weight', $chickenSale->gross_weight ?? '') }}" required="" step="0.01" min="0" />
-                @error('gross_weight')
-                    <label id="gross_weight-error" class="error" for="gross_weight">{{ $message }}</label>
+                <label for="cages_weight" class="form-label">Cages Weight (kg) <span class="text-red">*</span></label>
+                <input type="number" class="form-control" name="cages_weight" id="cages_weight" placeholder="Caged Weight"
+                    value="{{ old('cages_weight', $chickenSale->gross_weight ?? '') }}" required="" step="0.01" min="0" />
+                @error('cages_weight')
+                    <label id="cages_weight-error" class="error" for="cages_weight">{{ $message }}</label>
                 @enderror
             </div>
         </div>
     </div>
 
     <div class="row">
-        <!-- Number of Cages -->
+        <!-- Cages Count -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="no_of_cages" class="form-label">Number of Cages <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="no_of_cages" id="no_of_cages" placeholder="Number of Cages" 
-                    value="{{ old('no_of_cages', $chickenSale->no_of_cages ?? '') }}" required="" min="1" />
-                @error('no_of_cages')
-                    <label id="no_of_cages-error" class="error" for="no_of_cages">{{ $message }}</label>
+                <label for="cages_count" class="form-label">Cages Count <span class="text-red">*</span></label>
+                <input type="number" class="form-control" name="cages_count" id="cages_count" placeholder="Cages Count"
+                    value="{{ old('cages_count', $chickenSale->no_of_cages ?? '') }}" required="" min="1" />
+                @error('cages_count')
+                    <label id="cages_count-error" class="error" for="cages_count">{{ $message }}</label>
                 @enderror
             </div>
         </div>
 
-        <!-- Number of Birds -->
+        <!-- Birds per Cage -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="no_of_birds" class="form-label">Number of Birds <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="no_of_birds" id="no_of_birds" placeholder="Number of Birds" 
-                    value="{{ old('no_of_birds', $chickenSale->no_of_birds ?? '') }}" required="" min="1" />
-                @error('no_of_birds')
-                    <label id="no_of_birds-error" class="error" for="no_of_birds">{{ $message }}</label>
+                <label for="birds_per_cage" class="form-label">Birds per Cage <span class="text-red">*</span></label>
+                <input type="number" class="form-control" name="birds_per_cage" id="birds_per_cage" placeholder="Birds per Cage"
+                    value="{{ old('birds_per_cage', isset($chickenSale) ? round($chickenSale->no_of_birds / $chickenSale->no_of_cages) : '') }}" required="" min="1" />
+                @error('birds_per_cage')
+                    <label id="birds_per_cage-error" class="error" for="birds_per_cage">{{ $message }}</label>
                 @enderror
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Total Quantity (Auto Calculated) -->
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="quantity_display" class="form-label">Total Quantity (Auto)</label>
+                <input type="number" class="form-control" name="quantity_display" id="quantity_display" placeholder="Auto Calculated"
+                    value="" readonly />
+                <small class="text-muted">Cages × Birds per Cage</small>
             </div>
         </div>
     </div>
@@ -221,7 +233,7 @@
                     type: 'GET',
                     success: function(flocks) {
                         flocks.forEach(function(flock) {
-                            $('#flock_id').append('<option value="' + flock.id + '">' + flock.breed + '</option>');
+                            $('#flock_id').append('<option value="' + flock.id + '">' + flock.name + ' - ' + flock.breed + '</option>');
                         });
                     }
                 });
@@ -246,26 +258,46 @@
             }
         });
 
+        // Calculate total quantity (Cages × Birds per Cage)
+        function calculateQuantity() {
+            var cagesCount = parseFloat($('#cages_count').val()) || 0;
+            var birdsPerCage = parseFloat($('#birds_per_cage').val()) || 0;
+
+            if (cagesCount > 0 && birdsPerCage > 0) {
+                var totalQty = Math.round(cagesCount * birdsPerCage);
+                $('#quantity_display').val(totalQty);
+                calculateAvgWeight(totalQty);
+            } else {
+                $('#quantity_display').val('');
+                $('#avg_weight_per_bird').val('');
+            }
+        }
+
         // Calculate average weight per bird
-        function calculateAvgWeight() {
+        function calculateAvgWeight(quantity) {
             var netWeight = parseFloat($('#net_weight').val()) || 0;
-            var noOfBirds = parseFloat($('#no_of_birds').val()) || 0;
-            
-            if (netWeight > 0 && noOfBirds > 0) {
-                var avgWeight = (netWeight / noOfBirds).toFixed(2);
+            var totalQty = quantity || parseFloat($('#quantity_display').val()) || 0;
+
+            if (netWeight > 0 && totalQty > 0) {
+                var avgWeight = (netWeight / totalQty).toFixed(2);
                 $('#avg_weight_per_bird').val(avgWeight);
             } else {
                 $('#avg_weight_per_bird').val('');
             }
         }
 
-        $('#net_weight, #no_of_birds').on('change keyup', function() {
+        // Trigger calculations when inputs change
+        $('#cages_count, #birds_per_cage').on('change keyup', function() {
+            calculateQuantity();
+        });
+
+        $('#net_weight').on('change keyup', function() {
             calculateAvgWeight();
         });
 
-        // Trigger calculation on page load if editing
+        // Trigger calculations on page load if editing
         @if(isset($chickenSale))
-            calculateAvgWeight();
+            calculateQuantity();
         @endif
     });
 </script>

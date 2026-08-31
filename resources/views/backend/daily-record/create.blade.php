@@ -105,12 +105,13 @@
             window.breedType = 'Layer'; // Default
 
             if (flockId) {
-                // Fetch flock breed details
+                // Fetch flock breed details FIRST
                 $.ajax({
                     url: "{{ route('daily-record.flock-details', ['username' => $siteSlug, 'flock' => ':flock']) }}".replace(':flock', flockId),
                     type: 'GET',
                     success: function(flockDetails) {
                         window.breedType = flockDetails.breed_type || 'Layer';
+                        console.log('Flock Details - Breed Type:', window.breedType);
 
                         // Update breed label
                         var breedText = flockDetails.breed_type + ' (' + flockDetails.breed_name + ')';
@@ -123,25 +124,44 @@
                             breedBadge.removeClass('badge-danger').addClass('badge-info');
                         }
                         breedLabel.show();
+
+                        // Now load hangars AFTER breed is set
+                        loadHangars();
                     }
                 });
+            } else {
+                noHangarsMsg.show().text('Please select a flock first to see allocated hangars.');
+            }
+        });
 
-                // Load hangars
-                $.ajax({
+        // Function to load hangars
+        function loadHangars() {
+            var flockId = $('#flock_id').val();
+            var container = $('#hangars_container');
+            var noHangarsMsg = $('#no_hangars_message');
+
+            $.ajax({
                     url: "{{ route('daily-record.hangars-by-flock', ['username' => $siteSlug, 'flock' => ':flock']) }}".replace(':flock', flockId),
                     type: 'GET',
                     success: function(response) {
-                        var hangars = response.hangars || response;
-                        if (hangars.length === 0) {
+                        console.log('Hangars Response:', response);
+
+                        // Handle both response formats: array or object with hangars key
+                        var hangars = Array.isArray(response) ? response : (response.hangars || response);
+                        var breedTypeFromResponse = (response && response.breed_type) ? response.breed_type : (window.breedType || 'Layer');
+
+                        console.log('Breed Type:', breedTypeFromResponse);
+
+                        if (!hangars || hangars.length === 0) {
                             noHangarsMsg.show().text('No hangars allocated to this flock.');
                             container.hide();
                             return;
                         }
-                        
+
                         hangars.forEach(function(hangar, index) {
                             // Get existing data if in edit mode
                             var existingData = existingRecordsData[hangar.id] || {};
-                            var breedType = window.breedType || 'Layer';
+                            var breedType = breedTypeFromResponse;
 
                             // Format decimal values with comma as separator
                             var feedValue = existingData.feed_kg ? parseFloat(existingData.feed_kg).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
@@ -177,8 +197,12 @@
                                             </div>
                                         </div>
                                         ${breedType === 'Broiler' ? `
-                                            <div class="col-md-6">
-                                                <p class="text-muted small mb-0"><em>Other fields are optional for Broiler breeds</em></p>
+                                            <div class="col-md-3">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-label mb-1" style="font-size: 0.85rem;">Chicks Weight (Kg) <small class="text-muted">(Optional)</small></label>
+                                                    <input type="text" class="form-control chicks-weight-input" name="hangar_chicks_weight[${hangar.id}]"
+                                                        value="${chicksWeightValue}" placeholder="0,00" data-hangar-id="${hangar.id}" />
+                                                </div>
                                             </div>
                                         ` : `
                                             <div class="col-md-3">
@@ -206,13 +230,6 @@
                                                         value="${eggsWeightValue}" placeholder="0,00" data-hangar-id="${hangar.id}" required />
                                                 </div>
                                             </div>
-                                            <div class="col-md-3">
-                                                <div class="form-group mb-0">
-                                                    <label class="form-label mb-1" style="font-size: 0.85rem;">Chicks Weight (Kg) <small class="text-muted">(Optional)</small></label>
-                                                    <input type="text" class="form-control chicks-weight-input" name="hangar_chicks_weight[${hangar.id}]"
-                                                        value="${chicksWeightValue}" placeholder="0,00" data-hangar-id="${hangar.id}" />
-                                                </div>
-                                            </div>
                                         </div>
                                     ` : ``}
                                 </div>
@@ -228,10 +245,7 @@
                         container.hide();
                     }
                 });
-            } else {
-                noHangarsMsg.show().text('Please select a flock first to see allocated hangars.');
-            }
-        });
+        }
 
         // Form submission
         $('#daily_record_form').on('submit', function(e) {

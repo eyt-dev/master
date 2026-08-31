@@ -42,9 +42,15 @@ class DailyRecordController extends Controller
                         'created_by' => $firstRecord->creator->name ?? 'N/A',
                         'created_at' => $firstRecord->created_at,
                         'hangars' => $group->map(function($record) {
+                            // Get allocated quantity from FlockHangar
+                            $flockHangar = FlockHangar::where('flock_id', $record->flock_id)
+                                ->where('hangar_id', $record->hangar_id)
+                                ->first();
+
                             return [
                                 'hangar_id' => $record->hangar_id,
                                 'hangar_name' => $record->hangar->name ?? 'N/A',
+                                'allocated_quantity' => $flockHangar->quantity ?? 'N/A',
                                 'feed_kg' => $record->feed_kg,
                                 'eggs_tray_30' => $record->eggs_tray_30,
                                 'eggs_count' => $record->eggs_count,
@@ -157,13 +163,14 @@ class DailyRecordController extends Controller
         if (!isset($row['hangars'][$index])) {
             return 'N/A';
         }
-        
+
         $hangar = $row['hangars'][$index];
         $feedKg = number_format((float) $hangar['feed_kg'], 2, ',', '.');
         $eggsWeight = number_format((float) $hangar['eggs_weight'], 2, ',', '.');
         $chicksWeight = number_format((float) $hangar['chicks_weight'], 2, ',', '.');
-        
+
         return '<strong>' . $hangar['hangar_name'] . '</strong><br>' .
+               '<span style="color: #666; font-size: 0.9em;">Qty: ' . $hangar['allocated_quantity'] . '</span><br>' .
                'Feed: ' . $feedKg . ' kg<br>' .
                'Eggs(T): ' . $hangar['eggs_tray_30'] . '<br>' .
                'Eggs(C): ' . $hangar['eggs_count'] . '<br>' .

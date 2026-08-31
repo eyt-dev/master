@@ -128,37 +128,37 @@
             });
         });
         
+        // Fixed 10 hangar columns
+        var columns = [
+            { data: 'id', name: 'id' },
+            { data: 'name', name: 'name' },
+            { data: 'farm', name: 'farm' },
+            { data: 'chicks_supplier', name: 'chicks_supplier' },
+            { data: 'breed', name: 'breed' },
+            { data: 'start_date', name: 'start_date' },
+            { data: 'total_qty', name: 'total_qty', orderable: false, searchable: false },
+            { data: 'total_farm', name: 'total_farm', orderable: false, searchable: false },
+            { data: 'total_quantity', name: 'total_quantity' }
+        ];
+
+        // Add exactly 10 fixed hangar columns (hangar1 through hangar10)
+        for (var i = 1; i <= 10; i++) {
+            columns.push({ data: 'hangar' + i, name: 'hangar' + i, orderable: false, searchable: false });
+        }
+
+        // Add remaining columns
+        columns.push({ data: 'created_by' });
+        columns.push({ data: 'created_at', name: 'created_at' });
+        columns.push({ data: 'action', name: 'action', orderable: false, searchable: false });
+
         var table = $('#flock_table').DataTable({
             processing: true,
             serverSide: true,
             responsive: true,
             ajax: "{{ route('flock.index', ['username' => $siteSlug]) }}",
-            columns: [
-                { data: 'id', name: 'id' },
-                { data: 'name', name: 'name' },
-                { data: 'farm', name: 'farm' },
-                { data: 'chicks_supplier', name: 'chicks_supplier' },
-                { data: 'breed', name: 'breed' },
-                { data: 'start_date', name: 'start_date' },
-                { data: 'total_qty', name: 'total_qty', orderable: false, searchable: false },
-                { data: 'total_farm', name: 'total_farm', orderable: false, searchable: false },
-                { data: 'total_quantity', name: 'total_quantity' },
-                { data: 'hangar1', name: 'hangar1', orderable: false, searchable: false },
-                { data: 'hangar2', name: 'hangar2', orderable: false, searchable: false },
-                { data: 'hangar3', name: 'hangar3', orderable: false, searchable: false },
-                { data: 'hangar4', name: 'hangar4', orderable: false, searchable: false },
-                { data: 'hangar5', name: 'hangar5', orderable: false, searchable: false },
-                { data: 'hangar6', name: 'hangar6', orderable: false, searchable: false },
-                { data: 'hangar7', name: 'hangar7', orderable: false, searchable: false },
-                { data: 'hangar8', name: 'hangar8', orderable: false, searchable: false },
-                { data: 'hangar9', name: 'hangar9', orderable: false, searchable: false },
-                { data: 'hangar10', name: 'hangar10', orderable: false, searchable: false },
-                { data: 'created_by' },
-                { data: 'created_at', name: 'created_at' },
-                { data: 'action', name: 'action', orderable: false, searchable: false }
-            ]
+            columns: columns
         });
-        
+
         $(document).on('click', '.delete-flock', function() {
             var id = $(this).attr("data-id");
             swal({
@@ -180,7 +180,7 @@
                             swal({
                                 title: response.msg
                             }, function(result) {
-                                location.reload();
+                                table.ajax.reload();
                             });
                         }
                     });

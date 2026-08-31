@@ -18,94 +18,131 @@ class FlockController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Flock::with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar')
+            $flocks = Flock::with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar')
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                     $query->where('created_by', auth()->id());
                 })
-                ->orderBy('created_at', 'desc')->get();
+                ->orderBy('farm_id', 'asc')
+                ->orderBy('created_at', 'desc')
+                ->get();
 
-            $totalQty = $data->sum('total_quantity');
-            $totalFarms = $data->pluck('farm_id')->unique()->count();
+            // Group flocks by farm
+            $farmGroups = [];
+            foreach ($flocks as $flock) {
+                $farmId = $flock->farm_id;
 
-            return datatables()->of($data)
+                if (!isset($farmGroups[$farmId])) {
+                    $farmGroups[$farmId] = [
+                        'farm' => $flock->farm,
+                        'flocks' => []
+                    ];
+                }
+
+                // Add flock to this farm's group
+                $farmGroups[$farmId]['flocks'][] = $flock;
+            }
+
+            // Transform into flat array for DataTables with fixed hangar1-10 columns
+            $data = [];
+            foreach ($farmGroups as $farmId => $group) {
+                foreach ($group['flocks'] as $flock) {
+                    // Initialize hangar columns 1-10
+                    $hangarData = [];
+                    for ($i = 1; $i <= 10; $i++) {
+                        $hangarData["hangar{$i}"] = '-';
+                    }
+
+                    // Map flock's hangar allocations to the fixed columns based on hangar name
+                    foreach ($flock->flockHangarAllocations as $allocation) {
+                        $hangarName = $allocation->hangar?->name;
+                        
+                        if ($hangarName) {
+                            // Extract hangar number from name (e.g., "Hangar 1" -> 1)
+                            preg_match('/(\d+)/', $hangarName, $matches);
+                            
+                            if (!empty($matches[1])) {
+                                $hangarNumber = intval($matches[1]);
+                                
+                                // Map to hangar1-10 columns
+                                if ($hangarNumber >= 1 && $hangarNumber <= 10) {
+                                    $hangarData["hangar{$hangarNumber}"] = $allocation->quantity;
+                                }
+                            }
+                        }
+                    }
+
+                    $rowData = [
+                        'id' => $flock->id,
+                        'farm_id' => $flock->farm_id,
+                        'farm_name' => $group['farm']->name ?? 'N/A',
+                        'name' => $flock->name,
+                        'chicks_supplier' => $flock->chicksSupplier->name ?? 'N/A',
+                        'breed' => $flock->breed,
+                        'start_date' => $flock->start_date,
+                        'total_quantity' => $flock->total_quantity,
+                        'created_by' => $flock->creator->name ?? 'N/A',
+                        'created_at' => $flock->created_at,
+                    ];
+
+                    // Merge hangar data into row
+                    $rowData = array_merge($rowData, $hangarData);
+                    $data[] = $rowData;
+                }
+            }
+
+            $totalQty = collect($data)->sum('total_quantity');
+            $totalFarms = collect($data)->pluck('farm_id')->unique()->count();
+
+            $datatableBuilder = datatables()->of($data)
                 ->addColumn('farm', function($row) {
-                    return $row->farm->name ?? 'N/A';
+                    return $row['farm_name'];
                 })
                 ->addColumn('name', function($row) {
-                    return $row->name ?? 'N/A';
+                    return $row['name'];
                 })
                 ->addColumn('chicks_supplier', function($row) {
-                    return $row->chicksSupplier->name ?? 'N/A';
+                    return $row['chicks_supplier'];
                 })
                 ->addColumn('breed', function($row) {
-                    $breedType = $this->extractBreedType($row->breed);
-                    $breedName = $this->extractBreedName($row->breed);
+                    $breedType = $this->extractBreedType($row['breed']);
+                    $breedName = $this->extractBreedName($row['breed']);
                     $badgeClass = ($breedType === 'Broiler') ? 'badge-danger' : 'badge-info';
                     return '<span class="badge ' . $badgeClass . '">' . $breedType . ' (' . $breedName . ')</span>';
                 })
                 ->addColumn('start_date', function($row) {
-                    return date('Y-m-d', strtotime($row->start_date));
+                    return date('Y-m-d', strtotime($row['start_date']));
                 })
-                ->addColumn('total_qty', function($row) use ($totalQty) {
+                ->addColumn('total_qty', function() use ($totalQty) {
                     return $totalQty;
                 })
-                ->addColumn('total_farm', function($row) use ($totalFarms) {
+                ->addColumn('total_farm', function() use ($totalFarms) {
                     return $totalFarms;
                 })
                 ->addColumn('created_by', function($row) {
-                    return $row->creator->name ?? 'N/A';
+                    return $row['created_by'];
                 })
                 ->addColumn('created_at', function($row) {
-                    return date('Y-m-d', strtotime($row->created_at));
-                })
-                ->addColumn('hangar1', function($row) {
-                    $allocations = $row->flockHangarAllocations;
-                    return isset($allocations[0]) ? $allocations[0]->hangar->name . '-' . $allocations[0]->quantity : 'N/A';
-                })
-                ->addColumn('hangar2', function($row) {
-                    $allocations = $row->flockHangarAllocations;
-                    return isset($allocations[1]) ? $allocations[1]->hangar->name . '-' . $allocations[1]->quantity : 'N/A';
-                })
-                ->addColumn('hangar3', function($row) {
-                    $allocations = $row->flockHangarAllocations;
-                    return isset($allocations[2]) ? $allocations[2]->hangar->name . '-' . $allocations[2]->quantity : 'N/A';
-                })
-                ->addColumn('hangar4', function($row) {
-                    $allocations = $row->flockHangarAllocations;
-                    return isset($allocations[3]) ? $allocations[3]->hangar->name . '-' . $allocations[3]->quantity : 'N/A';
-                })
-                ->addColumn('hangar5', function($row) {
-                    $allocations = $row->flockHangarAllocations;
-                    return isset($allocations[4]) ? $allocations[4]->hangar->name . '-' . $allocations[4]->quantity : 'N/A';
-                })
-                ->addColumn('hangar6', function($row) {
-                    $allocations = $row->flockHangarAllocations;
-                    return isset($allocations[5]) ? $allocations[5]->hangar->name . '-' . $allocations[5]->quantity : 'N/A';
-                })
-                ->addColumn('hangar7', function($row) {
-                    $allocations = $row->flockHangarAllocations;
-                    return isset($allocations[6]) ? $allocations[6]->hangar->name . '-' . $allocations[6]->quantity : 'N/A';
-                })
-                ->addColumn('hangar8', function($row) {
-                    $allocations = $row->flockHangarAllocations;
-                    return isset($allocations[7]) ? $allocations[7]->hangar->name . '-' . $allocations[7]->quantity : 'N/A';
-                })
-                ->addColumn('hangar9', function($row) {
-                    $allocations = $row->flockHangarAllocations;
-                    return isset($allocations[8]) ? $allocations[8]->hangar->name . '-' . $allocations[8]->quantity : 'N/A';
-                })
-                ->addColumn('hangar10', function($row) {
-                    $allocations = $row->flockHangarAllocations;
-                    return isset($allocations[9]) ? $allocations[9]->hangar->name . '-' . $allocations[9]->quantity : 'N/A';
-                })
+                    return date('Y-m-d', strtotime($row['created_at']));
+                });
+
+            // Add fixed 10 hangar columns
+            for ($i = 1; $i <= 10; $i++) {
+                $datatableBuilder->addColumn('hangar' . $i, function($row) use ($i) {
+                    return $row['hangar' . $i];
+                });
+            }
+
+            return $datatableBuilder
                 ->addColumn('action', function($row) {
-                    return '<a class="edit-flock btn btn-sm btn-success mr-1" data-path="'.route('flock.edit', ['username' => request()->segment(1), 'flock' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
-                         .'<a class="delete-flock btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
+                    return '<a class="edit-flock btn btn-sm btn-success mr-1" data-path="'.route('flock.edit', ['username' => request()->segment(1), 'flock' => $row['id']]).'" title="Edit"><i class="fa fa-edit"></i></a>'
+                         .'<a class="delete-flock btn btn-sm btn-danger" data-id="'.$row['id'].'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
                 ->rawColumns(['action', 'breed'])
                 ->make(true);
         }
+
+        // No need to fetch all hangar IDs for view since we're using fixed columns
         return view('backend.flock.index');
     }
 

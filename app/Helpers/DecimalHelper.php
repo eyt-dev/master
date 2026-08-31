@@ -36,9 +36,9 @@ class DecimalHelper
             return null;
         }
 
-        // Round to specified decimals and replace period with comma
-        $rounded = round((float) $value, $decimals);
-        return str_replace('.', ',', (string) $rounded);
+        // Use number_format to ensure decimal places are preserved (e.g., 900.00 not 900)
+        $formatted = number_format((float) $value, $decimals, '.', '');
+        return str_replace('.', ',', $formatted);
     }
 
     /**

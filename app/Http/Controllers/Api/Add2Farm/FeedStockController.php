@@ -112,12 +112,21 @@ class FeedStockController extends BaseController
 
         $user = auth()->user();
 
-        $records = MaterialStock::whereHas('farm', function ($q) use ($user) {
-                $q->where(function ($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
-                });
-            })
+        // Debug: Check if user has access to any farms
+        $userFarms = Farm::where(function ($q) use ($user) {
+            $q->where('created_by', $user->id)
+              ->orWhere('assigned_to', $user->id);
+        })->pluck('id');
+
+        if ($userFarms->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No farms accessible to this user.',
+                'debug' => ['user_id' => $user->id, 'accessible_farms' => []]
+            ], 403);
+        }
+
+        $records = MaterialStock::whereIn('farm_id', $userFarms)
             ->when($request->farm_id, fn($q) => $q->where('farm_id', $request->farm_id))
             ->when($request->search, fn($q) => $q->where('name', 'like', "%{$request->search}%"))
             ->with('farm', 'supplier', 'creator', 'materialName', 'materialStockHangarAllocations.hangar')

@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             GlobalDataSeeder::class,
             CreateFormSeeder::class,
             FixPermissionGuardSeeder::class,
+            MaterialNameSeeder::class,
         ]);
     }
 }

@@ -141,13 +141,16 @@ class DailyRecordController extends Controller
     }
 
     public function getHangarsByFlock($siteUrl, $flockId)
-    {        
+    {
         $flockId = (int) $flockId;
         $flock = Flock::findOrFail($flockId);
-        
-        // Get hangars allocated to this flock via FlockHangar
+
+        // Get hangars allocated to this flock via FlockHangar (only Active)
         $flockHangars = \App\Models\FlockHangar::where('flock_id', $flockId)
             ->with('hangar')
+            ->whereHas('hangar', function ($q) {
+                $q->where('status', 'Active');
+            })
             ->get()
             ->map(function($allocation) {
                 return [

@@ -14,6 +14,7 @@ class MaterialStock extends Model
     protected $fillable = [
         'stock_date',
         'name',
+        'material_name_id',
         'quantity',
         'supplier_id',
         'farm_id',
@@ -32,6 +33,11 @@ class MaterialStock extends Model
     public function supplier()
     {
         return $this->belongsTo(ChicksSupplier::class, 'supplier_id');
+    }
+
+    public function materialName()
+    {
+        return $this->belongsTo(MaterialName::class, 'material_name_id');
     }
 
     public function hangars()

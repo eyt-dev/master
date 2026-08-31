@@ -17,7 +17,7 @@ class MaterialStockController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = MaterialStock::with('farm', 'supplier', 'creator', 'materialStockHangarAllocations.hangar')
+            $data = MaterialStock::with('farm', 'supplier', 'creator', 'materialName', 'materialStockHangarAllocations.hangar')
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                     $query->where('created_by', auth()->id());
                 })
@@ -26,84 +26,87 @@ class MaterialStockController extends Controller
                 ->addColumn('stock_date', function($row) {
                     return date('Y-m-d', strtotime($row->stock_date));
                 })
+                ->addColumn('name', function($row) {
+                    return $row->materialName?->name ?? $row->name ?? 'N/A';
+                })
                 ->addColumn('farm', function($row) {
-                    return $row->farm->name ?? 'N/A';
+                    return $row->farm?->name ?? 'N/A';
                 })
                 ->addColumn('supplier', function($row) {
-                    return $row->supplier->name ?? 'N/A';
+                    return $row->supplier?->name ?? 'N/A';
                 })
                 ->addColumn('created_by', function($row) {
-                    return $row->creator->name ?? 'N/A';
+                    return $row->creator?->name ?? 'N/A';
                 })
                 ->addColumn('created_at', function($row) {
                     return date('Y-m-d', strtotime($row->created_at));
                 })
                 ->addColumn('hangar1', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[0])) {
+                    if (isset($allocations[0]) && $allocations[0]->hangar) {
                         return $allocations[0]->hangar->name . '<br>Qty: ' . $allocations[0]->quantity . '<br>Remaining: ' . $allocations[0]->remaining_quantity;
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar2', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[1])) {
+                    if (isset($allocations[1]) && $allocations[1]->hangar) {
                         return $allocations[1]->hangar->name . '<br>Qty: ' . $allocations[1]->quantity . '<br>Remaining: ' . $allocations[1]->remaining_quantity;
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar3', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[2])) {
+                    if (isset($allocations[2]) && $allocations[2]->hangar) {
                         return $allocations[2]->hangar->name . '<br>Qty: ' . $allocations[2]->quantity . '<br>Remaining: ' . $allocations[2]->remaining_quantity;
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar4', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[3])) {
+                    if (isset($allocations[3]) && $allocations[3]->hangar) {
                         return $allocations[3]->hangar->name . '<br>Qty: ' . $allocations[3]->quantity . '<br>Remaining: ' . $allocations[3]->remaining_quantity;
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar5', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[4])) {
+                    if (isset($allocations[4]) && $allocations[4]->hangar) {
                         return $allocations[4]->hangar->name . '<br>Qty: ' . $allocations[4]->quantity . '<br>Remaining: ' . $allocations[4]->remaining_quantity;
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar6', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[5])) {
+                    if (isset($allocations[5]) && $allocations[5]->hangar) {
                         return $allocations[5]->hangar->name . '<br>Qty: ' . $allocations[5]->quantity . '<br>Remaining: ' . $allocations[5]->remaining_quantity;
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar7', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[6])) {
+                    if (isset($allocations[6]) && $allocations[6]->hangar) {
                         return $allocations[6]->hangar->name . '<br>Qty: ' . $allocations[6]->quantity . '<br>Remaining: ' . $allocations[6]->remaining_quantity;
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar8', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[7])) {
+                    if (isset($allocations[7]) && $allocations[7]->hangar) {
                         return $allocations[7]->hangar->name . '<br>Qty: ' . $allocations[7]->quantity . '<br>Remaining: ' . $allocations[7]->remaining_quantity;
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar9', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[8])) {
+                    if (isset($allocations[8]) && $allocations[8]->hangar) {
                         return $allocations[8]->hangar->name . '<br>Qty: ' . $allocations[8]->quantity . '<br>Remaining: ' . $allocations[8]->remaining_quantity;
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar10', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[9])) {
+                    if (isset($allocations[9]) && $allocations[9]->hangar) {
                         return $allocations[9]->hangar->name . '<br>Qty: ' . $allocations[9]->quantity . '<br>Remaining: ' . $allocations[9]->remaining_quantity;
                     }
                     return 'N/A';
@@ -124,25 +127,38 @@ class MaterialStockController extends Controller
         $farms = Farm::where('created_by', auth()->id())->orWhere('created_by', function($query) {
             $query->select('id')->from('admins')->where('type', 0);
         })->get();
-        
+
         if (auth()->user()->role === 'SuperAdmin') {
             $farms = Farm::all();
         }
 
         $suppliers = ChicksSupplier::all();
-        return view('backend.material-stock.create', compact('farms', 'suppliers'));
+        $materialNames = \App\Models\MaterialName::all();
+        return view('backend.material-stock.create', compact('farms', 'suppliers', 'materialNames'));
     }
 
     public function getHangarsByFarm($siteUrl, $farmId)
-    {        
+    {
         $farmId = (int) $farmId;
         $hangars = Hangar::where('farm_id', $farmId)
+            ->where('status', 'Active')
             ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                 $query->where('created_by', auth()->id());
             })
             ->select('id', 'name')
-            ->get();
-        
+            ->get()
+            ->map(function ($hangar) {
+                $remaining = MaterialStockHangar::where('hangar_id', $hangar->id)
+                    ->latest('created_at')
+                    ->value('remaining_quantity') ?? 0;
+
+                return [
+                    'id' => $hangar->id,
+                    'name' => $hangar->name,
+                    'remaining' => number_format($remaining, 2, ',', ''),
+                ];
+            });
+
         return response()->json($hangars);
     }
 
@@ -151,7 +167,7 @@ class MaterialStockController extends Controller
         $request->validate([
             'farm_id' => 'required|exists:farms,id',
             'supplier_id' => 'required|exists:chicks_suppliers,id',
-            'name' => 'required|string',
+            'material_name_id' => 'required|exists:material_names,id',
             'stock_date' => 'required|date',
             'quantity' => 'required|numeric|min:1',
             'hangar_quantities_json' => 'required|json',
@@ -169,10 +185,12 @@ class MaterialStockController extends Controller
             return back()->withErrors(['hangar_quantities_json' => 'Duplicate hangars are not allowed. Each hangar can only be selected once.']);
         }
 
+        $materialName = \App\Models\MaterialName::findOrFail($request->material_name_id);
         $materialStock = MaterialStock::create([
             'farm_id' => $request->farm_id,
             'supplier_id' => $request->supplier_id,
-            'name' => $request->name,
+            'material_name_id' => $request->material_name_id,
+            'name' => $materialName->name,
             'stock_date' => $request->stock_date,
             'quantity' => $request->quantity,
             'created_by' => auth()->id()
@@ -198,14 +216,15 @@ class MaterialStockController extends Controller
         $farms = Farm::where('created_by', auth()->id())->orWhere('created_by', function($query) {
             $query->select('id')->from('admins')->where('type', 0);
         })->get();
-        
+
         if (auth()->user()->role === 'SuperAdmin') {
             $farms = Farm::all();
         }
 
         $suppliers = ChicksSupplier::all();
+        $materialNames = \App\Models\MaterialName::all();
         $materialStockHangars = MaterialStockHangar::where('material_stock_id', $materialStock->id)->get();
-        return view('backend.material-stock.create', compact('materialStock', 'farms', 'suppliers', 'materialStockHangars'));
+        return view('backend.material-stock.create', compact('materialStock', 'farms', 'suppliers', 'materialNames', 'materialStockHangars'));
     }
 
     public function update(Request $request, $siteUrl, $id)
@@ -213,7 +232,7 @@ class MaterialStockController extends Controller
         $request->validate([
             'farm_id' => 'required|exists:farms,id',
             'supplier_id' => 'required|exists:chicks_suppliers,id',
-            'name' => 'required|string',
+            'material_name_id' => 'required|exists:material_names,id',
             'stock_date' => 'required|date',
             'quantity' => 'required|numeric|min:1',
             'hangar_quantities_json' => 'required|json',
@@ -231,11 +250,13 @@ class MaterialStockController extends Controller
             return back()->withErrors(['hangar_quantities_json' => 'Duplicate hangars are not allowed. Each hangar can only be selected once.']);
         }
 
+        $materialName = \App\Models\MaterialName::findOrFail($request->material_name_id);
         $materialStock = MaterialStock::findOrFail($id);
         $materialStock->update([
             'farm_id' => $request->farm_id,
             'supplier_id' => $request->supplier_id,
-            'name' => $request->name,
+            'material_name_id' => $request->material_name_id,
+            'name' => $materialName->name,
             'stock_date' => $request->stock_date,
             'quantity' => $request->quantity,
         ]);

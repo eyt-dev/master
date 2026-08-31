@@ -165,6 +165,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
         Route::get('feed-stocks/{id}', [Add2FarmFeedStockController::class, 'show']);
         Route::put('feed-stocks/{id}', [Add2FarmFeedStockController::class, 'update']);
         Route::delete('feed-stocks/{id}', [Add2FarmFeedStockController::class, 'destroy']);
+        Route::get('hangar-remaining/{farm_id}', [Add2FarmFeedStockController::class, 'getHangarRemaining']);
     });
 
     // Dropdowns - Accessible to authenticated users

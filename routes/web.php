@@ -236,6 +236,7 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('/', 'index')->name('daily-record.index')->middleware('permission:view.daily_record');
                         Route::get('create', 'create')->name('daily-record.create')->middleware('permission:create.daily_record');
                         Route::post('store', 'store')->name('daily-record.store')->middleware('permission:create.daily_record');
+                        Route::get('flock-details/{flock}', 'getFlockDetails')->name('daily-record.flock-details');
                         Route::get('hangars-by-flock/{flock}', 'getHangarsByFlock')->name('daily-record.hangars-by-flock');
                         Route::get('{daily_record}/edit', 'edit')->name('daily-record.edit')->middleware('permission:edit.daily_record');
                         Route::post('{daily_record}', 'update')->name('daily-record.update')->middleware('permission:edit.daily_record');

@@ -44,7 +44,8 @@
       "Bash(git diff *)",
       "Bash(cat)",
       "Read(//tmp/**)",
-      "Bash(rm -f \"e:\\\\xampp\\\\htdocs\\\\eyt-master\\\\app\\\\Models\\\\FeedStock.php\" \"e:\\\\xampp\\\\htdocs\\\\eyt-master\\\\app\\\\Models\\\\FeedStockHangar.php\")"
+      "Bash(rm -f \"e:\\\\xampp\\\\htdocs\\\\eyt-master\\\\app\\\\Models\\\\FeedStock.php\" \"e:\\\\xampp\\\\htdocs\\\\eyt-master\\\\app\\\\Models\\\\FeedStockHangar.php\")",
+      "Bash(mysql -u root -p xampp_eyt -e \"SELECT id, name, breed FROM flocks LIMIT 5;\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\Dell\\Desktop",

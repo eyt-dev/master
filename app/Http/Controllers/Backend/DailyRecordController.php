@@ -114,6 +114,44 @@ class DailyRecordController extends Controller
         return view('backend.daily-record.index');
     }
 
+    private function extractBreedType($breedString)
+    {
+        $breedType = 'Layer'; // Default
+
+        if (!empty($breedString)) {
+            if (strpos($breedString, ',') !== false) {
+                // Format: "Type,BreedName"
+                $breedParts = explode(',', $breedString);
+                $breedType = trim($breedParts[0]);
+            } else {
+                // Format: "BreedName" only - infer type from known breed names
+                if (stripos($breedString, 'cobb') !== false || stripos($breedString, 'ross') !== false) {
+                    $breedType = 'Broiler';
+                } elseif (stripos($breedString, 'lohmann') !== false || stripos($breedString, 'hy-line') !== false) {
+                    $breedType = 'Layer';
+                }
+            }
+        }
+
+        return $breedType;
+    }
+
+    private function extractBreedName($breedString)
+    {
+        if (empty($breedString)) {
+            return 'N/A';
+        }
+
+        if (strpos($breedString, ',') !== false) {
+            // Format: "Type,BreedName"
+            $breedParts = explode(',', $breedString);
+            return trim($breedParts[1] ?? 'N/A');
+        }
+
+        // Format: "BreedName" only
+        return trim($breedString);
+    }
+
     private function formatHangarData($row, $index)
     {
         if (!isset($row['hangars'][$index])) {
@@ -140,6 +178,21 @@ class DailyRecordController extends Controller
         return view('backend.daily-record.create', compact('flocks'));
     }
 
+    public function getFlockDetails($siteUrl, $flockId)
+    {
+        $flockId = (int) $flockId;
+        $flock = Flock::findOrFail($flockId);
+
+        return response()->json([
+            'id' => $flock->id,
+            'name' => FlockHelper::getFlockLabel($flock),
+            'breed_name' => $this->extractBreedName($flock->breed),
+            'breed_type' => $this->extractBreedType($flock->breed),
+            'total_birds' => $flock->total_birds ?? 0,
+            'farm_id' => $flock->farm_id
+        ]);
+    }
+
     public function getHangarsByFlock($siteUrl, $flockId)
     {
         $flockId = (int) $flockId;
@@ -159,8 +212,11 @@ class DailyRecordController extends Controller
                     'quantity' => $allocation->quantity
                 ];
             });
-        
-        return response()->json($flockHangars);
+
+        return response()->json([
+            'hangars' => $flockHangars,
+            'breed_type' => $this->extractBreedType($flock->breed)
+        ]);
     }
 
     public function store(Request $request, $siteUrl)
@@ -171,13 +227,37 @@ class DailyRecordController extends Controller
             'hangar_records' => 'required|json',
         ]);
 
-        // Get farm_id from the selected flock
+        // Get farm_id and breed from the selected flock
         $flock = Flock::findOrFail($request->flock_id);
-        
+        $breedType = $this->extractBreedType($flock->breed);
         $hangarRecords = json_decode($request->hangar_records, true);
-        
+
         if (empty($hangarRecords)) {
             return back()->withErrors(['hangar_records' => 'Please add at least one hangar record.']);
+        }
+
+        // Validate based on breed type
+        foreach ($hangarRecords as $record) {
+            if ($breedType === 'Broiler') {
+                // For broiler: feed and mortality are required
+                if (!isset($record['feed_kg']) || $record['feed_kg'] === '' || $record['feed_kg'] === null) {
+                    return back()->withErrors(['hangar_records' => 'Feed (kg) is required for Broiler breeds.']);
+                }
+                if (!isset($record['mortality']) || $record['mortality'] === '') {
+                    return back()->withErrors(['hangar_records' => 'Mortality is required for Broiler breeds.']);
+                }
+            } else {
+                // For layer: feed, eggs_weight, and mortality are required
+                if (!isset($record['feed_kg']) || $record['feed_kg'] === '' || $record['feed_kg'] === null) {
+                    return back()->withErrors(['hangar_records' => 'Feed (kg) is required for Layer breeds.']);
+                }
+                if (!isset($record['eggs_weight']) || $record['eggs_weight'] === '' || $record['eggs_weight'] === null) {
+                    return back()->withErrors(['hangar_records' => 'Eggs Weight is required for Layer breeds.']);
+                }
+                if (!isset($record['mortality']) || $record['mortality'] === '') {
+                    return back()->withErrors(['hangar_records' => 'Mortality is required for Layer breeds.']);
+                }
+            }
         }
 
         // Create daily records for each hangar

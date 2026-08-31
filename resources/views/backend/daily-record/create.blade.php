@@ -56,7 +56,13 @@
         <!-- Hangar List with Input Fields -->
         <div class="col-sm-12 col-md-12">
             <div class="form-group">
-                <label class="form-label">Hangar Details <span class="text-red">*</span></label>
+                <label class="form-label">
+                    Hangar Details 
+                    <span class="text-red">*</span>
+                    <span id="breed_label" style="display: none; margin-left: 10px;">
+                        <span class="badge badge-info" id="breed_badge">Layer (Lohmann Brown)</span>
+                    </span>
+                </label>
                 <small class="form-text text-muted d-block mb-3">Enter details for each hangar allocated to this flock.</small>
                 
                 <div id="hangars_container" class="bg-light rounded-lg p-0" style="border: 1px solid #dee2e6; background-color: #f8f9fa !important; display: none;">
@@ -83,21 +89,49 @@
         // Existing records data for edit mode
         var existingRecordsData = @json(isset($existingRecords) ? $existingRecords : []);
         
-        // Load hangars when flock is selected
+        // Load flock details and hangars when flock is selected
         $('#flock_id').on('change', function() {
             var flockId = $(this).val();
             var container = $('#hangars_container');
             var noHangarsMsg = $('#no_hangars_message');
-            
+            var breedLabel = $('#breed_label');
+            var breedBadge = $('#breed_badge');
+
             container.html('');
             container.hide();
             noHangarsMsg.hide();
-            
+            breedLabel.hide();
+
+            window.breedType = 'Layer'; // Default
+
             if (flockId) {
+                // Fetch flock breed details
+                $.ajax({
+                    url: "{{ route('daily-record.flock-details', ['username' => $siteSlug, 'flock' => ':flock']) }}".replace(':flock', flockId),
+                    type: 'GET',
+                    success: function(flockDetails) {
+                        window.breedType = flockDetails.breed_type || 'Layer';
+
+                        // Update breed label
+                        var breedText = flockDetails.breed_type + ' (' + flockDetails.breed_name + ')';
+                        breedBadge.text(breedText);
+
+                        // Update badge color based on breed type
+                        if (window.breedType === 'Broiler') {
+                            breedBadge.removeClass('badge-info').addClass('badge-danger');
+                        } else {
+                            breedBadge.removeClass('badge-danger').addClass('badge-info');
+                        }
+                        breedLabel.show();
+                    }
+                });
+
+                // Load hangars
                 $.ajax({
                     url: "{{ route('daily-record.hangars-by-flock', ['username' => $siteSlug, 'flock' => ':flock']) }}".replace(':flock', flockId),
                     type: 'GET',
-                    success: function(hangars) {
+                    success: function(response) {
+                        var hangars = response.hangars || response;
                         if (hangars.length === 0) {
                             noHangarsMsg.show().text('No hangars allocated to this flock.');
                             container.hide();
@@ -107,6 +141,8 @@
                         hangars.forEach(function(hangar, index) {
                             // Get existing data if in edit mode
                             var existingData = existingRecordsData[hangar.id] || {};
+                            var breedType = window.breedType || 'Layer';
+
                             // Format decimal values with comma as separator
                             var feedValue = existingData.feed_kg ? parseFloat(existingData.feed_kg).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
                             var eggsWeightValue = existingData.eggs_weight ? parseFloat(existingData.eggs_weight).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
@@ -114,7 +150,8 @@
                             var eggsTraySValue = existingData.eggs_tray_30 || '';
                             var eggsCountValue = existingData.eggs_count || '';
                             var mortalityValue = existingData.mortality || '';
-                            
+
+                            // Build HTML based on breed type
                             var html = `
                                 <div class="hangar-record-row p-3" style="border-bottom: 1px solid #dee2e6;" data-hangar-id="${hangar.id}">
                                     <div class="row">
@@ -127,49 +164,57 @@
                                     <div class="row">
                                         <div class="col-md-3">
                                             <div class="form-group mb-0">
-                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Feed (Kg)</label>
-                                                <input type="text" class="form-control feed-input" name="hangar_feed[${hangar.id}]" 
-                                                    value="${feedValue}" placeholder="0,00" data-hangar-id="${hangar.id}" />
+                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Feed (Kg) <span class="text-red">*</span></label>
+                                                <input type="text" class="form-control feed-input" name="hangar_feed[${hangar.id}]"
+                                                    value="${feedValue}" placeholder="0,00" data-hangar-id="${hangar.id}" required />
                                             </div>
                                         </div>
                                         <div class="col-md-3">
                                             <div class="form-group mb-0">
-                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Eggs (Tray 30)</label>
-                                                <input type="number" class="form-control eggs-tray-input" name="hangar_eggs_tray[${hangar.id}]" 
-                                                    value="${eggsTraySValue}" placeholder="0" min="0" data-hangar-id="${hangar.id}" />
+                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Mortality <span class="text-red">*</span></label>
+                                                <input type="number" class="form-control mortality-input" name="hangar_mortality[${hangar.id}]"
+                                                    value="${mortalityValue}" placeholder="0" min="0" data-hangar-id="${hangar.id}" required />
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
-                                            <div class="form-group mb-0">
-                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Eggs (Eggs)</label>
-                                                <input type="number" class="form-control eggs-count-input" name="hangar_eggs_count[${hangar.id}]" 
-                                                    value="${eggsCountValue}" placeholder="0" min="0" data-hangar-id="${hangar.id}" />
+                                        ${breedType === 'Broiler' ? `
+                                            <div class="col-md-6">
+                                                <p class="text-muted small mb-0"><em>Other fields are optional for Broiler breeds</em></p>
                                             </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="form-group mb-0">
-                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Mortality</label>
-                                                <input type="number" class="form-control mortality-input" name="hangar_mortality[${hangar.id}]" 
-                                                    value="${mortalityValue}" placeholder="0" min="0" data-hangar-id="${hangar.id}" />
+                                        ` : `
+                                            <div class="col-md-3">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-label mb-1" style="font-size: 0.85rem;">Eggs (Tray 30)</label>
+                                                    <input type="number" class="form-control eggs-tray-input" name="hangar_eggs_tray[${hangar.id}]"
+                                                        value="${eggsTraySValue}" placeholder="0" min="0" data-hangar-id="${hangar.id}" />
+                                                </div>
                                             </div>
-                                        </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-label mb-1" style="font-size: 0.85rem;">Eggs (Count)</label>
+                                                    <input type="number" class="form-control eggs-count-input" name="hangar_eggs_count[${hangar.id}]"
+                                                        value="${eggsCountValue}" placeholder="0" min="0" data-hangar-id="${hangar.id}" />
+                                                </div>
+                                            </div>
+                                        `}
                                     </div>
-                                    <div class="row mt-3">
-                                        <div class="col-md-3">
-                                            <div class="form-group mb-0">
-                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Eggs Weight (Kg)</label>
-                                                <input type="text" class="form-control eggs-weight-input" name="hangar_eggs_weight[${hangar.id}]" 
-                                                    value="${eggsWeightValue}" placeholder="0,00" data-hangar-id="${hangar.id}" />
+                                    ${breedType === 'Layer' ? `
+                                        <div class="row mt-3">
+                                            <div class="col-md-3">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-label mb-1" style="font-size: 0.85rem;">Eggs Weight (Kg) <span class="text-red">*</span></label>
+                                                    <input type="text" class="form-control eggs-weight-input" name="hangar_eggs_weight[${hangar.id}]"
+                                                        value="${eggsWeightValue}" placeholder="0,00" data-hangar-id="${hangar.id}" required />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group mb-0">
+                                                    <label class="form-label mb-1" style="font-size: 0.85rem;">Chicks Weight (Kg) <small class="text-muted">(Optional)</small></label>
+                                                    <input type="text" class="form-control chicks-weight-input" name="hangar_chicks_weight[${hangar.id}]"
+                                                        value="${chicksWeightValue}" placeholder="0,00" data-hangar-id="${hangar.id}" />
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
-                                            <div class="form-group mb-0">
-                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Chicks Weight (Kg)</label>
-                                                <input type="text" class="form-control chicks-weight-input" name="hangar_chicks_weight[${hangar.id}]" 
-                                                    value="${chicksWeightValue}" placeholder="0,00" data-hangar-id="${hangar.id}" />
-                                            </div>
-                                        </div>
-                                    </div>
+                                    ` : ``}
                                 </div>
                             `;
                             container.append(html);

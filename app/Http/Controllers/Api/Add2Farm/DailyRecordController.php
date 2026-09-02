@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Add2Farm;
 use App\Http\Controllers\Controller;
 use App\Models\DailyRecord;
 use App\Models\Flock;
+use App\Models\Farm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +28,7 @@ class DailyRecordController extends BaseController
      * @queryParam farm_id integer optional Filter by farm ID. Example: 1
      * @queryParam record_date string optional Filter by record date (format: yyyy-mm-dd). Example: 2026-08-07
      * @queryParam hangar_id integer optional Filter by hangar ID. Example: 1
+     * @queryParam type string optional Grouping type: day, week, month. Default: day. Example: week
      *
      * @response 200 {
      *   "success": true,
@@ -68,7 +70,27 @@ class DailyRecordController extends BaseController
             ], 401);
         }
 
-        $records = DailyRecord::where('created_by', auth()->id())
+        $type = $request->get('type', 'day');
+
+        if (!in_array($type, ['day', 'week', 'month'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid type parameter. Supported values: day, week, month',
+            ], 422);
+        }
+
+        if ($type === 'day') {
+            return $this->indexByDay($request);
+        } elseif ($type === 'week') {
+            return $this->indexByWeek($request);
+        } else {
+            return $this->indexByMonth($request);
+        }
+    }
+
+    private function indexByDay(Request $request)
+    {
+        $query = DailyRecord::where('created_by', auth()->id())
             ->when($request->flock_id, function ($q) use ($request) {
                 return $q->where('flock_id', $request->flock_id);
             })
@@ -80,14 +102,94 @@ class DailyRecordController extends BaseController
             })
             ->when($request->hangar_id, function ($q) use ($request) {
                 return $q->where('hangar_id', $request->hangar_id);
-            })
-            ->with('farm', 'flock', 'hangar', 'creator')
-            ->orderBy('record_date', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->paginate($request->per_page ?? 15);
+            });
+
+        $perPage = $request->per_page ?? 15;
+        $page = $request->page ?? 1;
+
+        $records = $query
+            ->selectRaw('record_date as period_date, farm_id, flock_id')
+            ->selectRaw('SUM(feed_kg) as feed_kg, SUM(eggs_tray_30) as eggs_tray_30, SUM(eggs_count) as eggs_count, SUM(eggs_weight) as eggs_weight, SUM(chicks_weight) as chicks_weight, SUM(mortality) as mortality')
+            ->groupByRaw('record_date, farm_id, flock_id')
+            ->orderByRaw('record_date DESC')
+            ->paginate($perPage, ['*'], 'page', $page);
 
         $records->setCollection($records->getCollection()->map(function ($record) {
-            return $this->formatDailyRecord($record);
+            return $this->formatDailyAggregateRecord($record);
+        }));
+
+        return response()->json([
+            'success' => true,
+            'message' => $this->translationService->get('daily_records_retrieved_successfully'),
+            'data' => $records,
+        ]);
+    }
+
+    private function indexByWeek(Request $request)
+    {
+        $query = DailyRecord::where('created_by', auth()->id())
+            ->when($request->flock_id, function ($q) use ($request) {
+                return $q->where('flock_id', $request->flock_id);
+            })
+            ->when($request->farm_id, function ($q) use ($request) {
+                return $q->where('farm_id', $request->farm_id);
+            })
+            ->when($request->record_date, function ($q) use ($request) {
+                return $q->where('record_date', $request->record_date);
+            })
+            ->when($request->hangar_id, function ($q) use ($request) {
+                return $q->where('hangar_id', $request->hangar_id);
+            });
+
+        $perPage = $request->per_page ?? 15;
+        $page = $request->page ?? 1;
+
+        $records = $query
+            ->selectRaw('YEAR(record_date) as year, WEEK(record_date) as week, MIN(record_date) as period_date, farm_id, flock_id')
+            ->selectRaw('SUM(feed_kg) as feed_kg, SUM(eggs_tray_30) as eggs_tray_30, SUM(eggs_count) as eggs_count, SUM(eggs_weight) as eggs_weight, SUM(chicks_weight) as chicks_weight, SUM(mortality) as mortality')
+            ->groupByRaw('YEAR(record_date), WEEK(record_date), farm_id, flock_id')
+            ->orderByRaw('YEAR(record_date) DESC, WEEK(record_date) DESC')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        $records->setCollection($records->getCollection()->map(function ($record) {
+            return $this->formatWeeklyRecord($record);
+        }));
+
+        return response()->json([
+            'success' => true,
+            'message' => $this->translationService->get('daily_records_retrieved_successfully'),
+            'data' => $records,
+        ]);
+    }
+
+    private function indexByMonth(Request $request)
+    {
+        $query = DailyRecord::where('created_by', auth()->id())
+            ->when($request->flock_id, function ($q) use ($request) {
+                return $q->where('flock_id', $request->flock_id);
+            })
+            ->when($request->farm_id, function ($q) use ($request) {
+                return $q->where('farm_id', $request->farm_id);
+            })
+            ->when($request->record_date, function ($q) use ($request) {
+                return $q->where('record_date', $request->record_date);
+            })
+            ->when($request->hangar_id, function ($q) use ($request) {
+                return $q->where('hangar_id', $request->hangar_id);
+            });
+
+        $perPage = $request->per_page ?? 15;
+        $page = $request->page ?? 1;
+
+        $records = $query
+            ->selectRaw('YEAR(record_date) as year, MONTH(record_date) as month, DATE_FORMAT(record_date, "%Y-%m-01") as period_date, farm_id, flock_id')
+            ->selectRaw('SUM(feed_kg) as feed_kg, SUM(eggs_tray_30) as eggs_tray_30, SUM(eggs_count) as eggs_count, SUM(eggs_weight) as eggs_weight, SUM(chicks_weight) as chicks_weight, SUM(mortality) as mortality')
+            ->groupByRaw('YEAR(record_date), MONTH(record_date), farm_id, flock_id')
+            ->orderByRaw('YEAR(record_date) DESC, MONTH(record_date) DESC')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        $records->setCollection($records->getCollection()->map(function ($record) {
+            return $this->formatMonthlyRecord($record);
         }));
 
         return response()->json([
@@ -518,6 +620,82 @@ class DailyRecordController extends BaseController
         ];
 
         return $data;
+    }
+
+    private function formatDailyAggregateRecord($record): array
+    {
+        $farm = Farm::find($record->farm_id);
+        $flock = Flock::find($record->flock_id);
+
+        $periodDate = \Carbon\Carbon::parse($record->period_date);
+        $dateLabel = $periodDate->format('l, d M Y');
+
+        return [
+            'period'          => $dateLabel,
+            'period_date'     => $record->period_date,
+            'farm_id'         => $record->farm_id,
+            'farm_name'       => $farm?->name,
+            'flock_id'        => $record->flock_id,
+            'flock_name'      => $flock?->name,
+            'feed_kg'         => $this->formatDecimal($record->feed_kg),
+            'eggs_tray_30'    => (int) $record->eggs_tray_30,
+            'eggs_count'      => (int) $record->eggs_count,
+            'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
+            'chicks_weight'   => $this->formatDecimal($record->chicks_weight),
+            'mortality'       => (int) $record->mortality,
+        ];
+    }
+
+    private function formatWeeklyRecord($record): array
+    {
+        $farm = Farm::find($record->farm_id);
+        $flock = Flock::find($record->flock_id);
+
+        $periodDate = \Carbon\Carbon::parse($record->period_date);
+        $weekLabel = 'Week ' . $record->week . ' • ' . $periodDate->format('F Y');
+
+        return [
+            'period'          => $weekLabel,
+            'year'            => $record->year,
+            'week'            => $record->week,
+            'period_date'     => $record->period_date,
+            'farm_id'         => $record->farm_id,
+            'farm_name'       => $farm?->name,
+            'flock_id'        => $record->flock_id,
+            'flock_name'      => $flock?->name,
+            'feed_kg'         => $this->formatDecimal($record->feed_kg),
+            'eggs_tray_30'    => (int) $record->eggs_tray_30,
+            'eggs_count'      => (int) $record->eggs_count,
+            'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
+            'chicks_weight'   => $this->formatDecimal($record->chicks_weight),
+            'mortality'       => (int) $record->mortality,
+        ];
+    }
+
+    private function formatMonthlyRecord($record): array
+    {
+        $farm = Farm::find($record->farm_id);
+        $flock = Flock::find($record->flock_id);
+
+        $periodDate = \Carbon\Carbon::parse($record->period_date);
+        $monthLabel = $periodDate->format('F Y');
+
+        return [
+            'period'          => $monthLabel,
+            'year'            => $record->year,
+            'month'           => $record->month,
+            'period_date'     => $record->period_date,
+            'farm_id'         => $record->farm_id,
+            'farm_name'       => $farm?->name,
+            'flock_id'        => $record->flock_id,
+            'flock_name'      => $flock?->name,
+            'feed_kg'         => $this->formatDecimal($record->feed_kg),
+            'eggs_tray_30'    => (int) $record->eggs_tray_30,
+            'eggs_count'      => (int) $record->eggs_count,
+            'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
+            'chicks_weight'   => $this->formatDecimal($record->chicks_weight),
+            'mortality'       => (int) $record->mortality,
+        ];
     }
 
     private function extractBreedType($breedString)

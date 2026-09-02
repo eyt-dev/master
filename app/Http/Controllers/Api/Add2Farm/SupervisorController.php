@@ -30,6 +30,7 @@ class SupervisorController extends BaseController
      * @queryParam per_page integer optional Items per page. Default: 15. Example: 20
      * @queryParam search string optional Search by name or mobile_number. Example: John
      * @queryParam status string optional Filter by status (Active, Inactive, Disable). Example: Active
+     * @queryParam farm_name string optional Filter by associated farm name. Example: Main Farm
      *
      * @response 200 {
      *   "success": true,
@@ -45,6 +46,7 @@ class SupervisorController extends BaseController
      *         "type": 3,
      *         "type_label": "Supervisor",
      *         "status": "Active",
+     *         "farm_name": "Main Farm",
      *         "created_by_name": "Admin Name",
      *         "created_at": "2026-08-07T10:30:00Z"
      *       }
@@ -85,11 +87,35 @@ class SupervisorController extends BaseController
         $supervisors = Admin::where('type', self::ADMIN_TYPE)
             ->where('created_by', auth()->id())
             ->when($request->search, function ($q) use ($request) {
-                return $q->where('name', 'like', "%{$request->search}%")
-                    ->orWhere('mobile_number', 'like', "%{$request->search}%");
+                return $q->where(function ($query) use ($request) {
+                    $query->where('name', 'like', "%{$request->search}%")
+                        ->orWhere('mobile_number', 'like', "%{$request->search}%");
+                });
             })
             ->when($request->status, function ($q) use ($request) {
-                return $q->where('status', $request->status);
+                $status = strtolower($request->status);
+                if ($status === 'active') {
+                    return $q->whereExists(function ($query) {
+                        $query->selectRaw(1)
+                            ->from('farms')
+                            ->whereRaw('farms.assigned_to = admins.id');
+                    });
+                } elseif ($status === 'inactive') {
+                    return $q->whereNotExists(function ($query) {
+                        $query->selectRaw(1)
+                            ->from('farms')
+                            ->whereRaw('farms.assigned_to = admins.id');
+                    });
+                }
+                return $q;
+            })
+            ->when($request->farm_name, function ($q) use ($request) {
+                return $q->whereExists(function ($query) use ($request) {
+                    $query->selectRaw(1)
+                        ->from('farms')
+                        ->whereRaw('farms.assigned_to = admins.id')
+                        ->where('farms.name', 'like', "%{$request->farm_name}%");
+                });
             })
             ->with('creator')
             ->orderBy('created_at', 'desc')

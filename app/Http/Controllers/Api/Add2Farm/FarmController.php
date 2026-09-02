@@ -29,6 +29,7 @@ class FarmController extends BaseController
      * @queryParam page integer optional Pagination page number. Example: 1
      * @queryParam per_page integer optional Items per page. Default: 15. Example: 20
      * @queryParam search string optional Search by name or location. Example: Main Farm
+     * @queryParam farm_name string optional Filter by farm name. Example: Main Farm
      * @queryParam type string optional Filter by farm type. Example: Layer
      * @queryParam assigned_to integer optional Filter by assigned admin ID. Example: 1
      *
@@ -74,8 +75,13 @@ class FarmController extends BaseController
 
         $farms = (clone $userFarms)
             ->when($request->search, function ($q) use ($request) {
-                return $q->where('name', 'like', "%{$request->search}%")
-                    ->orWhere('location', 'like', "%{$request->search}%");
+                return $q->where(function ($query) use ($request) {
+                    $query->where('name', 'like', "%{$request->search}%")
+                        ->orWhere('location', 'like', "%{$request->search}%");
+                });
+            })
+            ->when($request->farm_name, function ($q) use ($request) {
+                return $q->where('name', 'like', "%{$request->farm_name}%");
             })
             ->when($request->type, function ($q) use ($request) {
                 return $q->where('type', $request->type);

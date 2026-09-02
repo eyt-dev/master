@@ -45,7 +45,16 @@
       "Bash(cat)",
       "Read(//tmp/**)",
       "Bash(rm -f \"e:\\\\xampp\\\\htdocs\\\\eyt-master\\\\app\\\\Models\\\\FeedStock.php\" \"e:\\\\xampp\\\\htdocs\\\\eyt-master\\\\app\\\\Models\\\\FeedStockHangar.php\")",
-      "Bash(mysql -u root -p xampp_eyt -e \"SELECT id, name, breed FROM flocks LIMIT 5;\")"
+      "Bash(mysql -u root -p xampp_eyt -e \"SELECT id, name, breed FROM flocks LIMIT 5;\")",
+      "Bash(Get-ChildItem -Path \"e:\\\\xampp\\\\htdocs\\\\eyt-master\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(Get-ChildItem -Path \"e:\\\\xampp\\\\htdocs\\\\eyt-master\" -File)",
+      "Bash(ls -la \"e:\\\\\\\\xampp\\\\\\\\htdocs\\\\\\\\eyt-master\")",
+      "Bash(find \"e:\\\\\\\\xampp\\\\\\\\htdocs\\\\\\\\eyt-master\\\\\\\\app\" -type d -maxdepth 2)",
+      "Bash(find \"e:\\\\\\\\xampp\\\\\\\\htdocs\\\\\\\\eyt-master\\\\\\\\routes\" -type f)",
+      "Bash(find \"e:\\\\\\\\xampp\\\\\\\\htdocs\\\\\\\\eyt-master\\\\\\\\app\\\\\\\\Http\\\\\\\\Controllers\\\\\\\\Api\\\\\\\\Add2Farm\" -type f -name \"*.php\")",
+      "Read(//c/Users/Dell/AppData/Local/Temp/claude/e--xampp-htdocs-eyt-master/f98f319f-8b0a-4077-b260-151c25f8d64a/scratchpad/**)",
+      "Bash(python create_part2_docx.py)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Dell\\Desktop",

@@ -27,7 +27,11 @@ class FlockController extends BaseController
      *
      * @authenticated
      * @queryParam farm_id integer optional Filter by farm ID. Example: 1
-     * @queryParam status string optional Filter by status. Example: Active
+     * @queryParam status string optional Filter by status (active, pending). Example: active
+     * @queryParam start_date string optional Filter flocks starting from this date (format: Y-m-d). Example: 2026-01-01
+     * @queryParam end_date string optional Filter flocks up to this date (format: Y-m-d). Example: 2026-06-30
+     * @queryParam period integer optional Filter by period in months (3, 6, 12). Example: 6
+     * @queryParam breed_type string optional Filter by breed type. Example: Broiler
      *
      * @response 200 {
      *   "success": true,
@@ -63,6 +67,14 @@ class FlockController extends BaseController
 
         $user = auth()->user();
 
+        // Validate period parameter if provided
+        if ($request->period && !in_array((int)$request->period, [3, 6, 12])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Period must be one of: 3, 6, 12',
+            ], 422);
+        }
+
         // Calculate aggregates for available flocks
         $allFlocks = Flock::whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
@@ -72,6 +84,29 @@ class FlockController extends BaseController
             })
             ->when($request->farm_id, function ($q) use ($request) {
                 return $q->where('farm_id', $request->farm_id);
+            })
+            ->when($request->status, function ($q) use ($request) {
+                $status = strtolower($request->status);
+                if ($status === 'active') {
+                    return $q->whereDate('start_date', '<=', now()->toDateString());
+                } elseif ($status === 'pending') {
+                    return $q->whereDate('start_date', '>', now()->toDateString());
+                }
+                return $q;
+            })
+            ->when($request->start_date, function ($q) use ($request) {
+                return $q->whereDate('start_date', '>=', $request->start_date);
+            })
+            ->when($request->end_date, function ($q) use ($request) {
+                return $q->whereDate('start_date', '<=', $request->end_date);
+            })
+            ->when($request->period, function ($q) use ($request) {
+                $months = (int)$request->period;
+                $startDate = now()->subMonths($months)->toDateString();
+                return $q->whereDate('start_date', '>=', $startDate);
+            })
+            ->when($request->breed_type, function ($q) use ($request) {
+                return $q->where('breed', 'like', "%{$request->breed_type}%");
             })
             ->select('id', 'farm_id', 'total_quantity', 'start_date')
             ->get();
@@ -97,6 +132,29 @@ class FlockController extends BaseController
             })
             ->when($request->farm_id, function ($q) use ($request) {
                 return $q->where('farm_id', $request->farm_id);
+            })
+            ->when($request->status, function ($q) use ($request) {
+                $status = strtolower($request->status);
+                if ($status === 'active') {
+                    return $q->whereDate('start_date', '<=', now()->toDateString());
+                } elseif ($status === 'pending') {
+                    return $q->whereDate('start_date', '>', now()->toDateString());
+                }
+                return $q;
+            })
+            ->when($request->start_date, function ($q) use ($request) {
+                return $q->whereDate('start_date', '>=', $request->start_date);
+            })
+            ->when($request->end_date, function ($q) use ($request) {
+                return $q->whereDate('start_date', '<=', $request->end_date);
+            })
+            ->when($request->period, function ($q) use ($request) {
+                $months = (int)$request->period;
+                $startDate = now()->subMonths($months)->toDateString();
+                return $q->whereDate('start_date', '>=', $startDate);
+            })
+            ->when($request->breed_type, function ($q) use ($request) {
+                return $q->where('breed', 'like', "%{$request->breed_type}%");
             })
             ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar')
             ->orderBy('name', 'asc')
@@ -292,7 +350,11 @@ class FlockController extends BaseController
      * @queryParam per_page integer optional Items per page. Default: 15. Example: 20
      * @queryParam search string optional Search by flock name. Example: Flock1
      * @queryParam farm_id integer optional Filter by farm ID. Example: 1
-     * @queryParam status string optional Filter by status. Example: Active
+     * @queryParam status string optional Filter by status (active, pending). Example: active
+     * @queryParam start_date string optional Filter flocks starting from this date (format: Y-m-d). Example: 2026-01-01
+     * @queryParam end_date string optional Filter flocks up to this date (format: Y-m-d). Example: 2026-06-30
+     * @queryParam period integer optional Filter by period in months (3, 6, 12). Example: 6
+     * @queryParam breed_type string optional Filter by breed type. Example: Broiler
      *
      * @response 200 {
      *   "success": true,
@@ -332,6 +394,14 @@ class FlockController extends BaseController
 
         $user = auth()->user();
 
+        // Validate period parameter if provided
+        if ($request->period && !in_array((int)$request->period, [3, 6, 12])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Period must be one of: 3, 6, 12',
+            ], 422);
+        }
+
         // Calculate aggregates for all flocks of logged-in user
         $allFlocks = Flock::where('created_by', $user->id)
             ->whereHas('farm', function ($q) use ($user) {
@@ -351,7 +421,7 @@ class FlockController extends BaseController
             return $flock->start_date && $flock->start_date->format('Y-m-d') <= now()->format('Y-m-d');
         })->count();
 
-        // Count completed flocks (for now, all flocks not yet started are considered pending)
+        // Count pending flocks (not yet started)
         $completedFlocks = $allFlocks->filter(function ($flock) {
             return $flock->start_date && $flock->start_date->format('Y-m-d') > now()->format('Y-m-d');
         })->count();
@@ -368,6 +438,29 @@ class FlockController extends BaseController
             })
             ->when($request->farm_id, function ($q) use ($request) {
                 return $q->where('farm_id', $request->farm_id);
+            })
+            ->when($request->status, function ($q) use ($request) {
+                $status = strtolower($request->status);
+                if ($status === 'active') {
+                    return $q->whereDate('start_date', '<=', now()->toDateString());
+                } elseif ($status === 'pending') {
+                    return $q->whereDate('start_date', '>', now()->toDateString());
+                }
+                return $q;
+            })
+            ->when($request->start_date, function ($q) use ($request) {
+                return $q->whereDate('start_date', '>=', $request->start_date);
+            })
+            ->when($request->end_date, function ($q) use ($request) {
+                return $q->whereDate('start_date', '<=', $request->end_date);
+            })
+            ->when($request->period, function ($q) use ($request) {
+                $months = (int)$request->period;
+                $startDate = now()->subMonths($months)->toDateString();
+                return $q->whereDate('start_date', '>=', $startDate);
+            })
+            ->when($request->breed_type, function ($q) use ($request) {
+                return $q->where('breed', 'like', "%{$request->breed_type}%");
             })
             ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar')
             ->orderBy('created_at', 'desc')

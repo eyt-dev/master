@@ -12,11 +12,13 @@ class FlockEndDetail extends Model
     protected $fillable = [
         'flock_end_id',
         'batch_number',
-        'batch_weight',
+        'gross_weight',
+        'batch_weights',
     ];
 
     protected $casts = [
-        'batch_weight' => 'decimal:2',
+        'gross_weight' => 'decimal:2',
+        'batch_weights' => 'array',
     ];
 
     public function flockEnd()

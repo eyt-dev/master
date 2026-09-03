@@ -74,6 +74,7 @@ class Kernel extends HttpKernel
         'validate.password.reset.token' => \App\Http\Middleware\ValidatePasswordResetToken::class,
         'reject.password.reset.token' => \App\Http\Middleware\RejectPasswordResetToken::class,
         'set.add2farm.language' => \App\Http\Middleware\SetAdd2FarmLanguage::class,
+        'convert.european.numbers' => \App\Http\Middleware\ConvertEuropeanNumbers::class,
         // 'admin.domain.access' => \App\Http\Middleware\AdminDomainAccess::class,
     ];
 }

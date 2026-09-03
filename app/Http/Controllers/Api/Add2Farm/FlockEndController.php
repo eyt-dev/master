@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Add2Farm;
 use App\Http\Controllers\Controller;
 use App\Models\Flock;
 use App\Models\FlockEnd;
+use App\Models\FlockEndDetail;
 use App\Models\FlockHangar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -185,7 +186,8 @@ class FlockEndController extends BaseController
      * @bodyParam cages_count integer required Number of cages. Example: 10
      * @bodyParam cages_weight decimal required Weight per cage (kg). Example: 1.85
      * @bodyParam birds_per_cage integer required Birds per cage (1-25). Example: 20
-     * @bodyParam batch_weight decimal required Total batch weight (kg). Example: 450
+     * @bodyParam gross_weight decimal required Total gross weight (kg). Example: 450
+     * @bodyParam batch_weights array optional Batch weights details. Example: [{"batch_number": 1, "weight": 225}, {"batch_number": 2, "weight": 225}]
      * @bodyParam net_weight decimal required Net weight after processing (kg). Example: 431.5
      * @bodyParam avg_weight decimal required Average weight per bird (kg). Example: 10.5
      * @bodyParam notes string optional Additional notes. Example: Grade A birds
@@ -232,7 +234,10 @@ class FlockEndController extends BaseController
             'cages_count' => 'required|integer|min:1',
             'cages_weight' => 'required|numeric|min:0.1',
             'birds_per_cage' => 'required|integer|min:1|max:25',
-            'batch_weight' => 'required|numeric|min:0',
+            'gross_weight' => 'required|numeric|min:0',
+            'batch_weights' => 'nullable|array',
+            'batch_weights.*.batch_number' => 'integer',
+            'batch_weights.*.weight' => 'numeric|min:0',
             'net_weight' => 'required|numeric|min:0',
             'avg_weight' => 'required|numeric|min:0',
             'notes' => 'nullable|string',
@@ -305,11 +310,20 @@ class FlockEndController extends BaseController
                 'total_birds_harvested' => $totalBirdsHarvested,
                 'available_birds' => $availableBirds,
                 'remaining_birds' => $remainingBirds,
-                'total_weight' => $request->batch_weight,
+                'total_weight' => $request->gross_weight,
                 'avg_weight_per_bird' => $request->avg_weight,
                 'notes' => $request->notes,
                 'ended_by' => auth()->id(),
             ]);
+
+            if ($request->has('batch_weights')) {
+                FlockEndDetail::create([
+                    'flock_end_id' => $flockEnd->id,
+                    'batch_number' => 1,
+                    'gross_weight' => $request->gross_weight,
+                    'batch_weights' => $request->batch_weights,
+                ]);
+            }
 
             DB::commit();
 
@@ -345,7 +359,8 @@ class FlockEndController extends BaseController
      * @bodyParam cages_count integer required Number of cages. Example: 10
      * @bodyParam cages_weight decimal required Weight per cage (kg). Example: 1.85
      * @bodyParam birds_per_cage integer required Birds per cage (1-25). Example: 20
-     * @bodyParam batch_weight decimal required Total batch weight (kg). Example: 450
+     * @bodyParam gross_weight decimal required Total gross weight (kg). Example: 450
+     * @bodyParam batch_weights array optional Batch weights details. Example: [{"batch_number": 1, "weight": 225}, {"batch_number": 2, "weight": 225}]
      * @bodyParam net_weight decimal required Net weight after processing (kg). Example: 431.5
      * @bodyParam avg_weight decimal required Average weight per bird (kg). Example: 10.5
      * @bodyParam notes string optional Additional notes. Example: Grade A birds
@@ -395,7 +410,10 @@ class FlockEndController extends BaseController
             'cages_count' => 'required|integer|min:1',
             'cages_weight' => 'required|numeric|min:0.1',
             'birds_per_cage' => 'required|integer|min:1|max:25',
-            'batch_weight' => 'required|numeric|min:0',
+            'gross_weight' => 'required|numeric|min:0',
+            'batch_weights' => 'nullable|array',
+            'batch_weights.*.batch_number' => 'integer',
+            'batch_weights.*.weight' => 'numeric|min:0',
             'net_weight' => 'required|numeric|min:0',
             'avg_weight' => 'required|numeric|min:0',
             'notes' => 'nullable|string',
@@ -452,10 +470,27 @@ class FlockEndController extends BaseController
                 'total_birds_harvested' => $totalBirdsHarvested,
                 'available_birds' => $availableBirds,
                 'remaining_birds' => $remainingBirds,
-                'total_weight' => $request->batch_weight,
+                'total_weight' => $request->gross_weight,
                 'avg_weight_per_bird' => $request->avg_weight,
                 'notes' => $request->notes,
             ]);
+
+            if ($request->has('batch_weights')) {
+                $detail = FlockEndDetail::where('flock_end_id', $flockEnd->id)->first();
+                if ($detail) {
+                    $detail->update([
+                        'gross_weight' => $request->gross_weight,
+                        'batch_weights' => $request->batch_weights,
+                    ]);
+                } else {
+                    FlockEndDetail::create([
+                        'flock_end_id' => $flockEnd->id,
+                        'batch_number' => 1,
+                        'gross_weight' => $request->gross_weight,
+                        'batch_weights' => $request->batch_weights,
+                    ]);
+                }
+            }
 
             DB::commit();
 
@@ -552,6 +587,8 @@ class FlockEndController extends BaseController
             ? ($mortality / $flockEnd->available_birds) * 100
             : 0;
 
+        $batchDetails = FlockEndDetail::where('flock_end_id', $flockEnd->id)->first();
+
         return [
             'id' => $flockEnd->id,
             'flock_id' => $flockEnd->flock_id,
@@ -569,7 +606,8 @@ class FlockEndController extends BaseController
             'mortality_birds' => $mortality,
             'mortality_rate' => $this->formatDecimal($mortalityRate),
             'remaining_birds' => $flockEnd->remaining_birds,
-            'batch_weight' => $this->formatDecimal($flockEnd->total_weight),
+            'gross_weight' => $this->formatDecimal($flockEnd->total_weight),
+            'batch_weights' => $batchDetails?->batch_weights ?? null,
             'avg_weight' => $this->formatDecimal($flockEnd->avg_weight_per_bird),
             'notes' => $flockEnd->notes,
             'ended_by_id' => $flockEnd->ended_by,

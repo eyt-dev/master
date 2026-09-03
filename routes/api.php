@@ -97,7 +97,7 @@ Route::prefix('add2farm')->middleware('set.add2farm.language')->group(function (
 });
 
 // Add2Farm protected routes — require a valid Sanctum token
-Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2farm.language'])->group(function () {
+Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2farm.language', 'convert.european.numbers'])->group(function () {
     // Public endpoints (no auth required for Scribe)
     Route::post('auth/logout', [Add2FarmAuthController::class, 'logout'])->middleware('auth:sanctum');
 

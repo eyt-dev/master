@@ -742,23 +742,4 @@ class DailyRecordController extends BaseController
         ];
     }
 
-    private function extractBreedType($breedString)
-    {
-        $breedType = 'Layer';
-
-        if (!empty($breedString)) {
-            if (strpos($breedString, ',') !== false) {
-                $breedParts = explode(',', $breedString);
-                $breedType = trim($breedParts[0]);
-            } else {
-                if (stripos($breedString, 'cobb') !== false || stripos($breedString, 'ross') !== false) {
-                    $breedType = 'Broiler';
-                } elseif (stripos($breedString, 'lohmann') !== false || stripos($breedString, 'hy-line') !== false) {
-                    $breedType = 'Layer';
-                }
-            }
-        }
-
-        return $breedType;
-    }
 }

@@ -286,7 +286,7 @@ class ProfileController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $this->translationService->get('current_password_incorrect'),
-            ], 401);
+            ], 400);
         }
 
         $user->update([

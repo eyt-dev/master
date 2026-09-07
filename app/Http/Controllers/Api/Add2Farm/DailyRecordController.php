@@ -245,7 +245,7 @@ class DailyRecordController extends BaseController
         }
 
         $record = DailyRecord::where('created_by', auth()->id())
-            ->with('farm', 'flock', 'hangar', 'creator')
+            ->with('farm', 'flock', 'flock.flockEnd', 'hangar', 'creator')
             ->find($id);
 
         if (!$record) {
@@ -598,6 +598,15 @@ class DailyRecordController extends BaseController
         // Check if logged-in user created this record
         $assignment = (auth()->check() && $record->created_by === auth()->id()) ? 1 : 0;
 
+        // Calculate flock age if flock exists
+        $flockAge = null;
+        $flockStatus = null;
+        if ($record->flock) {
+            $endDate = $record->flock->flockEnd?->sale_date;
+            $flockAge = $this->calculateFlockAge($record->flock->start_date, $endDate);
+            $flockStatus = $endDate ? 'Completed' : 'Active';
+        }
+
         $data = [
             'id'              => $record->id,
             'record_date'     => $record->record_date?->format('Y-m-d'),
@@ -605,6 +614,8 @@ class DailyRecordController extends BaseController
             'farm_name'       => $record->farm?->name,
             'flock_id'        => $record->flock_id,
             'flock_name'      => $record->flock?->name,
+            'flock_age'       => $flockAge,
+            'flock_status'    => $flockStatus,
             'hangar_id'       => $record->hangar_id,
             'hangar_name'     => $record->hangar?->name,
             'feed_kg'         => $this->formatDecimal($record->feed_kg),
@@ -625,10 +636,19 @@ class DailyRecordController extends BaseController
     private function formatDailyAggregateRecord($record): array
     {
         $farm = Farm::find($record->farm_id);
-        $flock = Flock::find($record->flock_id);
+        $flock = Flock::with('flockEnd')->find($record->flock_id);
 
         $periodDate = \Carbon\Carbon::parse($record->period_date);
         $dateLabel = $periodDate->format('l, d M Y');
+
+        // Calculate flock age if flock exists
+        $flockAge = null;
+        $flockStatus = null;
+        if ($flock) {
+            $endDate = $flock->flockEnd?->sale_date;
+            $flockAge = $this->calculateFlockAge($flock->start_date, $endDate);
+            $flockStatus = $endDate ? 'Completed' : 'Active';
+        }
 
         return [
             'period'          => $dateLabel,
@@ -637,6 +657,8 @@ class DailyRecordController extends BaseController
             'farm_name'       => $farm?->name,
             'flock_id'        => $record->flock_id,
             'flock_name'      => $flock?->name,
+            'flock_age'       => $flockAge,
+            'flock_status'    => $flockStatus,
             'feed_kg'         => $this->formatDecimal($record->feed_kg),
             'eggs_tray_30'    => (int) $record->eggs_tray_30,
             'eggs_count'      => (int) $record->eggs_count,
@@ -649,10 +671,19 @@ class DailyRecordController extends BaseController
     private function formatWeeklyRecord($record): array
     {
         $farm = Farm::find($record->farm_id);
-        $flock = Flock::find($record->flock_id);
+        $flock = Flock::with('flockEnd')->find($record->flock_id);
 
         $periodDate = \Carbon\Carbon::parse($record->period_date);
         $weekLabel = 'Week ' . $record->week . ' • ' . $periodDate->format('F Y');
+
+        // Calculate flock age if flock exists
+        $flockAge = null;
+        $flockStatus = null;
+        if ($flock) {
+            $endDate = $flock->flockEnd?->sale_date;
+            $flockAge = $this->calculateFlockAge($flock->start_date, $endDate);
+            $flockStatus = $endDate ? 'Completed' : 'Active';
+        }
 
         return [
             'period'          => $weekLabel,
@@ -663,6 +694,8 @@ class DailyRecordController extends BaseController
             'farm_name'       => $farm?->name,
             'flock_id'        => $record->flock_id,
             'flock_name'      => $flock?->name,
+            'flock_age'       => $flockAge,
+            'flock_status'    => $flockStatus,
             'feed_kg'         => $this->formatDecimal($record->feed_kg),
             'eggs_tray_30'    => (int) $record->eggs_tray_30,
             'eggs_count'      => (int) $record->eggs_count,
@@ -675,10 +708,19 @@ class DailyRecordController extends BaseController
     private function formatMonthlyRecord($record): array
     {
         $farm = Farm::find($record->farm_id);
-        $flock = Flock::find($record->flock_id);
+        $flock = Flock::with('flockEnd')->find($record->flock_id);
 
         $periodDate = \Carbon\Carbon::parse($record->period_date);
         $monthLabel = $periodDate->format('F Y');
+
+        // Calculate flock age if flock exists
+        $flockAge = null;
+        $flockStatus = null;
+        if ($flock) {
+            $endDate = $flock->flockEnd?->sale_date;
+            $flockAge = $this->calculateFlockAge($flock->start_date, $endDate);
+            $flockStatus = $endDate ? 'Completed' : 'Active';
+        }
 
         return [
             'period'          => $monthLabel,
@@ -689,6 +731,8 @@ class DailyRecordController extends BaseController
             'farm_name'       => $farm?->name,
             'flock_id'        => $record->flock_id,
             'flock_name'      => $flock?->name,
+            'flock_age'       => $flockAge,
+            'flock_status'    => $flockStatus,
             'feed_kg'         => $this->formatDecimal($record->feed_kg),
             'eggs_tray_30'    => (int) $record->eggs_tray_30,
             'eggs_count'      => (int) $record->eggs_count,

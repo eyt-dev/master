@@ -57,4 +57,76 @@ class BaseController extends Controller
     {
         return DecimalHelper::formatArray($data, $fields);
     }
+
+    /**
+     * Extract breed type from breed string
+     * Supports formats:
+     * - "Layer, Lohmann brown" → "Layer"
+     * - "Broiler, Cobb 500" → "Broiler"
+     * - "Cobb" → "Broiler"
+     * - "Lohmann" → "Layer"
+     */
+    protected function extractBreedType($breedString)
+    {
+        $breedType = 'Layer';
+
+        if (!empty($breedString)) {
+            // If breed contains comma, take first part (e.g., "Layer, Lohmann brown" → "Layer")
+            if (strpos($breedString, ',') !== false) {
+                $breedParts = explode(',', $breedString);
+                $breedType = trim($breedParts[0]);
+            } else {
+                // Check for specific breed names
+                if (stripos($breedString, 'cobb') !== false || stripos($breedString, 'ross') !== false) {
+                    $breedType = 'Broiler';
+                } elseif (stripos($breedString, 'lohmann') !== false || stripos($breedString, 'hy-line') !== false) {
+                    $breedType = 'Layer';
+                }
+            }
+        }
+
+        return $breedType;
+    }
+
+    /**
+     * Calculate flock age based on start and optional end date
+     * If no end_date: calculates from start_date to today
+     * If end_date provided: calculates from start_date to end_date (flock duration)
+     *
+     * Returns format like: "Day 1", "Week 2", "Month 1 Week 2"
+     */
+    protected function calculateFlockAge($startDate, $endDate = null)
+    {
+        $start = \Carbon\Carbon::parse($startDate);
+        $end = $endDate ? \Carbon\Carbon::parse($endDate) : \Carbon\Carbon::now();
+        $days = $start->diffInDays($end);
+
+        if ($days == 0) {
+            return "Day 0";
+        } elseif ($days == 1) {
+            return "Day 1";
+        } elseif ($days < 7) {
+            return "Day {$days}";
+        } elseif ($days < 30) {
+            $weeks = (int)($days / 7);
+            $remainingDays = $days % 7;
+            $age = "Week {$weeks}";
+            if ($remainingDays > 0) {
+                $age .= " Day {$remainingDays}";
+            }
+            return $age;
+        } else {
+            $months = (int)($days / 30);
+            $remainingDays = $days % 30;
+            $weeks = (int)($remainingDays / 7);
+            $age = "Month {$months}";
+            if ($weeks > 0) {
+                $age .= " Week {$weeks}";
+            }
+            if ($remainingDays % 7 > 0 && $weeks == 0) {
+                $age .= " Day " . ($remainingDays % 7);
+            }
+            return $age;
+        }
+    }
 }

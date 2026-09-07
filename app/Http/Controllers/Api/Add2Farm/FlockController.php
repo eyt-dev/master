@@ -156,7 +156,7 @@ class FlockController extends BaseController
             ->when($request->breed_type, function ($q) use ($request) {
                 return $q->where('breed', 'like', "%{$request->breed_type}%");
             })
-            ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar')
+            ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnd')
             ->orderBy('name', 'asc')
             ->get();
 
@@ -462,7 +462,7 @@ class FlockController extends BaseController
             ->when($request->breed_type, function ($q) use ($request) {
                 return $q->where('breed', 'like', "%{$request->breed_type}%");
             })
-            ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar')
+            ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnd')
             ->orderBy('created_at', 'desc')
             ->paginate($request->per_page ?? 15);
 
@@ -538,7 +538,7 @@ class FlockController extends BaseController
                       ->orWhere('assigned_to', $user->id);
                 });
             })
-            ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar')
+            ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnd')
             ->find($id);
 
         if (!$flock) {
@@ -549,10 +549,10 @@ class FlockController extends BaseController
         }
 
         $totalBird = $flock->flockHangarAllocations->sum('quantity');
-        $age = $this->calculateFlockAge($flock->start_date);
+        $age = $this->calculateFlockAge($flock->start_date, $flock->flockEnd?->sale_date);
 
         // Fetch daily records for this flock
-        $dailyRecords = DailyRecord::where('flock_id', $flock->id)->get();
+        $dailyRecords = DailyRecord::where('flock_id', $flock->id)->orderBy('record_date', 'asc')->get();
 
         // Calculate dynamic metrics
         $totalMortality = $dailyRecords->sum('mortality');
@@ -573,9 +573,17 @@ class FlockController extends BaseController
         // Calculate live birds
         $liveBirds = $totalBird - $totalMortality;
 
+        // Determine flock type
+        $breedType = $this->extractBreedType($flock->breed);
+        $isLayer = $breedType === 'Layer';
+
+        // Generate chart data
+        $chartData = $this->generateChartData($dailyRecords, $flock, $totalBird, $isLayer);
+
         $data = [
             'flock_name' => $flock->name,
             'breed' => $flock->breed,
+            'flock_type' => $breedType,
             'total_bird' => $totalBird,
             'start_date' => $flock->start_date->format('Y-m-d'),
             'age' => $age,
@@ -586,6 +594,7 @@ class FlockController extends BaseController
             'feed_consumed' => number_format($totalFeedKg, 2) . ' kg',
             'fcr' => $fcr,
             'avg_weight' => $avgWeight ? round($avgWeight, 2) . ' kg' : 'N/A',
+            'chart_data' => $chartData,
         ];
 
         return response()->json([
@@ -714,7 +723,7 @@ class FlockController extends BaseController
 
             DB::commit();
 
-            $flock->load('farm', 'chicksSupplier', 'creator');
+            $flock->load('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnd');
 
             return response()->json([
                 'success' => true,
@@ -875,7 +884,7 @@ class FlockController extends BaseController
 
             DB::commit();
 
-            $flock->load('farm', 'chicksSupplier', 'creator');
+            $flock->load('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnd');
 
             return response()->json([
                 'success' => true,
@@ -1174,31 +1183,85 @@ class FlockController extends BaseController
         }
     }
 
-    private function calculateFlockAge($startDate)
+    private function generateChartData($dailyRecords, $flock, $totalBird, $isLayer)
     {
-        $start = \Carbon\Carbon::parse($startDate);
-        $now = \Carbon\Carbon::now();
-        $days = $start->diffInDays($now);
-
-        if ($days < 7) {
-            return "Day {$days}";
-        } elseif ($days < 30) {
-            $weeks = (int)($days / 7);
-            $remainingDays = $days % 7;
-            $age = "Week {$weeks}";
-            if ($remainingDays > 0) {
-                $age .= " Day {$remainingDays}";
-            }
-            return $age;
-        } else {
-            $months = (int)($days / 30);
-            $weeks = (int)(($days % 30) / 7);
-            $age = "Month {$months}";
-            if ($weeks > 0) {
-                $age .= " Week {$weeks}";
-            }
-            return $age;
+        if ($dailyRecords->isEmpty()) {
+            return null;
         }
+
+        // Group records by week
+        $weeklyData = [];
+        foreach ($dailyRecords as $record) {
+            $week = $record->record_date->weekOfYear;
+            $year = $record->record_date->year;
+            $key = $year . '-W' . str_pad($week, 2, '0', STR_PAD_LEFT);
+
+            if (!isset($weeklyData[$key])) {
+                $weeklyData[$key] = [
+                    'week' => $week,
+                    'year' => $year,
+                    'records' => [],
+                ];
+            }
+            $weeklyData[$key]['records'][] = $record;
+        }
+
+        // Calculate metrics per week
+        $performanceTrend = [];
+        $mortalityTrend = [];
+
+        foreach ($weeklyData as $weekKey => $data) {
+            $records = collect($data['records']);
+            $week = $data['week'];
+
+            if ($isLayer) {
+                // LAYER - Avg Production, Feed Intake, Mortality
+                $weekEggs = $records->sum('eggs_count');
+                $weekDays = $records->count();
+                $weekMortality = $records->sum('mortality');
+                $weekFeed = $records->sum('feed_kg');
+
+                $avgProd = $totalBird > 0 && $weekDays > 0 ? ($weekEggs / ($totalBird * $weekDays)) * 100 : 0;
+                $mortalityPct = $totalBird > 0 ? ($weekMortality / $totalBird) * 100 : 0;
+
+                $performanceTrend[] = [
+                    'week' => 'Week ' . $week,
+                    'avg_production' => round($avgProd, 2),
+                    'feed_intake' => round($weekFeed, 2),
+                    'mortality' => round($mortalityPct, 2),
+                ];
+            } else {
+                // BROILER - Avg Weight, FCR, Mortality
+                $weekWeight = $records->avg('chicks_weight');
+                $weekMortality = $records->sum('mortality');
+                $weekFeed = $records->sum('feed_kg');
+                $weekDays = $records->count();
+
+                $mortalityPct = $totalBird > 0 ? ($weekMortality / $totalBird) * 100 : 0;
+
+                // FCR for broiler = feed / (avg_weight * number_of_birds)
+                // Simplified: feed / average_weight_per_day
+                $fcr = $weekWeight > 0 ? round($weekFeed / $weekWeight, 2) : 0;
+
+                $performanceTrend[] = [
+                    'week' => 'Week ' . $week,
+                    'avg_weight' => round($weekWeight, 2),
+                    'fcr' => $fcr,
+                    'mortality' => round($mortalityPct, 2),
+                ];
+            }
+
+            $mortalityTrend[] = [
+                'week' => 'Week ' . $week,
+                'mortality' => round($mortalityPct, 2),
+            ];
+        }
+
+        return [
+            'flock_type' => $isLayer ? 'Layer' : 'Broiler',
+            'performance_trend' => $performanceTrend,
+            'is_layer' => $isLayer,
+        ];
     }
 
     private function formatFlock(Flock $flock): array
@@ -1206,6 +1269,11 @@ class FlockController extends BaseController
         // Load flockHangarAllocations if not already loaded
         if (!$flock->relationLoaded('flockHangarAllocations')) {
             $flock->load('flockHangarAllocations.hangar');
+        }
+
+        // Load flockEnd if not already loaded
+        if (!$flock->relationLoaded('flockEnd')) {
+            $flock->load('flockEnd');
         }
 
         // Check if logged-in user created this flock
@@ -1221,6 +1289,13 @@ class FlockController extends BaseController
             ];
         })->toArray();
 
+        // Determine end_date and status
+        $endDate = $flock->flockEnd?->sale_date;
+        $status = $endDate ? 'Completed' : 'Active';
+
+        // Calculate age
+        $age = $this->calculateFlockAge($flock->start_date, $endDate);
+
         return [
             'id'                    => $flock->id,
             'name'                  => $flock->name,
@@ -1230,10 +1305,9 @@ class FlockController extends BaseController
             'chicks_supplier_name'  => $flock->chicksSupplier?->name,
             'breed'                 => $flock->breed,
             'start_date'            => $flock->start_date?->format('Y-m-d'),
-            'end_date'              => now()->format('Y-m-d'),
-            'status'                => 'Active',
-            'age'                   => 'Day0',
-            'avg_weight'            => '1.85 kg',
+            'end_date'              => $endDate?->format('Y-m-d') ?? null,
+            'status'                => $status,
+            'age'                   => $age,
             'total_quantity'        => $flock->total_quantity,
             'hangar_allocations'    => $hangarAllocations,
             'assignment'            => $assignment,

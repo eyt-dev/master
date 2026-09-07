@@ -208,7 +208,20 @@ class ProfileController extends Controller
             ], 422);
         }
 
-        $user->update($request->only(['language', 'country_id', 'phone_code']));
+        $updateData = [];
+        if ($request->filled('language')) {
+            $updateData['language'] = $request->language;
+        }
+        if ($request->filled('country_id')) {
+            $updateData['country_id'] = $request->country_id;
+        }
+        if ($request->filled('phone_code')) {
+            $updateData['phone_code'] = $request->phone_code;
+        }
+
+        if (!empty($updateData)) {
+            $user->update($updateData);
+        }
 
         return response()->json([
             'success' => true,
@@ -303,7 +316,9 @@ class ProfileController extends Controller
             'name'          => $user->name,
             'email'         => $user->email,
             'username'      => $user->username,
-            'mobile_number' => $user->getFullPhoneNumber(),
+            'phone_code'    => $user->phone_code,
+            'mobile_number' => $user->mobile_number,
+            'full_phone'    => $user->getFullPhoneNumber(),
             'type'          => $user->type,
             'type_label'    => $this->getTypeLabel($user->type),
             'status'        => $user->status,

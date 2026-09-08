@@ -161,7 +161,7 @@ class ChickenSalesController extends Controller
             ]);
 
             DB::commit();
-            Session::flash('successMsg', 'Chicken sale created successfully.');
+            Session::flash('successMsg', 'Ending flock created successfully.');
             return redirect()->route('chicken-sale.index', ['username' => request()->segment(1)]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -252,7 +252,7 @@ class ChickenSalesController extends Controller
             ]);
 
             DB::commit();
-            Session::flash('successMsg', 'Chicken sale updated successfully.');
+            Session::flash('successMsg', 'Ending flock updated successfully.');
             return redirect()->route('chicken-sale.index', ['username' => request()->segment(1)]);
         } catch (\Exception $e) {
             DB::rollBack();

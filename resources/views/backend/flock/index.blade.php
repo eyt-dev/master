@@ -58,8 +58,6 @@
                                     <th>Chicks Supplier</th>
                                     <th>Breed</th>
                                     <th>Start Date</th>
-                                    <th>Total Qty</th>
-                                    <th>Total Farms</th>
                                     <th>Total Quantity</th>
                                     <th>Hangar 1</th>
                                     <th>Hangar 2</th>
@@ -136,8 +134,6 @@
             { data: 'chicks_supplier', name: 'chicks_supplier' },
             { data: 'breed', name: 'breed' },
             { data: 'start_date', name: 'start_date' },
-            { data: 'total_qty', name: 'total_qty', orderable: false, searchable: false },
-            { data: 'total_farm', name: 'total_farm', orderable: false, searchable: false },
             { data: 'total_quantity', name: 'total_quantity' }
         ];
 

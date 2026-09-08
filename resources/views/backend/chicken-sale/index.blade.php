@@ -12,11 +12,11 @@
 @section('page-header')
     <div class="page-header">
         <div class="page-leftheader">
-            <h4 class="page-title mb-0">Chicken Sales</h4>
+            <h4 class="page-title mb-0">Ending Flock</h4>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
                     <a href="#">
-                        <i class="fe fe-layout mr-2 fs-14"></i>Chicken Sales
+                        <i class="fe fe-layout mr-2 fs-14"></i>Ending Flock
                     </a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page"><a href="#">Listing</a></li>
@@ -36,7 +36,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Chicken Sales Data</div>
+                    <div class="card-title">Ending Flock Data</div>
                 </div>
                 @if ($errors->any())
                     <div class="alert alert-danger">
@@ -78,7 +78,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Add Chicken Sale</h4>
+                    <h4 class="modal-title">Add Ending Flock</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">×</span> </button>
                 </div>
                 <div class="modal-body"></div>
@@ -98,20 +98,20 @@
                 type: "GET",
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Add Chicken Sale");
+                    $(".modal-title").html("Add Ending Flock");
                     $("#chicken_sale_form_modal").modal('show');
                     checkValidation();
                 }
             });
         });
-        
+
         $(document).on('click', '.edit-chicken-sale', function() {
             var id = $(this).data('id');
             $.ajax({
                 url: $(this).data('path'),
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Update Chicken Sale");
+                    $(".modal-title").html("Update Ending Flock");
                     $("#chicken_sale_form_modal").modal('show');
                     checkValidation();
                 }

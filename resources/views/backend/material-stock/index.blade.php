@@ -12,11 +12,11 @@
 @section('page-header')
     <div class="page-header">
         <div class="page-leftheader">
-            <h4 class="page-title mb-0">Material Stock</h4>
+            <h4 class="page-title mb-0">Feed Stock</h4>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
                     <a href="#">
-                        <i class="fe fe-layout mr-2 fs-14"></i>Material Stock
+                        <i class="fe fe-layout mr-2 fs-14"></i>Feed Stock
                     </a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page"><a href="#">Listing</a></li>
@@ -36,7 +36,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Material Stock Data</div>
+                    <div class="card-title">Feed Stock Data</div>
                 </div>
                 @if ($errors->any())
                     <div class="alert alert-danger">
@@ -85,7 +85,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Add Material Stock</h4>
+                    <h4 class="modal-title">Add Feed Stock</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">×</span> </button>
                 </div>
                 <div class="modal-body"></div>
@@ -105,20 +105,20 @@
                 type: "GET",
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Add Material Stock");
+                    $(".modal-title").html("Add Feed Stock");
                     $("#material_stock_form_modal").modal('show');
                     checkValidation();
                 }
             });
         });
-        
+
         $(document).on('click', '.edit-material-stock', function() {
             var id = $(this).data('id');
             $.ajax({
                 url: $(this).data('path'),
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Update Material Stock");
+                    $(".modal-title").html("Update Feed Stock");
                     $("#material_stock_form_modal").modal('show');
                     checkValidation();
                 }

@@ -279,7 +279,7 @@ class MaterialStockController extends Controller
             }
 
             DB::commit();
-            Session::flash('successMsg', 'Material Stock created successfully.');
+            Session::flash('successMsg', 'Feed Stock created successfully.');
             return redirect()->route('material-stock.index', ['username' => request()->segment(1)]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -412,7 +412,7 @@ class MaterialStockController extends Controller
             }
 
             DB::commit();
-            Session::flash('successMsg', 'Material Stock updated successfully.');
+            Session::flash('successMsg', 'Feed Stock updated successfully.');
             return redirect()->route('material-stock.index', ['username' => request()->segment(1)]);
         } catch (\Exception $e) {
             DB::rollBack();

@@ -90,9 +90,6 @@ class FlockController extends Controller
                 }
             }
 
-            $totalQty = collect($data)->sum('total_quantity');
-            $totalFarms = collect($data)->pluck('farm_id')->unique()->count();
-
             $datatableBuilder = datatables()->of($data)
                 ->addColumn('farm', function($row) {
                     return $row['farm_name'];
@@ -111,12 +108,6 @@ class FlockController extends Controller
                 })
                 ->addColumn('start_date', function($row) {
                     return date('Y-m-d', strtotime($row['start_date']));
-                })
-                ->addColumn('total_qty', function() use ($totalQty) {
-                    return $totalQty;
-                })
-                ->addColumn('total_farm', function() use ($totalFarms) {
-                    return $totalFarms;
                 })
                 ->addColumn('created_by', function($row) {
                     return $row['created_by'];

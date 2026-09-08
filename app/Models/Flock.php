@@ -57,8 +57,8 @@ class Flock extends Model
         return $this->hasMany(FlockHangar::class, 'flock_id');
     }
 
-    public function flockEnd()
+    public function flockEnds()
     {
-        return $this->hasOne(FlockEnd::class);
+        return $this->hasMany(FlockEnd::class);
     }
 }

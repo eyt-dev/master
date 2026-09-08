@@ -156,7 +156,7 @@ class FlockController extends BaseController
             ->when($request->breed_type, function ($q) use ($request) {
                 return $q->where('breed', 'like', "%{$request->breed_type}%");
             })
-            ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnd')
+            ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnds')
             ->orderBy('name', 'asc')
             ->get();
 
@@ -462,7 +462,7 @@ class FlockController extends BaseController
             ->when($request->breed_type, function ($q) use ($request) {
                 return $q->where('breed', 'like', "%{$request->breed_type}%");
             })
-            ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnd')
+            ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnds')
             ->orderBy('created_at', 'desc')
             ->paginate($request->per_page ?? 15);
 
@@ -538,7 +538,7 @@ class FlockController extends BaseController
                       ->orWhere('assigned_to', $user->id);
                 });
             })
-            ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnd')
+            ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnds')
             ->find($id);
 
         if (!$flock) {
@@ -549,7 +549,8 @@ class FlockController extends BaseController
         }
 
         $totalBird = $flock->flockHangarAllocations->sum('quantity');
-        $age = $this->calculateFlockAge($flock->start_date, $flock->flockEnd?->sale_date);
+        $latestFlockEnd = $flock->flockEnds()->latest('sale_date')->first();
+        $age = $this->calculateFlockAge($flock->start_date, $latestFlockEnd?->sale_date);
 
         // Fetch daily records for this flock
         $dailyRecords = DailyRecord::where('flock_id', $flock->id)->orderBy('record_date', 'asc')->get();
@@ -574,7 +575,7 @@ class FlockController extends BaseController
         $breedType = $this->extractBreedType($flock->breed);
         $isLayer = $breedType === 'Layer';
         $isBroiler = !$isLayer;
-        $isEnded = (bool) $flock->flockEnd?->sale_date;
+        $isEnded = (bool) $latestFlockEnd?->sale_date;
 
         // Calculate FCR (Feed Conversion Ratio) - varies by flock type
         $fcr = 0;
@@ -583,7 +584,7 @@ class FlockController extends BaseController
             $fcr = $totalEggs > 0 ? round($totalFeedKg / $totalEggs, 2) : 0;
         } elseif ($isBroiler && $isEnded) {
             // For broilers at harvest: FCR = feed_kg per kg of weight
-            $totalWeight = $flock->flockEnd->total_weight ?? 0;
+            $totalWeight = $latestFlockEnd->total_weight ?? 0;
             $fcr = $totalWeight > 0 ? round($totalFeedKg / $totalWeight, 2) : 0;
         }
 
@@ -599,7 +600,7 @@ class FlockController extends BaseController
             'flock_type' => $breedType,
             'total_bird' => $totalBird,
             'start_date' => $flock->start_date->format('Y-m-d'),
-            'end_date' => $isEnded ? $flock->flockEnd->sale_date->format('Y-m-d') : null,
+            'end_date' => $isEnded ? $latestFlockEnd->sale_date->format('Y-m-d') : null,
             'age' => $age,
             'live_birds' => $liveBirds,
             'mortality_rate' => round($mortalityRate, 2),
@@ -1005,242 +1006,6 @@ class FlockController extends BaseController
         }
     }
 
-    /**
-     * Record a harvest/sale for a flock
-     *
-     * Record a harvest/sale event for a hangar in a flock.
-     * Multiple harvests can be recorded for the same flock over time.
-     *
-     * @authenticated
-     * @urlParam flock_id integer required The flock ID. Example: 4
-     * @bodyParam slaughter_id integer optional Slaughter house ID. Example: 1
-     * @bodyParam sale_date date required Sale date (format: dd-mm-yyyy). Example: 27-08-2026
-     * @bodyParam hangar_id integer required Hangar ID. Example: 12
-     * @bodyParam cages_count integer required Number of cages. Example: 10
-     * @bodyParam cages_weight decimal required Weight per cage (kg). Example: 1.85
-     * @bodyParam birds_per_cage integer required Birds per cage (1-25). Example: 20
-     * @bodyParam batch_weight decimal required Total batch weight (kg). Example: 450
-     * @bodyParam gross_weight decimal required Gross weight of batch (kg). Example: 425.5
-     * @bodyParam net_weight decimal required Net weight after processing (kg). Example: 431.5
-     * @bodyParam avg_weight decimal required Average weight per bird (kg). Example: 10.5
-     * @bodyParam batch_weights array optional Array of individual weights per cage/item (kg). Example: [10.5, 10.6, 10.4, 10.5, 10.6]
-     * @bodyParam notes string optional Additional notes
-     *
-     * @response 201 {
-     *   "success": true,
-     *   "message": "Harvest recorded successfully.",
-     *   "data": {
-     *     "flock_end_id": 1,
-     *     "flock_id": 4,
-     *     "flock_name": "flock1",
-     *     "hangar_id": 12,
-     *     "hangar_name": "Hangar 1",
-     *     "slaughter_id": 1,
-     *     "slaughter_name": "Al Saeed Trading Co.",
-     *     "sale_date": "2026-08-27",
-     *     "cages_count": 10,
-     *     "birds_per_cage": 20,
-     *     "cages_weight": "1,85",
-     *     "total_birds": 200,
-     *     "total_birds_harvested": 200,
-     *     "mortality_birds": 0,
-     *     "mortality_rate": 0,
-     *     "remaining_birds": 0,
-     *     "batch_weight": 450,
-     *     "net_weight": 431.5,
-     *     "avg_weight": 10.5,
-     *     "notes": "Grade A birds",
-     *     "ended_by_id": 6,
-     *     "ended_by_name": "Dean Lindsay",
-     *     "created_at": "2026-08-27 11:44:45"
-     *   }
-     * }
-     * @response 422 {
-     *   "success": false,
-     *   "errors": {"cages_count": ["The cages count must be at least 1."]}
-     * }
-     */
-    public function end($flockId, Request $request)
-    {
-        if (!auth()->check()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthenticated. Please provide a valid authentication token.',
-            ], 401);
-        }
-
-        $user = auth()->user();
-
-        $flock = Flock::where('created_by', $user->id)
-            ->whereHas('farm', function ($q) use ($user) {
-                $q->where(function ($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
-                });
-            })
-            ->with('flockHangarAllocations.hangar')
-            ->find($flockId);
-
-        if (!$flock) {
-            return response()->json([
-                'success' => false,
-                'message' => $this->translationService->get('flock_not_found'),
-            ], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'sale_date' => 'required|date_format:d-m-Y',
-            'slaughter_id' => 'nullable|integer|exists:slaughters,id',
-            'hangar_id' => 'required|integer|exists:hangars,id',
-            'cages_count' => 'required|integer|min:1',
-            'cages_weight' => 'required|numeric|min:0.1',
-            'birds_per_cage' => 'required|integer|min:1|max:25',
-            'batch_weight' => 'required|numeric|min:0',
-            'gross_weight' => 'required|numeric|min:0',
-            'net_weight' => 'required|numeric|min:0',
-            'avg_weight' => 'required|numeric|min:0',
-            'batch_weights' => 'nullable|array',
-            'batch_weights.*' => 'numeric|min:0',
-            'notes' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        try {
-            DB::beginTransaction();
-
-            // Convert date format from dd-mm-yyyy to yyyy-mm-dd
-            $saleDate = \Carbon\Carbon::createFromFormat('d-m-Y', $request->sale_date);
-
-            // Find hangar allocation for this flock
-            $hangarAllocation = $flock->flockHangarAllocations
-                ->where('hangar_id', $request->hangar_id)
-                ->first();
-
-            if (!$hangarAllocation) {
-                DB::rollBack();
-                return response()->json([
-                    'success' => false,
-                    'message' => "Hangar is not allocated to this flock.",
-                ], 422);
-            }
-
-            // Calculate available birds (original allocation - all previous harvests from this hangar)
-            $previousHarvests = FlockEnd::where('flock_id', $flock->id)
-                ->where('hangar_id', $request->hangar_id)
-                ->sum('total_birds_harvested');
-
-            $availableBirds = $hangarAllocation->quantity - $previousHarvests;
-
-            // Calculate total birds harvested
-            $totalBirdsHarvested = $request->cages_count * $request->birds_per_cage;
-
-            if ($totalBirdsHarvested > $availableBirds) {
-                DB::rollBack();
-                return response()->json([
-                    'success' => false,
-                    'message' => "Cannot harvest {$totalBirdsHarvested} birds. Only {$availableBirds} birds available.",
-                ], 422);
-            }
-
-            // Calculate remaining birds
-            $remainingBirds = $availableBirds - $totalBirdsHarvested;
-
-            // Create FlockEnd record (harvest event)
-            $flockEnd = FlockEnd::create([
-                'flock_id' => $flock->id,
-                'slaughter_id' => $request->slaughter_id,
-                'hangar_id' => $request->hangar_id,
-                'sale_date' => $saleDate,
-                'cages_count' => $request->cages_count,
-                'cages_weight' => $request->cages_weight,
-                'birds_per_cage' => $request->birds_per_cage,
-                'total_birds_harvested' => $totalBirdsHarvested,
-                'available_birds' => $availableBirds,
-                'remaining_birds' => $remainingBirds,
-                'total_weight' => $request->batch_weight,
-                'avg_weight_per_bird' => $request->avg_weight,
-                'notes' => $request->notes,
-                'ended_by' => auth()->id(),
-            ]);
-
-            // Create FlockEndDetail record for batch weights
-            if ($request->has('batch_weights') && is_array($request->batch_weights) && !empty($request->batch_weights)) {
-                FlockEndDetail::create([
-                    'flock_end_id' => $flockEnd->id,
-                    'batch_number' => 1,
-                    'gross_weight' => $request->gross_weight,
-                    'batch_weights' => $request->batch_weights,
-                ]);
-            }
-
-            DB::commit();
-
-            // Load relationships
-            $flockEnd->load('slaughter', 'endedBy', 'batchWeights');
-
-            // Get actual mortality from daily records up to harvest date
-            $mortalityFromRecords = DailyRecord::where('flock_id', $flock->id)
-                ->where('record_date', '<=', $saleDate)
-                ->sum('mortality');
-
-            // Mortality is from daily records, not unaccounted birds
-            $mortality = $mortalityFromRecords;
-            $mortalityRate = $availableBirds > 0 ? ($mortality / $availableBirds) * 100 : 0;
-
-            // Get batch weights if available
-            $batchWeightsDetail = $flockEnd->batchWeights->first();
-            $batchWeights = $batchWeightsDetail ? $batchWeightsDetail->batch_weights : [];
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Harvest recorded successfully.',
-                'data' => [
-                    'flock_end_id' => $flockEnd->id,
-                    'flock_id' => $flock->id,
-                    'flock_name' => $flock->name,
-                    'hangar_id' => $hangarAllocation->hangar_id,
-                    'hangar_name' => $hangarAllocation->hangar->name,
-                    'slaughter_id' => $flockEnd->slaughter_id,
-                    'slaughter_name' => $flockEnd->slaughter?->name ?? null,
-                    'sale_date' => $flockEnd->sale_date->format('Y-m-d'),
-                    'cages_count' => $flockEnd->cages_count,
-                    'birds_per_cage' => $flockEnd->birds_per_cage,
-                    'cages_weight' => $this->formatDecimal($flockEnd->cages_weight),
-                    'total_birds' => $flockEnd->available_birds,
-                    'total_birds_harvested' => $flockEnd->total_birds_harvested,
-                    'mortality_birds' => $mortality,
-                    'mortality_rate' => $this->formatDecimal($mortalityRate),
-                    'remaining_birds' => $flockEnd->remaining_birds,
-                    'batch_weight' => $this->formatDecimal($flockEnd->total_weight),
-                    'gross_weight' => $this->formatDecimal($request->gross_weight),
-                    'net_weight' => $this->formatDecimal($request->net_weight),
-                    'avg_weight' => $this->formatDecimal($request->avg_weight),
-                    'batch_weights' => $batchWeights,
-                    'notes' => $flockEnd->notes,
-                    'ended_by_id' => $flockEnd->ended_by,
-                    'ended_by_name' => $flockEnd->endedBy?->name ?? null,
-                    'created_at' => $flockEnd->created_at->format('Y-m-d H:i:s'),
-                ],
-            ], 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Flock harvest error: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to record harvest.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
     private function generateChartData($dailyRecords, $flock, $totalBird, $isLayer)
     {
         if ($dailyRecords->isEmpty()) {
@@ -1329,9 +1094,9 @@ class FlockController extends BaseController
             $flock->load('flockHangarAllocations.hangar');
         }
 
-        // Load flockEnd if not already loaded
-        if (!$flock->relationLoaded('flockEnd')) {
-            $flock->load('flockEnd');
+        // Load flockEnds if not already loaded
+        if (!$flock->relationLoaded('flockEnds')) {
+            $flock->load('flockEnds');
         }
 
         // Check if logged-in user created this flock
@@ -1347,8 +1112,8 @@ class FlockController extends BaseController
             ];
         })->toArray();
 
-        // Determine end_date and status
-        $endDate = $flock->flockEnd?->sale_date;
+        // Determine end_date and status - get latest harvest record
+        $endDate = $flock->flockEnds()->latest('sale_date')->first()?->sale_date;
         $isEnded = (bool) $endDate;
         $status = $isEnded ? 'Completed' : 'Active';
 

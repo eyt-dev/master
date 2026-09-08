@@ -245,7 +245,7 @@ class DailyRecordController extends BaseController
         }
 
         $record = DailyRecord::where('created_by', auth()->id())
-            ->with('farm', 'flock', 'flock.flockEnd', 'hangar', 'creator')
+            ->with('farm', 'flock', 'flock.flockEnds', 'hangar', 'creator')
             ->find($id);
 
         if (!$record) {
@@ -602,7 +602,7 @@ class DailyRecordController extends BaseController
         $flockAge = null;
         $flockStatus = null;
         if ($record->flock) {
-            $endDate = $record->flock->flockEnd?->sale_date;
+            $endDate = $record->flock->flockEnds()->latest('sale_date')->first()?->sale_date;
             $flockAge = $this->calculateFlockAge($record->flock->start_date, $endDate);
             $flockStatus = $endDate ? 'Completed' : 'Active';
         }
@@ -636,7 +636,7 @@ class DailyRecordController extends BaseController
     private function formatDailyAggregateRecord($record): array
     {
         $farm = Farm::find($record->farm_id);
-        $flock = Flock::with('flockEnd')->find($record->flock_id);
+        $flock = Flock::with('flockEnds')->find($record->flock_id);
 
         $periodDate = \Carbon\Carbon::parse($record->period_date);
         $dateLabel = $periodDate->format('l, d M Y');
@@ -645,7 +645,7 @@ class DailyRecordController extends BaseController
         $flockAge = null;
         $flockStatus = null;
         if ($flock) {
-            $endDate = $flock->flockEnd?->sale_date;
+            $endDate = $flock->flockEnds()->latest('sale_date')->first()?->sale_date;
             $flockAge = $this->calculateFlockAge($flock->start_date, $endDate);
             $flockStatus = $endDate ? 'Completed' : 'Active';
         }
@@ -671,7 +671,7 @@ class DailyRecordController extends BaseController
     private function formatWeeklyRecord($record): array
     {
         $farm = Farm::find($record->farm_id);
-        $flock = Flock::with('flockEnd')->find($record->flock_id);
+        $flock = Flock::with('flockEnds')->find($record->flock_id);
 
         $periodDate = \Carbon\Carbon::parse($record->period_date);
         $weekLabel = 'Week ' . $record->week . ' • ' . $periodDate->format('F Y');
@@ -680,7 +680,7 @@ class DailyRecordController extends BaseController
         $flockAge = null;
         $flockStatus = null;
         if ($flock) {
-            $endDate = $flock->flockEnd?->sale_date;
+            $endDate = $flock->flockEnds()->latest('sale_date')->first()?->sale_date;
             $flockAge = $this->calculateFlockAge($flock->start_date, $endDate);
             $flockStatus = $endDate ? 'Completed' : 'Active';
         }
@@ -708,7 +708,7 @@ class DailyRecordController extends BaseController
     private function formatMonthlyRecord($record): array
     {
         $farm = Farm::find($record->farm_id);
-        $flock = Flock::with('flockEnd')->find($record->flock_id);
+        $flock = Flock::with('flockEnds')->find($record->flock_id);
 
         $periodDate = \Carbon\Carbon::parse($record->period_date);
         $monthLabel = $periodDate->format('F Y');
@@ -717,7 +717,7 @@ class DailyRecordController extends BaseController
         $flockAge = null;
         $flockStatus = null;
         if ($flock) {
-            $endDate = $flock->flockEnd?->sale_date;
+            $endDate = $flock->flockEnds()->latest('sale_date')->first()?->sale_date;
             $flockAge = $this->calculateFlockAge($flock->start_date, $endDate);
             $flockStatus = $endDate ? 'Completed' : 'Active';
         }

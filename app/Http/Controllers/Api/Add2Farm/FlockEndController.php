@@ -228,7 +228,7 @@ class FlockEndController extends BaseController
 
         $validator = Validator::make($request->all(), [
             'flock_id' => 'required|integer|exists:flocks,id',
-            'sale_date' => 'required|date_format:Y-m-d',
+            'sale_date' => 'required|date_format:d-m-Y',
             'slaughter_id' => 'nullable|integer|exists:slaughters,id',
             'hangar_id' => 'required|integer|exists:hangars,id',
             'cages_count' => 'required|integer|min:1',
@@ -299,11 +299,13 @@ class FlockEndController extends BaseController
 
             $remainingBirds = $availableBirds - $totalBirdsHarvested;
 
+            $saleDate = \Carbon\Carbon::createFromFormat('d-m-Y', $request->sale_date);
+
             $flockEnd = FlockEnd::create([
                 'flock_id' => $flock->id,
                 'slaughter_id' => $request->slaughter_id,
                 'hangar_id' => $request->hangar_id,
-                'sale_date' => $request->sale_date,
+                'sale_date' => $saleDate,
                 'cages_count' => $request->cages_count,
                 'cages_weight' => $request->cages_weight,
                 'birds_per_cage' => $request->birds_per_cage,
@@ -405,7 +407,7 @@ class FlockEndController extends BaseController
         }
 
         $validator = Validator::make($request->all(), [
-            'sale_date' => 'required|date_format:Y-m-d',
+            'sale_date' => 'required|date_format:d-m-Y',
             'slaughter_id' => 'nullable|integer|exists:slaughters,id',
             'cages_count' => 'required|integer|min:1',
             'cages_weight' => 'required|numeric|min:0.1',
@@ -461,9 +463,11 @@ class FlockEndController extends BaseController
 
             $remainingBirds = $availableBirds - $totalBirdsHarvested;
 
+            $saleDate = \Carbon\Carbon::createFromFormat('d-m-Y', $request->sale_date);
+
             $flockEnd->update([
                 'slaughter_id' => $request->slaughter_id,
-                'sale_date' => $request->sale_date,
+                'sale_date' => $saleDate,
                 'cages_count' => $request->cages_count,
                 'cages_weight' => $request->cages_weight,
                 'birds_per_cage' => $request->birds_per_cage,

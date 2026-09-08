@@ -22,6 +22,11 @@ class Farm extends Model
         'created_by',
     ];
 
+    protected $casts = [
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
+    ];
+
     // Define Relationship with assigned admin
     public function assignedAdmin()
     {

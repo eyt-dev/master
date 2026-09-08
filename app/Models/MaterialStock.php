@@ -23,6 +23,7 @@ class MaterialStock extends Model
 
     protected $casts = [
         'stock_date' => 'date',
+        'quantity' => 'decimal:2',
     ];
 
     public function farm()

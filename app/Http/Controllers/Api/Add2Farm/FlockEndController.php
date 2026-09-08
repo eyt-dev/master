@@ -182,7 +182,7 @@ class FlockEndController extends BaseController
      * @bodyParam flock_id integer required The flock ID. Example: 7
      * @bodyParam slaughter_id integer optional Slaughter house ID. Example: 1
      * @bodyParam hangar_id integer required Hangar ID. Example: 22
-     * @bodyParam sale_date date required Sale date (format: Y-m-d). Example: 2026-08-28
+     * @bodyParam sale_date date required Sale date (format: d-m-Y). Example: 28-08-2026
      * @bodyParam cages_count integer required Number of cages. Example: 10
      * @bodyParam cages_weight decimal required Weight per cage (kg). Example: 1.85
      * @bodyParam birds_per_cage integer required Birds per cage (1-25). Example: 20
@@ -357,7 +357,7 @@ class FlockEndController extends BaseController
      * @authenticated
      * @urlParam id integer required The harvest record ID. Example: 4
      * @bodyParam slaughter_id integer optional Slaughter house ID. Example: 1
-     * @bodyParam sale_date date required Sale date (format: Y-m-d). Example: 2026-08-28
+     * @bodyParam sale_date date required Sale date (format: d-m-Y). Example: 28-08-2026
      * @bodyParam cages_count integer required Number of cages. Example: 10
      * @bodyParam cages_weight decimal required Weight per cage (kg). Example: 1.85
      * @bodyParam birds_per_cage integer required Birds per cage (1-25). Example: 20

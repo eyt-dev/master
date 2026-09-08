@@ -753,7 +753,7 @@ class FlockController extends BaseController
 
             DB::commit();
 
-            $flock->load('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnd');
+            $flock->load('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnds');
 
             return response()->json([
                 'success' => true,
@@ -914,7 +914,7 @@ class FlockController extends BaseController
 
             DB::commit();
 
-            $flock->load('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnd');
+            $flock->load('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnds');
 
             return response()->json([
                 'success' => true,

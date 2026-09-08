@@ -19,6 +19,10 @@ class Hangar extends Model
         'created_by',
     ];
 
+    protected $casts = [
+        'area_sqm' => 'decimal:2',
+    ];
+
     // Define Relationship with Farm
     public function farm()
     {

@@ -16,6 +16,11 @@ class MaterialStockHangar extends Model
         'remaining_quantity',
     ];
 
+    protected $casts = [
+        'quantity' => 'decimal:2',
+        'remaining_quantity' => 'decimal:2',
+    ];
+
     public function materialStock()
     {
         return $this->belongsTo(MaterialStock::class, 'material_stock_id');

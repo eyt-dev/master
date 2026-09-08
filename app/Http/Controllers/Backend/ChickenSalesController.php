@@ -46,6 +46,9 @@ class ChickenSalesController extends Controller
                 ->addColumn('slaughter', function($row) {
                     return $row->slaughter->name ?? 'N/A';
                 })
+                ->addColumn('quantity', function($row) {
+                    return $row->total_birds_harvested ?? 'N/A';
+                })
                 ->addColumn('net_weight', function($row) {
                     return $row->total_weight ?? 'N/A';
                 })

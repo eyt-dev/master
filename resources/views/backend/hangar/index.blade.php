@@ -58,6 +58,7 @@
                                     <th>Area (sqm)</th>
                                     <th>Layer Hens</th>
                                     <th>Broiler Hens</th>
+                                    <th>Status</th>
                                     <th>Created By</th>
                                     <th>Created At</th>
                                     <th>Action</th>
@@ -127,6 +128,7 @@
                 { data: 'area_sqm', name: 'area_sqm' },
                 { data: 'layer_hens', name: 'layer_hens' },
                 { data: 'broiler_hens', name: 'broiler_hens' },
+                { data: 'status', name: 'status' },
                 { data: 'creator' },
                 { data: 'created_at', name: 'created_at' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }

@@ -561,21 +561,34 @@ class FlockController extends BaseController
         $avgWeight = $dailyRecords->avg('chicks_weight');
         $recordCount = $dailyRecords->count();
 
-        // Calculate mortality rate
+        // Calculate total harvested birds from all FlockEnd records
+        $totalHarvested = FlockEnd::where('flock_id', $flock->id)->sum('total_birds_harvested');
+
+        // Calculate mortality rate (only from daily records, not from unaccounted birds in harvest)
         $mortalityRate = $totalBird > 0 ? ($totalMortality / $totalBird) * 100 : 0;
 
         // Calculate average production (eggs per bird as percentage)
         $avgProduction = $totalBird > 0 && $recordCount > 0 ? ($totalEggs / ($totalBird * $recordCount)) * 100 : 0;
 
-        // Calculate FCR (Feed Conversion Ratio) - feed_kg per egg
-        $fcr = $totalEggs > 0 ? round($totalFeedKg / $totalEggs, 2) : 0;
-
-        // Calculate live birds
-        $liveBirds = $totalBird - $totalMortality;
-
-        // Determine flock type
+        // Determine flock type first
         $breedType = $this->extractBreedType($flock->breed);
         $isLayer = $breedType === 'Layer';
+        $isBroiler = !$isLayer;
+        $isEnded = (bool) $flock->flockEnd?->sale_date;
+
+        // Calculate FCR (Feed Conversion Ratio) - varies by flock type
+        $fcr = 0;
+        if ($isLayer) {
+            // For layers: FCR = feed_kg per egg
+            $fcr = $totalEggs > 0 ? round($totalFeedKg / $totalEggs, 2) : 0;
+        } elseif ($isBroiler && $isEnded) {
+            // For broilers at harvest: FCR = feed_kg per kg of weight
+            $totalWeight = $flock->flockEnd->total_weight ?? 0;
+            $fcr = $totalWeight > 0 ? round($totalFeedKg / $totalWeight, 2) : 0;
+        }
+
+        // Calculate live birds: total - harvested - mortality from daily records
+        $liveBirds = $totalBird - $totalHarvested - $totalMortality;
 
         // Generate chart data
         $chartData = $this->generateChartData($dailyRecords, $flock, $totalBird, $isLayer);
@@ -586,16 +599,32 @@ class FlockController extends BaseController
             'flock_type' => $breedType,
             'total_bird' => $totalBird,
             'start_date' => $flock->start_date->format('Y-m-d'),
+            'end_date' => $isEnded ? $flock->flockEnd->sale_date->format('Y-m-d') : null,
             'age' => $age,
             'live_birds' => $liveBirds,
             'mortality_rate' => round($mortalityRate, 2),
-            'avg_production' => round($avgProduction, 2) . '%',
-            'total_eggs' => $totalEggs,
             'feed_consumed' => number_format($totalFeedKg, 2) . ' kg',
-            'fcr' => $fcr,
             'avg_weight' => $avgWeight ? round($avgWeight, 2) . ' kg' : 'N/A',
             'chart_data' => $chartData,
         ];
+
+        // Add flock-condition flag and type-specific metrics
+        if ($isBroiler) {
+            $data['flock-condition'] = $isEnded ? 'broiler-ended' : 'broiler-active';
+            if ($isEnded) {
+                $data['fcr'] = $fcr;
+            }
+        } else {
+            // Layer flock
+            $data['flock-condition'] = $isEnded ? 'layer-ended' : 'layer-active';
+            $data['total_eggs'] = $totalEggs;
+            $data['avg_production'] = round($avgProduction, 2) . '%';
+            if ($isEnded) {
+                $data['fcr'] = $fcr;
+            } else {
+                $data['production_rate'] = round($avgProduction, 2);
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -985,14 +1014,16 @@ class FlockController extends BaseController
      * @authenticated
      * @urlParam flock_id integer required The flock ID. Example: 4
      * @bodyParam slaughter_id integer optional Slaughter house ID. Example: 1
-     * @bodyParam sale_date date required Sale date (format: Y-m-d). Example: 2026-08-27
+     * @bodyParam sale_date date required Sale date (format: dd-mm-yyyy). Example: 27-08-2026
      * @bodyParam hangar_id integer required Hangar ID. Example: 12
      * @bodyParam cages_count integer required Number of cages. Example: 10
      * @bodyParam cages_weight decimal required Weight per cage (kg). Example: 1.85
      * @bodyParam birds_per_cage integer required Birds per cage (1-25). Example: 20
      * @bodyParam batch_weight decimal required Total batch weight (kg). Example: 450
+     * @bodyParam gross_weight decimal required Gross weight of batch (kg). Example: 425.5
      * @bodyParam net_weight decimal required Net weight after processing (kg). Example: 431.5
      * @bodyParam avg_weight decimal required Average weight per bird (kg). Example: 10.5
+     * @bodyParam batch_weights array optional Array of individual weights per cage/item (kg). Example: [10.5, 10.6, 10.4, 10.5, 10.6]
      * @bodyParam notes string optional Additional notes
      *
      * @response 201 {
@@ -1058,15 +1089,18 @@ class FlockController extends BaseController
         }
 
         $validator = Validator::make($request->all(), [
-            'sale_date' => 'required|date_format:Y-m-d',
+            'sale_date' => 'required|date_format:d-m-Y',
             'slaughter_id' => 'nullable|integer|exists:slaughters,id',
             'hangar_id' => 'required|integer|exists:hangars,id',
             'cages_count' => 'required|integer|min:1',
             'cages_weight' => 'required|numeric|min:0.1',
             'birds_per_cage' => 'required|integer|min:1|max:25',
             'batch_weight' => 'required|numeric|min:0',
+            'gross_weight' => 'required|numeric|min:0',
             'net_weight' => 'required|numeric|min:0',
             'avg_weight' => 'required|numeric|min:0',
+            'batch_weights' => 'nullable|array',
+            'batch_weights.*' => 'numeric|min:0',
             'notes' => 'nullable|string',
         ]);
 
@@ -1079,6 +1113,9 @@ class FlockController extends BaseController
 
         try {
             DB::beginTransaction();
+
+            // Convert date format from dd-mm-yyyy to yyyy-mm-dd
+            $saleDate = \Carbon\Carbon::createFromFormat('d-m-Y', $request->sale_date);
 
             // Find hangar allocation for this flock
             $hangarAllocation = $flock->flockHangarAllocations
@@ -1119,7 +1156,7 @@ class FlockController extends BaseController
                 'flock_id' => $flock->id,
                 'slaughter_id' => $request->slaughter_id,
                 'hangar_id' => $request->hangar_id,
-                'sale_date' => $request->sale_date,
+                'sale_date' => $saleDate,
                 'cages_count' => $request->cages_count,
                 'cages_weight' => $request->cages_weight,
                 'birds_per_cage' => $request->birds_per_cage,
@@ -1132,14 +1169,33 @@ class FlockController extends BaseController
                 'ended_by' => auth()->id(),
             ]);
 
+            // Create FlockEndDetail record for batch weights
+            if ($request->has('batch_weights') && is_array($request->batch_weights) && !empty($request->batch_weights)) {
+                FlockEndDetail::create([
+                    'flock_end_id' => $flockEnd->id,
+                    'batch_number' => 1,
+                    'gross_weight' => $request->gross_weight,
+                    'batch_weights' => $request->batch_weights,
+                ]);
+            }
+
             DB::commit();
 
             // Load relationships
-            $flockEnd->load('slaughter', 'endedBy');
+            $flockEnd->load('slaughter', 'endedBy', 'batchWeights');
 
-            // Calculate mortality
-            $mortality = $availableBirds - $totalBirdsHarvested;
+            // Get actual mortality from daily records up to harvest date
+            $mortalityFromRecords = DailyRecord::where('flock_id', $flock->id)
+                ->where('record_date', '<=', $saleDate)
+                ->sum('mortality');
+
+            // Mortality is from daily records, not unaccounted birds
+            $mortality = $mortalityFromRecords;
             $mortalityRate = $availableBirds > 0 ? ($mortality / $availableBirds) * 100 : 0;
+
+            // Get batch weights if available
+            $batchWeightsDetail = $flockEnd->batchWeights->first();
+            $batchWeights = $batchWeightsDetail ? $batchWeightsDetail->batch_weights : [];
 
             return response()->json([
                 'success' => true,
@@ -1162,8 +1218,10 @@ class FlockController extends BaseController
                     'mortality_rate' => $this->formatDecimal($mortalityRate),
                     'remaining_birds' => $flockEnd->remaining_birds,
                     'batch_weight' => $this->formatDecimal($flockEnd->total_weight),
+                    'gross_weight' => $this->formatDecimal($request->gross_weight),
                     'net_weight' => $this->formatDecimal($request->net_weight),
                     'avg_weight' => $this->formatDecimal($request->avg_weight),
+                    'batch_weights' => $batchWeights,
                     'notes' => $flockEnd->notes,
                     'ended_by_id' => $flockEnd->ended_by,
                     'ended_by_name' => $flockEnd->endedBy?->name ?? null,
@@ -1291,12 +1349,21 @@ class FlockController extends BaseController
 
         // Determine end_date and status
         $endDate = $flock->flockEnd?->sale_date;
-        $status = $endDate ? 'Completed' : 'Active';
+        $isEnded = (bool) $endDate;
+        $status = $isEnded ? 'Completed' : 'Active';
 
         // Calculate age
         $age = $this->calculateFlockAge($flock->start_date, $endDate);
 
-        return [
+        // Determine flock type (Broiler or Layer)
+        $breedType = $this->extractBreedType($flock->breed);
+        $isBroiler = $breedType === 'Broiler';
+
+        // Get total bird allocation
+        $totalBird = $flock->flockHangarAllocations->sum('quantity');
+
+        // Build base response
+        $response = [
             'id'                    => $flock->id,
             'name'                  => $flock->name,
             'farm_id'               => $flock->farm_id,
@@ -1316,5 +1383,44 @@ class FlockController extends BaseController
             'created_at'            => $flock->created_at,
             'updated_at'            => $flock->updated_at,
         ];
+
+        // Add flock-condition flag
+        if ($isBroiler) {
+            $response['flock-condition'] = $isEnded ? 'broiler-ended' : 'broiler-active';
+        } else {
+            $response['flock-condition'] = $isEnded ? 'layer-ended' : 'layer-active';
+        }
+
+        // Fetch daily records for conditional metrics
+        $dailyRecords = DailyRecord::where('flock_id', $flock->id)->get();
+
+        // Calculate metrics based on flock type and status
+        if ($isBroiler) {
+            if ($isEnded) {
+                // Broiler ended: send avg FCR %
+                $totalFeedKg = $dailyRecords->sum('feed_kg');
+                $totalEggs = $dailyRecords->sum('eggs_count');
+                $avgFcr = $totalEggs > 0 ? round($totalFeedKg / $totalEggs, 2) : 0;
+                $response['avg_fcr'] = $avgFcr;
+            } else {
+                // Broiler active: send avg weight
+                $avgWeight = $dailyRecords->avg('chicks_weight');
+                $response['avg_weight'] = $avgWeight ? round($avgWeight, 2) : 0;
+            }
+        } else {
+            if ($isEnded) {
+                // Layer ended: send total eggs
+                $totalEggs = $dailyRecords->sum('eggs_count');
+                $response['total_eggs'] = $totalEggs;
+            } else {
+                // Layer active: send production rate %
+                $totalEggs = $dailyRecords->sum('eggs_count');
+                $recordCount = $dailyRecords->count();
+                $avgProduction = $totalBird > 0 && $recordCount > 0 ? ($totalEggs / ($totalBird * $recordCount)) * 100 : 0;
+                $response['production_rate'] = round($avgProduction, 2);
+            }
+        }
+
+        return $response;
     }
 }

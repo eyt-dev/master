@@ -24,6 +24,10 @@ class HangarController extends Controller
                 ->addColumn('name', function($row) {
                     return $row->name ?? 'N/A';
                 })
+                ->addColumn('status', function($row) {
+                    $statusClass = $row->status === 'Active' ? 'badge-success' : 'badge-danger';
+                    return '<span class="badge ' . $statusClass . '">' . ucfirst($row->status) . '</span>';
+                })
                 ->addColumn('creator', function($row) {
                     return $row->creator->name ?? 'N/A';
                 })
@@ -35,7 +39,7 @@ class HangarController extends Controller
                          .'<a class="delete-hangar btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action'])   
+                ->rawColumns(['action', 'status'])
                 ->make(true);
         }
         return view('backend.hangar.index');
@@ -58,6 +62,7 @@ class HangarController extends Controller
             'area_sqm' => 'required|numeric',
             'layer_hens' => 'required|integer',
             'broiler_hens' => 'required|integer',
+            'status' => 'required|in:Active,Inactive',
         ]);
 
         $createData = [
@@ -66,6 +71,7 @@ class HangarController extends Controller
             'area_sqm' => $request->area_sqm,
             'layer_hens' => $request->layer_hens,
             'broiler_hens' => $request->broiler_hens,
+            'status' => $request->status,
             'created_by' => auth()->id()
         ];
         Hangar::create($createData);
@@ -101,6 +107,7 @@ class HangarController extends Controller
             'area_sqm' => 'required|numeric',
             'layer_hens' => 'required|integer',
             'broiler_hens' => 'required|integer',
+            'status' => 'required|in:Active,Inactive',
         ]);
 
         $hangar->update([
@@ -109,6 +116,7 @@ class HangarController extends Controller
             'area_sqm' => $request->area_sqm,
             'layer_hens' => $request->layer_hens,
             'broiler_hens' => $request->broiler_hens,
+            'status' => $request->status,
         ]);
 
         Session::flash('successMsg', 'Hangar updated successfully.');

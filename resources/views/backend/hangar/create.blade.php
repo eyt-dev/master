@@ -56,7 +56,7 @@
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="layer_hens" class="form-label">Layer Hens <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="layer_hens" id="layer_hens" placeholder="Number of Layer Hens" 
+                <input type="number" class="form-control" name="layer_hens" id="layer_hens" placeholder="Number of Layer Hens"
                     value="{{ old('layer_hens', $hangar->layer_hens ?? '') }}" required="" />
                 @error('layer_hens')
                     <label id="layer_hens-error" class="error" for="layer_hens">{{ $message }}</label>
@@ -68,10 +68,27 @@
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="broiler_hens" class="form-label">Broiler Hens <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="broiler_hens" id="broiler_hens" placeholder="Number of Broiler Hens" 
+                <input type="number" class="form-control" name="broiler_hens" id="broiler_hens" placeholder="Number of Broiler Hens"
                     value="{{ old('broiler_hens', $hangar->broiler_hens ?? '') }}" required="" />
                 @error('broiler_hens')
                     <label id="broiler_hens-error" class="error" for="broiler_hens">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Status Dropdown -->
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="status" class="form-label">Status <span class="text-red">*</span></label>
+                <select class="form-control" name="status" id="status" required="">
+                    <option value="">Select Status</option>
+                    <option value="Active" {{ old('status', $hangar->status ?? '') == 'Active' ? 'selected' : '' }}>Active</option>
+                    <option value="Inactive" {{ old('status', $hangar->status ?? '') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                </select>
+                @error('status')
+                    <label id="status-error" class="error" for="status">{{ $message }}</label>
                 @enderror
             </div>
         </div>

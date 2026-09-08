@@ -4,22 +4,24 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\ChickenSale;
+use App\Models\FlockEnd;
 use App\Models\Farm;
 use App\Models\Flock;
 use App\Models\Hangar;
 use App\Models\Slaughter;
 use App\Models\Admin;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\DB;
 
 class ChickenSalesController extends Controller
 {
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = ChickenSale::with('farm', 'flock', 'hangar', 'slaughter', 'creator')
-                ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
-                    $query->where('created_by', auth()->id());
+            $user = auth()->user();
+            $data = FlockEnd::with('flock', 'hangar', 'slaughter', 'endedBy')
+                ->when($user->role !== 'SuperAdmin', function ($query) use ($user) {
+                    $query->where('ended_by', $user->id);
                 })
                 ->orderBy('created_at', 'desc')->get();
             return datatables()->of($data)
@@ -27,7 +29,7 @@ class ChickenSalesController extends Controller
                     return date('Y-m-d', strtotime($row->sale_date));
                 })
                 ->addColumn('farm', function($row) {
-                    return $row->farm->name ?? 'N/A';
+                    return $row->flock->farm->name ?? 'N/A';
                 })
                 ->addColumn('flock', function($row) {
                     if (!$row->flock) {
@@ -45,13 +47,13 @@ class ChickenSalesController extends Controller
                     return $row->slaughter->name ?? 'N/A';
                 })
                 ->addColumn('net_weight', function($row) {
-                    return $row->net_weight;
+                    return $row->total_weight ?? 'N/A';
                 })
                 ->addColumn('avg_weight_per_bird', function($row) {
                     return round($row->avg_weight_per_bird, 2);
                 })
                 ->addColumn('creator', function($row) {
-                    return $row->creator->name ?? 'N/A';
+                    return $row->endedBy->name ?? 'N/A';
                 })
                 ->addColumn('created_at', function($row) {
                     return date('Y-m-d', strtotime($row->created_at));
@@ -100,110 +102,172 @@ class ChickenSalesController extends Controller
     {
         $request->validate([
             'sale_date' => 'required|date_format:Y-m-d',
-            'farm_id' => 'required|exists:farms,id',
             'flock_id' => 'required|exists:flocks,id',
             'hangar_id' => 'required|exists:hangars,id',
-            'slaughter_id' => 'required|exists:slaughters,id',
-            'batch_weight' => 'required|numeric|min:0',
+            'slaughter_id' => 'nullable|exists:slaughters,id',
             'cages_weight' => 'required|numeric|min:0.1',
             'cages_count' => 'required|integer|min:1',
             'birds_per_cage' => 'required|integer|min:1|max:25',
+            'batch_weight' => 'required|numeric|min:0',
             'net_weight' => 'required|numeric|min:0',
+            'avg_weight' => 'required|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        // Auto-calculate quantity
-        $quantity = $request->cages_count * $request->birds_per_cage;
-        $avgWeightPerBird = $request->net_weight / $quantity;
+        try {
+            DB::beginTransaction();
 
-        ChickenSale::create([
-            'sale_date' => $request->sale_date,
-            'farm_id' => $request->farm_id,
-            'flock_id' => $request->flock_id,
-            'hangar_id' => $request->hangar_id,
-            'slaughter_id' => $request->slaughter_id,
-            'quantity' => $quantity,
-            'total_weight' => $request->batch_weight,
-            'gross_weight' => $request->cages_weight,
-            'no_of_cages' => $request->cages_count,
-            'no_of_birds' => $quantity,
-            'net_weight' => $request->net_weight,
-            'avg_weight_per_bird' => $avgWeightPerBird,
-            'notes' => $request->notes,
-            'created_by' => auth()->id()
-        ]);
+            $flock = Flock::findOrFail($request->flock_id);
+            $hangarAllocation = $flock->flockHangarAllocations()
+                ->where('hangar_id', $request->hangar_id)
+                ->first();
 
-        Session::flash('successMsg', 'Chicken sale created successfully.');
-        return redirect()->route('chicken-sale.index', ['username' => request()->segment(1)]);
+            if (!$hangarAllocation) {
+                return redirect()->back()->withErrors('Hangar is not allocated to this flock.');
+            }
+
+            $previousHarvests = FlockEnd::where('flock_id', $flock->id)
+                ->where('hangar_id', $request->hangar_id)
+                ->sum('total_birds_harvested');
+
+            $availableBirds = $hangarAllocation->quantity - $previousHarvests;
+            $totalBirdsHarvested = $request->cages_count * $request->birds_per_cage;
+
+            if ($totalBirdsHarvested > $availableBirds) {
+                return redirect()->back()->withErrors("Cannot harvest {$totalBirdsHarvested} birds. Only {$availableBirds} birds available.");
+            }
+
+            $remainingBirds = $availableBirds - $totalBirdsHarvested;
+            $saleDate = \Carbon\Carbon::createFromFormat('Y-m-d', $request->sale_date);
+
+            FlockEnd::create([
+                'flock_id' => $request->flock_id,
+                'slaughter_id' => $request->slaughter_id,
+                'hangar_id' => $request->hangar_id,
+                'sale_date' => $saleDate,
+                'cages_count' => $request->cages_count,
+                'cages_weight' => $request->cages_weight,
+                'birds_per_cage' => $request->birds_per_cage,
+                'total_birds_harvested' => $totalBirdsHarvested,
+                'available_birds' => $availableBirds,
+                'remaining_birds' => $remainingBirds,
+                'total_weight' => $request->batch_weight,
+                'avg_weight_per_bird' => $request->avg_weight,
+                'notes' => $request->notes,
+                'ended_by' => auth()->id()
+            ]);
+
+            DB::commit();
+            Session::flash('successMsg', 'Chicken sale created successfully.');
+            return redirect()->route('chicken-sale.index', ['username' => request()->segment(1)]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withErrors('Failed to create chicken sale: ' . $e->getMessage());
+        }
     }
 
     public function edit($siteUrl, $id)
     {
-        $chickenSale = ChickenSale::findOrFail($id);
+        $flockEnd = FlockEnd::findOrFail($id);
         $farms = Farm::where('created_by', auth()->id())->orWhere('created_by', function($query) {
             $query->select('id')->from('admins')->where('type', 0);
         })->get();
-        
+
         if (auth()->user()->role === 'SuperAdmin') {
             $farms = Farm::all();
         }
 
-        $flocks = Flock::where('farm_id', $chickenSale->farm_id)->get();
+        $flocks = Flock::where('farm_id', $flockEnd->flock->farm_id)->get();
         $hangars = Hangar::where('status', 'Active')
-            ->whereHas('flocks', function($query) use ($chickenSale) {
-                $query->where('flock_id', $chickenSale->flock_id);
+            ->whereHas('flocks', function($query) use ($flockEnd) {
+                $query->where('flock_id', $flockEnd->flock_id);
             })->get();
         $slaughters = Slaughter::all();
 
-        return view('backend.chicken-sale.create', compact('chickenSale', 'farms', 'flocks', 'hangars', 'slaughters'));
+        return view('backend.chicken-sale.create', compact('flockEnd', 'farms', 'flocks', 'hangars', 'slaughters'));
     }
 
     public function update(Request $request, $siteUrl, $id)
     {
-        $chickenSale = ChickenSale::findOrFail($id);
+        $flockEnd = FlockEnd::findOrFail($id);
 
         $request->validate([
             'sale_date' => 'required|date_format:Y-m-d',
-            'farm_id' => 'required|exists:farms,id',
             'flock_id' => 'required|exists:flocks,id',
             'hangar_id' => 'required|exists:hangars,id',
-            'slaughter_id' => 'required|exists:slaughters,id',
-            'batch_weight' => 'required|numeric|min:0',
+            'slaughter_id' => 'nullable|exists:slaughters,id',
             'cages_weight' => 'required|numeric|min:0.1',
             'cages_count' => 'required|integer|min:1',
             'birds_per_cage' => 'required|integer|min:1|max:25',
+            'batch_weight' => 'required|numeric|min:0',
             'net_weight' => 'required|numeric|min:0',
+            'avg_weight' => 'required|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        // Auto-calculate quantity
-        $quantity = $request->cages_count * $request->birds_per_cage;
-        $avgWeightPerBird = $request->net_weight / $quantity;
+        try {
+            DB::beginTransaction();
 
-        $chickenSale->update([
-            'sale_date' => $request->sale_date,
-            'farm_id' => $request->farm_id,
-            'flock_id' => $request->flock_id,
-            'hangar_id' => $request->hangar_id,
-            'slaughter_id' => $request->slaughter_id,
-            'quantity' => $quantity,
-            'total_weight' => $request->batch_weight,
-            'gross_weight' => $request->cages_weight,
-            'no_of_cages' => $request->cages_count,
-            'no_of_birds' => $quantity,
-            'net_weight' => $request->net_weight,
-            'avg_weight_per_bird' => $avgWeightPerBird,
-            'notes' => $request->notes,
-        ]);
+            $flock = Flock::findOrFail($request->flock_id);
+            $hangarAllocation = $flock->flockHangarAllocations()
+                ->where('hangar_id', $request->hangar_id)
+                ->first();
 
-        Session::flash('successMsg', 'Chicken sale updated successfully.');
-        return redirect()->route('chicken-sale.index', ['username' => request()->segment(1)]);
+            if (!$hangarAllocation) {
+                return redirect()->back()->withErrors('Hangar is not allocated to this flock.');
+            }
+
+            $previousHarvests = FlockEnd::where('flock_id', $flock->id)
+                ->where('hangar_id', $request->hangar_id)
+                ->where('id', '!=', $id)
+                ->sum('total_birds_harvested');
+
+            $availableBirds = $hangarAllocation->quantity - $previousHarvests;
+            $totalBirdsHarvested = $request->cages_count * $request->birds_per_cage;
+
+            if ($totalBirdsHarvested > $availableBirds) {
+                return redirect()->back()->withErrors("Cannot harvest {$totalBirdsHarvested} birds. Only {$availableBirds} birds available.");
+            }
+
+            $remainingBirds = $availableBirds - $totalBirdsHarvested;
+            $saleDate = \Carbon\Carbon::createFromFormat('Y-m-d', $request->sale_date);
+
+            $flockEnd->update([
+                'flock_id' => $request->flock_id,
+                'slaughter_id' => $request->slaughter_id,
+                'hangar_id' => $request->hangar_id,
+                'sale_date' => $saleDate,
+                'cages_count' => $request->cages_count,
+                'cages_weight' => $request->cages_weight,
+                'birds_per_cage' => $request->birds_per_cage,
+                'total_birds_harvested' => $totalBirdsHarvested,
+                'available_birds' => $availableBirds,
+                'remaining_birds' => $remainingBirds,
+                'total_weight' => $request->batch_weight,
+                'avg_weight_per_bird' => $request->avg_weight,
+                'notes' => $request->notes,
+            ]);
+
+            DB::commit();
+            Session::flash('successMsg', 'Chicken sale updated successfully.');
+            return redirect()->route('chicken-sale.index', ['username' => request()->segment(1)]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withErrors('Failed to update chicken sale: ' . $e->getMessage());
+        }
     }
 
     public function destroy($siteUrl, $id)
     {
-        ChickenSale::findOrFail($id)->delete();
-        return response()->json(['msg' => 'Chicken sale deleted successfully.']);
+        try {
+            DB::beginTransaction();
+            FlockEnd::findOrFail($id)->delete();
+            DB::commit();
+            return response()->json(['msg' => 'Chicken sale deleted successfully.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Failed to delete chicken sale: ' . $e->getMessage()], 500);
+        }
     }
 
     private function extractBreedType($breedString)

@@ -99,17 +99,17 @@ class ChickenSalesController extends Controller
     public function store(Request $request, $siteUrl)
     {
         $request->validate([
-            'sale_date' => 'required|date',
+            'sale_date' => 'required|date_format:Y-m-d',
             'farm_id' => 'required|exists:farms,id',
             'flock_id' => 'required|exists:flocks,id',
             'hangar_id' => 'required|exists:hangars,id',
             'slaughter_id' => 'required|exists:slaughters,id',
             'batch_weight' => 'required|numeric|min:0',
-            'cages_weight' => 'required|numeric|min:0',
+            'cages_weight' => 'required|numeric|min:0.1',
             'cages_count' => 'required|integer|min:1',
-            'birds_per_cage' => 'required|integer|min:1',
+            'birds_per_cage' => 'required|integer|min:1|max:25',
             'net_weight' => 'required|numeric|min:0',
-            'notes' => 'nullable|string',
+            'notes' => 'nullable|string|max:1000',
         ]);
 
         // Auto-calculate quantity
@@ -163,17 +163,17 @@ class ChickenSalesController extends Controller
         $chickenSale = ChickenSale::findOrFail($id);
 
         $request->validate([
-            'sale_date' => 'required|date',
+            'sale_date' => 'required|date_format:Y-m-d',
             'farm_id' => 'required|exists:farms,id',
             'flock_id' => 'required|exists:flocks,id',
             'hangar_id' => 'required|exists:hangars,id',
             'slaughter_id' => 'required|exists:slaughters,id',
             'batch_weight' => 'required|numeric|min:0',
-            'cages_weight' => 'required|numeric|min:0',
+            'cages_weight' => 'required|numeric|min:0.1',
             'cages_count' => 'required|integer|min:1',
-            'birds_per_cage' => 'required|integer|min:1',
+            'birds_per_cage' => 'required|integer|min:1|max:25',
             'net_weight' => 'required|numeric|min:0',
-            'notes' => 'nullable|string',
+            'notes' => 'nullable|string|max:1000',
         ]);
 
         // Auto-calculate quantity

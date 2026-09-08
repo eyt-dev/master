@@ -28,6 +28,10 @@ class ChickenSale extends Model
 
     protected $casts = [
         'sale_date' => 'date',
+        'total_weight' => 'decimal:2',
+        'gross_weight' => 'decimal:2',
+        'net_weight' => 'decimal:2',
+        'avg_weight_per_bird' => 'decimal:2',
     ];
 
     public function farm()

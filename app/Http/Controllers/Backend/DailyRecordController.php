@@ -12,6 +12,8 @@ use App\Models\Flock;
 use App\Models\FlockHangar;
 use App\Models\Admin;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DailyRecordController extends Controller
 {
@@ -249,17 +251,15 @@ class DailyRecordController extends Controller
     public function store(Request $request, $siteUrl)
     {
         $request->validate([
-            'record_date' => 'required|date',
+            'record_date' => 'required|date_format:Y-m-d',
             'flock_id' => 'required|exists:flocks,id',
             'hangar_records' => 'nullable|json',
         ]);
 
-        // Check if hangar_records is present and valid
         if (!$request->has('hangar_records') || !$request->hangar_records) {
             return back()->withErrors(['hangar_records' => 'Please add at least one hangar record.']);
         }
 
-        // Get farm_id and breed from the selected flock
         $flock = Flock::findOrFail($request->flock_id);
         $breedType = $this->extractBreedType($flock->breed);
         $hangarRecords = json_decode($request->hangar_records, true);
@@ -268,9 +268,8 @@ class DailyRecordController extends Controller
             return back()->withErrors(['hangar_records' => 'Please add at least one hangar record.']);
         }
 
-        // Validate based on breed type
+        // Validate based on breed type before transaction
         foreach ($hangarRecords as $record) {
-            // Check required fields: feed_kg and mortality
             if (!isset($record['feed_kg']) || $record['feed_kg'] === '' || $record['feed_kg'] === null) {
                 return back()->withErrors(['hangar_records' => 'Feed (kg) is required.']);
             }
@@ -278,7 +277,6 @@ class DailyRecordController extends Controller
                 return back()->withErrors(['hangar_records' => 'Mortality is required.']);
             }
 
-            // For Layer: eggs_weight is also required
             if ($breedType === 'Layer') {
                 if (!isset($record['eggs_weight']) || $record['eggs_weight'] === '' || $record['eggs_weight'] === null) {
                     return back()->withErrors(['hangar_records' => 'Eggs Weight is required for Layer breeds.']);
@@ -286,33 +284,49 @@ class DailyRecordController extends Controller
             }
         }
 
-        // Create daily records for each hangar
-        foreach ($hangarRecords as $record) {
-            DailyRecord::create([
-                'record_date' => $request->record_date,
-                'farm_id' => $flock->farm_id,
-                'hangar_id' => $record['hangar_id'],
-                'flock_id' => $request->flock_id,
-                'feed_kg' => $record['feed_kg'] ?? 0,
-                'eggs_tray_30' => $record['eggs_tray_30'] ?? 0,
-                'eggs_count' => $record['eggs_count'] ?? 0,
-                'eggs_weight' => $record['eggs_weight'] ?? 0,
-                'chicks_weight' => $record['chicks_weight'] ?? 0,
-                'mortality' => $record['mortality'] ?? 0,
-                'created_by' => auth()->id()
-            ]);
-        }
+        try {
+            DB::beginTransaction();
 
-        Session::flash('successMsg', 'Daily Records created successfully.');
-        return redirect()->route('daily-record.index', ['username' => request()->segment(1)]);
+            $recordDate = \Carbon\Carbon::createFromFormat('Y-m-d', $request->record_date);
+
+            foreach ($hangarRecords as $record) {
+                DailyRecord::create([
+                    'record_date' => $recordDate,
+                    'farm_id' => $flock->farm_id,
+                    'hangar_id' => $record['hangar_id'],
+                    'flock_id' => $request->flock_id,
+                    'feed_kg' => (float)($record['feed_kg'] ?? 0),
+                    'eggs_tray_30' => (int)($record['eggs_tray_30'] ?? 0),
+                    'eggs_count' => (int)($record['eggs_count'] ?? 0),
+                    'eggs_weight' => (float)($record['eggs_weight'] ?? 0),
+                    'chicks_weight' => (float)($record['chicks_weight'] ?? 0),
+                    'mortality' => (int)($record['mortality'] ?? 0),
+                    'created_by' => auth()->id()
+                ]);
+            }
+
+            DB::commit();
+            Session::flash('successMsg', 'Daily Records created successfully.');
+            return redirect()->route('daily-record.index', ['username' => request()->segment(1)]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Daily record creation error: ' . $e->getMessage());
+            return back()->withErrors('Failed to create daily records: ' . $e->getMessage());
+        }
     }
 
     public function edit($siteUrl, $id)
     {
+        $user = auth()->user();
         $dailyRecord = DailyRecord::findOrFail($id);
+
+        // Verify access: user must be SuperAdmin or have created the record
+        if ($user->role !== 'SuperAdmin' && $dailyRecord->created_by !== $user->id) {
+            abort(403, 'You do not have permission to edit this record.');
+        }
+
         $flocks = FlockHelper::getAllFlockOptions();
-        
-        // Get all hangars for the selected flock
+
         $flockHangars = \App\Models\FlockHangar::where('flock_id', $dailyRecord->flock_id)
             ->with('hangar')
             ->get()
@@ -323,42 +337,46 @@ class DailyRecordController extends Controller
                     'quantity' => $allocation->quantity
                 ];
             });
-        
-        // Get all existing daily records for this flock on this date to populate form
+
         $existingRecords = DailyRecord::where('flock_id', $dailyRecord->flock_id)
             ->where('record_date', $dailyRecord->record_date)
             ->get()
             ->keyBy('hangar_id');
-        
+
         return view('backend.daily-record.create', compact('dailyRecord', 'flocks', 'flockHangars', 'existingRecords'));
     }
 
     public function update(Request $request, $siteUrl, $id)
     {
+        $user = auth()->user();
+
         $request->validate([
-            'record_date' => 'required|date',
+            'record_date' => 'required|date_format:Y-m-d',
             'flock_id' => 'required|exists:flocks,id',
             'hangar_records' => 'nullable|json',
         ]);
 
-        // Check if hangar_records is present and valid
+        $dailyRecord = DailyRecord::findOrFail($id);
+
+        // Verify access: user must be SuperAdmin or have created the record
+        if ($user->role !== 'SuperAdmin' && $dailyRecord->created_by !== $user->id) {
+            abort(403, 'You do not have permission to update this record.');
+        }
+
         if (!$request->has('hangar_records') || !$request->hangar_records) {
             return back()->withErrors(['hangar_records' => 'Please add at least one hangar record.']);
         }
 
-        // Get farm_id and breed from the selected flock
         $flock = Flock::findOrFail($request->flock_id);
         $breedType = $this->extractBreedType($flock->breed);
-
         $hangarRecords = json_decode($request->hangar_records, true);
 
         if (empty($hangarRecords)) {
             return back()->withErrors(['hangar_records' => 'Please add at least one hangar record.']);
         }
 
-        // Validate based on breed type (same as CREATE)
+        // Validate based on breed type before transaction
         foreach ($hangarRecords as $record) {
-            // Check required fields: feed_kg and mortality
             if (!isset($record['feed_kg']) || $record['feed_kg'] === '' || $record['feed_kg'] === null) {
                 return back()->withErrors(['hangar_records' => 'Feed (kg) is required.']);
             }
@@ -366,7 +384,6 @@ class DailyRecordController extends Controller
                 return back()->withErrors(['hangar_records' => 'Mortality is required.']);
             }
 
-            // For Layer: eggs_weight is also required
             if ($breedType === 'Layer') {
                 if (!isset($record['eggs_weight']) || $record['eggs_weight'] === '' || $record['eggs_weight'] === null) {
                     return back()->withErrors(['hangar_records' => 'Eggs Weight is required for Layer breeds.']);
@@ -374,55 +391,78 @@ class DailyRecordController extends Controller
             }
         }
 
-        $dailyRecord = DailyRecord::findOrFail($id);
+        try {
+            DB::beginTransaction();
 
-        // Delete old records for this flock on this date
-        DailyRecord::where('flock_id', $request->flock_id)
-            ->where('record_date', $request->record_date)
-            ->where('id', '!=', $id)
-            ->delete();
+            $recordDate = \Carbon\Carbon::createFromFormat('Y-m-d', $request->record_date);
 
-        // Update or create records for each hangar
-        foreach ($hangarRecords as $index => $record) {
-            if ($index === 0) {
-                // Update the first (main) record
-                $dailyRecord->update([
-                    'record_date' => $request->record_date,
-                    'farm_id' => $flock->farm_id,
-                    'hangar_id' => $record['hangar_id'],
-                    'flock_id' => $request->flock_id,
-                    'feed_kg' => $record['feed_kg'] ?? 0,
-                    'eggs_tray_30' => $record['eggs_tray_30'] ?? 0,
-                    'eggs_count' => $record['eggs_count'] ?? 0,
-                    'eggs_weight' => $record['eggs_weight'] ?? 0,
-                    'chicks_weight' => $record['chicks_weight'] ?? 0,
-                    'mortality' => $record['mortality'] ?? 0,
-                ]);
-            } else {
-                // Create additional records
-                DailyRecord::create([
-                    'record_date' => $request->record_date,
-                    'farm_id' => $flock->farm_id,
-                    'hangar_id' => $record['hangar_id'],
-                    'flock_id' => $request->flock_id,
-                    'feed_kg' => $record['feed_kg'] ?? 0,
-                    'eggs_tray_30' => $record['eggs_tray_30'] ?? 0,
-                    'eggs_count' => $record['eggs_count'] ?? 0,
-                    'eggs_weight' => $record['eggs_weight'] ?? 0,
-                    'chicks_weight' => $record['chicks_weight'] ?? 0,
-                    'mortality' => $record['mortality'] ?? 0,
-                    'created_by' => auth()->id()
-                ]);
+            // Delete old records for this flock on this date
+            DailyRecord::where('flock_id', $request->flock_id)
+                ->where('record_date', $recordDate)
+                ->where('id', '!=', $id)
+                ->delete();
+
+            // Update or create records for each hangar
+            foreach ($hangarRecords as $index => $record) {
+                if ($index === 0) {
+                    $dailyRecord->update([
+                        'record_date' => $recordDate,
+                        'farm_id' => $flock->farm_id,
+                        'hangar_id' => $record['hangar_id'],
+                        'flock_id' => $request->flock_id,
+                        'feed_kg' => (float)($record['feed_kg'] ?? 0),
+                        'eggs_tray_30' => (int)($record['eggs_tray_30'] ?? 0),
+                        'eggs_count' => (int)($record['eggs_count'] ?? 0),
+                        'eggs_weight' => (float)($record['eggs_weight'] ?? 0),
+                        'chicks_weight' => (float)($record['chicks_weight'] ?? 0),
+                        'mortality' => (int)($record['mortality'] ?? 0),
+                    ]);
+                } else {
+                    DailyRecord::create([
+                        'record_date' => $recordDate,
+                        'farm_id' => $flock->farm_id,
+                        'hangar_id' => $record['hangar_id'],
+                        'flock_id' => $request->flock_id,
+                        'feed_kg' => (float)($record['feed_kg'] ?? 0),
+                        'eggs_tray_30' => (int)($record['eggs_tray_30'] ?? 0),
+                        'eggs_count' => (int)($record['eggs_count'] ?? 0),
+                        'eggs_weight' => (float)($record['eggs_weight'] ?? 0),
+                        'chicks_weight' => (float)($record['chicks_weight'] ?? 0),
+                        'mortality' => (int)($record['mortality'] ?? 0),
+                        'created_by' => auth()->id()
+                    ]);
+                }
             }
-        }
 
-        Session::flash('successMsg', 'Daily Record updated successfully.');
-        return redirect()->route('daily-record.index', ['username' => request()->segment(1)]);
+            DB::commit();
+            Session::flash('successMsg', 'Daily Record updated successfully.');
+            return redirect()->route('daily-record.index', ['username' => request()->segment(1)]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Daily record update error: ' . $e->getMessage());
+            return back()->withErrors('Failed to update daily records: ' . $e->getMessage());
+        }
     }
 
     public function destroy($siteUrl, $id)
     {
-        DailyRecord::findOrFail($id)->delete();
-        return response()->json(['msg' => 'Daily Record deleted successfully.']);
+        $user = auth()->user();
+        $dailyRecord = DailyRecord::findOrFail($id);
+
+        // Verify access: user must be SuperAdmin or have created the record
+        if ($user->role !== 'SuperAdmin' && $dailyRecord->created_by !== $user->id) {
+            return response()->json(['error' => 'You do not have permission to delete this record.'], 403);
+        }
+
+        try {
+            DB::beginTransaction();
+            $dailyRecord->delete();
+            DB::commit();
+            return response()->json(['msg' => 'Daily Record deleted successfully.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Daily record deletion error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to delete daily record: ' . $e->getMessage()], 500);
+        }
     }
 }

@@ -172,9 +172,25 @@ class FlockController extends Controller
                 // For non-SuperAdmin, show only hangars they created
                 $query->where('created_by', auth()->id());
             })
-            ->select('id', 'name')
-            ->get();
-        
+            ->get(['id', 'name']);
+
+        // Get hangars that already have active flocks allocated
+        $allocatedHangarIds = FlockHangar::whereHas('flock', function ($query) {
+            $query->where('status', '!=', 'ended');
+        })
+        ->pluck('hangar_id')
+        ->toArray();
+
+        // Add disabled flag to each hangar
+        $hangars = $hangars->map(function ($hangar) use ($allocatedHangarIds) {
+            return [
+                'id' => $hangar->id,
+                'name' => $hangar->name,
+                'disabled' => in_array($hangar->id, $allocatedHangarIds),
+                'allocated' => in_array($hangar->id, $allocatedHangarIds),
+            ];
+        });
+
         return response()->json($hangars);
     }
 

@@ -324,11 +324,16 @@ class FlockEndController extends BaseController
                 });
 
                 if (!empty($batchWeights)) {
+                    // Extract just the weight values for storage (flat array)
+                    $weightValues = array_map(function($batch) {
+                        return $batch['weight'];
+                    }, $batchWeights);
+
                     FlockEndDetail::create([
                         'flock_end_id' => $flockEnd->id,
                         'batch_number' => 1,
                         'gross_weight' => $request->gross_weight,
-                        'batch_weights' => array_values($batchWeights),
+                        'batch_weights' => $weightValues,
                     ]);
                 }
             }
@@ -493,17 +498,22 @@ class FlockEndController extends BaseController
                 $detail = FlockEndDetail::where('flock_end_id', $flockEnd->id)->first();
 
                 if (!empty($batchWeights)) {
+                    // Extract just the weight values for storage (flat array)
+                    $weightValues = array_map(function($batch) {
+                        return $batch['weight'];
+                    }, $batchWeights);
+
                     if ($detail) {
                         $detail->update([
                             'gross_weight' => $request->gross_weight,
-                            'batch_weights' => array_values($batchWeights),
+                            'batch_weights' => $weightValues,
                         ]);
                     } else {
                         FlockEndDetail::create([
                             'flock_end_id' => $flockEnd->id,
                             'batch_number' => 1,
                             'gross_weight' => $request->gross_weight,
-                            'batch_weights' => array_values($batchWeights),
+                            'batch_weights' => $weightValues,
                         ]);
                     }
                 } else if ($detail) {

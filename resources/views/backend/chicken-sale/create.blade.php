@@ -207,11 +207,33 @@
                 if(is_object($chickenSale->batchWeights) && $chickenSale->batchWeights->count() > 0) {
                     $detail = $chickenSale->batchWeights->first();
                     if($detail && isset($detail->batch_weights) && !is_null($detail->batch_weights)) {
-                        // batch_weights is already cast to array by the model
-                        if(is_array($detail->batch_weights)) {
-                            $batchWeightsData = $detail->batch_weights;
+                        $rawBatchWeights = $detail->batch_weights;
+
+                        // Handle different data structures
+                        if(is_array($rawBatchWeights)) {
+                            // Check if it's a flat array of numbers [10.5, 11.5, 12, 12.5]
+                            if(!empty($rawBatchWeights) && is_numeric($rawBatchWeights[0])) {
+                                // Transform flat array to object array format
+                                $batchWeightsData = array_map(function($weight) {
+                                    return ['weight' => $weight];
+                                }, $rawBatchWeights);
+                            }
+                            // Otherwise it's already in object format [{weight: 10.5}, ...]
+                            else {
+                                $batchWeightsData = $rawBatchWeights;
+                            }
                         } else {
-                            $batchWeightsData = json_decode($detail->batch_weights, true) ?? [];
+                            // Try to decode if it's JSON string
+                            $decoded = json_decode($rawBatchWeights, true);
+                            if(is_array($decoded)) {
+                                if(!empty($decoded) && is_numeric($decoded[0])) {
+                                    $batchWeightsData = array_map(function($weight) {
+                                        return ['weight' => $weight];
+                                    }, $decoded);
+                                } else {
+                                    $batchWeightsData = $decoded;
+                                }
+                            }
                         }
                     }
                 }

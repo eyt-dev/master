@@ -180,11 +180,16 @@ class ChickenSalesController extends Controller
                 });
 
                 if (!empty($batchWeights)) {
+                    // Extract just the weight values for storage (flat array)
+                    $weightValues = array_map(function($batch) {
+                        return $batch['weight'];
+                    }, $batchWeights);
+
                     FlockEndDetail::create([
                         'flock_end_id' => $flockEnd->id,
                         'batch_number' => 1,
                         'gross_weight' => $request->gross_weight,
-                        'batch_weights' => array_values($batchWeights),
+                        'batch_weights' => $weightValues,
                     ]);
                 }
             }
@@ -297,18 +302,22 @@ class ChickenSalesController extends Controller
                 $detail = FlockEndDetail::where('flock_end_id', $flockEnd->id)->first();
 
                 if (!empty($batchWeights)) {
-                    $reindexedWeights = array_values($batchWeights);
+                    // Extract just the weight values for storage (flat array)
+                    $weightValues = array_map(function($batch) {
+                        return $batch['weight'];
+                    }, $batchWeights);
+
                     if ($detail) {
                         $detail->update([
                             'gross_weight' => $request->gross_weight,
-                            'batch_weights' => $reindexedWeights,
+                            'batch_weights' => $weightValues,
                         ]);
                     } else {
                         FlockEndDetail::create([
                             'flock_end_id' => $flockEnd->id,
                             'batch_number' => 1,
                             'gross_weight' => $request->gross_weight,
-                            'batch_weights' => $reindexedWeights,
+                            'batch_weights' => $weightValues,
                         ]);
                     }
                 } else if ($detail) {

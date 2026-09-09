@@ -197,19 +197,24 @@
             // Build the hangar list
             hangars.forEach(function(hangar) {
                 var quantity = existingAllocations[hangar.id] || '';
+                var isDisabled = hangar.disabled || false;
+                var disabledClass = isDisabled ? 'opacity-50' : '';
+                var disabledBadge = isDisabled ? '<span class="badge badge-warning ml-2" title="This hangar already has an active flock">Already Allocated</span>' : '';
+
                 var html = `
-                    <div class="d-flex align-items-center justify-content-between p-3" style="border-bottom: 1px solid #dee2e6;">
+                    <div class="d-flex align-items-center justify-content-between p-3 ${disabledClass}" style="border-bottom: 1px solid #dee2e6; ${isDisabled ? 'background-color: #f8f9fa;' : ''}">
                         <div class="d-flex align-items-center flex-grow-1">
                             <div class="mr-3">
-                                <i class="fe fe-home" style="font-size: 18px; color: #007bff;"></i>
+                                <i class="fe fe-home" style="font-size: 18px; color: ${isDisabled ? '#ccc' : '#007bff'};"></i>
                             </div>
                             <div>
-                                <p class="mb-0 font-weight-600" style="color: #212529;">${hangar.name}</p>
+                                <p class="mb-0 font-weight-600" style="color: #212529;">${hangar.name}${disabledBadge}</p>
                             </div>
                         </div>
                         <div class="ml-3" style="min-width: 150px;">
-                            <input type="number" class="form-control hangar-quantity-input" name="hangar_qty[${hangar.id}]" 
-                                placeholder="Qty" value="${quantity}" min="0" data-hangar-id="${hangar.id}" />
+                            <input type="number" class="form-control hangar-quantity-input" name="hangar_qty[${hangar.id}]"
+                                placeholder="Qty" value="${quantity}" min="0" data-hangar-id="${hangar.id}"
+                                ${isDisabled ? 'disabled' : ''} />
                         </div>
                     </div>
                 `;

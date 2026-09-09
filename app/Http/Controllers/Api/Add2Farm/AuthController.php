@@ -92,8 +92,13 @@ class AuthController extends Controller
                 'email'         => $request->email,
             ]);
 
-            // Assign PrivateVendor role
-            $role = Role::where('name', 'PrivateVendor')->first();
+            // Assign role based on type (1=Admin, 2=PublicVendor)
+            $rolePrefix = match (intval($request->type)) {
+                1 => 'Admin',
+                2 => 'PublicVendor',
+                default => 'PublicVendor',
+            };
+            $role = Role::where('name', $rolePrefix)->first();
             if ($role) {
                 $admin->assignRole($role);
             }

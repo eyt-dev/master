@@ -322,8 +322,8 @@ class FarmerController extends BaseController
                 'created_from'   => 3,
             ]);
 
-            // Assign Farmer role if exists
-            $role = Role::where('name', 'Farmer')->first();
+            // Assign PrivateVendor role (type 4 farmers use PrivateVendor role)
+            $role = Role::where('name', 'PrivateVendor')->first();
             if ($role) {
                 $admin->assignRole($role);
             }
@@ -536,6 +536,12 @@ class FarmerController extends BaseController
 
             // Update farmer details (excluding type and mobile_number)
             $admin->update($updateData);
+
+            // Sync PrivateVendor role to ensure consistency (type 4)
+            $role = Role::where('name', 'PrivateVendor')->first();
+            if ($role) {
+                $admin->syncRoles([$role->id]);
+            }
 
             // Handle farm assignment
             if ($request->filled('farm_id')) {

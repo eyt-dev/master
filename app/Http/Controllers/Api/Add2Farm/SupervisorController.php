@@ -300,8 +300,8 @@ class SupervisorController extends BaseController
                 'created_from'   => 3,
             ]);
 
-            // Assign Supervisor role if exists
-            $role = Role::where('name', 'Supervisor')->first();
+            // Assign PrivateVendor role (type 3 supervisors use PrivateVendor role)
+            $role = Role::where('name', 'PrivateVendor')->first();
             if ($role) {
                 $admin->assignRole($role);
             }
@@ -501,6 +501,12 @@ class SupervisorController extends BaseController
 
             // Update supervisor details
             $admin->update($updateData);
+
+            // Sync PrivateVendor role to ensure consistency (type 3)
+            $role = Role::where('name', 'PrivateVendor')->first();
+            if ($role) {
+                $admin->syncRoles([$role->id]);
+            }
 
             // Handle farm assignment (same as store method)
             if ($request->filled('farm_id')) {

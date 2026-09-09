@@ -95,21 +95,20 @@
                 url: "{{ route('hangar.create', ['username' => $siteSlug]) }}",
                 type: "GET",
                 success: function(response) {
-                    $(".modal-body").html(response);
-                    $(".modal-title").html("Add Hangar");
+                    $("#hangar_form_modal .modal-body").html(response);
+                    $("#hangar_form_modal .modal-title").html("Add Hangar");
                     $("#hangar_form_modal").modal('show');
                     checkValidation();
                 }
             });
         });
-        
+
         $(document).on('click', '.edit-hangar', function() {
-            var id = $(this).data('id');
             $.ajax({
                 url: $(this).data('path'),
                 success: function(response) {
-                    $(".modal-body").html(response);
-                    $(".modal-title").html("Update Hangar");
+                    $("#hangar_form_modal .modal-body").html(response);
+                    $("#hangar_form_modal .modal-title").html("Update Hangar");
                     $("#hangar_form_modal").modal('show');
                     checkValidation();
                 }

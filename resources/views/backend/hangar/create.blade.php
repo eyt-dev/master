@@ -84,8 +84,8 @@
                 <label for="status" class="form-label">Status <span class="text-red">*</span></label>
                 <select class="form-control" name="status" id="status" required="">
                     <option value="">Select Status</option>
-                    <option value="Active" {{ old('status', $hangar->status ?? '') == 'Active' ? 'selected' : '' }}>Active</option>
-                    <option value="Inactive" {{ old('status', $hangar->status ?? '') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                    <option value="Active" {{ trim(old('status', $hangar->status ?? '')) === 'Active' ? 'selected' : '' }}>Active</option>
+                    <option value="Inactive" {{ trim(old('status', $hangar->status ?? '')) === 'Inactive' ? 'selected' : '' }}>Inactive</option>
                 </select>
                 @error('status')
                     <label id="status-error" class="error" for="status">{{ $message }}</label>

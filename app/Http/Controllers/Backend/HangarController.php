@@ -33,8 +33,9 @@ class HangarController extends Controller
                     return $row->name ?? 'N/A';
                 })
                 ->addColumn('status', function($row) {
-                    $statusClass = $row->status === 'Active' ? 'badge-success' : 'badge-danger';
-                    return '<span class="badge ' . $statusClass . '">' . ucfirst($row->status) . '</span>';
+                    $status = trim($row->status);
+                    $statusClass = $status === 'Active' ? 'badge-success' : 'badge-danger';
+                    return '<span class="badge ' . $statusClass . '">' . ucfirst($status) . '</span>';
                 })
                 ->addColumn('creator', function($row) {
                     return $row->creator->name ?? 'N/A';
@@ -80,7 +81,7 @@ class HangarController extends Controller
             'area_sqm' => $request->area_sqm,
             'layer_hens' => $request->layer_hens,
             'broiler_hens' => $request->broiler_hens,
-            'status' => $request->status,
+            'status' => trim($request->status),
             'created_by' => auth()->id()
         ];
         Hangar::create($createData);
@@ -136,7 +137,7 @@ class HangarController extends Controller
             'area_sqm' => $request->area_sqm,
             'layer_hens' => $request->layer_hens,
             'broiler_hens' => $request->broiler_hens,
-            'status' => $request->status,
+            'status' => trim($request->status),
         ]);
 
         Session::flash('successMsg', 'Hangar updated successfully.');

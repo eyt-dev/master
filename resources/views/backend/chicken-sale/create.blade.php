@@ -202,10 +202,17 @@
     <div class="row">
         @php
             $batchWeightsData = [];
-            if(isset($chickenSale) && $chickenSale->batchWeights) {
-                foreach($chickenSale->batchWeights as $detail) {
-                    if(is_array($detail->batch_weights)) {
-                        $batchWeightsData = $detail->batch_weights;
+            if(isset($chickenSale) && isset($chickenSale->batchWeights)) {
+                // batchWeights is a relationship that returns a collection
+                if(is_object($chickenSale->batchWeights) && $chickenSale->batchWeights->count() > 0) {
+                    $detail = $chickenSale->batchWeights->first();
+                    if($detail && isset($detail->batch_weights) && !is_null($detail->batch_weights)) {
+                        // batch_weights is already cast to array by the model
+                        if(is_array($detail->batch_weights)) {
+                            $batchWeightsData = $detail->batch_weights;
+                        } else {
+                            $batchWeightsData = json_decode($detail->batch_weights, true) ?? [];
+                        }
                     }
                 }
             }

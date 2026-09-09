@@ -94,7 +94,8 @@ class ChickenSalesController extends Controller
         }
 
         $slaughters = Slaughter::all();
-        return view('backend.chicken-sale.create', compact('farms', 'slaughters'));
+        $siteSlug = request()->segment(1);
+        return view('backend.chicken-sale.create', compact('farms', 'slaughters', 'siteSlug'));
     }
 
     public function getFlocksByFarm($siteUrl, $farmId)
@@ -221,6 +222,7 @@ class ChickenSalesController extends Controller
             'flocks' => $flocks,
             'hangars' => $hangars,
             'slaughters' => $slaughters,
+            'siteSlug' => $siteUrl,
         ]);
     }
 

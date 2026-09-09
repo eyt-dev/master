@@ -309,6 +309,7 @@
         }
 
         // Form validation on submit
+        // Note: Backend validates project rows, frontend just warns about it
         if (form) {
             form.addEventListener('submit', function (event) {
                 const statusSelects = container?.querySelectorAll('select[name$="[status]"]') || [];
@@ -321,11 +322,15 @@
                     }
                 });
 
-                // Show message if no projects assigned
+                // For Type 1 (Admin) users, projects are optional
+                // Only warn if needed, don't prevent submission
                 if (assignedCount === 0) {
-                    event.preventDefault();
-                    alert('Please select at least one project with a status (Active or Inactive).');
-                    return false;
+                    // Allow submission but show warning for awareness
+                    console.warn('No projects assigned to this admin');
+                    // Uncomment below if you want to enforce project assignment:
+                    // event.preventDefault();
+                    // alert('Please select at least one project with a status (Active or Inactive).');
+                    // return false;
                 }
             });
         }

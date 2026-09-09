@@ -183,7 +183,7 @@ class ChickenSalesController extends Controller
                         'flock_end_id' => $flockEnd->id,
                         'batch_number' => 1,
                         'gross_weight' => $request->gross_weight,
-                        'batch_weights' => $batchWeights,
+                        'batch_weights' => array_values($batchWeights),
                     ]);
                 }
             }
@@ -292,21 +292,25 @@ class ChickenSalesController extends Controller
                     return isset($batch['weight']) && $batch['weight'] > 0;
                 });
 
+                $detail = FlockEndDetail::where('flock_end_id', $flockEnd->id)->first();
+
                 if (!empty($batchWeights)) {
-                    $detail = FlockEndDetail::where('flock_end_id', $flockEnd->id)->first();
+                    $reindexedWeights = array_values($batchWeights);
                     if ($detail) {
                         $detail->update([
                             'gross_weight' => $request->gross_weight,
-                            'batch_weights' => $batchWeights,
+                            'batch_weights' => $reindexedWeights,
                         ]);
                     } else {
                         FlockEndDetail::create([
                             'flock_end_id' => $flockEnd->id,
                             'batch_number' => 1,
                             'gross_weight' => $request->gross_weight,
-                            'batch_weights' => $batchWeights,
+                            'batch_weights' => $reindexedWeights,
                         ]);
                     }
+                } else if ($detail) {
+                    $detail->delete();
                 }
             }
 

@@ -23,7 +23,7 @@ class SettingController extends Controller
             }
 
             // Else send to create
-            return redirect()->route('setting.create');
+            return redirect()->route('setting.create', ['username' => $request->route('username')]);
         // }
 
         if ($request->ajax()) {

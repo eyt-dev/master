@@ -319,12 +319,18 @@ class FlockEndController extends BaseController
             ]);
 
             if ($request->has('batch_weights')) {
-                FlockEndDetail::create([
-                    'flock_end_id' => $flockEnd->id,
-                    'batch_number' => 1,
-                    'gross_weight' => $request->gross_weight,
-                    'batch_weights' => $request->batch_weights,
-                ]);
+                $batchWeights = array_filter($request->batch_weights, function($batch) {
+                    return isset($batch['weight']) && $batch['weight'] > 0;
+                });
+
+                if (!empty($batchWeights)) {
+                    FlockEndDetail::create([
+                        'flock_end_id' => $flockEnd->id,
+                        'batch_number' => 1,
+                        'gross_weight' => $request->gross_weight,
+                        'batch_weights' => array_values($batchWeights),
+                    ]);
+                }
             }
 
             DB::commit();
@@ -480,19 +486,28 @@ class FlockEndController extends BaseController
             ]);
 
             if ($request->has('batch_weights')) {
+                $batchWeights = array_filter($request->batch_weights, function($batch) {
+                    return isset($batch['weight']) && $batch['weight'] > 0;
+                });
+
                 $detail = FlockEndDetail::where('flock_end_id', $flockEnd->id)->first();
-                if ($detail) {
-                    $detail->update([
-                        'gross_weight' => $request->gross_weight,
-                        'batch_weights' => $request->batch_weights,
-                    ]);
-                } else {
-                    FlockEndDetail::create([
-                        'flock_end_id' => $flockEnd->id,
-                        'batch_number' => 1,
-                        'gross_weight' => $request->gross_weight,
-                        'batch_weights' => $request->batch_weights,
-                    ]);
+
+                if (!empty($batchWeights)) {
+                    if ($detail) {
+                        $detail->update([
+                            'gross_weight' => $request->gross_weight,
+                            'batch_weights' => array_values($batchWeights),
+                        ]);
+                    } else {
+                        FlockEndDetail::create([
+                            'flock_end_id' => $flockEnd->id,
+                            'batch_number' => 1,
+                            'gross_weight' => $request->gross_weight,
+                            'batch_weights' => array_values($batchWeights),
+                        ]);
+                    }
+                } else if ($detail) {
+                    $detail->delete();
                 }
             }
 

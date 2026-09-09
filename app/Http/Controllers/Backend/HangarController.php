@@ -91,18 +91,27 @@ class HangarController extends Controller
         return redirect()->route('hangar.index', ['username' => request()->segment(1)]);
     }
 
-    public function edit($siteUrl, $id)
+    public function edit($siteUrl, $hangar)
     {
         $user = auth()->user();
         $siteSlug = $siteUrl;
-        $hangar = Hangar::with('farm')
-            ->when($user->role !== 'SuperAdmin', function ($query) use ($user) {
-                $query->whereHas('farm', function ($subQuery) {
-                    $subQuery->where('created_by', auth()->id())
-                             ->orWhere('assigned_to', auth()->id());
-                })
-                ->orWhere('created_by', $user->id);
-            })->findOrFail($id);
+
+        // Verify user has access to this hangar
+        if ($user->role !== 'SuperAdmin') {
+            $authorized = $hangar->whereHas('farm', function ($query) use ($user) {
+                $query->where('created_by', auth()->id())
+                      ->orWhere('assigned_to', auth()->id());
+            })
+            ->orWhere('created_by', $user->id)
+            ->where('id', $hangar->id)
+            ->exists();
+
+            if (!$authorized) {
+                abort(403, 'Unauthorized');
+            }
+        }
+
+        $hangar->load('farm');
 
         $farms = Farm::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
             $query->where('created_by', $user->id)
@@ -112,17 +121,24 @@ class HangarController extends Controller
         return view('backend.hangar.create', compact('hangar', 'farms', 'siteSlug'));
     }
 
-    public function update(Request $request, $siteUrl, $id)
+    public function update(Request $request, $siteUrl, $hangar)
     {
         $user = auth()->user();
-        $hangar = Hangar::with('farm')
-            ->when($user->role !== 'SuperAdmin', function ($query) use ($user) {
-                $query->whereHas('farm', function ($subQuery) {
-                    $subQuery->where('created_by', auth()->id())
-                             ->orWhere('assigned_to', auth()->id());
-                })
-                ->orWhere('created_by', $user->id);
-            })->findOrFail($id);
+
+        // Verify user has access to this hangar
+        if ($user->role !== 'SuperAdmin') {
+            $authorized = Hangar::whereHas('farm', function ($query) use ($user) {
+                $query->where('created_by', auth()->id())
+                      ->orWhere('assigned_to', auth()->id());
+            })
+            ->orWhere('created_by', $user->id)
+            ->where('id', $hangar->id)
+            ->exists();
+
+            if (!$authorized) {
+                abort(403, 'Unauthorized');
+            }
+        }
 
         $request->validate([
             'farm_id' => 'required',
@@ -146,17 +162,24 @@ class HangarController extends Controller
         return redirect()->route('hangar.index', ['username' => request()->segment(1)]);
     }
 
-    public function destroy($siteUrl, $id)
+    public function destroy($siteUrl, $hangar)
     {
         $user = auth()->user();
-        $hangar = Hangar::with('farm')
-            ->when($user->role !== 'SuperAdmin', function ($query) use ($user) {
-                $query->whereHas('farm', function ($subQuery) {
-                    $subQuery->where('created_by', auth()->id())
-                             ->orWhere('assigned_to', auth()->id());
-                })
-                ->orWhere('created_by', $user->id);
-            })->findOrFail($id);
+
+        // Verify user has access to this hangar
+        if ($user->role !== 'SuperAdmin') {
+            $authorized = Hangar::whereHas('farm', function ($query) use ($user) {
+                $query->where('created_by', auth()->id())
+                      ->orWhere('assigned_to', auth()->id());
+            })
+            ->orWhere('created_by', $user->id)
+            ->where('id', $hangar->id)
+            ->exists();
+
+            if (!$authorized) {
+                abort(403, 'Unauthorized');
+            }
+        }
 
         $hangar->delete();
         return response()->json(['msg' => 'Hangar deleted successfully.']);

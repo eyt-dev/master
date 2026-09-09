@@ -100,38 +100,27 @@
             </div>
         </div>
 
-        <!-- Quantity -->
-        <div class="col-sm-6 col-md-6">
-            <div class="form-group">
-                <label for="quantity" class="form-label">Quantity <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="quantity" id="quantity" placeholder="Quantity" 
-                    value="{{ old('quantity', $chickenSale->quantity ?? '') }}" required="" min="1" />
-                @error('quantity')
-                    <label id="quantity-error" class="error" for="quantity">{{ $message }}</label>
-                @enderror
-            </div>
-        </div>
     </div>
 
     <div class="row">
-        <!-- Batch Weight -->
+        <!-- Gross Weight (Total Batch Weight) -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="batch_weight" class="form-label">Batch Weight <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="batch_weight" id="batch_weight" placeholder="Batch Weight"
-                    value="{{ old('batch_weight', $chickenSale->total_weight ?? '') }}" required="" step="0.01" min="0" />
-                @error('batch_weight')
-                    <label id="batch_weight-error" class="error" for="batch_weight">{{ $message }}</label>
+                <label for="gross_weight" class="form-label">Gross Weight (kg) <span class="text-red">*</span></label>
+                <input type="number" class="form-control" name="gross_weight" id="gross_weight" placeholder="Total batch weight"
+                    value="{{ old('gross_weight', $chickenSale->total_weight ?? '') }}" required="" step="0.01" min="0" />
+                @error('gross_weight')
+                    <label id="gross_weight-error" class="error" for="gross_weight">{{ $message }}</label>
                 @enderror
             </div>
         </div>
 
-        <!-- Caged Weight -->
+        <!-- Cages Weight (Weight per Cage) -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="cages_weight" class="form-label">Cages Weight (kg) <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="cages_weight" id="cages_weight" placeholder="Caged Weight"
-                    value="{{ old('cages_weight', $chickenSale->gross_weight ?? '') }}" required="" step="0.01" min="0" />
+                <label for="cages_weight" class="form-label">Weight per Cage (kg) <span class="text-red">*</span></label>
+                <input type="number" class="form-control" name="cages_weight" id="cages_weight" placeholder="Weight per cage"
+                    value="{{ old('cages_weight', $chickenSale->cages_weight ?? '') }}" required="" step="0.01" min="0.1" />
                 @error('cages_weight')
                     <label id="cages_weight-error" class="error" for="cages_weight">{{ $message }}</label>
                 @enderror
@@ -145,7 +134,7 @@
             <div class="form-group">
                 <label for="cages_count" class="form-label">Cages Count <span class="text-red">*</span></label>
                 <input type="number" class="form-control" name="cages_count" id="cages_count" placeholder="Cages Count"
-                    value="{{ old('cages_count', $chickenSale->no_of_cages ?? '') }}" required="" min="1" />
+                    value="{{ old('cages_count', $chickenSale->cages_count ?? '') }}" required="" min="1" />
                 @error('cages_count')
                     <label id="cages_count-error" class="error" for="cages_count">{{ $message }}</label>
                 @enderror
@@ -157,7 +146,7 @@
             <div class="form-group">
                 <label for="birds_per_cage" class="form-label">Birds per Cage <span class="text-red">*</span></label>
                 <input type="number" class="form-control" name="birds_per_cage" id="birds_per_cage" placeholder="Birds per Cage"
-                    value="{{ old('birds_per_cage', isset($chickenSale) ? round($chickenSale->no_of_birds / $chickenSale->no_of_cages) : '') }}" required="" min="1" />
+                    value="{{ old('birds_per_cage', $chickenSale->birds_per_cage ?? '') }}" required="" min="1" />
                 @error('birds_per_cage')
                     <label id="birds_per_cage-error" class="error" for="birds_per_cage">{{ $message }}</label>
                 @enderror
@@ -194,8 +183,67 @@
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="avg_weight_per_bird" class="form-label">Average Weight per Bird (Auto)</label>
-                <input type="number" class="form-control" name="avg_weight_per_bird" id="avg_weight_per_bird" placeholder="Auto Calculated" 
+                <input type="number" class="form-control" name="avg_weight_per_bird" id="avg_weight_per_bird" placeholder="Auto Calculated"
                     value="{{ old('avg_weight_per_bird', isset($chickenSale) ? round($chickenSale->avg_weight_per_bird, 2) : '') }}" readonly step="0.01" />
+                <input type="hidden" name="avg_weight" id="avg_weight" value="{{ old('avg_weight', isset($chickenSale) ? round($chickenSale->avg_weight_per_bird, 2) : '') }}" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="form-group">
+                <label class="form-label">Batch Weights (Optional)</label>
+                <small class="text-muted d-block mb-2">Enter weight for each batch (leave blank if not applicable)</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        @php
+            $batchWeightsData = [];
+            if(isset($chickenSale) && $chickenSale->batchWeights) {
+                foreach($chickenSale->batchWeights as $detail) {
+                    if(is_array($detail->batch_weights)) {
+                        $batchWeightsData = $detail->batch_weights;
+                    }
+                }
+            }
+        @endphp
+
+        <!-- Batch 1 Weight -->
+        <div class="col-sm-6 col-md-3">
+            <div class="form-group">
+                <label for="batch_weight_1" class="form-label">Batch 1 Weight (kg)</label>
+                <input type="number" class="form-control" name="batch_weights[0][weight]" id="batch_weight_1" placeholder="Batch 1"
+                    value="{{ old('batch_weights.0.weight', isset($batchWeightsData[0]['weight']) ? $batchWeightsData[0]['weight'] : '') }}" step="0.01" min="0" />
+            </div>
+        </div>
+
+        <!-- Batch 2 Weight -->
+        <div class="col-sm-6 col-md-3">
+            <div class="form-group">
+                <label for="batch_weight_2" class="form-label">Batch 2 Weight (kg)</label>
+                <input type="number" class="form-control" name="batch_weights[1][weight]" id="batch_weight_2" placeholder="Batch 2"
+                    value="{{ old('batch_weights.1.weight', isset($batchWeightsData[1]['weight']) ? $batchWeightsData[1]['weight'] : '') }}" step="0.01" min="0" />
+            </div>
+        </div>
+
+        <!-- Batch 3 Weight -->
+        <div class="col-sm-6 col-md-3">
+            <div class="form-group">
+                <label for="batch_weight_3" class="form-label">Batch 3 Weight (kg)</label>
+                <input type="number" class="form-control" name="batch_weights[2][weight]" id="batch_weight_3" placeholder="Batch 3"
+                    value="{{ old('batch_weights.2.weight', isset($batchWeightsData[2]['weight']) ? $batchWeightsData[2]['weight'] : '') }}" step="0.01" min="0" />
+            </div>
+        </div>
+
+        <!-- Batch 4 Weight -->
+        <div class="col-sm-6 col-md-3">
+            <div class="form-group">
+                <label for="batch_weight_4" class="form-label">Batch 4 Weight (kg)</label>
+                <input type="number" class="form-control" name="batch_weights[3][weight]" id="batch_weight_4" placeholder="Batch 4"
+                    value="{{ old('batch_weights.3.weight', isset($batchWeightsData[3]['weight']) ? $batchWeightsData[3]['weight'] : '') }}" step="0.01" min="0" />
             </div>
         </div>
     </div>
@@ -270,6 +318,7 @@
             } else {
                 $('#quantity_display').val('');
                 $('#avg_weight_per_bird').val('');
+                $('#avg_weight').val('');
             }
         }
 
@@ -281,8 +330,10 @@
             if (netWeight > 0 && totalQty > 0) {
                 var avgWeight = (netWeight / totalQty).toFixed(2);
                 $('#avg_weight_per_bird').val(avgWeight);
+                $('#avg_weight').val(avgWeight);
             } else {
                 $('#avg_weight_per_bird').val('');
+                $('#avg_weight').val('');
             }
         }
 

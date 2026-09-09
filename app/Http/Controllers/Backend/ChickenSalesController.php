@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\FlockEnd;
+use App\Models\FlockEndDetail;
 use App\Models\Farm;
 use App\Models\Flock;
 use App\Models\Hangar;
@@ -111,7 +112,9 @@ class ChickenSalesController extends Controller
             'cages_weight' => 'required|numeric|min:0.1',
             'cages_count' => 'required|integer|min:1',
             'birds_per_cage' => 'required|integer|min:1|max:25',
-            'batch_weight' => 'required|numeric|min:0',
+            'gross_weight' => 'required|numeric|min:0',
+            'batch_weights' => 'nullable|array',
+            'batch_weights.*.weight' => 'numeric|min:0',
             'net_weight' => 'required|numeric|min:0',
             'avg_weight' => 'required|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
@@ -143,7 +146,7 @@ class ChickenSalesController extends Controller
             $remainingBirds = $availableBirds - $totalBirdsHarvested;
             $saleDate = \Carbon\Carbon::createFromFormat('Y-m-d', $request->sale_date);
 
-            FlockEnd::create([
+            $flockEnd = FlockEnd::create([
                 'flock_id' => $request->flock_id,
                 'slaughter_id' => $request->slaughter_id,
                 'hangar_id' => $request->hangar_id,
@@ -154,11 +157,26 @@ class ChickenSalesController extends Controller
                 'total_birds_harvested' => $totalBirdsHarvested,
                 'available_birds' => $availableBirds,
                 'remaining_birds' => $remainingBirds,
-                'total_weight' => $request->batch_weight,
+                'total_weight' => $request->gross_weight,
                 'avg_weight_per_bird' => $request->avg_weight,
                 'notes' => $request->notes,
                 'ended_by' => auth()->id()
             ]);
+
+            if ($request->has('batch_weights')) {
+                $batchWeights = array_filter($request->batch_weights, function($batch) {
+                    return isset($batch['weight']) && $batch['weight'] > 0;
+                });
+
+                if (!empty($batchWeights)) {
+                    FlockEndDetail::create([
+                        'flock_end_id' => $flockEnd->id,
+                        'batch_number' => 1,
+                        'gross_weight' => $request->gross_weight,
+                        'batch_weights' => $batchWeights,
+                    ]);
+                }
+            }
 
             DB::commit();
             Session::flash('successMsg', 'Ending flock created successfully.');
@@ -171,7 +189,7 @@ class ChickenSalesController extends Controller
 
     public function edit($siteUrl, $id)
     {
-        $flockEnd = FlockEnd::findOrFail($id);
+        $flockEnd = FlockEnd::with('batchWeights')->findOrFail($id);
         $farms = Farm::where('created_by', auth()->id())->orWhere('created_by', function($query) {
             $query->select('id')->from('admins')->where('type', 0);
         })->get();
@@ -187,7 +205,13 @@ class ChickenSalesController extends Controller
             })->get();
         $slaughters = Slaughter::all();
 
-        return view('backend.chicken-sale.create', compact('flockEnd', 'farms', 'flocks', 'hangars', 'slaughters'));
+        return view('backend.chicken-sale.create', [
+            'chickenSale' => $flockEnd,
+            'farms' => $farms,
+            'flocks' => $flocks,
+            'hangars' => $hangars,
+            'slaughters' => $slaughters,
+        ]);
     }
 
     public function update(Request $request, $siteUrl, $id)
@@ -202,7 +226,9 @@ class ChickenSalesController extends Controller
             'cages_weight' => 'required|numeric|min:0.1',
             'cages_count' => 'required|integer|min:1',
             'birds_per_cage' => 'required|integer|min:1|max:25',
-            'batch_weight' => 'required|numeric|min:0',
+            'gross_weight' => 'required|numeric|min:0',
+            'batch_weights' => 'nullable|array',
+            'batch_weights.*.weight' => 'numeric|min:0',
             'net_weight' => 'required|numeric|min:0',
             'avg_weight' => 'required|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
@@ -246,10 +272,33 @@ class ChickenSalesController extends Controller
                 'total_birds_harvested' => $totalBirdsHarvested,
                 'available_birds' => $availableBirds,
                 'remaining_birds' => $remainingBirds,
-                'total_weight' => $request->batch_weight,
+                'total_weight' => $request->gross_weight,
                 'avg_weight_per_bird' => $request->avg_weight,
                 'notes' => $request->notes,
             ]);
+
+            if ($request->has('batch_weights')) {
+                $batchWeights = array_filter($request->batch_weights, function($batch) {
+                    return isset($batch['weight']) && $batch['weight'] > 0;
+                });
+
+                if (!empty($batchWeights)) {
+                    $detail = FlockEndDetail::where('flock_end_id', $flockEnd->id)->first();
+                    if ($detail) {
+                        $detail->update([
+                            'gross_weight' => $request->gross_weight,
+                            'batch_weights' => $batchWeights,
+                        ]);
+                    } else {
+                        FlockEndDetail::create([
+                            'flock_end_id' => $flockEnd->id,
+                            'batch_number' => 1,
+                            'gross_weight' => $request->gross_weight,
+                            'batch_weights' => $batchWeights,
+                        ]);
+                    }
+                }
+            }
 
             DB::commit();
             Session::flash('successMsg', 'Ending flock updated successfully.');

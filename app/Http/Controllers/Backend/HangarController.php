@@ -57,11 +57,12 @@ class HangarController extends Controller
     public function create()
     {
         $user = auth()->user();
+        $siteSlug = request()->segment(1);
         $farms = Farm::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
             $query->where('created_by', $user->id)
                   ->orWhere('assigned_to', $user->id);
         })->get();
-        return view('backend.hangar.create', compact('farms'));
+        return view('backend.hangar.create', compact('farms', 'siteSlug'));
     }
 
     public function store(Request $request, $siteUrl)
@@ -93,6 +94,7 @@ class HangarController extends Controller
     public function edit($siteUrl, $id)
     {
         $user = auth()->user();
+        $siteSlug = $siteUrl;
         $hangar = Hangar::with('farm')
             ->when($user->role !== 'SuperAdmin', function ($query) use ($user) {
                 $query->whereHas('farm', function ($subQuery) {
@@ -107,7 +109,7 @@ class HangarController extends Controller
                   ->orWhere('assigned_to', $user->id);
         })->get();
 
-        return view('backend.hangar.create', compact('hangar', 'farms'));
+        return view('backend.hangar.create', compact('hangar', 'farms', 'siteSlug'));
     }
 
     public function update(Request $request, $siteUrl, $id)

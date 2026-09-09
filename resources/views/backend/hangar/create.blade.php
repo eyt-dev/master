@@ -82,10 +82,13 @@
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="status" class="form-label">Status <span class="text-red">*</span></label>
+                @php
+                    $currentStatus = old('status', isset($hangar) && $hangar->status ? trim($hangar->status) : '');
+                @endphp
                 <select class="form-control" name="status" id="status" required="">
                     <option value="">Select Status</option>
-                    <option value="Active" {{ trim(old('status', $hangar->status ?? '')) === 'Active' ? 'selected' : '' }}>Active</option>
-                    <option value="Inactive" {{ trim(old('status', $hangar->status ?? '')) === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                    <option value="Active" {{ $currentStatus === 'Active' ? 'selected' : '' }}>Active</option>
+                    <option value="Inactive" {{ $currentStatus === 'Inactive' ? 'selected' : '' }}>Inactive</option>
                 </select>
                 @error('status')
                     <label id="status-error" class="error" for="status">{{ $message }}</label>

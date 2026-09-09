@@ -614,12 +614,21 @@ class AdminController extends Controller
     private function normalizeProjectRows(Request $request): array
     {
         // Only include rows that have a non-empty status value
+        // Projects are optional for all admin types
         return collect($request->input('project_rows', []))
             ->filter(function ($row) {
                 return filled($row['project_id'] ?? null) && filled($row['status'] ?? null);
             })
             ->values()
             ->all();
+    }
+
+    private function shouldSkipProjectValidation(): bool
+    {
+        // Skip strict project validation for type 1 (Admin) users
+        // They can work without project assignments
+        $admin = Auth::user();
+        return $admin && $admin->type === 1;
     }
 
     public function updateProjectStatus(Request $request, $siteUrl)

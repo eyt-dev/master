@@ -433,6 +433,19 @@ class AdminController extends Controller
             // Update admin
             $admin->update($updateData);
 
+            // Sync role based on admin type to ensure consistency
+            $rolePrefix = match (intval($admin->type)) {
+                1 => 'Admin',
+                2 => 'PublicVendor',
+                3 => 'PrivateVendor',
+                4 => 'Farmer',
+                default => 'Admin',
+            };
+            $roleToAssign = Role::where('name', $rolePrefix)->first();
+            if ($roleToAssign) {
+                $admin->syncRoles([$roleToAssign->id]);
+            }
+
             // Sync project statuses if provided
             if ($request->has('project_rows')) {
                 $admin->syncProjectStatuses($this->normalizeProjectRows($request));

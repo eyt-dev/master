@@ -186,7 +186,7 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::post('store', 'store')->name('hangar.store')->middleware('permission:create.hangar');
                         Route::get('{hangar}/edit', 'edit')->name('hangar.edit')->middleware('permission:edit.hangar');
                         Route::post('{hangar}', 'update')->name('hangar.update')->middleware('permission:edit.hangar');
-                        Route::get('destroy/{hangar}', 'destroy')->name('hangar.destroy')->middleware('permission:delete.hangar');
+                        Route::get('{hangar}/destroy', 'destroy')->name('hangar.destroy')->middleware('permission:delete.hangar');
                     });
                     Route::controller(FeedMillController::class)->prefix('feed-mill')->group(function () {
                         Route::get('/', 'index')->name('feed-mill.index')->middleware('permission:view.feed_mill');
@@ -518,7 +518,7 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::post('store', 'store')->name('hangar.store')->middleware('permission:create.hangar');
                 Route::get('{hangar}/edit', 'edit')->name('hangar.edit')->middleware('permission:edit.hangar');
                 Route::post('{hangar}', 'update')->name('hangar.update')->middleware('permission:edit.hangar');
-                Route::get('destroy/{hangar}', 'destroy')->name('hangar.destroy')->middleware('permission:delete.hangar');
+                Route::get('{hangar}/destroy', 'destroy')->name('hangar.destroy')->middleware('permission:delete.hangar');
             });
             Route::controller(FeedMillController::class)->prefix('feed-mill')->group(function () {
                 Route::get('/', 'index')->name('feed-mill.index')->middleware('permission:view.feed_mill');

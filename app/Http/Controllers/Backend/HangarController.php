@@ -45,7 +45,7 @@ class HangarController extends Controller
                 })
                 ->addColumn('action', function($row) {
                     return '<a class="edit-hangar btn btn-sm btn-success" data-path="'.route('hangar.edit', ['username' => request()->segment(1),  'hangar' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
-                         .'<a class="delete-hangar btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
+                         .'<a class="delete-hangar btn btn-sm btn-danger" data-path="'.route('hangar.destroy', ['username' => request()->segment(1), 'hangar' => $row->id]).'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
                 ->rawColumns(['action', 'status', 'farm_name'])
@@ -91,22 +91,19 @@ class HangarController extends Controller
         return redirect()->route('hangar.index', ['username' => request()->segment(1)]);
     }
 
-    public function edit($siteUrl, $hangar)
+    public function edit($siteUrl, Hangar $hangar)
     {
         $user = auth()->user();
         $siteSlug = $siteUrl;
 
         // Verify user has access to this hangar
         if ($user->role !== 'SuperAdmin') {
-            $authorized = $hangar->whereHas('farm', function ($query) use ($user) {
-                $query->where('created_by', auth()->id())
-                      ->orWhere('assigned_to', auth()->id());
-            })
-            ->orWhere('created_by', $user->id)
-            ->where('id', $hangar->id)
-            ->exists();
+            $isOwnHangar = ($hangar->created_by === $user->id);
+            $hasFarmAccess = $hangar->farm &&
+                ($hangar->farm->created_by === $user->id ||
+                 $hangar->farm->assigned_to === $user->id);
 
-            if (!$authorized) {
+            if (!$isOwnHangar && !$hasFarmAccess) {
                 abort(403, 'Unauthorized');
             }
         }
@@ -121,21 +118,18 @@ class HangarController extends Controller
         return view('backend.hangar.create', compact('hangar', 'farms', 'siteSlug'));
     }
 
-    public function update(Request $request, $siteUrl, $hangar)
+    public function update(Request $request, $siteUrl, Hangar $hangar)
     {
         $user = auth()->user();
 
         // Verify user has access to this hangar
         if ($user->role !== 'SuperAdmin') {
-            $authorized = Hangar::whereHas('farm', function ($query) use ($user) {
-                $query->where('created_by', auth()->id())
-                      ->orWhere('assigned_to', auth()->id());
-            })
-            ->orWhere('created_by', $user->id)
-            ->where('id', $hangar->id)
-            ->exists();
+            $isOwnHangar = ($hangar->created_by === $user->id);
+            $hasFarmAccess = $hangar->farm &&
+                ($hangar->farm->created_by === $user->id ||
+                 $hangar->farm->assigned_to === $user->id);
 
-            if (!$authorized) {
+            if (!$isOwnHangar && !$hasFarmAccess) {
                 abort(403, 'Unauthorized');
             }
         }
@@ -162,21 +156,18 @@ class HangarController extends Controller
         return redirect()->route('hangar.index', ['username' => request()->segment(1)]);
     }
 
-    public function destroy($siteUrl, $hangar)
+    public function destroy($siteUrl, Hangar $hangar)
     {
         $user = auth()->user();
 
         // Verify user has access to this hangar
         if ($user->role !== 'SuperAdmin') {
-            $authorized = Hangar::whereHas('farm', function ($query) use ($user) {
-                $query->where('created_by', auth()->id())
-                      ->orWhere('assigned_to', auth()->id());
-            })
-            ->orWhere('created_by', $user->id)
-            ->where('id', $hangar->id)
-            ->exists();
+            $isOwnHangar = ($hangar->created_by === $user->id);
+            $hasFarmAccess = $hangar->farm &&
+                ($hangar->farm->created_by === $user->id ||
+                 $hangar->farm->assigned_to === $user->id);
 
-            if (!$authorized) {
+            if (!$isOwnHangar && !$hasFarmAccess) {
                 abort(403, 'Unauthorized');
             }
         }

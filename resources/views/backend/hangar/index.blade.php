@@ -135,7 +135,7 @@
         });
         
         $(document).on('click', '.delete-hangar', function() {
-            var id = $(this).attr("data-id");
+            var deleteUrl = $(this).data("path");
             swal({
                 title: "Are you sure?",
                 text: "Once deleted, you will not be able to recover this hangar!",
@@ -150,7 +150,7 @@
                     $.ajax({
                         type: "get",
                         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        url: "{{ route('hangar.destroy', ['username' => $siteSlug, 'hangar' => ':id']) }}".replace(':id', id),
+                        url: deleteUrl,
                         success: function(response) {
                             swal({
                                 title: response.msg

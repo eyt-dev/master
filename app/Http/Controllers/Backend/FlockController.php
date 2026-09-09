@@ -174,12 +174,9 @@ class FlockController extends Controller
             })
             ->get(['id', 'name']);
 
-        // Get hangars that already have active flocks allocated
-        $allocatedHangarIds = FlockHangar::whereHas('flock', function ($query) {
-            $query->where('status', '!=', 'ended');
-        })
-        ->pluck('hangar_id')
-        ->toArray();
+        // Get hangars that already have flocks allocated
+        // A hangar is considered allocated if it has any flock assigned to it
+        $allocatedHangarIds = FlockHangar::pluck('hangar_id')->unique()->toArray();
 
         // Add disabled flag to each hangar
         $hangars = $hangars->map(function ($hangar) use ($allocatedHangarIds) {

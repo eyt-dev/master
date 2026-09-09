@@ -69,6 +69,7 @@
                                     <th>Hangar 9</th>
                                     <th>Hangar 10</th>
                                     <th>Created By</th>
+                                    <th>Assignment Status</th>
                                     <th>Created At</th>
                                     <th>Action</th>
                                 </tr>
@@ -148,6 +149,7 @@
                 { data: 'hangar9', name: 'hangar9', orderable: false, searchable: false },
                 { data: 'hangar10', name: 'hangar10', orderable: false, searchable: false },
                 { data: 'created_by' },
+                { data: 'assignment_status', name: 'assignment_status', orderable: false, searchable: false },
                 { data: 'created_at', name: 'created_at' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]

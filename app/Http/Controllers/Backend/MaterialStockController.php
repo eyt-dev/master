@@ -30,10 +30,13 @@ class MaterialStockController extends Controller
                 return datatables()->of(collect([]))->make(true);
             }
 
-            $query = MaterialStock::with('farm', 'supplier', 'creator', 'materialName', 'materialStockHangarAllocations.hangar');
+            $query = MaterialStock::with('farm.assignedAdmin', 'supplier', 'creator', 'materialName', 'materialStockHangarAllocations.hangar');
 
             if ($user->role !== 'SuperAdmin') {
-                $query->whereIn('farm_id', $userFarms);
+                $query->where(function ($subQuery) use ($userFarms) {
+                    $subQuery->whereIn('farm_id', $userFarms)
+                             ->orWhere('created_by', auth()->id());
+                });
             }
 
             $data = $query->orderBy('created_at', 'desc')->get();
@@ -45,7 +48,14 @@ class MaterialStockController extends Controller
                     return $row->materialName?->name ?? $row->name ?? 'N/A';
                 })
                 ->addColumn('farm', function($row) {
-                    return $row->farm?->name ?? 'N/A';
+                    $farmName = $row->farm?->name ?? 'N/A';
+                    $assignmentStatus = '';
+                    if ($row->farm) {
+                        if ($row->farm->assignedAdmin) {
+                            $assignmentStatus = '<br><small style="color: #666;">Assigned to: ' . $row->farm->assignedAdmin->name . '</small>';
+                        }
+                    }
+                    return $farmName . $assignmentStatus;
                 })
                 ->addColumn('supplier', function($row) {
                     return $row->supplier?->name ?? 'N/A';
@@ -55,6 +65,15 @@ class MaterialStockController extends Controller
                 })
                 ->addColumn('created_at', function($row) {
                     return date('Y-m-d', strtotime($row->created_at));
+                })
+                ->addColumn('assignment_status', function($row) {
+                    $user = auth()->user();
+                    if ($row->created_by === $user->id) {
+                        return '<span class="badge badge-success">Created by me</span>';
+                    } elseif ($row->farm && $row->farm->assigned_to === $user->id) {
+                        return '<span class="badge badge-info">Farm assigned to me</span>';
+                    }
+                    return 'N/A';
                 })
                 ->addColumn('hangar1', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
@@ -131,7 +150,7 @@ class MaterialStockController extends Controller
                          .'<a class="delete-material-stock btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action', 'hangar1', 'hangar2', 'hangar3', 'hangar4', 'hangar5', 'hangar6', 'hangar7', 'hangar8', 'hangar9', 'hangar10'])   
+                ->rawColumns(['action', 'farm', 'assignment_status', 'hangar1', 'hangar2', 'hangar3', 'hangar4', 'hangar5', 'hangar6', 'hangar7', 'hangar8', 'hangar9', 'hangar10'])
                 ->make(true);
         }
         return view('backend.material-stock.index');

@@ -21,9 +21,13 @@ class DailyRecordController extends Controller
     {
         if ($request->ajax()) {
             // Get unique flock/date combinations
-            $data = DailyRecord::with('farm', 'flock', 'creator')
+            $data = DailyRecord::with('farm.assignedAdmin', 'flock', 'creator')
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
-                    $query->where('created_by', auth()->id());
+                    $query->whereHas('farm', function ($subQuery) {
+                        $subQuery->where('created_by', auth()->id())
+                                 ->orWhere('assigned_to', auth()->id());
+                    })
+                    ->orWhere('created_by', auth()->id());
                 })
                 ->orderBy('record_date', 'desc')
                 ->orderBy('flock_id', 'desc')
@@ -37,6 +41,11 @@ class DailyRecordController extends Controller
                     $breedType = $firstRecord->flock ? $this->extractBreedType($firstRecord->flock->breed) : 'Layer';
                     $breedName = $firstRecord->flock ? $this->extractBreedName($firstRecord->flock->breed) : 'N/A';
 
+                    $farmDisplay = $firstRecord->farm->name ?? 'N/A';
+                    if ($firstRecord->farm && $firstRecord->farm->assignedAdmin) {
+                        $farmDisplay .= ' (Assigned to: ' . $firstRecord->farm->assignedAdmin->name . ')';
+                    }
+
                     return [
                         'id' => $firstRecord->id,
                         'record_date' => $firstRecord->record_date,
@@ -44,7 +53,7 @@ class DailyRecordController extends Controller
                         'flock_label' => $flockLabel,
                         'breed_type' => $breedType,
                         'breed_name' => $breedName,
-                        'farm' => $firstRecord->farm->name ?? 'N/A',
+                        'farm' => $farmDisplay,
                         'created_by' => $firstRecord->creator->name ?? 'N/A',
                         'created_at' => $firstRecord->created_at,
                         'hangars' => $group->map(function($record) {
@@ -85,6 +94,9 @@ class DailyRecordController extends Controller
                 ->addColumn('created_at', function($row) {
                     return date('Y-m-d', strtotime($row['created_at']));
                 })
+                ->addColumn('assignment_status', function($row) {
+                    return '<span class="badge badge-success">Created by me</span>';
+                })
                 ->addColumn('hangar1', function($row) {
                     return $this->formatHangarData($row, 1);
                 })
@@ -120,7 +132,7 @@ class DailyRecordController extends Controller
                          .'<a class="delete-daily-record btn btn-sm btn-danger" data-id="'.$row['id'].'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['flock', 'action', 'hangar1', 'hangar2', 'hangar3', 'hangar4', 'hangar5', 'hangar6', 'hangar7', 'hangar8', 'hangar9', 'hangar10'])
+                ->rawColumns(['flock', 'action', 'assignment_status', 'hangar1', 'hangar2', 'hangar3', 'hangar4', 'hangar5', 'hangar6', 'hangar7', 'hangar8', 'hangar9', 'hangar10'])
                 ->make(true);
         }
         return view('backend.daily-record.index');

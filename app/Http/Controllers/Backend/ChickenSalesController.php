@@ -20,9 +20,13 @@ class ChickenSalesController extends Controller
     {
         if ($request->ajax()) {
             $user = auth()->user();
-            $data = FlockEnd::with('flock', 'hangar', 'slaughter', 'endedBy')
+            $data = FlockEnd::with('flock.farm', 'hangar', 'slaughter', 'endedBy')
                 ->when($user->role !== 'SuperAdmin', function ($query) use ($user) {
-                    $query->where('ended_by', $user->id);
+                    $query->whereHas('flock.farm', function ($subQuery) {
+                        $subQuery->where('created_by', auth()->id())
+                                 ->orWhere('assigned_to', auth()->id());
+                    })
+                    ->orWhere('ended_by', $user->id);
                 })
                 ->orderBy('created_at', 'desc')->get();
             return datatables()->of($data)
@@ -30,7 +34,11 @@ class ChickenSalesController extends Controller
                     return date('Y-m-d', strtotime($row->sale_date));
                 })
                 ->addColumn('farm', function($row) {
-                    return $row->flock->farm->name ?? 'N/A';
+                    $farmName = $row->flock->farm->name ?? 'N/A';
+                    if ($row->flock->farm && $row->flock->farm->assignedAdmin) {
+                        $farmName .= '<br><small style="color: #666;">Assigned to: ' . $row->flock->farm->assignedAdmin->name . '</small>';
+                    }
+                    return $farmName;
                 })
                 ->addColumn('flock', function($row) {
                     if (!$row->flock) {
@@ -67,7 +75,7 @@ class ChickenSalesController extends Controller
                          .'<a class="delete-chicken-sale btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action', 'flock'])
+                ->rawColumns(['action', 'flock', 'farm'])
                 ->make(true);
         }
         return view('backend.chicken-sale.index');
@@ -75,12 +83,14 @@ class ChickenSalesController extends Controller
 
     public function create()
     {
-        $farms = Farm::where('created_by', auth()->id())->orWhere('created_by', function($query) {
-            $query->select('id')->from('admins')->where('type', 0);
-        })->get();
-        
-        if (auth()->user()->role === 'SuperAdmin') {
+        $user = auth()->user();
+
+        if ($user->role === 'SuperAdmin') {
             $farms = Farm::all();
+        } else {
+            $farms = Farm::where('created_by', $user->id)
+                         ->orWhere('assigned_to', $user->id)
+                         ->get();
         }
 
         $slaughters = Slaughter::all();

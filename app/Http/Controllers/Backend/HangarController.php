@@ -14,12 +14,20 @@ class HangarController extends Controller
         if ($request->ajax()) {
             $data = Hangar::with('farm', 'creator')
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
-                    $query->where('created_by', auth()->id());
+                    $query->whereHas('farm', function ($subQuery) {
+                        $subQuery->where('created_by', auth()->id())
+                                 ->orWhere('assigned_to', auth()->id());
+                    })
+                    ->orWhere('created_by', auth()->id());
                 })
                 ->orderBy('created_at', 'desc')->get();
             return datatables()->of($data)
                 ->addColumn('farm_name', function($row) {
-                    return $row->farm->name ?? 'N/A';
+                    $farmName = $row->farm->name ?? 'N/A';
+                    if ($row->farm && $row->farm->assignedAdmin) {
+                        $farmName .= '<br><small style="color: #666;">Assigned to: ' . $row->farm->assignedAdmin->name . '</small>';
+                    }
+                    return $farmName;
                 })
                 ->addColumn('name', function($row) {
                     return $row->name ?? 'N/A';
@@ -39,7 +47,7 @@ class HangarController extends Controller
                          .'<a class="delete-hangar btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action', 'status'])
+                ->rawColumns(['action', 'status', 'farm_name'])
                 ->make(true);
         }
         return view('backend.hangar.index');
@@ -49,7 +57,8 @@ class HangarController extends Controller
     {
         $user = auth()->user();
         $farms = Farm::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
-            $query->where('created_by', $user->id);
+            $query->where('created_by', $user->id)
+                  ->orWhere('assigned_to', $user->id);
         })->get();
         return view('backend.hangar.create', compact('farms'));
     }
@@ -83,12 +92,18 @@ class HangarController extends Controller
     public function edit($siteUrl, $id)
     {
         $user = auth()->user();
-        $hangar = Hangar::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
-            $query->where('created_by', $user->id);
-        })->findOrFail($id);
+        $hangar = Hangar::with('farm')
+            ->when($user->role !== 'SuperAdmin', function ($query) use ($user) {
+                $query->whereHas('farm', function ($subQuery) {
+                    $subQuery->where('created_by', auth()->id())
+                             ->orWhere('assigned_to', auth()->id());
+                })
+                ->orWhere('created_by', $user->id);
+            })->findOrFail($id);
 
         $farms = Farm::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
-            $query->where('created_by', $user->id);
+            $query->where('created_by', $user->id)
+                  ->orWhere('assigned_to', $user->id);
         })->get();
 
         return view('backend.hangar.create', compact('hangar', 'farms'));
@@ -97,9 +112,14 @@ class HangarController extends Controller
     public function update(Request $request, $siteUrl, $id)
     {
         $user = auth()->user();
-        $hangar = Hangar::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
-            $query->where('created_by', $user->id);
-        })->findOrFail($id);
+        $hangar = Hangar::with('farm')
+            ->when($user->role !== 'SuperAdmin', function ($query) use ($user) {
+                $query->whereHas('farm', function ($subQuery) {
+                    $subQuery->where('created_by', auth()->id())
+                             ->orWhere('assigned_to', auth()->id());
+                })
+                ->orWhere('created_by', $user->id);
+            })->findOrFail($id);
 
         $request->validate([
             'farm_id' => 'required',
@@ -126,9 +146,14 @@ class HangarController extends Controller
     public function destroy($siteUrl, $id)
     {
         $user = auth()->user();
-        $hangar = Hangar::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
-            $query->where('created_by', $user->id);
-        })->findOrFail($id);
+        $hangar = Hangar::with('farm')
+            ->when($user->role !== 'SuperAdmin', function ($query) use ($user) {
+                $query->whereHas('farm', function ($subQuery) {
+                    $subQuery->where('created_by', auth()->id())
+                             ->orWhere('assigned_to', auth()->id());
+                })
+                ->orWhere('created_by', $user->id);
+            })->findOrFail($id);
 
         $hangar->delete();
         return response()->json(['msg' => 'Hangar deleted successfully.']);

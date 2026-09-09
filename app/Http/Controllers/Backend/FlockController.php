@@ -20,7 +20,11 @@ class FlockController extends Controller
         if ($request->ajax()) {
             $flocks = Flock::with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar')
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
-                    $query->where('created_by', auth()->id());
+                    $query->whereHas('farm', function ($subQuery) {
+                        $subQuery->where('created_by', auth()->id())
+                                 ->orWhere('assigned_to', auth()->id());
+                    })
+                    ->orWhere('created_by', auth()->id());
                 })
                 ->orderBy('farm_id', 'asc')
                 ->orderBy('created_at', 'desc')
@@ -71,10 +75,15 @@ class FlockController extends Controller
                         }
                     }
 
+                    $farmDisplay = $group['farm']->name ?? 'N/A';
+                    if ($group['farm']->assignedAdmin) {
+                        $farmDisplay .= ' (Assigned to: ' . $group['farm']->assignedAdmin->name . ')';
+                    }
+
                     $rowData = [
                         'id' => $flock->id,
                         'farm_id' => $flock->farm_id,
-                        'farm_name' => $group['farm']->name ?? 'N/A',
+                        'farm_name' => $farmDisplay,
                         'name' => $flock->name,
                         'chicks_supplier' => $flock->chicksSupplier->name ?? 'N/A',
                         'breed' => $flock->breed,
@@ -139,12 +148,14 @@ class FlockController extends Controller
 
     public function create()
     {
-        $farms = Farm::where('created_by', auth()->id())->orWhere('created_by', function($query) {
-            $query->select('id')->from('admins')->where('type', 0);
-        })->get();
-        
-        if (auth()->user()->role === 'SuperAdmin') {
+        $user = auth()->user();
+
+        if ($user->role === 'SuperAdmin') {
             $farms = Farm::all();
+        } else {
+            $farms = Farm::where('created_by', $user->id)
+                         ->orWhere('assigned_to', $user->id)
+                         ->get();
         }
 
         $chicksSuppliers = ChicksSupplier::all();

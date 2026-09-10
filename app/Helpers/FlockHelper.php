@@ -31,13 +31,27 @@ class FlockHelper
     /**
      * Get all flocks formatted with their labels
      * Used for dropdowns
-     * 
+     *
      * @return \Illuminate\Support\Collection
      */
     public static function getAllFlockOptions()
     {
-        $flocks = Flock::with('farm')->get();
-        
+        $user = auth()->user();
+
+        $query = Flock::with('farm');
+
+        if ($user->role !== 'SuperAdmin') {
+            $query->where(function($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhereHas('farm', function($subQ) use ($user) {
+                      $subQ->where('created_by', $user->id)
+                           ->orWhere('assigned_to', $user->id);
+                  });
+            });
+        }
+
+        $flocks = $query->get();
+
         return $flocks->map(function($flock) {
             return [
                 'id' => $flock->id,

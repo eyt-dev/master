@@ -205,13 +205,15 @@ class ChickenSalesController extends Controller
 
     public function edit($siteUrl, $id)
     {
+        $user = auth()->user();
         $flockEnd = FlockEnd::with('batchWeights')->findOrFail($id);
-        $farms = Farm::where('created_by', auth()->id())->orWhere('created_by', function($query) {
-            $query->select('id')->from('admins')->where('type', 0);
-        })->get();
 
-        if (auth()->user()->role === 'SuperAdmin') {
+        if ($user->role === 'SuperAdmin') {
             $farms = Farm::all();
+        } else {
+            $farms = Farm::where('created_by', $user->id)
+                         ->orWhere('assigned_to', $user->id)
+                         ->get();
         }
 
         $flocks = Flock::where('farm_id', $flockEnd->flock->farm_id)->get();

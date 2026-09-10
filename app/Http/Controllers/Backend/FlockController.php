@@ -283,17 +283,16 @@ class FlockController extends Controller
             $query->where('created_by', $user->id);
         })->findOrFail($id);
 
-        $farms = Farm::where('created_by', auth()->id())->orWhere('created_by', function($query) {
-            $query->select('id')->from('admins')->where('type', 0);
-        })->get();
-
-        if (auth()->user()->role === 'SuperAdmin') {
+        if ($user->role === 'SuperAdmin') {
             $farms = Farm::all();
+        } else {
+            $farms = Farm::where('created_by', $user->id)
+                         ->orWhere('assigned_to', $user->id)
+                         ->get();
         }
 
         $chicksSuppliers = ChicksSupplier::all();
         $flockHangars = FlockHangar::where('flock_id', $flock->id)->get();
-        // Store original farm_id and name in session for comparison during update
         return view('backend.flock.create', compact('flock', 'farms', 'chicksSuppliers', 'flockHangars'));
     }
 

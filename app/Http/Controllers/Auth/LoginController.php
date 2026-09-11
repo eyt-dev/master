@@ -41,6 +41,32 @@ class LoginController extends Controller
         $this->middleware('auth')->only('logout');
     }
 
+    /**
+     * Get the login username to be used by the controller.
+     * Supports both email and mobile_number.
+     */
+    public function username()
+    {
+        $login = request()->input('login');
+        $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'mobile_number';
+        request()->merge([$fieldType => $login]);
+        return $fieldType;
+    }
+
+    /**
+     * Get the needed authorization credentials from the request.
+     */
+    public function credentials(Request $request)
+    {
+        $login = $request->input('login');
+        $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'mobile_number';
+
+        return [
+            $fieldType => $login,
+            'password' => $request->input('password'),
+        ];
+    }
+
     public function authenticated(Request $request, $user = null)
     {
         $user = $user ?? auth()->user();

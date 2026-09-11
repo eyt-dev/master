@@ -76,11 +76,13 @@ class AuthController extends Controller
 
     /**
      * Login and return a Sanctum token.
+     * Supports login via email or mobile number.
      */
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email'    => 'required|email',
+            'email'    => 'required_without:mobile_number|email|nullable',
+            'mobile_number' => 'required_without:email|string|nullable',
             'password' => 'required|string',
         ]);
 
@@ -91,15 +93,21 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // $admin = Admin::where('email', $request->email)->first();
-        $admin = Admin::where('email', $request->email)
-            ->where(function ($query) {
-                $query->where('type', 0)
-                    ->orWhereHas('project', function ($projectQuery) {
-                        $projectQuery->where('url', 'LIKE', '%add2mix.eyt.app%');
-                    });
-            })
-            ->first();
+        $query = Admin::query();
+
+        if ($request->filled('email')) {
+            $query->where('email', $request->email);
+        } else {
+            $query->where('mobile_number', $request->mobile_number);
+        }
+
+        $admin = $query->where(function ($query) {
+            $query->where('type', 0)
+                ->orWhereHas('project', function ($projectQuery) {
+                    $projectQuery->where('url', 'LIKE', '%add2mix.eyt.app%');
+                });
+        })->first();
+
         if (! $admin || ! Hash::check($request->password, $admin->password)) {
             return response()->json([
                 'success' => false,

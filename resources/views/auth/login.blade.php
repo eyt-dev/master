@@ -29,12 +29,12 @@
                                                         <i class="fe fe-user"></i>
                                                     </div>
                                                 </div>
-                                                <input type="text" class="form-control" placeholder="Email" name="email" id="email">
+                                                <input type="text" class="form-control" placeholder="Email or Mobile Number" name="login" id="login">
                                             </div>
-                                            @error('email')
-                                                <label id="email-error" class="error" for="email">{{ $message }}</label>
+                                            @error('login')
+                                                <label id="login-error" class="error" for="login">{{ $message }}</label>
                                             @else
-                                                <label id="email-error" class="error hide" for="email">The Email field is required</label>
+                                                <label id="login-error" class="error hide" for="login">The Email or Mobile Number field is required</label>
                                             @enderror
                                         </div>
                                         <div class="mb-2">
@@ -81,17 +81,15 @@
         $("#login").validate({
             ignore: ":hidden",
             rules: {
-                email: {
+                login: {
                     required: true,
-                    email: true,
                     maxlength: 250,
                 },
                 password: 'required'
             },
             messages: {
-                email: {
-                    required: "The Email field is required",
-                    email: "Email must be a valid email",
+                login: {
+                    required: "The Email or Mobile Number field is required",
                 },
                 password: {
                     required: "The Password field is required"

@@ -317,7 +317,7 @@ class FarmerController extends BaseController
                 'name'           => $request->name,
                 'phone_code'     => $request->phone_code,
                 'mobile_number'  => $request->mobile_number,
-                'email'          => $request->email ?? 'farmer-' . uniqid() . '@add2farm.local',
+                'email'          => $request->email ?? null,
                 'password'       => Hash::make('Password123'),
                 'type'           => self::ADMIN_TYPE,
                 'status'         => 'Active',

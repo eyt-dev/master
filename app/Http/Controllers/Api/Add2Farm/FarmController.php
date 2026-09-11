@@ -479,7 +479,7 @@ class FarmController extends BaseController
         }
 
         $validator = Validator::make($request->all(), [
-            'name'                      => 'required|string|max:255',
+            'name'                      => 'required|string|max:255|unique:farms,name,' . $farm->id,
             'location'                  => 'required|string|max:255',
             'latitude'                  => 'nullable|numeric|between:-90,90',
             'longitude'                 => 'nullable|numeric|between:-180,180',

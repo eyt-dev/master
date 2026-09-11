@@ -65,7 +65,10 @@ class FarmController extends BaseController
         // Type 3 (Supervisor) sees farms where they are assigned
         $userFarms = Farm::where(function ($q) use ($user) {
             $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id);
+              ->orWhere('assigned_to', $user->id)
+              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                  $query->where('admin_id', $user->id);
+              });
         });
 
         // Get total, active, and inactive farm counts for this user
@@ -147,8 +150,11 @@ class FarmController extends BaseController
         $user = auth()->user();
         $farm = Farm::where(function ($q) use ($user) {
             $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id);
-        })->with('assignedAdmin', 'creator', 'hangars')->find($id);
+              ->orWhere('assigned_to', $user->id)
+              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                  $query->where('admin_id', $user->id);
+              });
+        })->with('assignedAdmin', 'assignedAdmins', 'creator', 'hangars')->find($id);
 
         if (!$farm) {
             return response()->json([
@@ -267,7 +273,8 @@ class FarmController extends BaseController
             'phone_code'                => 'nullable|string|max:10',
             'mobile_number'             => 'nullable|string|max:20',
             'number_of_hangars'         => 'required|integer|min:1|max:999',
-            'assigned_to'               => 'nullable|integer|exists:admins,id',
+            'assigned_to'               => 'nullable|array',
+            'assigned_to.*'             => 'integer|exists:admins,id',
             'hangars'                   => 'required|array|min:1',
             'hangars.*.name'            => 'required|string|max:255',
             'hangars.*.area_sqm'        => 'required|numeric|min:0',
@@ -290,21 +297,10 @@ class FarmController extends BaseController
             ], 422);
         }
 
-        // Validate that the assigned farmer doesn't already have a farm
-        if ($request->filled('assigned_to')) {
-            $existingFarm = Farm::where('assigned_to', $request->assigned_to)->first();
-            if ($existingFarm) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This farmer is already assigned to another farm. Each farmer can be assigned to only 1 farm.',
-                ], 422);
-            }
-        }
-
         try {
             DB::beginTransaction();
 
-            $farm = Farm::create([
+            $farmData = [
                 'name'               => $request->name,
                 'location'           => $request->location,
                 'latitude'           => $request->latitude,
@@ -313,9 +309,20 @@ class FarmController extends BaseController
                 'phone_code'         => $request->phone_code,
                 'mobile_number'      => $request->mobile_number,
                 'number_of_hangars'  => $request->number_of_hangars,
-                'assigned_to'        => $request->assigned_to,
                 'created_by'         => auth()->id(),
-            ]);
+            ];
+
+            // Keep first assigned_to for backward compatibility
+            if ($request->filled('assigned_to') && is_array($request->assigned_to) && count($request->assigned_to) > 0) {
+                $farmData['assigned_to'] = $request->assigned_to[0];
+            }
+
+            $farm = Farm::create($farmData);
+
+            // Assign to multiple admins
+            if ($request->filled('assigned_to') && is_array($request->assigned_to)) {
+                $farm->assignedAdmins()->sync($request->assigned_to);
+            }
 
             // Create hangars
             foreach ($request->hangars as $hangarData) {
@@ -331,7 +338,7 @@ class FarmController extends BaseController
 
             DB::commit();
 
-            $farm->load('assignedAdmin', 'creator', 'hangars');
+            $farm->load('assignedAdmin', 'assignedAdmins', 'creator', 'hangars');
 
             return response()->json([
                 'success' => true,
@@ -458,7 +465,10 @@ class FarmController extends BaseController
         $user = auth()->user();
         $farm = Farm::where(function ($q) use ($user) {
             $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id);
+              ->orWhere('assigned_to', $user->id)
+              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                  $query->where('admin_id', $user->id);
+              });
         })->find($id);
 
         if (!$farm) {
@@ -477,7 +487,8 @@ class FarmController extends BaseController
             'phone_code'                => 'nullable|string|max:10',
             'mobile_number'             => 'nullable|string|max:20',
             'number_of_hangars'         => 'required|integer|min:1|max:999',
-            'assigned_to'               => 'nullable|integer|exists:admins,id',
+            'assigned_to'               => 'nullable|array',
+            'assigned_to.*'             => 'integer|exists:admins,id',
             'hangars'                   => 'required|array|min:1',
             'hangars.*.id'              => 'nullable|integer|exists:hangars,id',
             'hangars.*.name'            => 'required|string|max:255',
@@ -501,23 +512,10 @@ class FarmController extends BaseController
             ], 422);
         }
 
-        // Validate that the assigned farmer doesn't already have a different farm
-        if ($request->filled('assigned_to') && $request->assigned_to !== $farm->assigned_to) {
-            $existingFarm = Farm::where('assigned_to', $request->assigned_to)
-                ->where('id', '!=', $id)
-                ->first();
-            if ($existingFarm) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This farmer is already assigned to another farm. Each farmer can be assigned to only 1 farm.',
-                ], 422);
-            }
-        }
-
         try {
             DB::beginTransaction();
 
-            $farm->update([
+            $updateData = [
                 'name'               => $request->name,
                 'location'           => $request->location,
                 'latitude'           => $request->latitude,
@@ -526,8 +524,23 @@ class FarmController extends BaseController
                 'phone_code'         => $request->phone_code,
                 'mobile_number'      => $request->mobile_number,
                 'number_of_hangars'  => $request->number_of_hangars,
-                'assigned_to'        => $request->assigned_to,
-            ]);
+            ];
+
+            // Keep first assigned_to for backward compatibility
+            if ($request->filled('assigned_to') && is_array($request->assigned_to) && count($request->assigned_to) > 0) {
+                $updateData['assigned_to'] = $request->assigned_to[0];
+            } else {
+                $updateData['assigned_to'] = null;
+            }
+
+            $farm->update($updateData);
+
+            // Assign to multiple admins
+            if ($request->filled('assigned_to') && is_array($request->assigned_to)) {
+                $farm->assignedAdmins()->sync($request->assigned_to);
+            } else {
+                $farm->assignedAdmins()->detach();
+            }
 
             // Update hangars
             // Delete hangars not in the new list
@@ -561,7 +574,7 @@ class FarmController extends BaseController
 
             DB::commit();
 
-            $farm->load('assignedAdmin', 'creator', 'hangars');
+            $farm->load('assignedAdmin', 'assignedAdmins', 'creator', 'hangars');
 
             return response()->json([
                 'success' => true,
@@ -625,7 +638,10 @@ class FarmController extends BaseController
         $user = auth()->user();
         $farm = Farm::where(function ($q) use ($user) {
             $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id);
+              ->orWhere('assigned_to', $user->id)
+              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                  $query->where('admin_id', $user->id);
+              });
         })->find($id);
 
         if (!$farm) {
@@ -679,6 +695,11 @@ class FarmController extends BaseController
             $farm->load('hangars');
         }
 
+        // Always load assigned admins if not already loaded
+        if (!$farm->relationLoaded('assignedAdmins')) {
+            $farm->load('assignedAdmins');
+        }
+
         $hangars = $farm->hangars->map(function ($hangar) {
             return [
                 'id'            => $hangar->id,
@@ -690,12 +711,25 @@ class FarmController extends BaseController
             ];
         })->toArray();
 
+        // Format assigned admins
+        $assignedAdmins = $farm->assignedAdmins->map(function ($admin) {
+            return [
+                'id'   => $admin->id,
+                'name' => $admin->name,
+            ];
+        })->toArray();
+
         // Check if farm has flocks
         $hasFlocks = $farm->flocks()->exists();
 
         // Check if logged-in user created or is assigned to this farm
-        $assignment = (auth()->check() &&
-            ($farm->created_by === auth()->id() || $farm->assigned_to === auth()->id())) ? 1 : 0;
+        $isAssignedToUser = false;
+        if (auth()->check()) {
+            $isAssignedToUser = $farm->created_by === auth()->id() ||
+                               $farm->assigned_to === auth()->id() ||
+                               $farm->assignedAdmins->contains('id', auth()->id());
+        }
+        $assignment = $isAssignedToUser ? 1 : 0;
 
         // Calculate total hangars count
         $totalHangars = $farm->hangars->count();
@@ -717,6 +751,7 @@ class FarmController extends BaseController
             'number_of_hangars'     => $farm->number_of_hangars,
             'assigned_to'           => $farm->assigned_to,
             'assigned_admin_name'   => $farm->assignedAdmin?->name ?? null,
+            'assigned_admins'       => $assignedAdmins,
             'created_by_name'       => $farm->creator?->name ?? null,
             'assignment'            => $assignment,
             'has_flocks'            => $hasFlocks,

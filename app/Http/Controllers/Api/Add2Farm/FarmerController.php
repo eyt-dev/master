@@ -76,7 +76,12 @@ class FarmerController extends BaseController
         $inactiveFarmers = 0;
 
         foreach ($allFarmers as $farmer) {
-            $farm = \App\Models\Farm::where('assigned_to', $farmer->id)->first();
+            $farm = \App\Models\Farm::where(function ($q) use ($farmer) {
+                $q->where('assigned_to', $farmer->id)
+                  ->orWhereHas('assignedAdmins', function ($query) use ($farmer) {
+                      $query->where('admin_id', $farmer->id);
+                  });
+            })->first();
             if ($farm) {
                 $activeFarmers++;
             } else {
@@ -338,11 +343,14 @@ class FarmerController extends BaseController
                 ]);
             }
 
-            // Assign farmer to farm if farm_id provided
+            // Assign farmer to farms if farm_ids provided
             if ($request->filled('farm_id')) {
-                \App\Models\Farm::findOrFail($request->farm_id)->update([
-                    'assigned_to' => $admin->id,
-                ]);
+                $farm = \App\Models\Farm::findOrFail($request->farm_id);
+                $farm->assignedAdmins()->attach($admin->id);
+            }
+
+            if ($request->filled('farm_ids')) {
+                $admin->farms()->sync($request->farm_ids);
             }
 
             // Create project status records if provided
@@ -543,11 +551,14 @@ class FarmerController extends BaseController
                 $admin->syncRoles([$role->id]);
             }
 
-            // Handle farm assignment
+            // Handle farm assignments
             if ($request->filled('farm_id')) {
-                \App\Models\Farm::findOrFail($request->farm_id)->update([
-                    'assigned_to' => $admin->id,
-                ]);
+                $farm = \App\Models\Farm::findOrFail($request->farm_id);
+                $farm->assignedAdmins()->sync([$admin->id]);
+            }
+
+            if ($request->filled('farm_ids')) {
+                $admin->farms()->sync($request->farm_ids);
             }
 
             // Update project statuses if provided
@@ -665,11 +676,29 @@ class FarmerController extends BaseController
             $imageUrl = route('api.files', ['path' => $admin->image]);
         }
 
-        // Load assigned farm if exists
-        $farm = \App\Models\Farm::where('assigned_to', $admin->id)->first();
+        // Load assigned farms if not already loaded
+        if (!$admin->relationLoaded('farms')) {
+            $admin->load('farms');
+        }
+
+        // Load first assigned farm for backward compatibility
+        $farm = \App\Models\Farm::where(function ($q) use ($admin) {
+            $q->where('assigned_to', $admin->id)
+              ->orWhereHas('assignedAdmins', function ($query) use ($admin) {
+                  $query->where('admin_id', $admin->id);
+              });
+        })->first();
+
+        // Format assigned farms
+        $assignedFarms = $admin->farms->map(function ($f) {
+            return [
+                'id'   => $f->id,
+                'name' => $f->name,
+            ];
+        })->toArray();
 
         // Status is Active if farm assigned, otherwise Inactive
-        $displayStatus = $farm ? 'Active' : 'Inactive';
+        $displayStatus = ($farm || count($assignedFarms) > 0) ? 'Active' : 'Inactive';
 
         return [
             'id'            => $admin->id,
@@ -686,6 +715,7 @@ class FarmerController extends BaseController
             'image_url'     => $imageUrl,
             'farm_id'       => $farm?->id ?? null,
             'farm_name'     => $farm?->name ?? null,
+            'assigned_farms' => $assignedFarms,
             'created_by_name' => $admin->creator?->name ?? null,
             'created_at'    => $admin->created_at,
         ];

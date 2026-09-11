@@ -228,6 +228,13 @@ class Admin extends Authenticatable
         return $this->mobile_number;
     }
 
+    // Many-to-many relationship with farms
+    public function farms()
+    {
+        return $this->belongsToMany(Farm::class, 'admin_farm', 'admin_id', 'farm_id')
+                    ->withTimestamps();
+    }
+
     public function hasAssignment(): int
     {
         return Farm::where(function ($q) {

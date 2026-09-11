@@ -76,7 +76,8 @@ class FarmController extends Controller
             'name' => 'required|unique:farms,name',
             'location' => 'required',
             'number_of_hangars' => 'required|numeric|min:1',
-            'assigned_to' => 'nullable|exists:admins,id',
+            'assigned_to' => 'nullable|array',
+            'assigned_to.*' => 'exists:admins,id',
             'type' => 'required',
             'phone_code' => 'nullable|string|max:10',
             'mobile_number' => 'nullable|string|max:20',
@@ -86,19 +87,29 @@ class FarmController extends Controller
             'name' => $request->name,
             'location' => $request->location,
             'number_of_hangars' => $request->number_of_hangars,
-            'assigned_to' => $request->assigned_to,
             'type' => $request->type,
             'phone_code' => $request->phone_code,
             'mobile_number' => $request->mobile_number,
             'created_by' => auth()->id()
         ];
+
+        // Keep first assigned_to for backward compatibility
+        if ($request->filled('assigned_to') && is_array($request->assigned_to) && count($request->assigned_to) > 0) {
+            $createData['assigned_to'] = $request->assigned_to[0];
+        }
+
         $farm = Farm::create($createData);
+
+        // Assign to multiple admins
+        if ($request->filled('assigned_to') && is_array($request->assigned_to)) {
+            $farm->assignedAdmins()->sync($request->assigned_to);
+        }
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Farm created successfully.',
-                'farm' => $farm->load('assignedAdmin', 'creator')
+                'farm' => $farm->load('assignedAdmin', 'assignedAdmins', 'creator')
             ]);
         }
 
@@ -135,27 +146,43 @@ class FarmController extends Controller
             'name' => 'required|unique:farms,name,' . $farm->id,
             'location' => 'required',
             'number_of_hangars' => 'required|numeric|min:1',
-            'assigned_to' => 'nullable|exists:admins,id',
+            'assigned_to' => 'nullable|array',
+            'assigned_to.*' => 'exists:admins,id',
             'type' => 'required',
             'phone_code' => 'nullable|string|max:10',
             'mobile_number' => 'nullable|string|max:20',
         ]);
 
-        $farm->update([
+        $updateData = [
             'name' => $request->name,
             'location' => $request->location,
             'number_of_hangars' => $request->number_of_hangars,
-            'assigned_to' => $request->assigned_to,
             'type' => $request->type,
             'phone_code' => $request->phone_code,
             'mobile_number' => $request->mobile_number,
-        ]);
+        ];
+
+        // Keep first assigned_to for backward compatibility
+        if ($request->filled('assigned_to') && is_array($request->assigned_to) && count($request->assigned_to) > 0) {
+            $updateData['assigned_to'] = $request->assigned_to[0];
+        } else {
+            $updateData['assigned_to'] = null;
+        }
+
+        $farm->update($updateData);
+
+        // Assign to multiple admins
+        if ($request->filled('assigned_to') && is_array($request->assigned_to)) {
+            $farm->assignedAdmins()->sync($request->assigned_to);
+        } else {
+            $farm->assignedAdmins()->detach();
+        }
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Farm updated successfully.',
-                'farm' => $farm->load('assignedAdmin', 'creator')
+                'farm' => $farm->load('assignedAdmin', 'assignedAdmins', 'creator')
             ]);
         }
 

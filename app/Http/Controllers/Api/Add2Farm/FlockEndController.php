@@ -69,7 +69,10 @@ class FlockEndController extends BaseController
         $query = FlockEnd::whereHas('flock', function ($q) use ($user) {
             $q->where('created_by', $user->id)
               ->orWhereHas('farm', function ($q) use ($user) {
-                  $q->where('assigned_to', $user->id);
+                  $q->where('assigned_to', $user->id)
+                    ->orWhereHas('assignedAdmins', function ($sq) use ($user) {
+                        $sq->where('admin_id', $user->id);
+                    });
               });
         })
         ->with('flock', 'hangar', 'slaughter', 'endedBy')
@@ -153,7 +156,10 @@ class FlockEndController extends BaseController
         $flockEnd = FlockEnd::whereHas('flock', function ($q) use ($user) {
             $q->where('created_by', $user->id)
               ->orWhereHas('farm', function ($q) use ($user) {
-                  $q->where('assigned_to', $user->id);
+                  $q->where('assigned_to', $user->id)
+                    ->orWhereHas('assignedAdmins', function ($sq) use ($user) {
+                        $sq->where('admin_id', $user->id);
+                    });
               });
         })
         ->with('flock', 'hangar', 'slaughter', 'endedBy')
@@ -254,7 +260,10 @@ class FlockEndController extends BaseController
             ->whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
+                      ->orWhere('assigned_to', $user->id)
+                      ->orWhereHas('assignedAdmins', function ($sq) use ($user) {
+                          $sq->where('admin_id', $user->id);
+                      });
                 });
             })
             ->with('flockHangarAllocations.hangar')
@@ -406,7 +415,10 @@ class FlockEndController extends BaseController
         $flockEnd = FlockEnd::whereHas('flock', function ($q) use ($user) {
             $q->where('created_by', $user->id)
               ->orWhereHas('farm', function ($q) use ($user) {
-                  $q->where('assigned_to', $user->id);
+                  $q->where('assigned_to', $user->id)
+                    ->orWhereHas('assignedAdmins', function ($sq) use ($user) {
+                        $sq->where('admin_id', $user->id);
+                    });
               });
         })->find($id);
 
@@ -574,7 +586,10 @@ class FlockEndController extends BaseController
         $flockEnd = FlockEnd::whereHas('flock', function ($q) use ($user) {
             $q->where('created_by', $user->id)
               ->orWhereHas('farm', function ($q) use ($user) {
-                  $q->where('assigned_to', $user->id);
+                  $q->where('assigned_to', $user->id)
+                    ->orWhereHas('assignedAdmins', function ($sq) use ($user) {
+                        $sq->where('admin_id', $user->id);
+                    });
               });
         })->find($id);
 

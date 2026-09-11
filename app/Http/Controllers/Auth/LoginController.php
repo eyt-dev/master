@@ -159,20 +159,27 @@ class LoginController extends Controller
         $username = $request->route('username');
         $setting = $user->setting;
 
-        // Check conditions for specific routing
-        if ($host === config('domains.admin_subdomain') && $user->hasRole('SuperAdmin') && !$username) {
-            return redirect('/e/dashboard');
-        }
-
-        if ($host === config('domains.admin_subdomain') && ($username === $user->username || $username == 'e')) {
+        // If on admin subdomain with username in route, redirect to /{username}/dashboard
+        if ($host === config('domains.admin_subdomain') && $username) {
             return redirect("/$username/dashboard");
         }
 
+        // If on admin subdomain as SuperAdmin without username, redirect to /e/dashboard
+        if ($host === config('domains.admin_subdomain') && $user->hasRole('SuperAdmin')) {
+            return redirect('/e/dashboard');
+        }
+
+        // If user has a setting with admin_domain matching current host
         if ($setting && $setting->admin_domain === $host) {
             return redirect('/e/dashboard');
         }
 
-        // Default redirect to dashboard if no specific conditions matched
-        return redirect($this->redirectTo ?? '/e/dashboard');
+        // If logged in via username prefix but host doesn't match admin subdomain
+        if ($username) {
+            return redirect()->route('dashboard', ['username' => $username]);
+        }
+
+        // Default fallback
+        return redirect('/e/dashboard');
     }
 }

@@ -122,7 +122,7 @@ class FarmerController extends BaseController
                         ->where('farms.name', 'like', "%{$request->farm_name}%");
                 });
             })
-            ->with('creator')
+            ->with('creator', 'farms')
             ->orderBy('created_at', 'desc')
             ->paginate($request->per_page ?? 15);
 
@@ -186,7 +186,7 @@ class FarmerController extends BaseController
 
         $admin = Admin::where('type', self::ADMIN_TYPE)
             ->where('created_by', auth()->id())
-            ->with('creator', 'projectStatuses')
+            ->with('creator', 'projectStatuses', 'farms')
             ->find($id);
 
         if (!$admin) {
@@ -343,10 +343,9 @@ class FarmerController extends BaseController
                 ]);
             }
 
-            // Assign farmer to farms if farm_ids provided
+            // Assign farmer to farms if farm_id or farm_ids provided
             if ($request->filled('farm_id')) {
-                $farm = \App\Models\Farm::findOrFail($request->farm_id);
-                $farm->assignedAdmins()->attach($admin->id);
+                $admin->farms()->attach($request->farm_id);
             }
 
             if ($request->filled('farm_ids')) {
@@ -551,10 +550,9 @@ class FarmerController extends BaseController
                 $admin->syncRoles([$role->id]);
             }
 
-            // Handle farm assignments
+            // Handle farm assignments (support multiple farms)
             if ($request->filled('farm_id')) {
-                $farm = \App\Models\Farm::findOrFail($request->farm_id);
-                $farm->assignedAdmins()->sync([$admin->id]);
+                $admin->farms()->attach($request->farm_id);
             }
 
             if ($request->filled('farm_ids')) {
@@ -689,16 +687,12 @@ class FarmerController extends BaseController
               });
         })->first();
 
-        // Format assigned farms
-        $assignedFarms = $admin->farms->map(function ($f) {
-            return [
-                'id'   => $f->id,
-                'name' => $f->name,
-            ];
-        })->toArray();
+        // Format assigned farms as comma-separated string
+        $assignedFarmsArray = $admin->farms->pluck('name')->toArray();
+        $assignedFarmsString = !empty($assignedFarmsArray) ? implode(', ', $assignedFarmsArray) : null;
 
         // Status is Active if farm assigned, otherwise Inactive
-        $displayStatus = ($farm || count($assignedFarms) > 0) ? 'Active' : 'Inactive';
+        $displayStatus = ($farm || !empty($assignedFarmsArray)) ? 'Active' : 'Inactive';
 
         return [
             'id'            => $admin->id,
@@ -715,7 +709,7 @@ class FarmerController extends BaseController
             'image_url'     => $imageUrl,
             'farm_id'       => $farm?->id ?? null,
             'farm_name'     => $farm?->name ?? null,
-            'assigned_farms' => $assignedFarms,
+            'assigned_farms' => $assignedFarmsString,
             'created_by_name' => $admin->creator?->name ?? null,
             'created_at'    => $admin->created_at,
         ];

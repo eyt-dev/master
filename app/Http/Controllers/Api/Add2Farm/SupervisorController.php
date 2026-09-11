@@ -117,7 +117,7 @@ class SupervisorController extends BaseController
                         ->where('farms.name', 'like', "%{$request->farm_name}%");
                 });
             })
-            ->with('creator')
+            ->with('creator', 'farms')
             ->orderBy('created_at', 'desc')
             ->paginate($request->per_page ?? 15);
 
@@ -181,7 +181,7 @@ class SupervisorController extends BaseController
 
         $admin = Admin::where('type', self::ADMIN_TYPE)
             ->where('created_by', auth()->id())
-            ->with('creator')
+            ->with('creator', 'farms')
             ->find($id);
 
         if (!$admin) {
@@ -316,20 +316,14 @@ class SupervisorController extends BaseController
                 ]);
             }
 
-            // Assign supervisor to farm if farm_id provided
+            // Assign supervisor to farm(s) if farm_id or farm_ids provided
             if ($request->filled('farm_id')) {
                 $farm = \App\Models\Farm::findOrFail($request->farm_id);
+                $admin->farms()->attach($farm->id);
+            }
 
-                // Check if farm is already assigned to another supervisor
-                if ($farm->assigned_to !== null) {
-                    DB::rollBack();
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'This farm is already assigned to another supervisor.',
-                    ], 422);
-                }
-
-                $farm->update(['assigned_to' => $admin->id]);
+            if ($request->filled('farm_ids')) {
+                $admin->farms()->sync($request->farm_ids);
             }
 
             DB::commit();
@@ -508,11 +502,13 @@ class SupervisorController extends BaseController
                 $admin->syncRoles([$role->id]);
             }
 
-            // Handle farm assignment (same as store method)
+            // Handle farm assignment (support multiple farms)
             if ($request->filled('farm_id')) {
-                \App\Models\Farm::findOrFail($request->farm_id)->update([
-                    'assigned_to' => $admin->id,
-                ]);
+                $admin->farms()->attach($request->farm_id);
+            }
+
+            if ($request->filled('farm_ids')) {
+                $admin->farms()->sync($request->farm_ids);
             }
 
             DB::commit();
@@ -612,11 +608,20 @@ class SupervisorController extends BaseController
             $imageUrl = route('api.files', ['path' => $admin->image]);
         }
 
-        // Load assigned farm if exists
-        $farm = \App\Models\Farm::where('assigned_to', $admin->id)->first();
+        // Load assigned farms if not already loaded
+        if (!$admin->relationLoaded('farms')) {
+            $admin->load('farms');
+        }
+
+        // Get first farm from pivot table for backward compatibility
+        $farm = $admin->farms->first();
+
+        // Format assigned farms as comma-separated string
+        $assignedFarmsArray = $admin->farms->pluck('name')->toArray();
+        $assignedFarmsString = !empty($assignedFarmsArray) ? implode(', ', $assignedFarmsArray) : null;
 
         // Status is Active if farm assigned, otherwise Inactive
-        $displayStatus = $farm ? 'Active' : 'Inactive';
+        $displayStatus = !empty($assignedFarmsArray) ? 'Active' : 'Inactive';
 
         return [
             'id'            => $admin->id,
@@ -633,6 +638,7 @@ class SupervisorController extends BaseController
             'image_url'     => $imageUrl,
             'farm_id'       => $farm?->id ?? null,
             'farm_name'     => $farm?->name ?? null,
+            'assigned_farms' => $assignedFarmsString,
             'created_by_name' => $admin->creator?->name ?? null,
             'created_at'    => $admin->created_at,
         ];

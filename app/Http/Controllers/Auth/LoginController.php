@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use App\Models\Admin;
 use Illuminate\Http\Request;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
@@ -42,29 +43,113 @@ class LoginController extends Controller
     }
 
     /**
-     * Get the login username to be used by the controller.
-     * Supports both email and mobile_number.
+     * Validate the user login request.
      */
-    public function username()
+    protected function validateLogin(Request $request)
     {
-        $login = request()->input('login');
-        $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'mobile_number';
-        request()->merge([$fieldType => $login]);
-        return $fieldType;
+        $this->validate($request, [
+            'login' => 'required|string',
+            'password' => 'required|string',
+        ]);
     }
 
     /**
-     * Get the needed authorization credentials from the request.
+     * Handle a login attempt with email or mobile number.
      */
-    public function credentials(Request $request)
+    protected function attemptLogin(Request $request)
     {
         $login = $request->input('login');
-        $fieldType = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'mobile_number';
+        $password = $request->input('password');
 
-        return [
-            $fieldType => $login,
-            'password' => $request->input('password'),
-        ];
+        if (empty($login) || empty($password)) {
+            return false;
+        }
+
+        // Determine if login is email or mobile number
+        $isEmail = filter_var($login, FILTER_VALIDATE_EMAIL);
+
+        if ($isEmail) {
+            // Login with email
+            $admin = Admin::where('email', $login)->first();
+        } else {
+            // Login with mobile number (supports formats like "+91 9876543210", "+919876543210", "9876543210")
+            $admin = $this->findAdminByMobileNumber($login);
+        }
+
+        if ($admin && Hash::check($password, $admin->password)) {
+            // Set the login field for the guard
+            return $this->guard()->loginUsingId($admin->id, $request->filled('remember'));
+        }
+
+        return false;
+    }
+
+    /**
+     * Find admin by mobile number with flexible format support.
+     * Handles: "+91 9876543210", "+919876543210", "9876543210"
+     */
+    private function findAdminByMobileNumber($input): ?Admin
+    {
+        // First, try exact match (stored as just the mobile number)
+        $admin = Admin::where('mobile_number', $input)->first();
+        if ($admin) {
+            return $admin;
+        }
+
+        // Check if input starts with + (international format)
+        if (strpos($input, '+') === 0) {
+            // Remove spaces first
+            $cleaned = str_replace(' ', '', $input);
+
+            // Remove the + for easier parsing
+            $digitsOnly = ltrim($cleaned, '+');
+
+            // Try different phone code lengths (1, 2, 3 digits)
+            for ($codeLength = 1; $codeLength <= 3; $codeLength++) {
+                if (strlen($digitsOnly) <= $codeLength) {
+                    continue;
+                }
+
+                $phoneCode = substr($digitsOnly, 0, $codeLength);
+                $mobileNumber = substr($digitsOnly, $codeLength);
+
+                // Try without + in phone code
+                $admin = Admin::where('phone_code', $phoneCode)
+                    ->where('mobile_number', $mobileNumber)
+                    ->first();
+                if ($admin) {
+                    return $admin;
+                }
+
+                // Also try with + in phone code
+                $admin = Admin::where('phone_code', '+' . $phoneCode)
+                    ->where('mobile_number', $mobileNumber)
+                    ->first();
+                if ($admin) {
+                    return $admin;
+                }
+            }
+
+            // Try as full mobile number without phone code
+            $admin = Admin::where('mobile_number', $digitsOnly)->first();
+            if ($admin) {
+                return $admin;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the failed login response instance.
+     */
+    protected function sendFailedLoginResponse(Request $request)
+    {
+        return back()
+            ->withInput($request->only('login', 'remember'))
+            ->withErrors([
+                'login' => trans('auth.failed'),
+            ]);
     }
 
     public function authenticated(Request $request, $user = null)
@@ -74,8 +159,7 @@ class LoginController extends Controller
         $username = $request->route('username');
         $setting = $user->setting;
 
-        // dd($user, $setting, $setting->admin_domain, $host);
-
+        // Check conditions for specific routing
         if ($host === config('domains.admin_subdomain') && $user->hasRole('SuperAdmin') && !$username) {
             return redirect('/e/dashboard');
         }
@@ -88,8 +172,7 @@ class LoginController extends Controller
             return redirect('/e/dashboard');
         }
 
-        auth()->logout();
-        abort(403, 'Unauthorized context.');
-
+        // Default redirect to dashboard if no specific conditions matched
+        return redirect($this->redirectTo ?? '/e/dashboard');
     }
 }

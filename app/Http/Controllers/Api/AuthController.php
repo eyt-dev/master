@@ -76,7 +76,7 @@ class AuthController extends Controller
 
     /**
      * Login and return a Sanctum token.
-     * Supports login via email or mobile number.
+     * Supports login via email or mobile number (with flexible phone code formats).
      */
     public function login(Request $request)
     {
@@ -93,20 +93,25 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $query = Admin::query();
+        $admin = null;
 
         if ($request->filled('email')) {
-            $query->where('email', $request->email);
+            $admin = Admin::where('email', $request->email)->first();
         } else {
-            $query->where('mobile_number', $request->mobile_number);
+            $admin = $this->findAdminByMobileNumber($request->mobile_number);
         }
 
-        $admin = $query->where(function ($query) {
-            $query->where('type', 0)
-                ->orWhereHas('project', function ($projectQuery) {
-                    $projectQuery->where('url', 'LIKE', '%add2mix.eyt.app%');
-                });
-        })->first();
+        // Apply type and project filters
+        if ($admin) {
+            $isAllowed = $admin->type == 0 || $admin->projectStatuses()
+                ->whereHas('project', function ($query) {
+                    $query->where('url', 'LIKE', '%add2mix.eyt.app%');
+                })->exists();
+
+            if (!$isAllowed) {
+                $admin = null;
+            }
+        }
 
         if (! $admin || ! Hash::check($request->password, $admin->password)) {
             return response()->json([
@@ -133,6 +138,62 @@ class AuthController extends Controller
             'token'   => $token,
             'user'    => $this->formatUser($admin),
         ]);
+    }
+
+    /**
+     * Find admin by mobile number with flexible format support.
+     * Handles: "+91 9876543210", "+919876543210", "9876543210"
+     */
+    private function findAdminByMobileNumber($input): ?Admin
+    {
+        $input = trim($input);
+
+        // First, try exact match
+        $admin = Admin::where('mobile_number', $input)->first();
+        if ($admin) {
+            return $admin;
+        }
+
+        // Check if input starts with + (international format)
+        if (strpos($input, '+') === 0) {
+            // Remove spaces
+            $cleaned = str_replace(' ', '', $input);
+            $digitsOnly = ltrim($cleaned, '+');
+
+            // Try different phone code lengths (1-3 digits)
+            for ($codeLength = 1; $codeLength <= 3; $codeLength++) {
+                if (strlen($digitsOnly) <= $codeLength) {
+                    continue;
+                }
+
+                $phoneCode = substr($digitsOnly, 0, $codeLength);
+                $mobileNumber = substr($digitsOnly, $codeLength);
+
+                // Try without + prefix
+                $admin = Admin::where('phone_code', $phoneCode)
+                    ->where('mobile_number', $mobileNumber)
+                    ->first();
+                if ($admin) {
+                    return $admin;
+                }
+
+                // Try with + prefix
+                $admin = Admin::where('phone_code', '+' . $phoneCode)
+                    ->where('mobile_number', $mobileNumber)
+                    ->first();
+                if ($admin) {
+                    return $admin;
+                }
+            }
+
+            // Fallback: try full number as mobile_number
+            $admin = Admin::where('mobile_number', $digitsOnly)->first();
+            if ($admin) {
+                return $admin;
+            }
+        }
+
+        return null;
     }
 
     /**

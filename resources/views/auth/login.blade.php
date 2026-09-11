@@ -20,7 +20,7 @@
                                         <hr>
                                         <p class="text-muted">Sign In to your account</p>
                                     </div>
-                                    <form method="POST" class="form-horizontal form-simple" action="{{ route('login', ['username' => request()->segment(1)]) }}" id="login">
+                                    <form method="POST" class="form-horizontal form-simple" action="{{ route('login', ['username' => request()->segment(1)]) }}" id="loginForm">
                                     @csrf
                                         <div class="mb-2">
                                             <div class="input-group mb-1">
@@ -29,7 +29,7 @@
                                                         <i class="fe fe-user"></i>
                                                     </div>
                                                 </div>
-                                                <input type="text" class="form-control" placeholder="Email or Mobile Number" name="login" id="login">
+                                                <input type="text" class="form-control" placeholder="Email or Mobile Number" name="login" id="loginInput">
                                             </div>
                                             @error('login')
                                                 <label id="login-error" class="error" for="login">{{ $message }}</label>
@@ -78,7 +78,7 @@
 <script src="{{URL::asset('assets/plugins/forn-wizard/js/jquery.validate.min.js')}}"></script>
 <script>
     $(document).ready(function() {
-        $("#login").validate({
+        $("#loginForm").validate({
             ignore: ":hidden",
             rules: {
                 login: {

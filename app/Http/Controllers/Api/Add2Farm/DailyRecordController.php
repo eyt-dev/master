@@ -263,48 +263,51 @@ class DailyRecordController extends BaseController
     }
 
     /**
-     * Create a new daily record
+     * Create new daily records
      *
-     * Create a new daily record for a flock/hangar combination.
+     * Create daily records for multiple hangars under the same flock and date.
      *
      * @authenticated
      * @bodyParam record_date date required Record date (format: dd-mm-yyyy). Example: 07-08-2026
      * @bodyParam flock_id integer required Flock ID. Example: 1
-     * @bodyParam hangar_id integer required Hangar ID. Example: 1
-     * @bodyParam feed_kg number required Feed quantity in kg. Example: 450.50
-     * @bodyParam eggs_tray_30 integer optional Number of egg trays (30 count). Example: 12
-     * @bodyParam eggs_count integer optional Egg count. Example: 360
-     * @bodyParam eggs_weight number optional Eggs weight in kg. Example: 18.50
-     * @bodyParam chicks_weight number optional Chicks weight in kg. Example: 1.85
-     * @bodyParam mortality integer optional Mortality count. Example: 5
+     * @bodyParam hangars array required Array of hangar records. Example: [{"hangar_id": 1, "feed_kg": 450.50, "mortality": 5, "eggs_tray_30": 12, "eggs_count": 360, "eggs_weight": 18.50}]
+     * @bodyParam hangars[].hangar_id integer required Hangar ID
+     * @bodyParam hangars[].feed_kg number required Feed quantity in kg
+     * @bodyParam hangars[].mortality integer required Mortality count
+     * @bodyParam hangars[].eggs_tray_30 integer optional Number of egg trays (30 count, for layer flocks)
+     * @bodyParam hangars[].eggs_count integer optional Egg count (for layer flocks)
+     * @bodyParam hangars[].eggs_weight number optional Eggs weight in kg (for layer flocks)
+     * @bodyParam hangars[].chicks_weight number optional Chicks weight in kg (for broiler flocks)
+     * @bodyParam hangars[].notes string optional Notes for this hangar record
      *
      * @response 201 {
      *   "success": true,
-     *   "message": "Daily record created successfully.",
-     *   "data": {
-     *     "id": 1,
-     *     "record_date": "2026-08-07",
-     *     "farm_id": 1,
-     *     "farm_name": "Main Farm",
-     *     "flock_id": 1,
-     *     "flock_name": "Farm1-Flock4",
-     *     "hangar_id": 1,
-     *     "hangar_name": "Farm1-Hangar1",
-     *     "feed_kg": 450.50,
-     *     "eggs_tray_30": 12,
-     *     "eggs_count": 360,
-     *     "eggs_weight": 18.50,
-     *     "chicks_weight": 1.85,
-     *     "mortality": 5,
-     *     "created_by": 1,
-     *     "created_by_name": "Admin Name",
-     *     "created_at": "2026-08-07T10:30:00Z"
-     *   }
+     *   "message": "Daily records created successfully.",
+     *   "data": [
+     *     {
+     *       "id": 1,
+     *       "record_date": "2026-08-07",
+     *       "farm_id": 1,
+     *       "farm_name": "Main Farm",
+     *       "flock_id": 1,
+     *       "flock_name": "Farm1-Flock4",
+     *       "hangar_id": 1,
+     *       "hangar_name": "Farm1-Hangar1",
+     *       "feed_kg": 450.50,
+     *       "eggs_tray_30": 12,
+     *       "eggs_count": 360,
+     *       "eggs_weight": 18.50,
+     *       "mortality": 5,
+     *       "created_by": 1,
+     *       "created_by_name": "Admin Name",
+     *       "created_at": "2026-08-07T10:30:00Z"
+     *     }
+     *   ]
      * }
      * @response 422 {
      *   "success": false,
      *   "errors": {
-     *     "record_date": ["The record date field is required."]
+     *     "hangars": ["The hangars field is required."]
      *   }
      * }
      */
@@ -317,18 +320,39 @@ class DailyRecordController extends BaseController
             ], 401);
         }
 
-        $validator = Validator::make($request->all(), [
+        $flock = Flock::find($request->flock_id);
+        if (!$flock) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['flock_id' => ['The selected flock id is invalid.']],
+            ], 422);
+        }
+
+        $breedType = $this->extractBreedType($flock->breed);
+
+        $rules = [
             'record_date'    => 'required|date_format:d-m-Y',
             'flock_id'       => 'required|integer|exists:flocks,id',
-            'hangar_id'      => 'required|integer|exists:hangars,id',
-            'feed_kg'        => 'required|numeric|min:0',
-            'eggs_tray_30'   => 'nullable|integer|min:0',
-            'eggs_count'     => 'nullable|integer|min:0',
-            'eggs_weight'    => 'nullable|numeric|min:0',
-            'chicks_weight'  => 'nullable|numeric|min:0',
-            'mortality'      => 'required|integer|min:0',
-            'notes'          => 'nullable|string|max:1000',
-        ]);
+            'hangars'        => 'required|array|min:1',
+            'hangars.*.hangar_id' => 'required|integer|exists:hangars,id',
+            'hangars.*.feed_kg' => 'required|numeric|min:0',
+            'hangars.*.mortality' => 'required|integer|min:0',
+            'hangars.*.notes' => 'nullable|string|max:1000',
+        ];
+
+        if ($breedType === 'Layer') {
+            $rules['hangars.*.eggs_tray_30'] = 'required|integer|min:0';
+            $rules['hangars.*.eggs_count'] = 'required|integer|min:0';
+            $rules['hangars.*.eggs_weight'] = 'required|numeric|min:0';
+            $rules['hangars.*.chicks_weight'] = 'nullable|numeric|min:0';
+        } else {
+            $rules['hangars.*.eggs_tray_30'] = 'nullable|integer|min:0';
+            $rules['hangars.*.eggs_count'] = 'nullable|integer|min:0';
+            $rules['hangars.*.eggs_weight'] = 'nullable|numeric|min:0';
+            $rules['hangars.*.chicks_weight'] = 'nullable|numeric|min:0';
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return response()->json([
@@ -340,47 +364,37 @@ class DailyRecordController extends BaseController
         try {
             DB::beginTransaction();
 
-            // Get flock to retrieve farm_id and breed type
-            $flock = Flock::findOrFail($request->flock_id);
-            $breedType = $this->extractBreedType($flock->breed);
-
-            // For Layer breeds, eggs_weight is required
-            if ($breedType === 'Layer') {
-                if (!$request->eggs_weight || $request->eggs_weight === '') {
-                    DB::rollBack();
-                    return response()->json([
-                        'success' => false,
-                        'errors'  => ['eggs_weight' => ['The eggs weight field is required for Layer breeds.']],
-                    ], 422);
-                }
-            }
-
-            // Convert date format from dd-mm-yyyy to yyyy-mm-dd
             $recordDate = \Carbon\Carbon::createFromFormat('d-m-Y', $request->record_date);
+            $records = [];
 
-            $record = DailyRecord::create([
-                'record_date'   => $recordDate,
-                'farm_id'       => $flock->farm_id,
-                'flock_id'      => $request->flock_id,
-                'hangar_id'     => $request->hangar_id,
-                'feed_kg'       => $request->feed_kg,
-                'eggs_tray_30'  => $request->eggs_tray_30 ?? 0,
-                'eggs_count'    => $request->eggs_count ?? 0,
-                'eggs_weight'   => $request->eggs_weight ?? 0,
-                'chicks_weight' => $request->chicks_weight ?? 0,
-                'mortality'     => $request->mortality ?? 0,
-                'notes'         => $request->notes ?? null,
-                'created_by'    => auth()->id(),
-            ]);
+            foreach ($request->hangars as $hangarData) {
+                $record = DailyRecord::create([
+                    'record_date'   => $recordDate,
+                    'farm_id'       => $flock->farm_id,
+                    'flock_id'      => $request->flock_id,
+                    'hangar_id'     => $hangarData['hangar_id'],
+                    'feed_kg'       => $hangarData['feed_kg'],
+                    'eggs_tray_30'  => $hangarData['eggs_tray_30'] ?? 0,
+                    'eggs_count'    => $hangarData['eggs_count'] ?? 0,
+                    'eggs_weight'   => $hangarData['eggs_weight'] ?? 0,
+                    'chicks_weight' => $hangarData['chicks_weight'] ?? 0,
+                    'mortality'     => $hangarData['mortality'] ?? 0,
+                    'notes'         => $hangarData['notes'] ?? null,
+                    'created_by'    => auth()->id(),
+                ]);
+                $records[] = $record;
+            }
 
             DB::commit();
 
-            $record->load('farm', 'flock', 'hangar', 'creator');
+            foreach ($records as $record) {
+                $record->load('farm', 'flock', 'hangar', 'creator');
+            }
 
             return response()->json([
                 'success' => true,
                 'message' => $this->translationService->get('daily_record_created_successfully'),
-                'data'    => $this->formatDailyRecord($record),
+                'data'    => array_map(fn($record) => $this->formatDailyRecord($record), $records),
             ], 201);
 
         } catch (\Exception $e) {
@@ -462,17 +476,30 @@ class DailyRecordController extends BaseController
             ], 404);
         }
 
-        $validator = Validator::make($request->all(), [
+        $flock = Flock::findOrFail($record->flock_id);
+        $breedType = $this->extractBreedType($flock->breed);
+
+        $rules = [
             'record_date'    => 'required|date_format:d-m-Y',
             'hangar_id'      => 'required|integer|exists:hangars,id',
             'feed_kg'        => 'required|numeric|min:0',
-            'eggs_tray_30'   => 'nullable|integer|min:0',
-            'eggs_count'     => 'nullable|integer|min:0',
-            'eggs_weight'    => 'nullable|numeric|min:0',
-            'chicks_weight'  => 'nullable|numeric|min:0',
             'mortality'      => 'required|integer|min:0',
             'notes'          => 'nullable|string|max:1000',
-        ]);
+        ];
+
+        if ($breedType === 'Layer') {
+            $rules['eggs_tray_30'] = 'required|integer|min:0';
+            $rules['eggs_count'] = 'required|integer|min:0';
+            $rules['eggs_weight'] = 'required|numeric|min:0';
+            $rules['chicks_weight'] = 'nullable|numeric|min:0';
+        } else {
+            $rules['eggs_tray_30'] = 'nullable|integer|min:0';
+            $rules['eggs_count'] = 'nullable|integer|min:0';
+            $rules['eggs_weight'] = 'nullable|numeric|min:0';
+            $rules['chicks_weight'] = 'nullable|numeric|min:0';
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return response()->json([
@@ -483,21 +510,6 @@ class DailyRecordController extends BaseController
 
         try {
             DB::beginTransaction();
-
-            // Get flock to check breed type
-            $flock = Flock::findOrFail($record->flock_id);
-            $breedType = $this->extractBreedType($flock->breed);
-
-            // For Layer breeds, eggs_weight is required
-            if ($breedType === 'Layer') {
-                if (!$request->eggs_weight || $request->eggs_weight === '') {
-                    DB::rollBack();
-                    return response()->json([
-                        'success' => false,
-                        'errors'  => ['eggs_weight' => ['The eggs weight field is required for Layer breeds.']],
-                    ], 422);
-                }
-            }
 
             // Convert date format from dd-mm-yyyy to yyyy-mm-dd
             $recordDate = \Carbon\Carbon::createFromFormat('d-m-Y', $request->record_date);

@@ -106,10 +106,9 @@ class ChickenSalesController extends Controller
 
     public function getHangarsByFlock($siteUrl, $flockId)
     {
-        $hangars = Hangar::where('status', 'Active')
-            ->whereHas('flocks', function($query) use ($flockId) {
-                $query->where('flock_id', $flockId);
-            })->get();
+        $hangars = Hangar::whereHas('flocks', function($query) use ($flockId) {
+            $query->where('flock_id', $flockId);
+        })->get();
         return response()->json($hangars);
     }
 
@@ -217,10 +216,9 @@ class ChickenSalesController extends Controller
         }
 
         $flocks = Flock::where('farm_id', $flockEnd->flock->farm_id)->get();
-        $hangars = Hangar::where('status', 'Active')
-            ->whereHas('flocks', function($query) use ($flockEnd) {
-                $query->where('flock_id', $flockEnd->flock_id);
-            })->get();
+        $hangars = Hangar::whereHas('flocks', function($query) use ($flockEnd) {
+            $query->where('flock_id', $flockEnd->flock_id);
+        })->get();
         $slaughters = Slaughter::all();
 
         return view('backend.chicken-sale.create', [

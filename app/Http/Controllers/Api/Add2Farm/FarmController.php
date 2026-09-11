@@ -273,7 +273,6 @@ class FarmController extends BaseController
             'hangars.*.area_sqm'        => 'required|numeric|min:0',
             'hangars.*.layer_hens'      => 'nullable|integer|min:0',
             'hangars.*.broiler_hens'    => 'nullable|integer|min:0',
-            'hangars.*.status'          => 'nullable|string|in:Active,Inactive',
         ]);
 
         if ($validator->fails()) {
@@ -326,7 +325,6 @@ class FarmController extends BaseController
                     'area_sqm'      => $hangarData['area_sqm'] ?? null,
                     'layer_hens'    => $hangarData['layer_hens'] ?? null,
                     'broiler_hens'  => $hangarData['broiler_hens'] ?? null,
-                    'status'        => $hangarData['status'] ?? 'Active',
                     'created_by'    => auth()->id(),
                 ]);
             }
@@ -486,7 +484,6 @@ class FarmController extends BaseController
             'hangars.*.area_sqm'        => 'required|numeric|min:0',
             'hangars.*.layer_hens'      => 'nullable|integer|min:0',
             'hangars.*.broiler_hens'    => 'nullable|integer|min:0',
-            'hangars.*.status'          => 'nullable|string|in:Active,Inactive',
         ]);
 
         if ($validator->fails()) {
@@ -548,7 +545,6 @@ class FarmController extends BaseController
                         'area_sqm'      => $hangarData['area_sqm'] ?? null,
                         'layer_hens'    => $hangarData['layer_hens'] ?? null,
                         'broiler_hens'  => $hangarData['broiler_hens'] ?? null,
-                        'status'        => $hangarData['status'] ?? 'Active',
                     ]);
                 } else {
                     // Create new hangar
@@ -558,7 +554,6 @@ class FarmController extends BaseController
                         'area_sqm'      => $hangarData['area_sqm'] ?? null,
                         'layer_hens'    => $hangarData['layer_hens'] ?? null,
                         'broiler_hens'  => $hangarData['broiler_hens'] ?? null,
-                        'status'        => $hangarData['status'] ?? 'Active',
                         'created_by'    => auth()->id(),
                     ]);
                 }
@@ -684,10 +679,7 @@ class FarmController extends BaseController
             $farm->load('hangars');
         }
 
-        // Filter to only Active hangars
-        $activeHangars = $farm->hangars->where('status', 'Active');
-
-        $hangars = $activeHangars->map(function ($hangar) {
+        $hangars = $farm->hangars->map(function ($hangar) {
             return [
                 'id'            => $hangar->id,
                 'name'          => $hangar->name,

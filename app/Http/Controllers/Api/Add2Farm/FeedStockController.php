@@ -56,9 +56,8 @@ class FeedStockController extends BaseController
             return response()->json(['success' => false, 'message' => 'Farm not found or access denied.'], 403);
         }
 
-        // Get all active hangars and their remaining quantities
+        // Get all hangars and their remaining quantities
         $hangars = Hangar::where('farm_id', $farm_id)
-            ->where('status', 'Active')
             ->get()
             ->map(function ($hangar) {
                 $remaining = MaterialStockHangar::where('hangar_id', $hangar->id)
@@ -255,7 +254,7 @@ class FeedStockController extends BaseController
             }
 
             // Validate all hangars belong to this farm
-            $farmHangarIds = Hangar::where('farm_id', $data['farm_id'])->where('status', 'Active')->pluck('id')->toArray();
+            $farmHangarIds = Hangar::where('farm_id', $data['farm_id'])->pluck('id')->toArray();
             $requestHangarIds = array_column($data['hangar_allocations'], 'hangar_id');
             $invalidHangars = array_diff($requestHangarIds, $farmHangarIds);
 
@@ -381,7 +380,7 @@ class FeedStockController extends BaseController
             DB::beginTransaction();
 
             // Validate all hangars belong to this farm
-            $farmHangarIds = Hangar::where('farm_id', $record->farm_id)->where('status', 'Active')->pluck('id')->toArray();
+            $farmHangarIds = Hangar::where('farm_id', $record->farm_id)->pluck('id')->toArray();
             $requestHangarIds = array_column($data['hangar_allocations'], 'hangar_id');
             $invalidHangars = array_diff($requestHangarIds, $farmHangarIds);
 

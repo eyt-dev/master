@@ -15,7 +15,6 @@ class Hangar extends Model
         'area_sqm',
         'layer_hens',
         'broiler_hens',
-        'status',
         'created_by',
     ];
 
@@ -60,5 +59,10 @@ class Hangar extends Model
     public function materialStockAllocations()
     {
         return $this->hasMany(MaterialStockHangar::class, 'hangar_id');
+    }
+
+    public function getStatusAttribute(): string
+    {
+        return $this->flockAllocations()->exists() ? 'Active' : 'Inactive';
     }
 }

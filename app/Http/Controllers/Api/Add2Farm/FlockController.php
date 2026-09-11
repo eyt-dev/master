@@ -308,8 +308,8 @@ class FlockController extends BaseController
             ], 404);
         }
 
-        // Get all ACTIVE hangars for the farm
-        $hangars = $farm->hangars()->where('status', 'Active')->get();
+        // Get all hangars for the farm
+        $hangars = $farm->hangars()->get();
 
         // Get allocations for all flocks in this farm
         $allocations = FlockHangar::whereHas('flock', function ($q) use ($farmId) {

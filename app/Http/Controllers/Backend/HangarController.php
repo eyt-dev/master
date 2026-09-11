@@ -73,7 +73,6 @@ class HangarController extends Controller
             'area_sqm' => 'required|numeric',
             'layer_hens' => 'required|integer',
             'broiler_hens' => 'required|integer',
-            'status' => 'required|in:Active,Inactive',
         ]);
 
         $createData = [
@@ -82,7 +81,6 @@ class HangarController extends Controller
             'area_sqm' => $request->area_sqm,
             'layer_hens' => $request->layer_hens,
             'broiler_hens' => $request->broiler_hens,
-            'status' => trim($request->status),
             'created_by' => auth()->id()
         ];
         Hangar::create($createData);
@@ -140,7 +138,6 @@ class HangarController extends Controller
             'area_sqm' => 'required|numeric',
             'layer_hens' => 'required|integer',
             'broiler_hens' => 'required|integer',
-            'status' => 'required|in:Active,Inactive',
         ]);
 
         $hangar->update([
@@ -149,7 +146,6 @@ class HangarController extends Controller
             'area_sqm' => $request->area_sqm,
             'layer_hens' => $request->layer_hens,
             'broiler_hens' => $request->broiler_hens,
-            'status' => trim($request->status),
         ]);
 
         Session::flash('successMsg', 'Hangar updated successfully.');

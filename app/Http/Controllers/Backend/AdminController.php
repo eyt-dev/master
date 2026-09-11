@@ -505,7 +505,7 @@ class AdminController extends Controller
     {
         if ($request->ajax()) {
             $admin = auth()->user();
-            $query = Admin::query()->where('type', 4)->with(['creator', 'projectStatuses.project']);
+            $query = Admin::query()->where('type', 4)->with(['creator', 'projectStatuses.project', 'farms']);
 
             // Super Admin sees all farmers, others see only created farmers
             if ($admin->type != Admin::SUPER_ADMIN) {
@@ -532,6 +532,13 @@ class AdminController extends Controller
                         return '<img src="' . $url . '" alt="' . $row->name . '" style="height: 40px; width: 40px; border-radius: 50%; object-fit: cover;">';
                     }
                     return '<div style="height: 40px; width: 40px; border-radius: 50%; background: #ddd; display: flex; align-items: center; justify-content: center;"><i class="fa fa-user"></i></div>';
+                })
+                ->addColumn('assigned_farms', function($row) {
+                    $farms = $row->farms->pluck('name')->toArray();
+                    if (empty($farms)) {
+                        return '<span class="text-muted">Not assigned</span>';
+                    }
+                    return implode(', ', $farms);
                 })
                 ->addColumn('project_statuses_json', function ($row) use ($allProjects) {
                     try {
@@ -582,7 +589,7 @@ class AdminController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'status', 'image_thumbnail', 'project_statuses_json'])
+                ->rawColumns(['action', 'status', 'image_thumbnail', 'project_statuses_json', 'assigned_farms'])
                 ->addIndexColumn()
                 ->with('projects', $allProjects)
                 ->make(true);

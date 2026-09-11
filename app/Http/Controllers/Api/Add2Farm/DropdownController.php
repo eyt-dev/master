@@ -135,11 +135,13 @@ class DropdownController extends BaseController
      *   "data": [
      *     {
      *       "id": 1,
-     *       "name": "John Supervisor"
+     *       "name": "John Supervisor",
+     *       "assigned_to_farm": "Farm A, Farm B"
      *     },
      *     {
      *       "id": 3,
-     *       "name": "Alice Supervisor"
+     *       "name": "Alice Supervisor",
+     *       "assigned_to_farm": "Farm C"
      *     }
      *   ]
      * }
@@ -169,8 +171,16 @@ class DropdownController extends BaseController
         $supervisors = Admin::where('type', $supervisorType)
             ->where('created_by', $user->id)
             ->select('id', 'name')
+            ->with('farms:id,name')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(function ($supervisor) {
+                return [
+                    'id' => $supervisor->id,
+                    'name' => $supervisor->name,
+                    'assigned_to_farm' => $supervisor->farms->pluck('name')->implode(', '),
+                ];
+            });
 
         return response()->json([
             'success' => true,

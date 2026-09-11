@@ -60,6 +60,7 @@
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Created By</th>
+                                    <th>Assigned Farms</th>
                                     @foreach($projects as $project)
                                         <th>{{ $project->project_name }}</th>
                                     @endforeach
@@ -126,6 +127,12 @@
             {
                 data: 'created_by_name',
                 name: 'created_by_name',
+                orderable: false,
+                searchable: false
+            },
+            {
+                data: 'assigned_farms',
+                name: 'assigned_farms',
                 orderable: false,
                 searchable: false
             }

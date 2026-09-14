@@ -165,7 +165,7 @@
             }, function(willDelete) {
                 if (willDelete) {
                     $.ajax({
-                        type: "get",
+                        type: "DELETE",
                         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
                         url: "{{ route('daily-record.destroy', ['username' => $siteSlug, 'daily_record' => ':id']) }}".replace(':id', id),
                         success: function(response) {

@@ -645,7 +645,9 @@ class DailyRecordController extends BaseController
             $flock = Flock::findOrFail($request->flock_id);
 
             // Delete all existing records for this date, flock, and farm
-            DailyRecord::where('record_date', $recordDate)
+            // Use the old record's date if it exists, to ensure proper deletion
+            $oldDate = $record->record_date;
+            DailyRecord::where('record_date', $oldDate)
                 ->where('farm_id', $flock->farm_id)
                 ->where('flock_id', $request->flock_id)
                 ->where('created_by', auth()->id())

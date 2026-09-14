@@ -935,11 +935,10 @@ class FlockController extends BaseController
                     'quantity'  => $allocation['quantity'],
                 ]);
 
-                // Update hangar status to Active if newly added
-                if (!in_array($allocation['hangar_id'], $oldHangarIds)) {
-                    \App\Models\Hangar::where('id', $allocation['hangar_id'])
-                        ->update(['status' => 'Active']);
-                }
+                // Ensure all allocated hangars are set to Active
+                // (handles case where hangar was allocated before but status wasn't Active)
+                \App\Models\Hangar::where('id', $allocation['hangar_id'])
+                    ->update(['status' => 'Active']);
             }
 
             DB::commit();

@@ -639,6 +639,7 @@ class FlockEndController extends BaseController
             'flock_name' => $flockEnd->flock?->name,
             'hangar_id' => $flockEnd->hangar_id,
             'hangar_name' => $flockEnd->hangar?->name,
+            'hangar_status' => $flockEnd->hangar?->status,
             'slaughter_id' => $flockEnd->slaughter_id,
             'slaughter_name' => $flockEnd->slaughter?->name,
             'sale_date' => $flockEnd->sale_date?->format('Y-m-d'),

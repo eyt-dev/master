@@ -15,6 +15,7 @@ class Hangar extends Model
         'area_sqm',
         'layer_hens',
         'broiler_hens',
+        'status',
         'created_by',
     ];
 
@@ -61,8 +62,10 @@ class Hangar extends Model
         return $this->hasMany(MaterialStockHangar::class, 'hangar_id');
     }
 
+    // Status is now explicitly set when flocks are assigned/unassigned
+    // This returns the stored database value, defaulting to 'Inactive' if not set
     public function getStatusAttribute(): string
     {
-        return $this->flockAllocations()->exists() ? 'Active' : 'Inactive';
+        return $this->attributes['status'] ?? 'Inactive';
     }
 }

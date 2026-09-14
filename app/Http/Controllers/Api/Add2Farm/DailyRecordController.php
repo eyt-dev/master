@@ -827,6 +827,7 @@ class DailyRecordController extends BaseController
             return [
                 'hangar_id' => $firstHangarRecord->hangar_id,
                 'hangar_name' => $firstHangarRecord->hangar?->name,
+                'status' => $firstHangarRecord->hangar?->status,
                 'feed_kg' => $this->formatDecimal($totalFeed),
                 'eggs_tray_30' => (int) $totalEggsTray,
                 'eggs_count' => (int) $totalEggs,
@@ -886,6 +887,7 @@ class DailyRecordController extends BaseController
             return [
                 'hangar_id' => $record->hangar_id,
                 'hangar_name' => $record->hangar?->name,
+                'status' => $record->hangar?->status,
                 'feed_kg' => $this->formatDecimal($record->feed_kg),
                 'eggs_tray_30' => (int) $record->eggs_tray_30,
                 'eggs_count' => (int) $record->eggs_count,

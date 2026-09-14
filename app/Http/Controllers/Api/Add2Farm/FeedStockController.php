@@ -67,6 +67,7 @@ class FeedStockController extends BaseController
                 return [
                     'hangar_id' => $hangar->id,
                     'hangar_name' => $hangar->name,
+                    'status' => $hangar->status,
                     'remaining_quantity' => $this->formatDecimal($remaining),
                 ];
             });
@@ -498,6 +499,7 @@ class FeedStockController extends BaseController
             'hangar_allocations' => $record->materialStockHangarAllocations->map(fn($a) => [
                 'hangar_id' => $a->hangar_id,
                 'hangar_name' => $a->hangar->name,
+                'status' => $a->hangar->status,
                 'quantity' => $this->formatDecimal($a->quantity),
                 'remaining_quantity' => $this->formatDecimal($a->remaining_quantity),
             ]),

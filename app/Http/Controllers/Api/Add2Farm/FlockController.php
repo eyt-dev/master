@@ -238,6 +238,7 @@ class FlockController extends BaseController
                 'hangar_id' => $allocation->hangar_id,
                 'hangar_name' => $allocation->hangar->name,
                 'allocated_qty' => $allocation->quantity,
+                'status' => $allocation->hangar->status,
             ];
         })->values();
 
@@ -322,6 +323,7 @@ class FlockController extends BaseController
             return [
                 'hangar_id' => $hangar->id,
                 'hangar_name' => $hangar->name,
+                'status' => $hangar->status,
                 'is_allocated' => $allocation ? true : false,
                 'allocated_quantity' => $allocation?->quantity ?? 0,
                 'allocated_to_flock_id' => $allocation?->flock?->id ?? null,
@@ -742,13 +744,17 @@ class FlockController extends BaseController
                 'created_by'            => auth()->id(),
             ]);
 
-            // Create hangar allocations
+            // Create hangar allocations and update hangar status to Active
             foreach ($request->hangar_allocations as $allocation) {
                 FlockHangar::create([
                     'flock_id'  => $flock->id,
                     'hangar_id' => $allocation['hangar_id'],
                     'quantity'  => $allocation['quantity'],
                 ]);
+
+                // Update hangar status to Active
+                \App\Models\Hangar::where('id', $allocation['hangar_id'])
+                    ->update(['status' => 'Active']);
             }
 
             DB::commit();
@@ -900,16 +906,40 @@ class FlockController extends BaseController
                 'total_quantity'        => $request->total_quantity,
             ]);
 
+            // Get old hangar IDs before deleting allocations
+            $oldHangarIds = $flock->flockHangarAllocations()->pluck('hangar_id')->toArray();
+
             // Delete existing hangar allocations
             $flock->flockHangarAllocations()->delete();
 
-            // Create new hangar allocations
+            // Get new hangar IDs
+            $newHangarIds = array_column($request->hangar_allocations, 'hangar_id');
+
+            // Set removed hangars to Inactive if they're not allocated to any other flock
+            foreach (array_diff($oldHangarIds, $newHangarIds) as $removedHangarId) {
+                $hasOtherAllocations = FlockHangar::where('hangar_id', $removedHangarId)
+                    ->where('flock_id', '!=', $flock->id)
+                    ->exists();
+
+                if (!$hasOtherAllocations) {
+                    \App\Models\Hangar::where('id', $removedHangarId)
+                        ->update(['status' => 'Inactive']);
+                }
+            }
+
+            // Create new hangar allocations and set status to Active
             foreach ($request->hangar_allocations as $allocation) {
                 FlockHangar::create([
                     'flock_id'  => $flock->id,
                     'hangar_id' => $allocation['hangar_id'],
                     'quantity'  => $allocation['quantity'],
                 ]);
+
+                // Update hangar status to Active if newly added
+                if (!in_array($allocation['hangar_id'], $oldHangarIds)) {
+                    \App\Models\Hangar::where('id', $allocation['hangar_id'])
+                        ->update(['status' => 'Active']);
+                }
             }
 
             DB::commit();
@@ -981,8 +1011,17 @@ class FlockController extends BaseController
         try {
             DB::beginTransaction();
 
+            // Get all hangar IDs allocated to this flock
+            $hangarIds = $flock->flockHangarAllocations()->pluck('hangar_id')->toArray();
+
             // Delete hangar allocations
             $flock->flockHangarAllocations()->delete();
+
+            // Set all hangars to Inactive (they are no longer allocated to any flock)
+            foreach ($hangarIds as $hangarId) {
+                \App\Models\Hangar::where('id', $hangarId)
+                    ->update(['status' => 'Inactive']);
+            }
 
             // Delete the flock
             $flock->delete();
@@ -1109,6 +1148,7 @@ class FlockController extends BaseController
                 'hangar_name'   => $allocation->hangar?->name,
                 'quantity'      => $allocation->quantity,
                 'area_sqm'      => $allocation->hangar?->area_sqm,
+                'status'        => $allocation->hangar?->status,
             ];
         })->toArray();
 

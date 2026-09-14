@@ -37,23 +37,35 @@ class DailyRecordController extends BaseController
      *     "current_page": 1,
      *     "data": [
      *       {
-     *         "id": 1,
-     *         "record_date": "2026-08-07",
+     *         "id": 17,
+     *         "period": "Wednesday, 07 Aug 2026",
+     *         "period_date": "2026-08-07",
      *         "farm_id": 1,
      *         "farm_name": "Main Farm",
      *         "flock_id": 1,
      *         "flock_name": "Farm1-Flock4",
-     *         "hangar_id": 1,
-     *         "hangar_name": "Farm1-Hangar1",
-     *         "feed_kg": 450.50,
-     *         "eggs_tray_30": 12,
-     *         "eggs_count": 360,
-     *         "eggs_weight": 18.50,
-     *         "chicks_weight": 1.85,
+     *         "flock_age": "Week 1 Day 5",
+     *         "flock_status": "Active",
+     *         "feed_qty": 931.25,
+     *         "eggs_tray_30": 25,
+     *         "eggs_count": 750,
+     *         "eggs_weight": 38.25,
      *         "mortality": 5,
-     *         "created_by": 1,
-     *         "created_by_name": "Admin Name",
-     *         "created_at": "2026-08-07T10:30:00Z"
+     *         "hangars": [
+     *           {
+     *             "id": 17,
+     *             "hangar_id": 1,
+     *             "hangar_name": "Farm1-Hangar1",
+     *             "status": "Active",
+     *             "feed_qty": 450.50,
+     *             "remaining_qty": 250.75,
+     *             "eggs_tray_30": 12,
+     *             "eggs_count": 360,
+     *             "eggs_weight": 18.50,
+     *             "mortality": 3,
+     *             "notes": "Good production"
+     *           }
+     *         ]
      *       }
      *     ],
      *     "total": 50,
@@ -234,6 +246,7 @@ class DailyRecordController extends BaseController
      *   "success": true,
      *   "message": "Daily record retrieved successfully.",
      *   "data": {
+     *     "id": 17,
      *     "record_date": "2026-08-07",
      *     "period": "Wednesday, 07 Aug 2026",
      *     "farm_id": 1,
@@ -351,6 +364,7 @@ class DailyRecordController extends BaseController
      *   "success": true,
      *   "message": "Daily records created successfully.",
      *   "data": {
+     *     "id": 17,
      *     "period": "Monday, 07 Aug 2026",
      *     "period_date": "2026-08-07",
      *     "farm_id": 1,
@@ -367,6 +381,7 @@ class DailyRecordController extends BaseController
      *     "mortality": 5,
      *     "hangars": [
      *       {
+     *         "id": 17,
      *         "hangar_id": 1,
      *         "hangar_name": "Farm1-Hangar1",
      *         "status": "Active",
@@ -650,23 +665,28 @@ class DailyRecordController extends BaseController
     }
 
     /**
-     * Delete a daily record
+     * Delete daily records for a date
      *
-     * Delete a daily record.
+     * Delete daily records for the specified date, farm, and flock.
+     * The `id` parameter is the main record ID from the grouped response (the first hangar's ID).
+     * - Without hangar_id: Deletes ALL hangars for that date
+     * - With hangar_id: Deletes only that specific hangar's record for that date
      *
      * @authenticated
-     * @urlParam id integer required The daily record ID. Example: 1
+     * @urlParam id integer required The main daily record ID (from grouped response). Example: 17
+     * @queryParam hangar_id integer optional Hangar ID to delete only one hangar's record. Example: 1
      *
      * @response 200 {
      *   "success": true,
-     *   "message": "Daily record deleted successfully."
+     *   "message": "Daily record deleted successfully.",
+     *   "deleted_count": 2
      * }
      * @response 404 {
      *   "success": false,
      *   "message": "Daily record not found."
      * }
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         if (!auth()->check()) {
             return response()->json([
@@ -687,13 +707,30 @@ class DailyRecordController extends BaseController
         try {
             DB::beginTransaction();
 
-            $record->delete();
+            // Check if hangar_id is provided to delete only one hangar's record
+            if ($request->query('hangar_id')) {
+                // Delete only the specific hangar's record for this date
+                $deletedCount = DailyRecord::where('record_date', $record->record_date)
+                    ->where('farm_id', $record->farm_id)
+                    ->where('flock_id', $record->flock_id)
+                    ->where('hangar_id', $request->query('hangar_id'))
+                    ->where('created_by', auth()->id())
+                    ->delete();
+            } else {
+                // Delete all records for this date, farm, and flock (all hangars for that day)
+                $deletedCount = DailyRecord::where('record_date', $record->record_date)
+                    ->where('farm_id', $record->farm_id)
+                    ->where('flock_id', $record->flock_id)
+                    ->where('created_by', auth()->id())
+                    ->delete();
+            }
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
                 'message' => $this->translationService->get('daily_record_deleted_successfully'),
+                'deleted_count' => $deletedCount,
             ]);
 
         } catch (\Exception $e) {
@@ -915,6 +952,7 @@ class DailyRecordController extends BaseController
             $remainingQty = $materialStockHangar?->remaining_quantity ?? 0;
 
             $hangarData = [
+                'id' => $firstHangarRecord->id,
                 'hangar_id' => $firstHangarRecord->hangar_id,
                 'hangar_name' => $firstHangarRecord->hangar?->name,
                 'status' => $firstHangarRecord->hangar?->status,
@@ -948,6 +986,7 @@ class DailyRecordController extends BaseController
         $totalMortality = $records->sum('mortality');
 
         return [
+            'id'              => $firstRecord->id,
             'period'          => $dateLabel,
             'period_date'     => $periodDate->format('Y-m-d'),
             'farm_id'         => $groupedRecord['farm_id'],
@@ -1008,6 +1047,7 @@ class DailyRecordController extends BaseController
             $remainingQty = $materialStockHangar?->remaining_quantity ?? 0;
 
             $hangarData = [
+                'id' => $record->id,
                 'hangar_id' => $record->hangar_id,
                 'hangar_name' => $record->hangar?->name,
                 'status' => $record->hangar?->status,
@@ -1034,6 +1074,7 @@ class DailyRecordController extends BaseController
         })->values();
 
         return [
+            'id' => $firstRecord->id,
             'record_date' => $firstRecord->record_date->format('Y-m-d'),
             'period' => $firstRecord->record_date->format('l, d M Y'),
             'farm_id' => $firstRecord->farm_id,

@@ -240,7 +240,7 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('hangars-by-flock/{flock}', 'getHangarsByFlock')->name('daily-record.hangars-by-flock');
                         Route::get('{daily_record}/edit', 'edit')->name('daily-record.edit')->middleware('permission:edit.daily_record');
                         Route::post('{daily_record}', 'update')->name('daily-record.update')->middleware('permission:edit.daily_record');
-                        Route::get('destroy/{daily_record}', 'destroy')->name('daily-record.destroy')->middleware('permission:delete.daily_record');
+                        Route::delete('{daily_record}', 'destroy')->name('daily-record.destroy')->middleware('permission:delete.daily_record');
                     });
                     Route::controller(ChickenSalesController::class)->prefix('chicken-sale')->group(function () {
                         Route::get('/', 'index')->name('chicken-sale.index')->middleware('permission:view.chicken_sale');
@@ -570,7 +570,7 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::get('hangars-by-flock/{flock}', 'getHangarsByFlock')->name('daily-record.hangars-by-flock');
                 Route::get('{daily_record}/edit', 'edit')->name('daily-record.edit')->middleware('permission:edit.daily_record');
                 Route::post('{daily_record}', 'update')->name('daily-record.update')->middleware('permission:edit.daily_record');
-                Route::get('destroy/{daily_record}', 'destroy')->name('daily-record.destroy')->middleware('permission:delete.daily_record');
+                Route::delete('{daily_record}', 'destroy')->name('daily-record.destroy')->middleware('permission:delete.daily_record');
             });
             Route::controller(ChickenSalesController::class)->prefix('chicken-sale')->group(function () {
                 Route::get('/', 'index')->name('chicken-sale.index')->middleware('permission:view.chicken_sale');

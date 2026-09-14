@@ -63,6 +63,7 @@ class DailyRecordController extends Controller
                                 ->first();
 
                             return [
+                                'id' => $record->id,
                                 'hangar_id' => $record->hangar_id,
                                 'hangar_name' => $record->hangar->name ?? 'N/A',
                                 'allocated_quantity' => $flockHangar->quantity ?? 'N/A',
@@ -465,7 +466,7 @@ class DailyRecordController extends Controller
         }
     }
 
-    public function destroy($siteUrl, $id)
+    public function destroy($siteUrl, $id, Request $request)
     {
         $user = auth()->user();
         $dailyRecord = DailyRecord::findOrFail($id);
@@ -477,9 +478,29 @@ class DailyRecordController extends Controller
 
         try {
             DB::beginTransaction();
-            $dailyRecord->delete();
+
+            // Check if hangar_id is provided to delete only one hangar's record
+            if ($request->query('hangar_id')) {
+                // Delete only the specific hangar's record for this date
+                $deletedCount = DailyRecord::where('record_date', $dailyRecord->record_date)
+                    ->where('farm_id', $dailyRecord->farm_id)
+                    ->where('flock_id', $dailyRecord->flock_id)
+                    ->where('hangar_id', $request->query('hangar_id'))
+                    ->delete();
+
+                $message = $deletedCount > 0 ? 'Daily Record deleted successfully.' : 'Record not found.';
+            } else {
+                // Delete all records for this date, farm, and flock (all hangars for that day)
+                DailyRecord::where('record_date', $dailyRecord->record_date)
+                    ->where('farm_id', $dailyRecord->farm_id)
+                    ->where('flock_id', $dailyRecord->flock_id)
+                    ->delete();
+
+                $message = 'Daily Records deleted successfully.';
+            }
+
             DB::commit();
-            return response()->json(['msg' => 'Daily Record deleted successfully.']);
+            return response()->json(['msg' => $message]);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Daily record deletion error: ' . $e->getMessage());

@@ -83,6 +83,16 @@ class FarmController extends Controller
             'mobile_number' => 'nullable|string|max:20',
         ]);
 
+        // Type 2 (Farm Owner) can create maximum 3 farms
+        $user = auth()->user();
+        if ($user->type == 2) {
+            $farmCount = Farm::where('created_by', $user->id)->count();
+            if ($farmCount >= 3) {
+                Session::flash('errorMsg', 'You have reached the maximum limit of 3 farms.');
+                return redirect()->back()->withInput();
+            }
+        }
+
         $createData = [
             'name' => $request->name,
             'location' => $request->location,

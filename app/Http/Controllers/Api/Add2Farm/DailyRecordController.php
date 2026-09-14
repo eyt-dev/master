@@ -102,26 +102,49 @@ class DailyRecordController extends BaseController
             })
             ->when($request->hangar_id, function ($q) use ($request) {
                 return $q->where('hangar_id', $request->hangar_id);
-            });
+            })
+            ->with('farm', 'flock', 'flock.flockEnds', 'hangar', 'creator');
 
         $perPage = $request->per_page ?? 15;
         $page = $request->page ?? 1;
 
-        $records = $query
-            ->selectRaw('record_date as period_date, farm_id, flock_id')
-            ->selectRaw('SUM(feed_kg) as feed_kg, SUM(eggs_tray_30) as eggs_tray_30, SUM(eggs_count) as eggs_count, SUM(eggs_weight) as eggs_weight, SUM(chicks_weight) as chicks_weight, SUM(mortality) as mortality')
-            ->groupByRaw('record_date, farm_id, flock_id')
-            ->orderByRaw('record_date DESC')
-            ->paginate($perPage, ['*'], 'page', $page);
+        $allRecords = $query->orderBy('record_date', 'DESC')->get();
 
-        $records->setCollection($records->getCollection()->map(function ($record) {
-            return $this->formatDailyAggregateRecord($record);
-        }));
+        // Group by date, farm, and flock
+        $groupedByDate = $allRecords->groupBy(function ($record) {
+            return $record->record_date->format('Y-m-d') . '|' . $record->farm_id . '|' . $record->flock_id;
+        })->map(function ($dateGroup) {
+            $firstRecord = $dateGroup->first();
+            return [
+                'record_date' => $firstRecord->record_date,
+                'farm_id' => $firstRecord->farm_id,
+                'flock_id' => $firstRecord->flock_id,
+                'records' => $dateGroup
+            ];
+        })->values();
+
+        // Paginate the grouped results
+        $skip = ($page - 1) * $perPage;
+        $paginatedItems = $groupedByDate->slice($skip, $perPage)->values();
+
+        $formattedItems = $paginatedItems->map(function ($groupedRecord) {
+            return $this->formatDailyAggregateRecordWithHangars($groupedRecord);
+        });
+
+        $paginatedData = new \Illuminate\Pagination\LengthAwarePaginator(
+            $formattedItems,
+            $groupedByDate->count(),
+            $perPage,
+            $page,
+            [
+                'path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(),
+            ]
+        );
 
         return response()->json([
             'success' => true,
             'message' => $this->translationService->get('daily_records_retrieved_successfully'),
-            'data' => $records,
+            'data' => $paginatedData,
         ]);
     }
 
@@ -202,7 +225,7 @@ class DailyRecordController extends BaseController
     /**
      * Get a single daily record
      *
-     * Retrieve detailed information of a specific daily record.
+     * Retrieve detailed information of a specific daily record with all hangars for that day.
      *
      * @authenticated
      * @urlParam id integer required The daily record ID. Example: 1
@@ -211,14 +234,13 @@ class DailyRecordController extends BaseController
      *   "success": true,
      *   "message": "Daily record retrieved successfully.",
      *   "data": {
-     *     "id": 1,
      *     "record_date": "2026-08-07",
      *     "farm_id": 1,
      *     "farm_name": "Main Farm",
      *     "flock_id": 1,
      *     "flock_name": "Farm1-Flock4",
-     *     "hangar_id": 1,
-     *     "hangar_name": "Farm1-Hangar1",
+     *     "flock_age": 12,
+     *     "flock_status": "Active",
      *     "feed_kg": 450.50,
      *     "eggs_tray_30": 12,
      *     "eggs_count": 360,
@@ -227,7 +249,19 @@ class DailyRecordController extends BaseController
      *     "mortality": 5,
      *     "created_by": 1,
      *     "created_by_name": "Admin Name",
-     *     "created_at": "2026-08-07T10:30:00Z"
+     *     "created_at": "2026-08-07T10:30:00Z",
+     *     "hangars": [
+     *       {
+     *         "hangar_id": 1,
+     *         "hangar_name": "Hangar 1",
+     *         "feed_kg": 450.50,
+     *         "eggs_tray_30": 12,
+     *         "eggs_count": 360,
+     *         "eggs_weight": 18.50,
+     *         "mortality": 5,
+     *         "notes": "Good production"
+     *       }
+     *     ]
      *   }
      * }
      * @response 404 {
@@ -255,10 +289,17 @@ class DailyRecordController extends BaseController
             ], 404);
         }
 
+        // Fetch all records for this date, flock, and farm
+        $allRecordsForDate = DailyRecord::where('created_by', auth()->id())
+            ->where('record_date', $record->record_date)
+            ->where('flock_id', $record->flock_id)
+            ->with('farm', 'flock', 'flock.flockEnds', 'hangar', 'creator')
+            ->get();
+
         return response()->json([
             'success' => true,
             'message' => $this->translationService->get('daily_record_retrieved_successfully'),
-            'data' => $this->formatDailyRecord($record),
+            'data' => $this->formatDailyRecordDetail($allRecordsForDate),
         ]);
     }
 
@@ -751,6 +792,137 @@ class DailyRecordController extends BaseController
             'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
             'chicks_weight'   => $this->formatDecimal($record->chicks_weight),
             'mortality'       => (int) $record->mortality,
+        ];
+    }
+
+    private function formatDailyAggregateRecordWithHangars($groupedRecord): array
+    {
+        $records = $groupedRecord['records'];
+        $firstRecord = $records->first();
+        $farm = $firstRecord->farm;
+        $flock = $firstRecord->flock;
+
+        $periodDate = $groupedRecord['record_date'];
+        $dateLabel = $periodDate->format('l, d M Y');
+
+        // Calculate flock age if flock exists
+        $flockAge = null;
+        $flockStatus = null;
+        if ($flock) {
+            $endDate = $flock->flockEnds()->latest('sale_date')->first()?->sale_date;
+            $flockAge = $this->calculateFlockAge($flock->start_date, $endDate);
+            $flockStatus = $endDate ? 'Completed' : 'Active';
+        }
+
+        // Group records by hangar and format hangar details
+        $hangars = $records->groupBy('hangar_id')->map(function ($hangarRecords) {
+            $firstHangarRecord = $hangarRecords->first();
+            $totalFeed = $hangarRecords->sum('feed_kg');
+            $totalEggsTray = $hangarRecords->sum('eggs_tray_30');
+            $totalEggs = $hangarRecords->sum('eggs_count');
+            $totalEggsWeight = $hangarRecords->sum('eggs_weight');
+            $totalChicksWeight = $hangarRecords->sum('chicks_weight');
+            $totalMortality = $hangarRecords->sum('mortality');
+
+            return [
+                'hangar_id' => $firstHangarRecord->hangar_id,
+                'hangar_name' => $firstHangarRecord->hangar?->name,
+                'feed_kg' => $this->formatDecimal($totalFeed),
+                'eggs_tray_30' => (int) $totalEggsTray,
+                'eggs_count' => (int) $totalEggs,
+                'eggs_weight' => $this->formatDecimal($totalEggsWeight),
+                'chicks_weight' => $this->formatDecimal($totalChicksWeight),
+                'mortality' => (int) $totalMortality,
+            ];
+        })->values();
+
+        $totalFeed = $records->sum('feed_kg');
+        $totalEggsTray = $records->sum('eggs_tray_30');
+        $totalEggs = $records->sum('eggs_count');
+        $totalEggsWeight = $records->sum('eggs_weight');
+        $totalChicksWeight = $records->sum('chicks_weight');
+        $totalMortality = $records->sum('mortality');
+
+        return [
+            'period'          => $dateLabel,
+            'period_date'     => $periodDate->format('Y-m-d'),
+            'farm_id'         => $groupedRecord['farm_id'],
+            'farm_name'       => $farm?->name,
+            'flock_id'        => $groupedRecord['flock_id'],
+            'flock_name'      => $flock?->name,
+            'flock_age'       => $flockAge,
+            'flock_status'    => $flockStatus,
+            'feed_kg'         => $this->formatDecimal($totalFeed),
+            'eggs_tray_30'    => (int) $totalEggsTray,
+            'eggs_count'      => (int) $totalEggs,
+            'eggs_weight'     => $this->formatDecimal($totalEggsWeight),
+            'chicks_weight'   => $this->formatDecimal($totalChicksWeight),
+            'mortality'       => (int) $totalMortality,
+            'hangars'         => $hangars,
+        ];
+    }
+
+    private function formatDailyRecordDetail($records): array
+    {
+        if ($records->isEmpty()) {
+            return [];
+        }
+
+        $firstRecord = $records->first();
+        $farm = $firstRecord->farm;
+        $flock = $firstRecord->flock;
+
+        // Calculate flock age if flock exists
+        $flockAge = null;
+        $flockStatus = null;
+        if ($flock) {
+            $endDate = $flock->flockEnds()->latest('sale_date')->first()?->sale_date;
+            $flockAge = $this->calculateFlockAge($flock->start_date, $endDate);
+            $flockStatus = $endDate ? 'Completed' : 'Active';
+        }
+
+        // Format hangar details
+        $hangars = $records->map(function ($record) {
+            return [
+                'hangar_id' => $record->hangar_id,
+                'hangar_name' => $record->hangar?->name,
+                'feed_kg' => $this->formatDecimal($record->feed_kg),
+                'eggs_tray_30' => (int) $record->eggs_tray_30,
+                'eggs_count' => (int) $record->eggs_count,
+                'eggs_weight' => $this->formatDecimal($record->eggs_weight),
+                'chicks_weight' => $this->formatDecimal($record->chicks_weight),
+                'mortality' => (int) $record->mortality,
+                'notes' => $record->notes,
+            ];
+        })->values();
+
+        // Calculate totals
+        $totalFeed = $records->sum('feed_kg');
+        $totalEggsTray = $records->sum('eggs_tray_30');
+        $totalEggs = $records->sum('eggs_count');
+        $totalEggsWeight = $records->sum('eggs_weight');
+        $totalChicksWeight = $records->sum('chicks_weight');
+        $totalMortality = $records->sum('mortality');
+
+        return [
+            'record_date' => $firstRecord->record_date->format('Y-m-d'),
+            'period' => $firstRecord->record_date->format('l, d M Y'),
+            'farm_id' => $firstRecord->farm_id,
+            'farm_name' => $farm?->name,
+            'flock_id' => $firstRecord->flock_id,
+            'flock_name' => $flock?->name,
+            'flock_age' => $flockAge,
+            'flock_status' => $flockStatus,
+            'feed_kg' => $this->formatDecimal($totalFeed),
+            'eggs_tray_30' => (int) $totalEggsTray,
+            'eggs_count' => (int) $totalEggs,
+            'eggs_weight' => $this->formatDecimal($totalEggsWeight),
+            'chicks_weight' => $this->formatDecimal($totalChicksWeight),
+            'mortality' => (int) $totalMortality,
+            'created_by' => $firstRecord->created_by,
+            'created_by_name' => $firstRecord->creator?->name,
+            'created_at' => $firstRecord->created_at,
+            'hangars' => $hangars,
         ];
     }
 

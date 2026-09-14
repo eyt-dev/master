@@ -167,7 +167,6 @@ class FlockController extends Controller
         // Query hangars for the selected farm
         // Apply the same scoping as HangarController for non-SuperAdmins
         $hangars = Hangar::where('farm_id', $farmId)
-            ->where('status', 'Active')
             ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                 // For non-SuperAdmin, show only hangars they created
                 $query->where('created_by', auth()->id());

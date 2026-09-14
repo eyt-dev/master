@@ -192,7 +192,6 @@ class MaterialStockController extends Controller
         }
 
         $hangars = Hangar::where('farm_id', $farmId)
-            ->where('status', 'Active')
             ->select('id', 'name')
             ->get()
             ->map(function ($hangar) {
@@ -239,9 +238,8 @@ class MaterialStockController extends Controller
             return back()->withErrors('Farm not found or access denied.');
         }
 
-        // Validate all hangars belong to this farm and are active
+        // Validate all hangars belong to this farm
         $farmHangarIds = Hangar::where('farm_id', $request->farm_id)
-            ->where('status', 'Active')
             ->pluck('id')
             ->toArray();
 
@@ -370,9 +368,8 @@ class MaterialStockController extends Controller
             return back()->withErrors(['hangar_quantities_json' => 'Please select at least one hangar with quantity.']);
         }
 
-        // Validate all hangars belong to this farm and are active
+        // Validate all hangars belong to this farm
         $farmHangarIds = Hangar::where('farm_id', $request->farm_id)
-            ->where('status', 'Active')
             ->pluck('id')
             ->toArray();
 

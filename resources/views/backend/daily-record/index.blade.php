@@ -193,5 +193,4 @@
             });
         }
     </script>
-    </script>
 @endsection

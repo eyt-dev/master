@@ -235,18 +235,44 @@ class DailyRecordController extends BaseController
      *   "message": "Daily record retrieved successfully.",
      *   "data": {
      *     "record_date": "2026-08-07",
+     *     "period": "Wednesday, 07 Aug 2026",
      *     "farm_id": 1,
      *     "farm_name": "Main Farm",
      *     "flock_id": 1,
      *     "flock_name": "Farm1-Flock4",
-     *     "flock_age": 12,
+     *     "flock_age": "Week 1 Day 5",
      *     "flock_status": "Active",
-     *     "feed_kg": 450.50,
-     *     "eggs_tray_30": 12,
-     *     "eggs_count": 360,
-     *     "eggs_weight": 18.50,
-     *     "chicks_weight": 1.85,
-     *     "mortality": 5,
+     *     "breed": "Layer,Lohmann Brown",
+     *     "total_feed_qty": 931.25,
+     *     "total_remaining_qty": 500.00,
+     *     "total_mortality": 5,
+     *     "hangars": [
+     *       {
+     *         "hangar_id": 1,
+     *         "hangar_name": "Farm1-Hangar1",
+     *         "status": "Active",
+     *         "feed_qty": 450.50,
+     *         "remaining_qty": 250.75,
+     *         "eggs_tray_30": 12,
+     *         "eggs_count": 360,
+     *         "eggs_weight": 18.50,
+     *         "mortality": 3,
+     *         "notes": "Good production"
+     *       },
+     *       {
+     *         "hangar_id": 2,
+     *         "hangar_name": "Farm1-Hangar2",
+     *         "status": "Active",
+     *         "feed_qty": 480.75,
+     *         "remaining_qty": 249.25,
+     *         "eggs_tray_30": 13,
+     *         "eggs_count": 390,
+     *         "eggs_weight": 19.75,
+     *         "mortality": 2,
+     *         "notes": "Excellent performance"
+     *       }
+     *     ],
+     *     "recorded_by": "Admin Name",
      *     "created_by": 1,
      *     "created_by_name": "Admin Name",
      *     "created_at": "2026-08-07T10:30:00Z",
@@ -324,26 +350,36 @@ class DailyRecordController extends BaseController
      * @response 201 {
      *   "success": true,
      *   "message": "Daily records created successfully.",
-     *   "data": [
-     *     {
-     *       "id": 1,
-     *       "record_date": "2026-08-07",
-     *       "farm_id": 1,
-     *       "farm_name": "Main Farm",
-     *       "flock_id": 1,
-     *       "flock_name": "Farm1-Flock4",
-     *       "hangar_id": 1,
-     *       "hangar_name": "Farm1-Hangar1",
-     *       "feed_kg": 450.50,
-     *       "eggs_tray_30": 12,
-     *       "eggs_count": 360,
-     *       "eggs_weight": 18.50,
-     *       "mortality": 5,
-     *       "created_by": 1,
-     *       "created_by_name": "Admin Name",
-     *       "created_at": "2026-08-07T10:30:00Z"
-     *     }
-     *   ]
+     *   "data": {
+     *     "period": "Monday, 07 Aug 2026",
+     *     "period_date": "2026-08-07",
+     *     "farm_id": 1,
+     *     "farm_name": "Main Farm",
+     *     "flock_id": 1,
+     *     "flock_name": "Farm1-Flock4",
+     *     "flock_age": "Week 1 Day 2",
+     *     "flock_status": "Active",
+     *     "feed_qty": 931.25,
+     *     "eggs_tray_30": 25,
+     *     "eggs_count": 750,
+     *     "eggs_weight": 38.25,
+     *     "chicks_weight": 0.00,
+     *     "mortality": 5,
+     *     "hangars": [
+     *       {
+     *         "hangar_id": 1,
+     *         "hangar_name": "Farm1-Hangar1",
+     *         "status": "Active",
+     *         "feed_qty": 450.50,
+     *         "remaining_qty": 250.75,
+     *         "eggs_tray_30": 12,
+     *         "eggs_count": 360,
+     *         "eggs_weight": 18.50,
+     *         "mortality": 3,
+     *         "notes": "Good production"
+     *       }
+     *     ]
+     *   }
      * }
      * @response 422 {
      *   "success": false,
@@ -428,14 +464,18 @@ class DailyRecordController extends BaseController
 
             DB::commit();
 
+            // Load all relations for the records
             foreach ($records as $record) {
                 $record->load('farm', 'flock', 'hangar', 'creator');
             }
 
+            // Format and group records for aggregated response
+            $formattedData = $this->formatAndGroupDailyRecords(collect($records));
+
             return response()->json([
                 'success' => true,
                 'message' => $this->translationService->get('daily_record_created_successfully'),
-                'data'    => array_map(fn($record) => $this->formatDailyRecord($record), $records),
+                'data'    => $formattedData,
             ], 201);
 
         } catch (\Exception $e) {
@@ -469,23 +509,34 @@ class DailyRecordController extends BaseController
      *   "success": true,
      *   "message": "Daily record updated successfully.",
      *   "data": {
-     *     "id": 1,
-     *     "record_date": "2026-08-07",
+     *     "period": "Monday, 07 Aug 2026",
+     *     "period_date": "2026-08-07",
      *     "farm_id": 1,
      *     "farm_name": "Main Farm",
      *     "flock_id": 1,
      *     "flock_name": "Farm1-Flock4",
-     *     "hangar_id": 1,
-     *     "hangar_name": "Farm1-Hangar1",
-     *     "feed_kg": 450.50,
-     *     "eggs_tray_30": 12,
-     *     "eggs_count": 360,
-     *     "eggs_weight": 18.50,
-     *     "chicks_weight": 1.85,
+     *     "flock_age": "Week 1 Day 2",
+     *     "flock_status": "Active",
+     *     "feed_qty": 931.25,
+     *     "eggs_tray_30": 25,
+     *     "eggs_count": 750,
+     *     "eggs_weight": 38.25,
+     *     "chicks_weight": 0.00,
      *     "mortality": 5,
-     *     "created_by": 1,
-     *     "created_by_name": "Admin Name",
-     *     "created_at": "2026-08-07T10:30:00Z"
+     *     "hangars": [
+     *       {
+     *         "hangar_id": 1,
+     *         "hangar_name": "Farm1-Hangar1",
+     *         "status": "Active",
+     *         "feed_qty": 450.50,
+     *         "remaining_qty": 250.75,
+     *         "eggs_tray_30": 12,
+     *         "eggs_count": 360,
+     *         "eggs_weight": 18.50,
+     *         "mortality": 3,
+     *         "notes": "Updated production"
+     *       }
+     *     ]
      *   }
      * }
      * @response 404 {
@@ -571,10 +622,20 @@ class DailyRecordController extends BaseController
 
             $record->load('farm', 'flock', 'hangar', 'creator');
 
+            // Fetch all records for this date, flock, and farm
+            $allRecordsForDate = DailyRecord::where('created_by', auth()->id())
+                ->where('record_date', $record->record_date)
+                ->where('flock_id', $record->flock_id)
+                ->with('farm', 'flock', 'hangar', 'creator')
+                ->get();
+
+            // Format and group records for aggregated response
+            $formattedData = $this->formatAndGroupDailyRecords($allRecordsForDate);
+
             return response()->json([
                 'success' => true,
                 'message' => $this->translationService->get('daily_record_updated_successfully'),
-                'data'    => $this->formatDailyRecord($record),
+                'data'    => $formattedData,
             ]);
 
         } catch (\Exception $e) {
@@ -743,6 +804,12 @@ class DailyRecordController extends BaseController
             $flockStatus = $endDate ? 'Completed' : 'Active';
         }
 
+        // Get remaining quantities from latest MaterialStockHangar records for this farm
+        $farmHangars = \App\Models\Hangar::where('farm_id', $record->farm_id)->pluck('id');
+        $remainingQty = \App\Models\MaterialStockHangar::whereIn('hangar_id', $farmHangars)
+            ->latest('created_at')
+            ->first()?->remaining_quantity ?? 0;
+
         return [
             'period'          => $weekLabel,
             'year'            => $record->year,
@@ -754,7 +821,8 @@ class DailyRecordController extends BaseController
             'flock_name'      => $flock?->name,
             'flock_age'       => $flockAge,
             'flock_status'    => $flockStatus,
-            'feed_kg'         => $this->formatDecimal($record->feed_kg),
+            'feed_qty'        => $this->formatDecimal($record->feed_kg),
+            'remaining_qty'   => $this->formatDecimal($remainingQty),
             'eggs_tray_30'    => (int) $record->eggs_tray_30,
             'eggs_count'      => (int) $record->eggs_count,
             'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
@@ -780,6 +848,12 @@ class DailyRecordController extends BaseController
             $flockStatus = $endDate ? 'Completed' : 'Active';
         }
 
+        // Get remaining quantities from latest MaterialStockHangar records for this farm
+        $farmHangars = \App\Models\Hangar::where('farm_id', $record->farm_id)->pluck('id');
+        $remainingQty = \App\Models\MaterialStockHangar::whereIn('hangar_id', $farmHangars)
+            ->latest('created_at')
+            ->first()?->remaining_quantity ?? 0;
+
         return [
             'period'          => $monthLabel,
             'year'            => $record->year,
@@ -791,7 +865,8 @@ class DailyRecordController extends BaseController
             'flock_name'      => $flock?->name,
             'flock_age'       => $flockAge,
             'flock_status'    => $flockStatus,
-            'feed_kg'         => $this->formatDecimal($record->feed_kg),
+            'feed_qty'        => $this->formatDecimal($record->feed_kg),
+            'remaining_qty'   => $this->formatDecimal($remainingQty),
             'eggs_tray_30'    => (int) $record->eggs_tray_30,
             'eggs_count'      => (int) $record->eggs_count,
             'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
@@ -833,11 +908,18 @@ class DailyRecordController extends BaseController
             $totalChicksWeight = $hangarRecords->sum('chicks_weight');
             $totalMortality = $hangarRecords->sum('mortality');
 
+            // Get remaining quantity from latest MaterialStockHangar record
+            $materialStockHangar = \App\Models\MaterialStockHangar::where('hangar_id', $firstHangarRecord->hangar_id)
+                ->latest('created_at')
+                ->first();
+            $remainingQty = $materialStockHangar?->remaining_quantity ?? 0;
+
             $hangarData = [
                 'hangar_id' => $firstHangarRecord->hangar_id,
                 'hangar_name' => $firstHangarRecord->hangar?->name,
                 'status' => $firstHangarRecord->hangar?->status,
-                'feed_kg' => $this->formatDecimal($totalFeed),
+                'feed_qty' => $this->formatDecimal($totalFeed),
+                'remaining_qty' => $this->formatDecimal($remainingQty),
                 'mortality' => (int) $totalMortality,
             ];
 
@@ -874,7 +956,7 @@ class DailyRecordController extends BaseController
             'flock_name'      => $flock?->name,
             'flock_age'       => $flockAge,
             'flock_status'    => $flockStatus,
-            'feed_kg'         => $this->formatDecimal($totalFeed),
+            'feed_qty'        => $this->formatDecimal($totalFeed),
             'eggs_tray_30'    => (int) $totalEggsTray,
             'eggs_count'      => (int) $totalEggs,
             'eggs_weight'     => $this->formatDecimal($totalEggsWeight),
@@ -911,13 +993,26 @@ class DailyRecordController extends BaseController
         $breedType = $this->extractBreedType($flock->breed ?? '');
         $isBroiler = $breedType === 'Broiler';
 
+        // Get remaining quantities from latest MaterialStockHangar records for this farm
+        $farmHangars = \App\Models\Hangar::where('farm_id', $firstRecord->farm_id)->pluck('id');
+        $totalRemainingQty = \App\Models\MaterialStockHangar::whereIn('hangar_id', $farmHangars)
+            ->latest('created_at')
+            ->first()?->remaining_quantity ?? 0;
+
         // Format hangar details - include only breed-specific fields
         $hangars = $records->map(function ($record) use ($isBroiler) {
+            // Get remaining quantity for this specific hangar
+            $materialStockHangar = \App\Models\MaterialStockHangar::where('hangar_id', $record->hangar_id)
+                ->latest('created_at')
+                ->first();
+            $remainingQty = $materialStockHangar?->remaining_quantity ?? 0;
+
             $hangarData = [
                 'hangar_id' => $record->hangar_id,
                 'hangar_name' => $record->hangar?->name,
                 'status' => $record->hangar?->status,
-                'feed_kg' => $this->formatDecimal($record->feed_kg),
+                'feed_qty' => $this->formatDecimal($record->feed_kg),
+                'remaining_qty' => $this->formatDecimal($remainingQty),
                 'mortality' => (int) $record->mortality,
             ];
 
@@ -948,12 +1043,47 @@ class DailyRecordController extends BaseController
             'flock_age' => $flockAge,
             'flock_status' => $flockStatus,
             'breed' => $flock->breed,
-            'total_feed' => $this->formatDecimal($totalFeed),
+            'total_feed_qty' => $this->formatDecimal($totalFeed),
+            'total_remaining_qty' => $this->formatDecimal($totalRemainingQty),
             'total_mortality' => (int) $totalMortality,
             'recorded_by' => $firstRecord->creator?->name,
             'created_at' => $firstRecord->created_at,
             'hangars' => $hangars,
         ];
+    }
+
+    /**
+     * Format and group daily records for aggregated response
+     *
+     * Takes a collection of daily records and returns a single aggregated response
+     * grouped by date, farm, and flock with nested hangar details.
+     *
+     * @param \Illuminate\Database\Eloquent\Collection $records
+     * @return array|null Formatted aggregated response or null if records empty
+     */
+    private function formatAndGroupDailyRecords($records)
+    {
+        if ($records->isEmpty()) {
+            return null;
+        }
+
+        // Group records by date, farm, and flock
+        $groupedByDate = $records->groupBy(function ($record) {
+            return $record->record_date->format('Y-m-d') . '|' . $record->farm_id . '|' . $record->flock_id;
+        })->map(function ($dateGroup) {
+            $firstRecord = $dateGroup->first();
+            return [
+                'record_date' => $firstRecord->record_date,
+                'farm_id' => $firstRecord->farm_id,
+                'flock_id' => $firstRecord->flock_id,
+                'records' => $dateGroup
+            ];
+        })->values();
+
+        // Format the grouped data using the existing format method
+        return $groupedByDate->map(function ($groupedRecord) {
+            return $this->formatDailyAggregateRecordWithHangars($groupedRecord);
+        })->first();
     }
 
 }

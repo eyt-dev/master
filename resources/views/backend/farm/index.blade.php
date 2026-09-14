@@ -165,12 +165,24 @@
                     },
                     error: function(response) {
                         if (response.status === 422) {
-                            var errors = response.responseJSON.errors;
-                            
+                            var responseData = response.responseJSON;
+
+                            // If there's a general message (like 3-farm limit), show it
+                            if (responseData.message && !responseData.errors) {
+                                swal({
+                                    title: "Limit Reached!",
+                                    text: responseData.message,
+                                    icon: "warning"
+                                });
+                                return;
+                            }
+
+                            var errors = responseData.errors;
+
                             // Clear previous errors
                             form.find('.error').remove();
                             form.find('.form-control').removeClass('is-invalid');
-                            
+
                             // Display new errors
                             $.each(errors, function(field, messages) {
                                 var input = form.find('[name="' + field + '"]');

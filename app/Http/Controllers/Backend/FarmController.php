@@ -88,6 +88,12 @@ class FarmController extends Controller
         if ($user->type == 2) {
             $farmCount = Farm::where('created_by', $user->id)->count();
             if ($farmCount >= 3) {
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You have reached the maximum limit of 3 farms.'
+                    ], 422);
+                }
                 Session::flash('errorMsg', 'You have reached the maximum limit of 3 farms.');
                 return redirect()->back()->withInput();
             }

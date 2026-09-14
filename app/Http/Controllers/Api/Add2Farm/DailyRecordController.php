@@ -162,7 +162,7 @@ class DailyRecordController extends BaseController
 
     private function indexByWeek(Request $request)
     {
-        $query = DailyRecord::where('created_by', auth()->id())
+        $baseQuery = DailyRecord::where('created_by', auth()->id())
             ->when($request->flock_id, function ($q) use ($request) {
                 return $q->where('flock_id', $request->flock_id);
             })
@@ -179,27 +179,55 @@ class DailyRecordController extends BaseController
         $perPage = $request->per_page ?? 15;
         $page = $request->page ?? 1;
 
-        $records = $query
-            ->selectRaw('YEAR(record_date) as year, WEEK(record_date) as week, MIN(record_date) as period_date, farm_id, flock_id')
-            ->selectRaw('SUM(feed_kg) as feed_kg, SUM(eggs_tray_30) as eggs_tray_30, SUM(eggs_count) as eggs_count, SUM(eggs_weight) as eggs_weight, SUM(chicks_weight) as chicks_weight, SUM(mortality) as mortality')
-            ->groupByRaw('YEAR(record_date), WEEK(record_date), farm_id, flock_id')
-            ->orderByRaw('YEAR(record_date) DESC, WEEK(record_date) DESC')
-            ->paginate($perPage, ['*'], 'page', $page);
+        // Get grouped data with hangars
+        $allRecords = $baseQuery->with('farm', 'flock', 'hangar', 'creator')->get();
 
-        $records->setCollection($records->getCollection()->map(function ($record) {
-            return $this->formatWeeklyRecord($record);
-        }));
+        // Group by week and farm/flock
+        $groupedByWeek = $allRecords->groupBy(function ($record) {
+            return $record->record_date->format('Y-W') . '|' . $record->farm_id . '|' . $record->flock_id;
+        })->map(function ($weekGroup) {
+            $firstRecord = $weekGroup->first();
+            $weekNumber = $firstRecord->record_date->format('W');
+            $year = $firstRecord->record_date->format('Y');
+            return [
+                'year' => $year,
+                'week' => $weekNumber,
+                'period_date' => $firstRecord->record_date->startOfWeek(),
+                'farm_id' => $firstRecord->farm_id,
+                'flock_id' => $firstRecord->flock_id,
+                'records' => $weekGroup
+            ];
+        })->values();
+
+        // Paginate manually
+        $total = $groupedByWeek->count();
+        $skip = ($page - 1) * $perPage;
+        $paginatedResults = $groupedByWeek->slice($skip, $perPage)->values();
+
+        $formattedResults = $paginatedResults->map(function ($groupedRecord) {
+            return $this->formatWeeklyRecordWithHangars($groupedRecord);
+        });
+
+        $paginatedData = new \Illuminate\Pagination\LengthAwarePaginator(
+            $formattedResults,
+            $total,
+            $perPage,
+            $page,
+            [
+                'path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(),
+            ]
+        );
 
         return response()->json([
             'success' => true,
             'message' => $this->translationService->get('daily_records_retrieved_successfully'),
-            'data' => $records,
+            'data' => $paginatedData,
         ]);
     }
 
     private function indexByMonth(Request $request)
     {
-        $query = DailyRecord::where('created_by', auth()->id())
+        $baseQuery = DailyRecord::where('created_by', auth()->id())
             ->when($request->flock_id, function ($q) use ($request) {
                 return $q->where('flock_id', $request->flock_id);
             })
@@ -216,21 +244,47 @@ class DailyRecordController extends BaseController
         $perPage = $request->per_page ?? 15;
         $page = $request->page ?? 1;
 
-        $records = $query
-            ->selectRaw('YEAR(record_date) as year, MONTH(record_date) as month, DATE_FORMAT(record_date, "%Y-%m-01") as period_date, farm_id, flock_id')
-            ->selectRaw('SUM(feed_kg) as feed_kg, SUM(eggs_tray_30) as eggs_tray_30, SUM(eggs_count) as eggs_count, SUM(eggs_weight) as eggs_weight, SUM(chicks_weight) as chicks_weight, SUM(mortality) as mortality')
-            ->groupByRaw('YEAR(record_date), MONTH(record_date), farm_id, flock_id')
-            ->orderByRaw('YEAR(record_date) DESC, MONTH(record_date) DESC')
-            ->paginate($perPage, ['*'], 'page', $page);
+        // Get grouped data with hangars
+        $allRecords = $baseQuery->with('farm', 'flock', 'hangar', 'creator')->get();
 
-        $records->setCollection($records->getCollection()->map(function ($record) {
-            return $this->formatMonthlyRecord($record);
-        }));
+        // Group by month and farm/flock
+        $groupedByMonth = $allRecords->groupBy(function ($record) {
+            return $record->record_date->format('Y-m') . '|' . $record->farm_id . '|' . $record->flock_id;
+        })->map(function ($monthGroup) {
+            $firstRecord = $monthGroup->first();
+            return [
+                'year' => $firstRecord->record_date->format('Y'),
+                'month' => $firstRecord->record_date->format('m'),
+                'period_date' => $firstRecord->record_date->startOfMonth(),
+                'farm_id' => $firstRecord->farm_id,
+                'flock_id' => $firstRecord->flock_id,
+                'records' => $monthGroup
+            ];
+        })->values();
+
+        // Paginate manually
+        $total = $groupedByMonth->count();
+        $skip = ($page - 1) * $perPage;
+        $paginatedResults = $groupedByMonth->slice($skip, $perPage)->values();
+
+        $formattedResults = $paginatedResults->map(function ($groupedRecord) {
+            return $this->formatMonthlyRecordWithHangars($groupedRecord);
+        });
+
+        $paginatedData = new \Illuminate\Pagination\LengthAwarePaginator(
+            $formattedResults,
+            $total,
+            $perPage,
+            $page,
+            [
+                'path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(),
+            ]
+        );
 
         return response()->json([
             'success' => true,
             'message' => $this->translationService->get('daily_records_retrieved_successfully'),
-            'data' => $records,
+            'data' => $paginatedData,
         ]);
     }
 
@@ -1139,6 +1193,176 @@ class DailyRecordController extends BaseController
      * @param \Illuminate\Database\Eloquent\Collection $records
      * @return array|null Formatted aggregated response or null if records empty
      */
+    private function formatWeeklyRecordWithHangars($groupedRecord): array
+    {
+        $records = $groupedRecord['records'];
+        $firstRecord = $records->first();
+        $farm = $firstRecord->farm;
+        $flock = $firstRecord->flock;
+
+        $periodDate = $groupedRecord['period_date'];
+        $weekLabel = 'Week ' . $groupedRecord['week'] . ' • ' . $periodDate->format('F Y');
+
+        $flockAge = null;
+        $flockStatus = null;
+        if ($flock) {
+            $endDate = $flock->flockEnds()->latest('sale_date')->first()?->sale_date;
+            $flockAge = $this->calculateFlockAge($flock->start_date, $endDate);
+            $flockStatus = $endDate ? 'Completed' : 'Active';
+        }
+
+        $breedType = $this->extractBreedType($flock->breed ?? '');
+        $isBroiler = $breedType === 'Broiler';
+
+        // Group records by hangar and format hangar details
+        $hangars = $records->groupBy('hangar_id')->map(function ($hangarRecords) use ($isBroiler) {
+            $firstHangarRecord = $hangarRecords->first();
+            $totalFeed = $hangarRecords->sum('feed_kg');
+            $totalEggsTray = $hangarRecords->sum('eggs_tray_30');
+            $totalEggs = $hangarRecords->sum('eggs_count');
+            $totalEggsWeight = $hangarRecords->sum('eggs_weight');
+            $totalChicksWeight = $hangarRecords->sum('chicks_weight');
+            $totalMortality = $hangarRecords->sum('mortality');
+
+            $materialStockHangar = \App\Models\MaterialStockHangar::where('hangar_id', $firstHangarRecord->hangar_id)
+                ->latest('created_at')
+                ->first();
+            $remainingQty = $materialStockHangar?->remaining_quantity ?? 0;
+
+            $hangarData = [
+                'id' => $firstHangarRecord->id,
+                'hangar_id' => $firstHangarRecord->hangar_id,
+                'hangar_name' => $firstHangarRecord->hangar?->name,
+                'status' => $firstHangarRecord->hangar?->status,
+                'feed_qty' => $this->formatDecimal($totalFeed),
+                'remaining_qty' => $this->formatDecimal($remainingQty),
+                'mortality' => (int) $totalMortality,
+            ];
+
+            if ($isBroiler) {
+                $hangarData['chicks_weight'] = $this->formatDecimal($totalChicksWeight);
+            } else {
+                $hangarData['eggs_tray_30'] = (int) $totalEggsTray;
+                $hangarData['eggs_count'] = (int) $totalEggs;
+                $hangarData['eggs_weight'] = $this->formatDecimal($totalEggsWeight);
+            }
+
+            return $hangarData;
+        })->values();
+
+        $totalFeed = $records->sum('feed_kg');
+        $totalEggsTray = $records->sum('eggs_tray_30');
+        $totalEggs = $records->sum('eggs_count');
+        $totalEggsWeight = $records->sum('eggs_weight');
+        $totalChicksWeight = $records->sum('chicks_weight');
+        $totalMortality = $records->sum('mortality');
+
+        return [
+            'period'          => $weekLabel,
+            'year'            => $groupedRecord['year'],
+            'week'            => $groupedRecord['week'],
+            'period_date'     => $periodDate->format('Y-m-d'),
+            'farm_id'         => $groupedRecord['farm_id'],
+            'farm_name'       => $farm?->name,
+            'flock_id'        => $groupedRecord['flock_id'],
+            'flock_name'      => $flock?->name,
+            'flock_age'       => $flockAge,
+            'flock_status'    => $flockStatus,
+            'feed_qty'        => $this->formatDecimal($totalFeed),
+            'eggs_tray_30'    => (int) $totalEggsTray,
+            'eggs_count'      => (int) $totalEggs,
+            'eggs_weight'     => $this->formatDecimal($totalEggsWeight),
+            'chicks_weight'   => $this->formatDecimal($totalChicksWeight),
+            'mortality'       => (int) $totalMortality,
+            'hangars'         => $hangars,
+        ];
+    }
+
+    private function formatMonthlyRecordWithHangars($groupedRecord): array
+    {
+        $records = $groupedRecord['records'];
+        $firstRecord = $records->first();
+        $farm = $firstRecord->farm;
+        $flock = $firstRecord->flock;
+
+        $periodDate = $groupedRecord['period_date'];
+        $monthLabel = $periodDate->format('F Y');
+
+        $flockAge = null;
+        $flockStatus = null;
+        if ($flock) {
+            $endDate = $flock->flockEnds()->latest('sale_date')->first()?->sale_date;
+            $flockAge = $this->calculateFlockAge($flock->start_date, $endDate);
+            $flockStatus = $endDate ? 'Completed' : 'Active';
+        }
+
+        $breedType = $this->extractBreedType($flock->breed ?? '');
+        $isBroiler = $breedType === 'Broiler';
+
+        // Group records by hangar and format hangar details
+        $hangars = $records->groupBy('hangar_id')->map(function ($hangarRecords) use ($isBroiler) {
+            $firstHangarRecord = $hangarRecords->first();
+            $totalFeed = $hangarRecords->sum('feed_kg');
+            $totalEggsTray = $hangarRecords->sum('eggs_tray_30');
+            $totalEggs = $hangarRecords->sum('eggs_count');
+            $totalEggsWeight = $hangarRecords->sum('eggs_weight');
+            $totalChicksWeight = $hangarRecords->sum('chicks_weight');
+            $totalMortality = $hangarRecords->sum('mortality');
+
+            $materialStockHangar = \App\Models\MaterialStockHangar::where('hangar_id', $firstHangarRecord->hangar_id)
+                ->latest('created_at')
+                ->first();
+            $remainingQty = $materialStockHangar?->remaining_quantity ?? 0;
+
+            $hangarData = [
+                'id' => $firstHangarRecord->id,
+                'hangar_id' => $firstHangarRecord->hangar_id,
+                'hangar_name' => $firstHangarRecord->hangar?->name,
+                'status' => $firstHangarRecord->hangar?->status,
+                'feed_qty' => $this->formatDecimal($totalFeed),
+                'remaining_qty' => $this->formatDecimal($remainingQty),
+                'mortality' => (int) $totalMortality,
+            ];
+
+            if ($isBroiler) {
+                $hangarData['chicks_weight'] = $this->formatDecimal($totalChicksWeight);
+            } else {
+                $hangarData['eggs_tray_30'] = (int) $totalEggsTray;
+                $hangarData['eggs_count'] = (int) $totalEggs;
+                $hangarData['eggs_weight'] = $this->formatDecimal($totalEggsWeight);
+            }
+
+            return $hangarData;
+        })->values();
+
+        $totalFeed = $records->sum('feed_kg');
+        $totalEggsTray = $records->sum('eggs_tray_30');
+        $totalEggs = $records->sum('eggs_count');
+        $totalEggsWeight = $records->sum('eggs_weight');
+        $totalChicksWeight = $records->sum('chicks_weight');
+        $totalMortality = $records->sum('mortality');
+
+        return [
+            'period'          => $monthLabel,
+            'year'            => $groupedRecord['year'],
+            'month'           => $groupedRecord['month'],
+            'period_date'     => $periodDate->format('Y-m-d'),
+            'farm_id'         => $groupedRecord['farm_id'],
+            'farm_name'       => $farm?->name,
+            'flock_id'        => $groupedRecord['flock_id'],
+            'flock_name'      => $flock?->name,
+            'flock_age'       => $flockAge,
+            'flock_status'    => $flockStatus,
+            'feed_qty'        => $this->formatDecimal($totalFeed),
+            'eggs_tray_30'    => (int) $totalEggsTray,
+            'eggs_count'      => (int) $totalEggs,
+            'eggs_weight'     => $this->formatDecimal($totalEggsWeight),
+            'chicks_weight'   => $this->formatDecimal($totalChicksWeight),
+            'mortality'       => (int) $totalMortality,
+            'hangars'         => $hangars,
+        ];
+    }
+
     private function formatAndGroupDailyRecords($records)
     {
         if ($records->isEmpty()) {

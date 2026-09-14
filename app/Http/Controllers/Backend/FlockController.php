@@ -252,6 +252,18 @@ class FlockController extends Controller
             return back()->withErrors(['hangar_quantities_json' => 'Duplicate hangars are not allowed. Each hangar can only be selected once.']);
         }
 
+        // Validate that hangars aren't already allocated to other flocks in the same farm
+        $allocatedHangars = FlockHangar::whereHas('flock', function ($q) use ($request) {
+            $q->where('farm_id', $request->farm_id);
+        })->pluck('hangar_id')->toArray();
+
+        $requestHangarIds = array_column($hangarQuantities, 'hangar_id');
+        $doubleAllocated = array_intersect($requestHangarIds, $allocatedHangars);
+
+        if (!empty($doubleAllocated)) {
+            return back()->withErrors(['hangar_quantities_json' => 'One or more hangars are already allocated to another flock in this farm. Hangars: ' . implode(', ', $doubleAllocated)]);
+        }
+
         $flock = Flock::create([
             'name' => FlockNamingHelper::generateFlockName($request->farm_id),
             'farm_id' => $request->farm_id,
@@ -333,6 +345,20 @@ class FlockController extends Controller
         $hangarIds = array_column($hangarQuantities, 'hangar_id');
         if (count($hangarIds) !== count(array_unique($hangarIds))) {
             return back()->withErrors(['hangar_quantities_json' => 'Duplicate hangars are not allowed. Each hangar can only be selected once.']);
+        }
+
+        // Validate that hangars aren't already allocated to other flocks in the same farm
+        // (excluding the current flock being updated)
+        $allocatedHangars = FlockHangar::whereHas('flock', function ($q) use ($request, $id) {
+            $q->where('farm_id', $request->farm_id)
+              ->where('id', '!=', $id);
+        })->pluck('hangar_id')->toArray();
+
+        $requestHangarIds = array_column($hangarQuantities, 'hangar_id');
+        $doubleAllocated = array_intersect($requestHangarIds, $allocatedHangars);
+
+        if (!empty($doubleAllocated)) {
+            return back()->withErrors(['hangar_quantities_json' => 'One or more hangars are already allocated to another flock in this farm. Hangars: ' . implode(', ', $doubleAllocated)]);
         }
 
         // Determine flock name based on farm change

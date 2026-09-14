@@ -505,33 +505,38 @@ class DailyRecordController extends BaseController
     }
 
     /**
-     * Update a daily record
+     * Update daily records for a date
      *
-     * Update an existing daily record.
+     * Update existing daily records for multiple hangars on the same date and flock.
+     * All records for that date/farm/flock will be replaced with the new data.
      *
      * @authenticated
-     * @urlParam id integer required The daily record ID. Example: 1
-     * @bodyParam record_date date required Record date (format: dd-mm-yyyy). Example: 07-08-2026
-     * @bodyParam hangar_id integer required Hangar ID. Example: 1
-     * @bodyParam feed_kg number required Feed quantity in kg. Example: 450.50
-     * @bodyParam eggs_tray_30 integer optional Number of egg trays (30 count). Example: 12
-     * @bodyParam eggs_count integer optional Egg count. Example: 360
-     * @bodyParam eggs_weight number optional Eggs weight in kg. Example: 18.50
-     * @bodyParam chicks_weight number optional Chicks weight in kg. Example: 1.85
-     * @bodyParam mortality integer optional Mortality count. Example: 5
+     * @urlParam id integer required The daily record ID (any record from the date to update). Example: 21
+     * @bodyParam record_date date required Record date (format: dd-mm-yyyy). Example: 14-09-2026
+     * @bodyParam flock_id integer required Flock ID. Example: 47
+     * @bodyParam hangars array required Array of hangar records. Example: [{"hangar_id": 287, "feed_kg": 450.50, "mortality": 3, "eggs_tray_30": 12, "eggs_count": 360, "eggs_weight": 18.50}]
+     * @bodyParam hangars[].hangar_id integer required Hangar ID
+     * @bodyParam hangars[].feed_kg number required Feed quantity in kg
+     * @bodyParam hangars[].mortality integer required Mortality count
+     * @bodyParam hangars[].eggs_tray_30 integer optional Number of egg trays (30 count, for layer flocks)
+     * @bodyParam hangars[].eggs_count integer optional Egg count (for layer flocks)
+     * @bodyParam hangars[].eggs_weight number optional Eggs weight in kg (for layer flocks)
+     * @bodyParam hangars[].chicks_weight number optional Chicks weight in kg (for broiler flocks)
+     * @bodyParam hangars[].notes string optional Notes for this hangar record
      *
      * @response 200 {
      *   "success": true,
      *   "message": "Daily record updated successfully.",
      *   "data": {
-     *     "period": "Monday, 07 Aug 2026",
-     *     "period_date": "2026-08-07",
-     *     "farm_id": 1,
-     *     "farm_name": "Main Farm",
-     *     "flock_id": 1,
-     *     "flock_name": "Farm1-Flock4",
-     *     "flock_age": "Week 1 Day 2",
-     *     "flock_status": "Active",
+     *     "id": 21,
+     *     "period": "Monday, 14 Sep 2026",
+     *     "period_date": "2026-09-14",
+     *     "farm_id": 70,
+     *     "farm_name": "James Owner Farm 1",
+     *     "flock_id": 47,
+     *     "flock_name": "Flock1",
+     *     "flock_age": "Day 4",
+     *     "flock_status": "Completed",
      *     "feed_qty": 931.25,
      *     "eggs_tray_30": 25,
      *     "eggs_count": 750,
@@ -540,16 +545,29 @@ class DailyRecordController extends BaseController
      *     "mortality": 5,
      *     "hangars": [
      *       {
-     *         "hangar_id": 1,
-     *         "hangar_name": "Farm1-Hangar1",
+     *         "id": 21,
+     *         "hangar_id": 287,
+     *         "hangar_name": "Hangar 1",
      *         "status": "Active",
      *         "feed_qty": 450.50,
-     *         "remaining_qty": 250.75,
+     *         "remaining_qty": 0.00,
      *         "eggs_tray_30": 12,
      *         "eggs_count": 360,
      *         "eggs_weight": 18.50,
      *         "mortality": 3,
-     *         "notes": "Updated production"
+     *         "notes": "Good production day for Hangar 1"
+     *       },
+     *       {
+     *         "id": 22,
+     *         "hangar_id": 288,
+     *         "hangar_name": "Hangar 2",
+     *         "status": "Active",
+     *         "feed_qty": 480.75,
+     *         "remaining_qty": 0.00,
+     *         "eggs_tray_30": 13,
+     *         "eggs_count": 390,
+     *         "eggs_weight": 19.75,
+     *         "mortality": 2
      *       }
      *     ]
      *   }
@@ -561,7 +579,7 @@ class DailyRecordController extends BaseController
      * @response 422 {
      *   "success": false,
      *   "errors": {
-     *     "feed_kg": ["The feed kg field is required."]
+     *     "hangars.0.feed_kg": ["The hangars.0.feed kg field is required."]
      *   }
      * }
      */
@@ -588,22 +606,24 @@ class DailyRecordController extends BaseController
 
         $rules = [
             'record_date'    => 'required|date_format:d-m-Y',
-            'hangar_id'      => 'required|integer|exists:hangars,id',
-            'feed_kg'        => 'required|numeric|min:0',
-            'mortality'      => 'required|integer|min:0',
-            'notes'          => 'nullable|string|max:1000',
+            'flock_id'       => 'required|integer|exists:flocks,id',
+            'hangars'        => 'required|array|min:1',
+            'hangars.*.hangar_id' => 'required|integer|exists:hangars,id',
+            'hangars.*.feed_kg' => 'required|numeric|min:0',
+            'hangars.*.mortality' => 'required|integer|min:0',
+            'hangars.*.notes' => 'nullable|string|max:1000',
         ];
 
         if ($breedType === 'Layer') {
-            $rules['eggs_tray_30'] = 'required|integer|min:0';
-            $rules['eggs_count'] = 'required|integer|min:0';
-            $rules['eggs_weight'] = 'required|numeric|min:0';
-            $rules['chicks_weight'] = 'nullable|numeric|min:0';
+            $rules['hangars.*.eggs_tray_30'] = 'required|integer|min:0';
+            $rules['hangars.*.eggs_count'] = 'required|integer|min:0';
+            $rules['hangars.*.eggs_weight'] = 'required|numeric|min:0';
+            $rules['hangars.*.chicks_weight'] = 'nullable|numeric|min:0';
         } else {
-            $rules['eggs_tray_30'] = 'nullable|integer|min:0';
-            $rules['eggs_count'] = 'nullable|integer|min:0';
-            $rules['eggs_weight'] = 'nullable|numeric|min:0';
-            $rules['chicks_weight'] = 'nullable|numeric|min:0';
+            $rules['hangars.*.eggs_tray_30'] = 'nullable|integer|min:0';
+            $rules['hangars.*.eggs_count'] = 'nullable|integer|min:0';
+            $rules['hangars.*.eggs_weight'] = 'nullable|numeric|min:0';
+            $rules['hangars.*.chicks_weight'] = 'nullable|numeric|min:0';
         }
 
         $validator = Validator::make($request->all(), $rules);
@@ -621,31 +641,46 @@ class DailyRecordController extends BaseController
             // Convert date format from dd-mm-yyyy to yyyy-mm-dd
             $recordDate = \Carbon\Carbon::createFromFormat('d-m-Y', $request->record_date);
 
-            $record->update([
-                'record_date'   => $recordDate,
-                'hangar_id'     => $request->hangar_id,
-                'feed_kg'       => $request->feed_kg,
-                'eggs_tray_30'  => $request->eggs_tray_30 ?? 0,
-                'eggs_count'    => $request->eggs_count ?? 0,
-                'eggs_weight'   => $request->eggs_weight ?? 0,
-                'chicks_weight' => $request->chicks_weight ?? 0,
-                'mortality'     => $request->mortality ?? 0,
-                'notes'         => $request->notes ?? null,
-            ]);
+            // Get the farm_id from the flock
+            $flock = Flock::findOrFail($request->flock_id);
+
+            // Delete all existing records for this date, flock, and farm
+            DailyRecord::where('record_date', $recordDate)
+                ->where('farm_id', $flock->farm_id)
+                ->where('flock_id', $request->flock_id)
+                ->where('created_by', auth()->id())
+                ->delete();
+
+            $records = [];
+
+            // Create new records for all hangars
+            foreach ($request->hangars as $hangarData) {
+                $newRecord = DailyRecord::create([
+                    'record_date'   => $recordDate,
+                    'farm_id'       => $flock->farm_id,
+                    'flock_id'      => $request->flock_id,
+                    'hangar_id'     => $hangarData['hangar_id'],
+                    'feed_kg'       => $hangarData['feed_kg'],
+                    'eggs_tray_30'  => $hangarData['eggs_tray_30'] ?? 0,
+                    'eggs_count'    => $hangarData['eggs_count'] ?? 0,
+                    'eggs_weight'   => $hangarData['eggs_weight'] ?? 0,
+                    'chicks_weight' => $hangarData['chicks_weight'] ?? 0,
+                    'mortality'     => $hangarData['mortality'] ?? 0,
+                    'notes'         => $hangarData['notes'] ?? null,
+                    'created_by'    => auth()->id(),
+                ]);
+                $records[] = $newRecord;
+            }
 
             DB::commit();
 
-            $record->load('farm', 'flock', 'hangar', 'creator');
-
-            // Fetch all records for this date, flock, and farm
-            $allRecordsForDate = DailyRecord::where('created_by', auth()->id())
-                ->where('record_date', $record->record_date)
-                ->where('flock_id', $record->flock_id)
-                ->with('farm', 'flock', 'hangar', 'creator')
-                ->get();
+            // Load all relations for the records
+            foreach ($records as $record) {
+                $record->load('farm', 'flock', 'hangar', 'creator');
+            }
 
             // Format and group records for aggregated response
-            $formattedData = $this->formatAndGroupDailyRecords($allRecordsForDate);
+            $formattedData = $this->formatAndGroupDailyRecords(collect($records));
 
             return response()->json([
                 'success' => true,

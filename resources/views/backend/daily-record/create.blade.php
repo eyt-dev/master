@@ -232,6 +232,16 @@
                                             </div>
                                         </div>
                                     ` : ``}
+                                    <div class="row mt-3">
+                                        <div class="col-md-12">
+                                            <div class="form-group mb-0">
+                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Notes (Optional)</label>
+                                                <textarea class="form-control notes-input" name="hangar_notes[${hangar.id}]"
+                                                    placeholder="Add any notes for this hangar..." rows="2" data-hangar-id="${hangar.id}"
+                                                    style="resize: vertical; font-size: 0.85rem;">${existingData.notes || ''}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             `;
                             container.append(html);
@@ -271,6 +281,7 @@
                 var chicksWeight = parseFloat(chicksWeightValue) || 0;
 
                 var mortality = parseInt($(this).find('.mortality-input').val()) || 0;
+                var notes = $(this).find('.notes-input').val() || '';
 
                 hangarRecords.push({
                     hangar_id: hangarId,
@@ -279,7 +290,8 @@
                     eggs_count: eggsCount,
                     eggs_weight: eggsWeight,
                     chicks_weight: chicksWeight,
-                    mortality: mortality
+                    mortality: mortality,
+                    notes: notes
                 });
             });
 

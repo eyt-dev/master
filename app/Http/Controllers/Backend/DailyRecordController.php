@@ -71,7 +71,8 @@ class DailyRecordController extends Controller
                                 'eggs_count' => $record->eggs_count,
                                 'eggs_weight' => $record->eggs_weight,
                                 'chicks_weight' => $record->chicks_weight,
-                                'mortality' => $record->mortality
+                                'mortality' => $record->mortality,
+                                'notes' => $record->notes
                             ];
                         })->sortBy('hangar_name')->values()
                     ];
@@ -210,6 +211,11 @@ class DailyRecordController extends Controller
             $html .= '<br>Chicks Weight: ' . $chicksWeight . ' kg';
         }
 
+        // Add notes if present
+        if (!empty($hangar['notes'])) {
+            $html .= '<br><small style="color: #666; font-style: italic;">Note: ' . htmlspecialchars(substr($hangar['notes'], 0, 50)) . (strlen($hangar['notes']) > 50 ? '...' : '') . '</small>';
+        }
+
         return $html;
     }
 
@@ -313,6 +319,7 @@ class DailyRecordController extends Controller
                     'eggs_weight' => (float)($record['eggs_weight'] ?? 0),
                     'chicks_weight' => (float)($record['chicks_weight'] ?? 0),
                     'mortality' => (int)($record['mortality'] ?? 0),
+                    'notes' => $record['notes'] ?? null,
                     'created_by' => auth()->id()
                 ]);
             }
@@ -428,6 +435,7 @@ class DailyRecordController extends Controller
                         'eggs_weight' => (float)($record['eggs_weight'] ?? 0),
                         'chicks_weight' => (float)($record['chicks_weight'] ?? 0),
                         'mortality' => (int)($record['mortality'] ?? 0),
+                        'notes' => $record['notes'] ?? null,
                     ]);
                 } else {
                     DailyRecord::create([
@@ -441,6 +449,7 @@ class DailyRecordController extends Controller
                         'eggs_weight' => (float)($record['eggs_weight'] ?? 0),
                         'chicks_weight' => (float)($record['chicks_weight'] ?? 0),
                         'mortality' => (int)($record['mortality'] ?? 0),
+                        'notes' => $record['notes'] ?? null,
                         'created_by' => auth()->id()
                     ]);
                 }

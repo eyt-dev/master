@@ -683,6 +683,11 @@ class DailyRecordController extends BaseController
             'created_at'      => $record->created_at,
         ];
 
+        // Add notes if present
+        if ($record->notes) {
+            $data['notes'] = $record->notes;
+        }
+
         return $data;
     }
 
@@ -814,8 +819,12 @@ class DailyRecordController extends BaseController
             $flockStatus = $endDate ? 'Completed' : 'Active';
         }
 
+        // Determine breed type for hangar field filtering
+        $breedType = $this->extractBreedType($flock->breed ?? '');
+        $isBroiler = $breedType === 'Broiler';
+
         // Group records by hangar and format hangar details
-        $hangars = $records->groupBy('hangar_id')->map(function ($hangarRecords) {
+        $hangars = $records->groupBy('hangar_id')->map(function ($hangarRecords) use ($isBroiler) {
             $firstHangarRecord = $hangarRecords->first();
             $totalFeed = $hangarRecords->sum('feed_kg');
             $totalEggsTray = $hangarRecords->sum('eggs_tray_30');
@@ -824,17 +833,29 @@ class DailyRecordController extends BaseController
             $totalChicksWeight = $hangarRecords->sum('chicks_weight');
             $totalMortality = $hangarRecords->sum('mortality');
 
-            return [
+            $hangarData = [
                 'hangar_id' => $firstHangarRecord->hangar_id,
                 'hangar_name' => $firstHangarRecord->hangar?->name,
                 'status' => $firstHangarRecord->hangar?->status,
                 'feed_kg' => $this->formatDecimal($totalFeed),
-                'eggs_tray_30' => (int) $totalEggsTray,
-                'eggs_count' => (int) $totalEggs,
-                'eggs_weight' => $this->formatDecimal($totalEggsWeight),
-                'chicks_weight' => $this->formatDecimal($totalChicksWeight),
                 'mortality' => (int) $totalMortality,
             ];
+
+            // Add breed-specific fields
+            if ($isBroiler) {
+                $hangarData['chicks_weight'] = $this->formatDecimal($totalChicksWeight);
+            } else {
+                $hangarData['eggs_tray_30'] = (int) $totalEggsTray;
+                $hangarData['eggs_count'] = (int) $totalEggs;
+                $hangarData['eggs_weight'] = $this->formatDecimal($totalEggsWeight);
+            }
+
+            // Add notes if present
+            if ($firstHangarRecord->notes) {
+                $hangarData['notes'] = $firstHangarRecord->notes;
+            }
+
+            return $hangarData;
         })->values();
 
         $totalFeed = $records->sum('feed_kg');
@@ -882,29 +903,40 @@ class DailyRecordController extends BaseController
             $flockStatus = $endDate ? 'Completed' : 'Active';
         }
 
-        // Format hangar details
-        $hangars = $records->map(function ($record) {
-            return [
+        // Calculate totals
+        $totalFeed = $records->sum('feed_kg');
+        $totalMortality = $records->sum('mortality');
+
+        // Determine breed type
+        $breedType = $this->extractBreedType($flock->breed ?? '');
+        $isBroiler = $breedType === 'Broiler';
+
+        // Format hangar details - include only breed-specific fields
+        $hangars = $records->map(function ($record) use ($isBroiler) {
+            $hangarData = [
                 'hangar_id' => $record->hangar_id,
                 'hangar_name' => $record->hangar?->name,
                 'status' => $record->hangar?->status,
                 'feed_kg' => $this->formatDecimal($record->feed_kg),
-                'eggs_tray_30' => (int) $record->eggs_tray_30,
-                'eggs_count' => (int) $record->eggs_count,
-                'eggs_weight' => $this->formatDecimal($record->eggs_weight),
-                'chicks_weight' => $this->formatDecimal($record->chicks_weight),
                 'mortality' => (int) $record->mortality,
-                'notes' => $record->notes,
             ];
-        })->values();
 
-        // Calculate totals
-        $totalFeed = $records->sum('feed_kg');
-        $totalEggsTray = $records->sum('eggs_tray_30');
-        $totalEggs = $records->sum('eggs_count');
-        $totalEggsWeight = $records->sum('eggs_weight');
-        $totalChicksWeight = $records->sum('chicks_weight');
-        $totalMortality = $records->sum('mortality');
+            // Add breed-specific fields
+            if ($isBroiler) {
+                $hangarData['chicks_weight'] = $this->formatDecimal($record->chicks_weight);
+            } else {
+                $hangarData['eggs_tray_30'] = (int) $record->eggs_tray_30;
+                $hangarData['eggs_count'] = (int) $record->eggs_count;
+                $hangarData['eggs_weight'] = $this->formatDecimal($record->eggs_weight);
+            }
+
+            // Add notes if present
+            if ($record->notes) {
+                $hangarData['notes'] = $record->notes;
+            }
+
+            return $hangarData;
+        })->values();
 
         return [
             'record_date' => $firstRecord->record_date->format('Y-m-d'),
@@ -915,14 +947,10 @@ class DailyRecordController extends BaseController
             'flock_name' => $flock?->name,
             'flock_age' => $flockAge,
             'flock_status' => $flockStatus,
-            'feed_kg' => $this->formatDecimal($totalFeed),
-            'eggs_tray_30' => (int) $totalEggsTray,
-            'eggs_count' => (int) $totalEggs,
-            'eggs_weight' => $this->formatDecimal($totalEggsWeight),
-            'chicks_weight' => $this->formatDecimal($totalChicksWeight),
-            'mortality' => (int) $totalMortality,
-            'created_by' => $firstRecord->created_by,
-            'created_by_name' => $firstRecord->creator?->name,
+            'breed' => $flock->breed,
+            'total_feed' => $this->formatDecimal($totalFeed),
+            'total_mortality' => (int) $totalMortality,
+            'recorded_by' => $firstRecord->creator?->name,
             'created_at' => $firstRecord->created_at,
             'hangars' => $hangars,
         ];

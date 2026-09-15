@@ -597,7 +597,8 @@ class AdminController extends Controller
 
         $countries = CountryRegion::orderBy('name')->get();
         $projects = $this->getAllProjects();
-        return view('backend.admins.user', compact('countries', 'projects'));
+        $siteSlug = request()->get('username', request()->segment(1));
+        return view('backend.admins.user', compact('countries', 'projects', 'siteSlug'));
     }
 
     private function validateProjectRows(Request $request): void

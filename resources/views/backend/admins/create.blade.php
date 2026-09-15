@@ -271,6 +271,7 @@
         const form = document.getElementById('admin_form');
         const container = document.getElementById('project-status-container');
         const countrySelect = document.getElementById('vat_country_code');
+        const adminType = parseInt($('input[name="type"]').val());
 
         // Initialize phone code and VAT code on page load
         if (countrySelect && countrySelect.value) {
@@ -308,8 +309,59 @@
             });
         }
 
-        // No form validation needed - backend handles validation
-        // Projects are optional for type 1 admins
-        // Form submission is allowed without project assignment
+        // Initialize jQuery validation
+        $.validator.addMethod("noSpace", function(value, element) {
+            return value.indexOf(" ") < 0 && value !== "";
+        }, "Spaces are not allowed.");
+
+        const validationRules = {
+            name: { required: true, maxlength: 255 },
+            email: { required: true, email: true, maxlength: 255 },
+            password: { required: function () {
+                return !$('input[name="email"]').prop('readonly');
+            }, minlength: 8 },
+        };
+
+        const validationMessages = {
+            name: {
+                required: "The name field is required",
+                maxlength: "Name cannot exceed 255 characters"
+            },
+            email: {
+                required: "The email field is required",
+                email: "Please enter a valid email address",
+                maxlength: "Email cannot exceed 255 characters"
+            },
+            password: {
+                required: "The password field is required",
+                minlength: "Password must be at least 8 characters long"
+            },
+        };
+
+        // Add admin-specific rules
+        if (adminType !== 4) {
+            validationRules.username = { required: true, maxlength: 255, noSpace: true };
+            validationRules.vat_country_code = { required: true };
+            validationRules.vat_number = { required: true, maxlength: 50 };
+
+            validationMessages.username = {
+                required: "The username field is required",
+                maxlength: "Username cannot exceed 255 characters",
+                noSpace: "Spaces are not allowed."
+            };
+            validationMessages.vat_country_code = {
+                required: "Please select a country"
+            };
+            validationMessages.vat_number = {
+                required: "The VAT number is required",
+                maxlength: "VAT number cannot exceed 50 characters"
+            };
+        }
+
+        $("#admin_form").validate({
+            ignore: ":hidden",
+            rules: validationRules,
+            messages: validationMessages,
+        });
     })();
 </script>

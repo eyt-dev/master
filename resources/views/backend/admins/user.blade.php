@@ -442,6 +442,33 @@
             if (countryValue) {
                 updateVatAndPhoneCode();
             }
+
+            // Initialize jQuery validation for the form
+            $("#admin_form").validate({
+                ignore: ":hidden",
+                rules: {
+                    name: { required: true, maxlength: 255 },
+                    email: { required: true, email: true, maxlength: 255 },
+                    password: { required: function () {
+                        return $("#mode").val() === "add";
+                    }, minlength: 8 },
+                },
+                messages: {
+                    name: {
+                        required: "The name field is required",
+                        maxlength: "Name cannot exceed 255 characters"
+                    },
+                    email: {
+                        required: "The email field is required",
+                        email: "Please enter a valid email address",
+                        maxlength: "Email cannot exceed 255 characters"
+                    },
+                    password: {
+                        required: "The password field is required",
+                        minlength: "Password must be at least 8 characters long"
+                    },
+                },
+            });
         }
 
         // Function to update VAT code and phone code based on selected country

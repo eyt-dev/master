@@ -52,7 +52,7 @@
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="vat_country_code" class="form-label">Country <span class="text-red">*</span></label>
-                <select class="form-control" name="vat_country_code" id="vat_country_code">
+                <select class="form-control" name="vat_country_code" id="vat_country_code" required>
                     <option value="">Select Country</option>
                     @foreach($countries as $country)
                         <option value="{{ $country->id }}" data-dial-code="{{ $country->dial_code ?? '' }}" data-iso-code="{{ strtoupper(substr($country->name,0,2)) }}" {{ (old('vat_country_code')??$admin->vat_country_code) == $country->id ? 'selected' : '' }}>
@@ -74,7 +74,7 @@
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="vat_number" class="form-label">VAT Number <span class="text-red">*</span></label>
-                <input type="text" class="form-control" placeholder="VAT Number" name="vat_number" id="vat_number" value="{{ old('vat_number')??$admin->vat_number }}">
+                <input type="text" class="form-control" placeholder="VAT Number" name="vat_number" id="vat_number" value="{{ old('vat_number')??$admin->vat_number }}" required>
                 @error('vat_number')
                     <label id="vat_number-error" class="error" for="vat_number">{{ $message }}</label>
                 @enderror

@@ -227,6 +227,7 @@ class FlockController extends Controller
     public function store(Request $request, $siteUrl)
     {
         $request->validate([
+            'name' => 'required|string|max:255',
             'farm_id' => 'required|exists:farms,id',
             'chicks_supplier_id' => 'required|exists:chicks_suppliers,id',
             'breed' => 'required|string',
@@ -271,7 +272,7 @@ class FlockController extends Controller
         }
 
         $flock = Flock::create([
-            'name' => FlockNamingHelper::generateFlockName($request->farm_id),
+            'name' => $request->name,
             'farm_id' => $request->farm_id,
             'chicks_supplier_id' => $request->chicks_supplier_id,
             'breed' => $request->breed,
@@ -316,6 +317,7 @@ class FlockController extends Controller
     public function update(Request $request, $siteUrl, $id)
     {
         $request->validate([
+            'name' => 'required|string|max:255',
             'farm_id' => 'required|exists:farms,id',
             'chicks_supplier_id' => 'required|exists:chicks_suppliers,id',
             'breed' => 'required|string',
@@ -367,16 +369,9 @@ class FlockController extends Controller
             return back()->withErrors(['hangar_quantities_json' => 'One or more hangars are already allocated to another flock in this farm. Hangars: ' . implode(', ', $doubleAllocated)]);
         }
 
-        // Determine flock name based on farm change
-        $newName = $flock->name;
-        
-        if ($request->farm_id !== $flock->farm_id) {
-            // Farm has changed - generate new name for the new farm
-            $newName = FlockNamingHelper::generateFlockName($request->farm_id, $flock->id);
-        }
-
+        // Update flock with user-provided name
         $flock->update([
-            'name' => $newName,
+            'name' => $request->name,
             'farm_id' => $request->farm_id,
             'chicks_supplier_id' => $request->chicks_supplier_id,
             'breed' => $request->breed,

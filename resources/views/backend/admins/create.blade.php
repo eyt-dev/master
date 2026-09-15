@@ -42,8 +42,13 @@
         </div>
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" class="form-control" name="password" id="password" placeholder="Password" value="{{ old('password') }}" />
+                <label for="password" class="form-label">
+                    Password
+                    @if(!isset($admin->id))
+                        <span class="text-red">*</span>
+                    @endif
+                </label>
+                <input type="password" class="form-control" name="password" id="password" placeholder="Password" value="{{ old('password') }}" @if(!isset($admin->id)) required @endif />
                 @error('password')
                     <label id="password-error" class="error" for="password">{{ $message }}</label>
                 @enderror

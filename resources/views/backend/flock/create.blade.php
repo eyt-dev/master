@@ -19,11 +19,12 @@
     @endif
     
     <div class="row">
-        <!-- Flock Name (Auto-generated) -->
+        <!-- Flock Name -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="flock_name" class="form-label">Flock Name <span class="text-red">*</span></label>
-                <input type="text" class="form-control" id="flock_name" placeholder="Auto-generated" readonly />
+                <input type="text" class="form-control" name="name" id="flock_name" placeholder="Enter flock name"
+                    value="{{ old('name', $flock->name ?? '') }}" required="" />
                 @error('name')
                     <label id="flock_name-error" class="error" for="flock_name">{{ $message }}</label>
                 @enderror
@@ -256,23 +257,28 @@
             // User can choose to use this or set their own value
         }
 
-        // Store original farm and flock name for edit mode
+
+        // Store original farm and flock name for edit mode (COMMENTED - NOT USING AUTO-GENERATION)
+        /*
         var originalFarmId = null;
         var originalFlockName = null;
-        
+
         @if(isset($flock))
             originalFarmId = {{ $flock->farm_id }};
             originalFlockName = '{{ $flock->name }}';
         @endif
+        */
 
-        // When farm changes, reload hangars and update flock name
+        // When farm changes, reload hangars
         $('#farm_id').on('change', function() {
             var farmId = $(this).val();
             loadHangarsForFarm(farmId);
-            updateFlockName(farmId);
+            // COMMENTED - NOT USING AUTO-GENERATION
+            // updateFlockName(farmId);
         });
 
-        // Function to update flock name based on selected farm
+        // Function to update flock name based on selected farm (COMMENTED - NOT USING AUTO-GENERATION)
+        /*
         function updateFlockName(farmId) {
             if (!farmId) {
                 $('#flock_name').val('');
@@ -307,13 +313,15 @@
                 }
             });
         }
+        */
 
         // On page load (edit mode), load hangars and show existing name
         @if(isset($flock))
             var farmId = $('#farm_id').val();
             if (farmId) {
                 loadHangarsForFarm(farmId);
-                $('#flock_name').val('{{ $flock->name }}');
+                // COMMENTED - USER NOW PROVIDES FLOCK NAME
+                // $('#flock_name').val('{{ $flock->name }}');
             }
         @endif
 

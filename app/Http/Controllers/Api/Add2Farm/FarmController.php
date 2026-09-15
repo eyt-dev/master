@@ -545,9 +545,11 @@ class FarmController extends BaseController
             // Update hangars
             // Delete hangars not in the new list
             $providedHangarIds = array_filter(array_column($request->hangars, 'id'));
-            Hangar::where('farm_id', $farm->id)
-                ->whereNotIn('id', $providedHangarIds)
-                ->delete();
+            if (!empty($providedHangarIds)) {
+                Hangar::where('farm_id', $farm->id)
+                    ->whereNotIn('id', $providedHangarIds)
+                    ->delete();
+            }
 
             // Create or update hangars
             foreach ($request->hangars as $hangarData) {

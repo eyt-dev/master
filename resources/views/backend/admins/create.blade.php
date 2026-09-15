@@ -13,7 +13,7 @@
     <div class="row">
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <input type="hidden" name="type" value="{{ request('type', 1) }}">
+                <input type="hidden" name="type" value="{{ $type ?? 1 }}">
 
                 <label for="name" class="form-label">Formal Name <span class="text-red">*</span></label>
                 <input type="text" class="form-control" name="name" id="name" placeholder="Formal Name" value="{{ old('name', $admin->name) }}" required="" />

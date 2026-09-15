@@ -401,6 +401,18 @@ class FlockController extends Controller
             $query->where('created_by', $user->id);
         })->findOrFail($id);
 
+        // Check if flock has any feed stock allocated to it
+        $feedStockCount = \App\Models\DailyRecord::where('flock_id', $flock->id)
+            ->where('feed_kg', '>', 0)
+            ->count();
+
+        if ($feedStockCount > 0) {
+            return response()->json([
+                'msg' => 'Cannot delete flock. It has ' . $feedStockCount . ' feed stock allocation(s). Please remove all feed stock allocations before deleting this flock.',
+                'error' => true
+            ], 422);
+        }
+
         $flock->delete();
         return response()->json(['msg' => 'Flock deleted successfully.']);
     }

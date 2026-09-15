@@ -543,8 +543,28 @@ class FarmController extends BaseController
             }
 
             // Update hangars
-            // Delete hangars not in the new list
+            // Check if any hangars to be deleted have flocks assigned
             $providedHangarIds = array_filter(array_column($request->hangars, 'id'));
+            $hangarsToDelete = Hangar::where('farm_id', $farm->id)
+                ->when(!empty($providedHangarIds), function ($q) use ($providedHangarIds) {
+                    return $q->whereNotIn('id', $providedHangarIds);
+                }, function ($q) {
+                    return $q; // If no provided IDs, all hangars will be checked
+                })
+                ->get();
+
+            foreach ($hangarsToDelete as $hangar) {
+                $flockCount = $hangar->flocks()->count();
+                if ($flockCount > 0) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Cannot delete hangar '{$hangar->name}'. It has {$flockCount} flock(s) assigned to it.",
+                    ], 422);
+                }
+            }
+
+            // Delete hangars not in the new list
             if (!empty($providedHangarIds)) {
                 Hangar::where('farm_id', $farm->id)
                     ->whereNotIn('id', $providedHangarIds)

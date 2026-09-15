@@ -180,6 +180,15 @@ class HangarController extends Controller
             }
         }
 
+        // Check if hangar has any flocks assigned to it
+        $flockCount = $hangar->flocks()->count();
+        if ($flockCount > 0) {
+            return response()->json([
+                'msg' => 'Cannot delete hangar. It has ' . $flockCount . ' flock(s) assigned to it.',
+                'error' => true
+            ], 422);
+        }
+
         $hangar->delete();
         return response()->json(['msg' => 'Hangar deleted successfully.']);
     }

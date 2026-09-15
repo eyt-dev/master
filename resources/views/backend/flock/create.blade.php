@@ -162,8 +162,13 @@
             // Ensure farmId is an integer
             farmId = parseInt(farmId);
 
+            var url = "{{ route('flock.hangars-by-farm', ['username' => $siteSlug, 'farm' => ':farm']) }}".replace(':farm', farmId);
+            @if(isset($flock) && $flock->id)
+                url += '?flock_id={{ $flock->id }}';
+            @endif
+
             $.ajax({
-                url: "{{ route('flock.hangars-by-farm', ['username' => $siteSlug, 'farm' => ':farm']) }}".replace(':farm', farmId),
+                url: url,
                 type: 'GET',
                 success: function(hangars) {
                     allHangars = hangars;

@@ -178,7 +178,7 @@ class AdminController extends Controller
     public function create($siteUrl, $type = null)
     {
         $countries = Country::orderBy('name')->get();
-        $projects = $this->getProjectsForAdmin();
+        $projects = $this->getAllProjects();
         return view('backend.admins.create', ['admin' => new Admin(), 'type' => $type, 'countries' => $countries, 'projects' => $projects]);
     }
 
@@ -189,13 +189,13 @@ class AdminController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
-    {      
+    {
         $request->validate([
             'name' => 'required',
             'username' => 'nullable|string',
-            'email' => 'required|email|unique:admins',
+            'email' => 'nullable|email|unique:admins',
             'password' => 'required|min:6',
-            'mobile_number' => 'nullable|string|max:20|unique:admins,mobile_number',
+            'mobile_number' => 'required|string|max:20|unique:admins,mobile_number',
             'vat_country_code' => 'nullable',
             'vat_number' => 'nullable',
             'phone_code' => 'nullable|string|max:10',
@@ -352,7 +352,7 @@ class AdminController extends Controller
         }
 
         $roles = Role::all();
-        $projects = $this->getProjectsForAdmin();
+        $projects = $this->getAllProjects();
         return view('backend.admins.create', ['admin' => $admin, 'roles' => $roles, 'type' => $admin->type, 'countries' => $countries, 'projects' => $projects]);
     }
 
@@ -374,12 +374,12 @@ class AdminController extends Controller
         $request->validate([
             'name' => 'required',
             'username' => 'nullable|string',
-            'email' => 'required|email|unique:admins,email,' . $id,
+            'email' => 'nullable|email|unique:admins,email,' . $id,
             'vat_country_code' => 'nullable',
             'vat_number' => 'nullable',
             'phone_code' => 'nullable|string|max:10',
             'password' => 'nullable|min:6',
-            'mobile_number' => 'nullable|string|max:20|unique:admins,mobile_number,' . $id,
+            'mobile_number' => 'required|string|max:20|unique:admins,mobile_number,' . $id,
             'notes' => 'nullable|string|max:1000',
             'image' => 'nullable|image|mimes:jpeg,png,gif|max:2048',
             'project_id' => 'nullable|exists:projects,id',

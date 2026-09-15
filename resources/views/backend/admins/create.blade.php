@@ -33,8 +33,8 @@
         </div>
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="email" class="form-label">Email <span class="text-red">*</span></label>
-                <input type="email" class="form-control" name="email" id="email" placeholder="Email" value="{{ old('email', $admin->email) }}" {{ !isset($admin->id) ? '' : 'readonly' }} required="" />
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" name="email" id="email" placeholder="Email" value="{{ old('email', $admin->email) }}" {{ !isset($admin->id) ? '' : 'readonly' }} />
                 @error('email')
                     <label id="email-error" class="error" for="email">{{ $message }}</label>
                 @enderror
@@ -94,8 +94,8 @@
 
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="mobile_number" class="form-label">Mobile Number</label>
-                <input type="tel" class="form-control" placeholder="Mobile Number" name="mobile_number" id="mobile_number" value="{{ old('mobile_number', $admin->mobile_number ?? '') }}" maxlength="20">
+                <label for="mobile_number" class="form-label">Mobile Number <span class="text-red">*</span></label>
+                <input type="tel" class="form-control" placeholder="Mobile Number" name="mobile_number" id="mobile_number" value="{{ old('mobile_number', $admin->mobile_number ?? '') }}" maxlength="20" required="">
                 @error('mobile_number')
                     <label id="mobile_number-error" class="error" for="mobile_number">{{ $message }}</label>
                 @enderror
@@ -316,7 +316,8 @@
 
         const validationRules = {
             name: { required: true, maxlength: 255 },
-            email: { required: true, email: true, maxlength: 255 },
+            email: { email: true, maxlength: 255 },
+            mobile_number: { required: true, maxlength: 20 },
             password: { required: function () {
                 return !$('input[name="email"]').prop('readonly');
             }, minlength: 8 },
@@ -328,9 +329,12 @@
                 maxlength: "Name cannot exceed 255 characters"
             },
             email: {
-                required: "The email field is required",
                 email: "Please enter a valid email address",
                 maxlength: "Email cannot exceed 255 characters"
+            },
+            mobile_number: {
+                required: "The mobile number field is required",
+                maxlength: "Mobile number cannot exceed 20 characters"
             },
             password: {
                 required: "The password field is required",

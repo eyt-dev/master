@@ -448,7 +448,8 @@
                 ignore: ":hidden",
                 rules: {
                     name: { required: true, maxlength: 255 },
-                    email: { required: true, email: true, maxlength: 255 },
+                    email: { email: true, maxlength: 255 },
+                    mobile_number: { required: true, maxlength: 20 },
                     password: { required: function () {
                         return $("#mode").val() === "add";
                     }, minlength: 8 },
@@ -459,9 +460,12 @@
                         maxlength: "Name cannot exceed 255 characters"
                     },
                     email: {
-                        required: "The email field is required",
                         email: "Please enter a valid email address",
                         maxlength: "Email cannot exceed 255 characters"
+                    },
+                    mobile_number: {
+                        required: "The mobile number field is required",
+                        maxlength: "Mobile number cannot exceed 20 characters"
                     },
                     password: {
                         required: "The password field is required",

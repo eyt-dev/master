@@ -74,13 +74,21 @@
                 <label for="breed" class="form-label">Breed <span class="text-red">*</span></label>
                 <select class="form-control" name="breed" id="breed" required="">
                     <option value="">Select Breed</option>
+                    @php
+                        // Extract breed name from stored format (e.g., "Broiler,Ross 308" -> "Ross 308")
+                        $currentBreed = old('breed', $flock->breed ?? '');
+                        if (strpos($currentBreed, ',') !== false) {
+                            $breedParts = explode(',', $currentBreed);
+                            $currentBreed = trim($breedParts[1]);
+                        }
+                    @endphp
                     <optgroup label="Broiler">
-                        <option value="Ross 308" {{ old('breed', $flock->breed ?? '') == 'Ross 308' ? 'selected' : '' }}>Ross 308</option>
-                        <option value="Cobb 500" {{ old('breed', $flock->breed ?? '') == 'Cobb 500' ? 'selected' : '' }}>Cobb 500</option>
+                        <option value="Ross 308" {{ $currentBreed == 'Ross 308' ? 'selected' : '' }}>Ross 308</option>
+                        <option value="Cobb 500" {{ $currentBreed == 'Cobb 500' ? 'selected' : '' }}>Cobb 500</option>
                     </optgroup>
                     <optgroup label="Layer">
-                        <option value="Lohmann Brown" {{ old('breed', $flock->breed ?? '') == 'Lohmann Brown' ? 'selected' : '' }}>Lohmann Brown</option>
-                        <option value="Lohmann White" {{ old('breed', $flock->breed ?? '') == 'Lohmann White' ? 'selected' : '' }}>Lohmann White</option>
+                        <option value="Lohmann Brown" {{ $currentBreed == 'Lohmann Brown' ? 'selected' : '' }}>Lohmann Brown</option>
+                        <option value="Lohmann White" {{ $currentBreed == 'Lohmann White' ? 'selected' : '' }}>Lohmann White</option>
                     </optgroup>
                 </select>
                 @error('breed')

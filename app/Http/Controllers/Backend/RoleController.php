@@ -56,8 +56,8 @@ class RoleController extends Controller
     {
         $inputData = $request->all();
         // dd($inputData);
-        $permission_data=$inputData['permission_data'];
-        $permission_module=$inputData['permission_module'];
+        $permission_data=$inputData['permission_data'] ?? [];
+        $permission_module=$inputData['permission_module'] ?? [];
         $request->validate([
             'name' => ['required',
                         Rule::unique('roles')->where(function ($query) use ($request){

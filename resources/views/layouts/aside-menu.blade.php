@@ -236,7 +236,7 @@
 
     @endcanany
 
-        @canany(['view.farm', 'view.hangar', 'view.feed_mill', 'view.slaughter', 'view.chicks_supplier'])
+        @canany(['view.farm', 'view.hangar', 'view.feed_supplier', 'view.slaughter', 'view.chicks_supplier'])
             <li class="side-item side-item-category mt-4">
                 ADD2CARE Farm
             </li>
@@ -260,14 +260,14 @@
                         <span class="side-menu__label">Hangars</span></a>
                 </li>
             @endcan
-            @can('view.feed_mill')
+            @can('view.feed_supplier')
                 <li class="slide">
-                    <a class="side-menu__item" href="{{route('feed-mill.index', ['username' => $siteSlug])}}">
+                    <a class="side-menu__item" href="{{route('feed-supplier.index', ['username' => $siteSlug])}}">
                         <svg class="side-menu__icon" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
                             <path d="M0 0h24v24H0V0z" fill="none"/>
                             <path d="M12 2l8 4v5c0 5.55-3.84 10.74-9 12-5.16-1.26-9-6.45-9-12V6l8-4zm-2 16h4v-6h-4v6z M10 6h4v4h-4V6z"/>
                         </svg>
-                        <span class="side-menu__label">Feed Mills</span></a>
+                        <span class="side-menu__label">Feed Suppliers</span></a>
                 </li>
             @endcan
             @can('view.slaughter')

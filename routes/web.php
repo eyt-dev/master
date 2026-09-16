@@ -17,7 +17,7 @@ use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\FeedMaterialController;
 use App\Http\Controllers\Backend\FarmController;
 use App\Http\Controllers\Backend\HangarController;
-use App\Http\Controllers\Backend\FeedMillController;
+use App\Http\Controllers\Backend\FeedSupplierController;
 use App\Http\Controllers\Backend\SlaughterController;
 use App\Http\Controllers\Backend\ChicksSupplierController;
 use App\Http\Controllers\Backend\FlockController;
@@ -197,13 +197,13 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::post('{hangar}', 'update')->name('hangar.update')->middleware('permission:edit.hangar');
                         Route::get('{hangar}/destroy', 'destroy')->name('hangar.destroy')->middleware('permission:delete.hangar');
                     });
-                    Route::controller(FeedMillController::class)->prefix('feed-mill')->group(function () {
-                        Route::get('/', 'index')->name('feed-mill.index')->middleware('permission:view.feed_mill');
-                        Route::get('create', 'create')->name('feed-mill.create')->middleware('permission:create.feed_mill');
-                        Route::post('store', 'store')->name('feed-mill.store')->middleware('permission:create.feed_mill');
-                        Route::get('{feed_mill}/edit', 'edit')->name('feed-mill.edit')->middleware('permission:edit.feed_mill');
-                        Route::post('{feed_mill}', 'update')->name('feed-mill.update')->middleware('permission:edit.feed_mill');
-                        Route::get('destroy/{feed_mill}', 'destroy')->name('feed-mill.destroy')->middleware('permission:delete.feed_mill');
+                    Route::controller(FeedSupplierController::class)->prefix('feed-supplier')->group(function () {
+                        Route::get('/', 'index')->name('feed-supplier.index')->middleware('permission:view.feed_supplier');
+                        Route::get('create', 'create')->name('feed-supplier.create')->middleware('permission:create.feed_supplier');
+                        Route::post('store', 'store')->name('feed-supplier.store')->middleware('permission:create.feed_supplier');
+                        Route::get('{feed_supplier}/edit', 'edit')->name('feed-supplier.edit')->middleware('permission:edit.feed_supplier');
+                        Route::post('{feed_supplier}', 'update')->name('feed-supplier.update')->middleware('permission:edit.feed_supplier');
+                        Route::get('destroy/{feed_supplier}', 'destroy')->name('feed-supplier.destroy')->middleware('permission:delete.feed_supplier');
                     });
                     Route::controller(SlaughterController::class)->prefix('slaughter')->group(function () {
                         Route::get('/', 'index')->name('slaughter.index')->middleware('permission:view.slaughter');
@@ -537,13 +537,13 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::post('{hangar}', 'update')->name('hangar.update')->middleware('permission:edit.hangar');
                 Route::get('{hangar}/destroy', 'destroy')->name('hangar.destroy')->middleware('permission:delete.hangar');
             });
-            Route::controller(FeedMillController::class)->prefix('feed-mill')->group(function () {
-                Route::get('/', 'index')->name('feed-mill.index')->middleware('permission:view.feed_mill');
-                Route::get('create', 'create')->name('feed-mill.create')->middleware('permission:create.feed_mill');
-                Route::post('store', 'store')->name('feed-mill.store')->middleware('permission:create.feed_mill');
-                Route::get('{feed_mill}/edit', 'edit')->name('feed-mill.edit')->middleware('permission:edit.feed_mill');
-                Route::post('{feed_mill}', 'update')->name('feed-mill.update')->middleware('permission:edit.feed_mill');
-                Route::get('destroy/{feed_mill}', 'destroy')->name('feed-mill.destroy')->middleware('permission:delete.feed_mill');
+            Route::controller(FeedSupplierController::class)->prefix('feed-supplier')->group(function () {
+                Route::get('/', 'index')->name('feed-supplier.index')->middleware('permission:view.feed_supplier');
+                Route::get('create', 'create')->name('feed-supplier.create')->middleware('permission:create.feed_supplier');
+                Route::post('store', 'store')->name('feed-supplier.store')->middleware('permission:create.feed_supplier');
+                Route::get('{feed_supplier}/edit', 'edit')->name('feed-supplier.edit')->middleware('permission:edit.feed_supplier');
+                Route::post('{feed_supplier}', 'update')->name('feed-supplier.update')->middleware('permission:edit.feed_supplier');
+                Route::get('destroy/{feed_supplier}', 'destroy')->name('feed-supplier.destroy')->middleware('permission:delete.feed_supplier');
             });
             Route::controller(SlaughterController::class)->prefix('slaughter')->group(function () {
                 Route::get('/', 'index')->name('slaughter.index')->middleware('permission:view.slaughter');

@@ -3,15 +3,15 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\FeedMill;
+use App\Models\FeedSupplier;
 use Illuminate\Support\Facades\Session;
 
-class FeedMillController extends Controller
+class FeedSupplierController extends Controller
 {
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = FeedMill::with('creator')
+            $data = FeedSupplier::with('creator')
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                     $query->where('created_by', auth()->id());
                 })
@@ -24,19 +24,19 @@ class FeedMillController extends Controller
                     return date('Y-m-d', strtotime($row->created_at));
                 })
                 ->addColumn('action', function($row) {
-                    return '<a class="edit-feed-mill btn btn-sm btn-success" data-path="'.route('feed-mill.edit', ['username' => request()->segment(1),  'feed_mill' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
-                         .'<a class="delete-feed-mill btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
+                    return '<a class="edit-feed-supplier btn btn-sm btn-success" data-path="'.route('feed-supplier.edit', ['username' => request()->segment(1),  'feed_supplier' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
+                         .'<a class="delete-feed-supplier btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action'])   
+                ->rawColumns(['action'])
                 ->make(true);
         }
-        return view('backend.feed-mill.index');
+        return view('backend.feed-supplier.index');
     }
 
     public function create()
     {
-        return view('backend.feed-mill.create');
+        return view('backend.feed-supplier.create');
     }
 
     public function store(Request $request, $siteUrl)
@@ -57,16 +57,16 @@ class FeedMillController extends Controller
             'mobile_number' => $request->mobile_number,
             'created_by' => auth()->id()
         ];
-        FeedMill::create($createData);
+        FeedSupplier::create($createData);
 
-        Session::flash('successMsg', 'Feed Mill created successfully.');
-        return redirect()->route('feed-mill.index', ['username' => request()->segment(1)]);
+        Session::flash('successMsg', 'Feed Supplier created successfully.');
+        return redirect()->route('feed-supplier.index', ['username' => request()->segment(1)]);
     }
 
     public function edit($siteUrl, $id)
     {
-        $feed_mill = FeedMill::findOrFail($id);
-        return view('backend.feed-mill.create', compact('feed_mill'));
+        $feed_supplier = FeedSupplier::findOrFail($id);
+        return view('backend.feed-supplier.create', compact('feed_supplier'));
     }
 
     public function update(Request $request, $siteUrl, $id)
@@ -79,8 +79,8 @@ class FeedMillController extends Controller
             'mobile_number' => 'required',
         ]);
 
-        $feed_mill = FeedMill::findOrFail($id);
-        $feed_mill->update([
+        $feed_supplier = FeedSupplier::findOrFail($id);
+        $feed_supplier->update([
             'name' => $request->name,
             'location' => $request->location,
             'address' => $request->address,
@@ -88,13 +88,13 @@ class FeedMillController extends Controller
             'mobile_number' => $request->mobile_number,
         ]);
 
-        Session::flash('successMsg', 'Feed Mill updated successfully.');
-        return redirect()->route('feed-mill.index', ['username' => request()->segment(1)]);
+        Session::flash('successMsg', 'Feed Supplier updated successfully.');
+        return redirect()->route('feed-supplier.index', ['username' => request()->segment(1)]);
     }
 
     public function destroy($siteUrl, $id)
     {
-        FeedMill::findOrFail($id)->delete();
-        return response()->json(['msg' => 'Feed Mill deleted successfully.']);
+        FeedSupplier::findOrFail($id)->delete();
+        return response()->json(['msg' => 'Feed Supplier deleted successfully.']);
     }
 }

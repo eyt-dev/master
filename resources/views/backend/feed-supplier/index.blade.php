@@ -12,11 +12,11 @@
 @section('page-header')
     <div class="page-header">
         <div class="page-leftheader">
-            <h4 class="page-title mb-0">Feed Mills</h4>
+            <h4 class="page-title mb-0">Feed Suppliers</h4>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
                     <a href="#">
-                        <i class="fe fe-layout mr-2 fs-14"></i>Feed Mills
+                        <i class="fe fe-layout mr-2 fs-14"></i>Feed Suppliers
                     </a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page"><a href="#">Listing</a></li>
@@ -25,7 +25,7 @@
         <div class="page-rightheader">
             <div class="btn btn-list">
                 <a id="add_new" class="btn btn-info" data-toggle="tooltip" title="Add new">
-                    <i class="fe fe-plus mr-1"></i> Add new 
+                    <i class="fe fe-plus mr-1"></i> Add new
                 </a>
             </div>
         </div>
@@ -36,7 +36,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Feed Mills Data</div>
+                    <div class="card-title">Feed Suppliers Data</div>
                 </div>
                 @if ($errors->any())
                     <div class="alert alert-danger">
@@ -49,17 +49,16 @@
                 @endif
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered text-nowrap" id="feed_mill_table">
+                        <table class="table table-bordered text-nowrap" id="feed_supplier_table">
                             <thead>
                                 <tr>
                                     <th>#</th>
                                     <th>Name</th>
                                     <th>Location</th>
-                                    <th>Address</th>
                                     <th>Contact Person</th>
                                     <th>Mobile Number</th>
+                                    <th>Created On</th>
                                     <th>Created By</th>
-                                    <th>Created At</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -71,11 +70,11 @@
         </div>
     </div>
 
-    <div class="modal fade bd-example-modal-lg" id="feed_mill_form_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal fade bd-example-modal-lg" id="feed_supplier_form_modal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Add Feed Mill</h4>
+                    <h4 class="modal-title">Add Feed Supplier</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">×</span> </button>
                 </div>
                 <div class="modal-body"></div>
@@ -91,53 +90,52 @@
     <script>
         $(document).on('click', '#add_new', function() {
             $.ajax({
-                url: "{{ route('feed-mill.create', ['username' => $siteSlug]) }}",
+                url: "{{ route('feed-supplier.create', ['username' => $siteSlug]) }}",
                 type: "GET",
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Add Feed Mill");
-                    $("#feed_mill_form_modal").modal('show');
+                    $(".modal-title").html("Add Feed Supplier");
+                    $("#feed_supplier_form_modal").modal('show');
                     checkValidation();
                 }
             });
         });
-        
-        $(document).on('click', '.edit-feed-mill', function() {
+
+        $(document).on('click', '.edit-feed-supplier', function() {
             var id = $(this).data('id');
             $.ajax({
                 url: $(this).data('path'),
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Update Feed Mill");
-                    $("#feed_mill_form_modal").modal('show');
+                    $(".modal-title").html("Update Feed Supplier");
+                    $("#feed_supplier_form_modal").modal('show');
                     checkValidation();
                 }
             });
         });
-        
-        var table = $('#feed_mill_table').DataTable({
+
+        var table = $('#feed_supplier_table').DataTable({
             processing: true,
             serverSide: true,
             responsive: true,
-            ajax: "{{ route('feed-mill.index', ['username' => $siteSlug]) }}",
+            ajax: "{{ route('feed-supplier.index', ['username' => $siteSlug]) }}",
             columns: [
                 { data: 'id', name: 'id' },
                 { data: 'name', name: 'name' },
                 { data: 'location', name: 'location' },
-                { data: 'address', name: 'address' },
                 { data: 'contact_person', name: 'contact_person' },
                 { data: 'mobile_number', name: 'mobile_number' },
+                { data: 'created_at' },
                 { data: 'creator' },
-                { data: 'created_at', name: 'created_at' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]
         });
-        
-        $(document).on('click', '.delete-feed-mill', function() {
+
+        $(document).on('click', '.delete-feed-supplier', function() {
             var id = $(this).attr("data-id");
             swal({
                 title: "Are you sure?",
-                text: "Once deleted, you will not be able to recover this feed mill!",
+                text: "Once deleted, you will not be able to recover this feed supplier!",
                 icon: "warning",
                 buttons: true,
                 dangerMode: true,
@@ -149,7 +147,7 @@
                     $.ajax({
                         type: "get",
                         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        url: "{{ route('feed-mill.destroy', ['username' => $siteSlug, 'feed_mill' => ':id']) }}".replace(':id', id),
+                        url: "{{ route('feed-supplier.destroy', ['username' => $siteSlug, 'feed_supplier' => ':id']) }}".replace(':id', id),
                         success: function(response) {
                             swal({
                                 title: response.msg

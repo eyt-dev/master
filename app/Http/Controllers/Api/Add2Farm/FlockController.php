@@ -552,7 +552,10 @@ class FlockController extends BaseController
 
         $totalBird = $flock->flockHangarAllocations->sum('quantity');
         $latestFlockEnd = $flock->flockEnds()->latest('sale_date')->first();
-        $age = $this->calculateFlockAge($flock->start_date, $latestFlockEnd?->sale_date);
+
+        // Determine flock type first
+        $breedType = $this->extractBreedType($flock->breed);
+        $age = $this->calculateFlockAge($flock->start_date, $latestFlockEnd?->sale_date, $breedType);
 
         // Fetch daily records for this flock
         $dailyRecords = DailyRecord::where('flock_id', $flock->id)->orderBy('record_date', 'asc')->get();
@@ -573,8 +576,7 @@ class FlockController extends BaseController
         // Calculate average production (eggs per bird as percentage)
         $avgProduction = $totalBird > 0 && $recordCount > 0 ? ($totalEggs / ($totalBird * $recordCount)) * 100 : 0;
 
-        // Determine flock type first
-        $breedType = $this->extractBreedType($flock->breed);
+        // Determine flock status based on end date
         $isLayer = $breedType === 'Layer';
         $isBroiler = !$isLayer;
         $isEnded = (bool) $latestFlockEnd?->sale_date;
@@ -1168,11 +1170,12 @@ class FlockController extends BaseController
         $isEnded = (bool) $endDate;
         $status = $isEnded ? 'Completed' : 'Active';
 
-        // Calculate age
-        $age = $this->calculateFlockAge($flock->start_date, $endDate);
-
         // Determine flock type (Broiler or Layer)
         $breedType = $this->extractBreedType($flock->breed);
+
+        // Calculate age with breed type
+        $age = $this->calculateFlockAge($flock->start_date, $endDate, $breedType);
+
         $isBroiler = $breedType === 'Broiler';
 
         // Get total bird allocation

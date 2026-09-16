@@ -93,40 +93,32 @@ class BaseController extends Controller
      * If no end_date: calculates from start_date to today
      * If end_date provided: calculates from start_date to end_date (flock duration)
      *
-     * Returns format like: "Day 1", "Week 2", "Month 1 Week 2"
+     * Age format depends on breed type:
+     * - Broiler: Always in days (Day1, Day2, ..., DayN)
+     * - Layer: Days for first 28 days (Day1-Day28), then weeks (Week4, Week5, ..., WeekN)
      */
-    protected function calculateFlockAge($startDate, $endDate = null)
+    protected function calculateFlockAge($startDate, $endDate = null, $breedType = null)
     {
         $start = \Carbon\Carbon::parse($startDate);
         $end = $endDate ? \Carbon\Carbon::parse($endDate) : \Carbon\Carbon::now();
         $days = $start->diffInDays($end);
 
-        if ($days == 0) {
-            return "Day 0";
-        } elseif ($days == 1) {
-            return "Day 1";
-        } elseif ($days < 7) {
+        // Default to Layer if breed type not provided
+        if ($breedType === null) {
+            $breedType = 'Layer';
+        }
+
+        // Broiler: always display in days
+        if ($breedType === 'Broiler') {
             return "Day {$days}";
-        } elseif ($days < 30) {
-            $weeks = (int)($days / 7);
-            $remainingDays = $days % 7;
-            $age = "Week {$weeks}";
-            if ($remainingDays > 0) {
-                $age .= " Day {$remainingDays}";
-            }
-            return $age;
+        }
+
+        // Layer: days for first 28 days, then weeks
+        if ($days <= 28) {
+            return "Day {$days}";
         } else {
-            $months = (int)($days / 30);
-            $remainingDays = $days % 30;
-            $weeks = (int)($remainingDays / 7);
-            $age = "Month {$months}";
-            if ($weeks > 0) {
-                $age .= " Week {$weeks}";
-            }
-            if ($remainingDays % 7 > 0 && $weeks == 0) {
-                $age .= " Day " . ($remainingDays % 7);
-            }
-            return $age;
+            $weeks = (int)($days / 7);
+            return "Week {$weeks}";
         }
     }
 }

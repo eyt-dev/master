@@ -13,5 +13,12 @@ class MaterialName extends Model
 
     protected $fillable = [
         'name',
+        'type',
+        'created_by',
     ];
+
+    public function creator()
+    {
+        return $this->belongsTo(Admin::class, 'created_by');
+    }
 }

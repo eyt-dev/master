@@ -10,19 +10,19 @@ class MaterialNameSeeder extends Seeder
     public function run(): void
     {
         $materials = [
-            'Barley',
-            'Corn',
-            'Finisher feed',
-            'Grower feed',
-            'Limestone',
-            'Premix',
-            'Soybean meal',
-            'Starter feed',
-            'Wheat',
+            ['name' => 'Barley', 'type' => 'Feedstuff'],
+            ['name' => 'Corn', 'type' => 'Feedstuff'],
+            ['name' => 'Finisher feed', 'type' => 'Pelleted feed'],
+            ['name' => 'Grower feed', 'type' => 'Pelleted feed'],
+            ['name' => 'Limestone', 'type' => 'Feedstuff'],
+            ['name' => 'Premix', 'type' => 'Feedstuff'],
+            ['name' => 'Soybean meal', 'type' => 'Feedstuff'],
+            ['name' => 'Starter feed', 'type' => 'Pelleted feed'],
+            ['name' => 'Wheat', 'type' => 'Feedstuff'],
         ];
 
-        foreach ($materials as $name) {
-            MaterialName::firstOrCreate(['name' => $name]);
+        foreach ($materials as $material) {
+            MaterialName::firstOrCreate(['name' => $material['name']], $material);
         }
     }
 }

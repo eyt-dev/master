@@ -598,14 +598,44 @@ class FlockController extends BaseController
         // Generate chart data
         $chartData = $this->generateChartData($dailyRecords, $flock, $totalBird, $isLayer);
 
+        // Format hangar allocations with details
+        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) {
+            return [
+                'hangar_id'     => $allocation->hangar_id,
+                'hangar_name'   => $allocation->hangar?->name,
+                'quantity'      => $allocation->quantity,
+                'area_sqm'      => $allocation->hangar?->area_sqm,
+                'status'        => $allocation->hangar?->status,
+            ];
+        })->toArray();
+
+        // Check if logged-in user created this flock
+        $assignment = (auth()->check() && $flock->created_by === auth()->id()) ? 1 : 0;
+
+        // Build base response with all fields from list API
         $data = [
+            'id' => $flock->id,
+            'name' => $flock->name,
             'flock_name' => $flock->name,
+            'farm_id' => $flock->farm_id,
+            'farm_name' => $flock->farm?->name,
+            'chicks_supplier_id' => $flock->chicks_supplier_id,
+            'chicks_supplier_name' => $flock->chicksSupplier?->name,
             'breed' => $flock->breed,
             'flock_type' => $breedType,
-            'total_bird' => $totalBird,
             'start_date' => $flock->start_date->format('Y-m-d'),
             'end_date' => $isEnded ? $latestFlockEnd->sale_date->format('Y-m-d') : null,
+            'status' => $isEnded ? 'Completed' : 'Active',
             'age' => $age,
+            'total_quantity' => $flock->total_quantity,
+            'total_bird' => $totalBird,
+            'hangar_allocations' => $hangarAllocations,
+            'assignment' => $assignment,
+            'created_by' => $flock->created_by,
+            'created_by_name' => $flock->creator?->name,
+            'created_at' => $flock->created_at,
+            'updated_at' => $flock->updated_at,
+            'flock-condition' => $isBroiler ? ($isEnded ? 'broiler-ended' : 'broiler-active') : ($isEnded ? 'layer-ended' : 'layer-active'),
             'live_birds' => $liveBirds,
             'mortality_rate' => round($mortalityRate, 2),
             'feed_consumed' => number_format($totalFeedKg, 2) . ' kg',
@@ -613,15 +643,13 @@ class FlockController extends BaseController
             'chart_data' => $chartData,
         ];
 
-        // Add flock-condition flag and type-specific metrics
+        // Add type-specific metrics
         if ($isBroiler) {
-            $data['flock-condition'] = $isEnded ? 'broiler-ended' : 'broiler-active';
             if ($isEnded) {
                 $data['fcr'] = $fcr;
             }
         } else {
             // Layer flock
-            $data['flock-condition'] = $isEnded ? 'layer-ended' : 'layer-active';
             $data['total_eggs'] = $totalEggs;
             $data['avg_production'] = round($avgProduction, 2) . '%';
             if ($isEnded) {

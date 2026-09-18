@@ -256,8 +256,7 @@ class FlockEndController extends BaseController
             ], 422);
         }
 
-        $flock = Flock::where('created_by', $user->id)
-            ->whereHas('farm', function ($q) use ($user) {
+        $flock = Flock::whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
                       ->orWhere('assigned_to', $user->id)

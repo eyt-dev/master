@@ -102,7 +102,17 @@ class DailyRecordController extends BaseController
 
     private function indexByDay(Request $request)
     {
-        $query = DailyRecord::where('created_by', auth()->id())
+        $user = auth()->user();
+        $query = DailyRecord::where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhereHas('farm', function ($subQ) use ($user) {
+                      $subQ->where('created_by', $user->id)
+                           ->orWhere('assigned_to', $user->id)
+                           ->orWhereHas('assignedAdmins', function ($adminQ) use ($user) {
+                               $adminQ->where('admin_id', $user->id);
+                           });
+                  });
+            })
             ->when($request->flock_id, function ($q) use ($request) {
                 return $q->where('flock_id', $request->flock_id);
             })
@@ -162,7 +172,17 @@ class DailyRecordController extends BaseController
 
     private function indexByWeek(Request $request)
     {
-        $baseQuery = DailyRecord::where('created_by', auth()->id())
+        $user = auth()->user();
+        $baseQuery = DailyRecord::where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhereHas('farm', function ($subQ) use ($user) {
+                      $subQ->where('created_by', $user->id)
+                           ->orWhere('assigned_to', $user->id)
+                           ->orWhereHas('assignedAdmins', function ($adminQ) use ($user) {
+                               $adminQ->where('admin_id', $user->id);
+                           });
+                  });
+            })
             ->when($request->flock_id, function ($q) use ($request) {
                 return $q->where('flock_id', $request->flock_id);
             })
@@ -227,7 +247,17 @@ class DailyRecordController extends BaseController
 
     private function indexByMonth(Request $request)
     {
-        $baseQuery = DailyRecord::where('created_by', auth()->id())
+        $user = auth()->user();
+        $baseQuery = DailyRecord::where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhereHas('farm', function ($subQ) use ($user) {
+                      $subQ->where('created_by', $user->id)
+                           ->orWhere('assigned_to', $user->id)
+                           ->orWhereHas('assignedAdmins', function ($adminQ) use ($user) {
+                               $adminQ->where('admin_id', $user->id);
+                           });
+                  });
+            })
             ->when($request->flock_id, function ($q) use ($request) {
                 return $q->where('flock_id', $request->flock_id);
             })
@@ -371,7 +401,18 @@ class DailyRecordController extends BaseController
             ], 401);
         }
 
-        $record = DailyRecord::where('created_by', auth()->id())
+        $user = auth()->user();
+
+        $record = DailyRecord::where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhereHas('farm', function ($subQ) use ($user) {
+                      $subQ->where('created_by', $user->id)
+                           ->orWhere('assigned_to', $user->id)
+                           ->orWhereHas('assignedAdmins', function ($adminQ) use ($user) {
+                               $adminQ->where('admin_id', $user->id);
+                           });
+                  });
+            })
             ->with('farm', 'flock', 'flock.flockEnds', 'hangar', 'creator')
             ->find($id);
 
@@ -383,7 +424,16 @@ class DailyRecordController extends BaseController
         }
 
         // Fetch all records for this date, flock, and farm
-        $allRecordsForDate = DailyRecord::where('created_by', auth()->id())
+        $allRecordsForDate = DailyRecord::where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhereHas('farm', function ($subQ) use ($user) {
+                      $subQ->where('created_by', $user->id)
+                           ->orWhere('assigned_to', $user->id)
+                           ->orWhereHas('assignedAdmins', function ($adminQ) use ($user) {
+                               $adminQ->where('admin_id', $user->id);
+                           });
+                  });
+            })
             ->where('record_date', $record->record_date)
             ->where('flock_id', $record->flock_id)
             ->with('farm', 'flock', 'flock.flockEnds', 'hangar', 'creator')
@@ -466,12 +516,32 @@ class DailyRecordController extends BaseController
             ], 401);
         }
 
-        $flock = Flock::find($request->flock_id);
+        $user = auth()->user();
+
+        // Verify user has access to the farm
+        $flock = Flock::with('farm')->find($request->flock_id);
         if (!$flock) {
             return response()->json([
                 'success' => false,
                 'errors' => ['flock_id' => ['The selected flock id is invalid.']],
             ], 422);
+        }
+
+        // Check farm access
+        if ($user->role !== 'SuperAdmin') {
+            $farm = $flock->farm;
+            $hasAccess = $farm && (
+                $farm->created_by === $user->id ||
+                $farm->assigned_to === $user->id ||
+                $farm->assignedAdmins->contains('id', $user->id)
+            );
+
+            if (!$hasAccess) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to create records for this farm.',
+                ], 403);
+            }
         }
 
         $breedType = $this->extractBreedType($flock->breed);
@@ -646,13 +716,32 @@ class DailyRecordController extends BaseController
             ], 401);
         }
 
-        $record = DailyRecord::where('created_by', auth()->id())->find($id);
+        $user = auth()->user();
+        $record = DailyRecord::with('farm')->find($id);
 
         if (!$record) {
             return response()->json([
                 'success' => false,
                 'message' => $this->translationService->get('daily_record_not_found'),
             ], 404);
+        }
+
+        // Verify access: user must be SuperAdmin, creator, or have access to the farm
+        if ($user->role !== 'SuperAdmin') {
+            $hasAccess = ($record->created_by === $user->id) || (
+                $record->farm && (
+                    $record->farm->created_by === $user->id ||
+                    $record->farm->assigned_to === $user->id ||
+                    $record->farm->assignedAdmins->contains('id', $user->id)
+                )
+            );
+
+            if (!$hasAccess) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to update this record.',
+                ], 403);
+            }
         }
 
         $flock = Flock::findOrFail($record->flock_id);
@@ -786,13 +875,32 @@ class DailyRecordController extends BaseController
             ], 401);
         }
 
-        $record = DailyRecord::where('created_by', auth()->id())->find($id);
+        $user = auth()->user();
+        $record = DailyRecord::with('farm')->find($id);
 
         if (!$record) {
             return response()->json([
                 'success' => false,
                 'message' => $this->translationService->get('daily_record_not_found'),
             ], 404);
+        }
+
+        // Verify access: user must be SuperAdmin, creator, or have access to the farm
+        if ($user->role !== 'SuperAdmin') {
+            $hasAccess = ($record->created_by === $user->id) || (
+                $record->farm && (
+                    $record->farm->created_by === $user->id ||
+                    $record->farm->assigned_to === $user->id ||
+                    $record->farm->assignedAdmins->contains('id', $user->id)
+                )
+            );
+
+            if (!$hasAccess) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to delete this record.',
+                ], 403);
+            }
         }
 
         try {

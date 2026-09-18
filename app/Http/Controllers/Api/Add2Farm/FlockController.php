@@ -216,11 +216,13 @@ class FlockController extends BaseController
 
         $user = auth()->user();
 
-        $flock = Flock::where('created_by', $user->id)
-            ->whereHas('farm', function ($q) use ($user) {
+        $flock = Flock::whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
+                      ->orWhere('assigned_to', $user->id)
+                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                          $query->where('admin_id', $user->id);
+                      });
                 });
             })
             ->with('flockHangarAllocations.hangar')
@@ -299,7 +301,10 @@ class FlockController extends BaseController
         // Verify user has access to this farm
         $farm = Farm::where(function ($q) use ($user) {
             $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id);
+              ->orWhere('assigned_to', $user->id)
+              ->orWhereHas('assignedAdmins', function ($q) use ($user) {
+                  $q->where('admin_id', $user->id);
+              });
         })->find($farmId);
 
         if (!$farm) {
@@ -405,11 +410,13 @@ class FlockController extends BaseController
         }
 
         // Calculate aggregates for all flocks of logged-in user
-        $allFlocks = Flock::where('created_by', $user->id)
-            ->whereHas('farm', function ($q) use ($user) {
+        $allFlocks = Flock::whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
+                      ->orWhere('assigned_to', $user->id)
+                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                          $query->where('admin_id', $user->id);
+                      });
                 });
             })
             ->select('id', 'farm_id', 'total_quantity', 'start_date')
@@ -428,11 +435,13 @@ class FlockController extends BaseController
             return $flock->start_date && $flock->start_date->format('Y-m-d') > now()->format('Y-m-d');
         })->count();
 
-        $flocks = Flock::where('created_by', $user->id)
-            ->whereHas('farm', function ($q) use ($user) {
+        $flocks = Flock::whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
+                      ->orWhere('assigned_to', $user->id)
+                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                          $query->where('admin_id', $user->id);
+                      });
                 });
             })
             ->when($request->search, function ($q) use ($request) {
@@ -533,11 +542,13 @@ class FlockController extends BaseController
 
         $user = auth()->user();
 
-        $flock = Flock::where('created_by', $user->id)
-            ->whereHas('farm', function ($q) use ($user) {
+        $flock = Flock::whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
+                      ->orWhere('assigned_to', $user->id)
+                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                          $query->where('admin_id', $user->id);
+                      });
                 });
             })
             ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnds')
@@ -758,6 +769,25 @@ class FlockController extends BaseController
             ], 422);
         }
 
+        // Verify user has access to the farm
+        $user = auth()->user();
+        if ($user->role !== 'SuperAdmin') {
+            $farm = Farm::where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhere('assigned_to', $user->id)
+                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                      $query->where('admin_id', $user->id);
+                  });
+            })->find($request->farm_id);
+
+            if (!$farm) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Farm not found or access denied.',
+                ], 403);
+            }
+        }
+
         try {
             DB::beginTransaction();
 
@@ -861,11 +891,13 @@ class FlockController extends BaseController
 
         $user = auth()->user();
 
-        $flock = Flock::where('created_by', $user->id)
-            ->whereHas('farm', function ($q) use ($user) {
+        $flock = Flock::whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
+                      ->orWhere('assigned_to', $user->id)
+                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                          $query->where('admin_id', $user->id);
+                      });
                 });
             })
             ->find($id);
@@ -1021,11 +1053,13 @@ class FlockController extends BaseController
 
         $user = auth()->user();
 
-        $flock = Flock::where('created_by', $user->id)
-            ->whereHas('farm', function ($q) use ($user) {
+        $flock = Flock::whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
+                      ->orWhere('assigned_to', $user->id)
+                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                          $query->where('admin_id', $user->id);
+                      });
                 });
             })
             ->find($id);

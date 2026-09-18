@@ -184,7 +184,10 @@ class MaterialStockController extends Controller
         // Verify user has access to the farm
         $farm = Farm::where(function ($q) use ($user) {
             $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id);
+              ->orWhere('assigned_to', $user->id)
+              ->orWhereHas('assignedAdmins', function ($q) use ($user) {
+                  $q->where('admin_id', $user->id);
+              });
         })->find($farmId);
 
         if (!$farm && $user->role !== 'SuperAdmin') {
@@ -313,7 +316,10 @@ class MaterialStockController extends Controller
         // Verify user has access to the farm
         $farm = Farm::where(function ($q) use ($user) {
             $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id);
+              ->orWhere('assigned_to', $user->id)
+              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                  $query->where('admin_id', $user->id);
+              });
         })->find($materialStock->farm_id);
 
         if (!$farm && $user->role !== 'SuperAdmin') {
@@ -322,7 +328,10 @@ class MaterialStockController extends Controller
 
         $farms = Farm::where(function($query) use ($user) {
             $query->where('created_by', $user->id)
-                  ->orWhere('assigned_to', $user->id);
+                  ->orWhere('assigned_to', $user->id)
+                  ->orWhereHas('assignedAdmins', function ($q) use ($user) {
+                      $q->where('admin_id', $user->id);
+                  });
         });
 
         if ($user->role === 'SuperAdmin') {
@@ -355,7 +364,10 @@ class MaterialStockController extends Controller
         // Verify user has access to the farm
         $farm = Farm::where(function ($q) use ($user) {
             $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id);
+              ->orWhere('assigned_to', $user->id)
+              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                  $query->where('admin_id', $user->id);
+              });
         })->find($request->farm_id);
 
         if (!$farm && $user->role !== 'SuperAdmin') {
@@ -439,9 +451,25 @@ class MaterialStockController extends Controller
 
     public function destroy($siteUrl, $id)
     {
+        $user = auth()->user();
+        $materialStock = MaterialStock::with('farm')->findOrFail($id);
+
+        // Verify user has access to the farm
+        if ($user->role !== 'SuperAdmin') {
+            $farm = $materialStock->farm;
+            $hasAccess = $farm && (
+                $farm->created_by === $user->id ||
+                $farm->assigned_to === $user->id ||
+                $farm->assignedAdmins->contains('id', $user->id)
+            );
+
+            if (!$hasAccess) {
+                return response()->json(['error' => 'You do not have permission to delete this material stock.'], 403);
+            }
+        }
+
         try {
             DB::beginTransaction();
-            $materialStock = MaterialStock::findOrFail($id);
             $materialStock->materialStockHangarAllocations()->delete();
             $materialStock->delete();
             DB::commit();

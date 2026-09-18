@@ -22,9 +22,12 @@ class ChickenSalesController extends Controller
             $user = auth()->user();
             $data = FlockEnd::with('flock.farm', 'hangar', 'slaughter', 'endedBy')
                 ->when($user->role !== 'SuperAdmin', function ($query) use ($user) {
-                    $query->whereHas('flock.farm', function ($subQuery) {
-                        $subQuery->where('created_by', auth()->id())
-                                 ->orWhere('assigned_to', auth()->id());
+                    $query->whereHas('flock.farm', function ($subQuery) use ($user) {
+                        $subQuery->where('created_by', $user->id)
+                                 ->orWhere('assigned_to', $user->id)
+                                 ->orWhereHas('assignedAdmins', function ($q) use ($user) {
+                                     $q->where('admin_id', $user->id);
+                                 });
                     })
                     ->orWhere('ended_by', $user->id);
                 })
@@ -106,6 +109,27 @@ class ChickenSalesController extends Controller
 
     public function getHangarsByFlock($siteUrl, $flockId)
     {
+        $user = auth()->user();
+
+        // Verify user has access to this flock
+        if ($user->role !== 'SuperAdmin') {
+            $flock = Flock::with('farm')->find($flockId);
+
+            if (!$flock) {
+                return response()->json([], 404);
+            }
+
+            $hasAccess = $flock->farm && (
+                $flock->farm->created_by === $user->id ||
+                $flock->farm->assigned_to === $user->id ||
+                $flock->farm->assignedAdmins->contains('id', $user->id)
+            );
+
+            if (!$hasAccess) {
+                return response()->json([], 403);
+            }
+        }
+
         $hangars = Hangar::whereHas('flocks', function($query) use ($flockId) {
             $query->where('flock_id', $flockId);
         })->get();
@@ -205,13 +229,30 @@ class ChickenSalesController extends Controller
     public function edit($siteUrl, $id)
     {
         $user = auth()->user();
-        $flockEnd = FlockEnd::with('batchWeights')->findOrFail($id);
+        $flockEnd = FlockEnd::with('flock.farm')->findOrFail($id);
+
+        // Verify access to the farm
+        if ($user->role !== 'SuperAdmin') {
+            $farm = $flockEnd->flock->farm;
+            $hasAccess = $farm && (
+                $farm->created_by === $user->id ||
+                $farm->assigned_to === $user->id ||
+                $farm->assignedAdmins->contains('id', $user->id)
+            );
+
+            if (!$hasAccess) {
+                abort(403, 'You do not have permission to edit this chicken sale.');
+            }
+        }
 
         if ($user->role === 'SuperAdmin') {
             $farms = Farm::all();
         } else {
             $farms = Farm::where('created_by', $user->id)
                          ->orWhere('assigned_to', $user->id)
+                         ->orWhereHas('assignedAdmins', function ($q) use ($user) {
+                             $q->where('admin_id', $user->id);
+                         })
                          ->get();
         }
 
@@ -233,7 +274,22 @@ class ChickenSalesController extends Controller
 
     public function update(Request $request, $siteUrl, $id)
     {
-        $flockEnd = FlockEnd::findOrFail($id);
+        $user = auth()->user();
+        $flockEnd = FlockEnd::with('flock.farm')->findOrFail($id);
+
+        // Verify access to the farm
+        if ($user->role !== 'SuperAdmin') {
+            $farm = $flockEnd->flock->farm;
+            $hasAccess = $farm && (
+                $farm->created_by === $user->id ||
+                $farm->assigned_to === $user->id ||
+                $farm->assignedAdmins->contains('id', $user->id)
+            );
+
+            if (!$hasAccess) {
+                return redirect()->back()->withErrors('You do not have permission to update this chicken sale.');
+            }
+        }
 
         $request->validate([
             'sale_date' => 'required|date_format:Y-m-d',
@@ -336,9 +392,26 @@ class ChickenSalesController extends Controller
 
     public function destroy($siteUrl, $id)
     {
+        $user = auth()->user();
+        $flockEnd = FlockEnd::with('flock.farm')->findOrFail($id);
+
+        // Verify access to the farm
+        if ($user->role !== 'SuperAdmin') {
+            $farm = $flockEnd->flock->farm;
+            $hasAccess = $farm && (
+                $farm->created_by === $user->id ||
+                $farm->assigned_to === $user->id ||
+                $farm->assignedAdmins->contains('id', $user->id)
+            );
+
+            if (!$hasAccess) {
+                return response()->json(['error' => 'You do not have permission to delete this chicken sale.'], 403);
+            }
+        }
+
         try {
             DB::beginTransaction();
-            FlockEnd::findOrFail($id)->delete();
+            $flockEnd->delete();
             DB::commit();
             return response()->json(['msg' => 'Chicken sale deleted successfully.']);
         } catch (\Exception $e) {

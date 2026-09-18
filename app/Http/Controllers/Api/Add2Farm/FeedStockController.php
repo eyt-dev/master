@@ -49,7 +49,10 @@ class FeedStockController extends BaseController
         // Verify farm access
         $farm = Farm::where(function ($q) use ($user) {
             $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id);
+              ->orWhere('assigned_to', $user->id)
+              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                  $query->where('admin_id', $user->id);
+              });
         })->find($farm_id);
 
         if (!$farm) {
@@ -115,7 +118,10 @@ class FeedStockController extends BaseController
         // Debug: Check if user has access to any farms
         $userFarms = Farm::where(function ($q) use ($user) {
             $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id);
+              ->orWhere('assigned_to', $user->id)
+              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                  $query->where('admin_id', $user->id);
+              });
         })->pluck('id');
 
         if ($userFarms->isEmpty()) {
@@ -162,7 +168,10 @@ class FeedStockController extends BaseController
         $record = MaterialStock::whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
+                      ->orWhere('assigned_to', $user->id)
+                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                          $query->where('admin_id', $user->id);
+                      });
                 });
             })
             ->with('farm', 'supplier', 'creator', 'materialName', 'materialStockHangarAllocations.hangar')
@@ -247,7 +256,10 @@ class FeedStockController extends BaseController
             // Verify farm access
             $farm = Farm::where(function ($q) use ($user) {
                 $q->where('created_by', $user->id)
-                  ->orWhere('assigned_to', $user->id);
+                  ->orWhere('assigned_to', $user->id)
+                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                      $query->where('admin_id', $user->id);
+                  });
             })->find($data['farm_id']);
 
             if (!$farm) {
@@ -343,7 +355,10 @@ class FeedStockController extends BaseController
         $record = MaterialStock::whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
+                      ->orWhere('assigned_to', $user->id)
+                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                          $query->where('admin_id', $user->id);
+                      });
                 });
             })
             ->find($id);
@@ -460,7 +475,10 @@ class FeedStockController extends BaseController
         $record = MaterialStock::whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
+                      ->orWhere('assigned_to', $user->id)
+                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                          $query->where('admin_id', $user->id);
+                      });
                 });
             })
             ->find($id);

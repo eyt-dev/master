@@ -216,7 +216,7 @@ class AdminController extends Controller
             1 => 'Admin',
             2 => 'PublicVendor',
             3 => 'PrivateVendor',
-            4 => 'Farmer',
+            4 => 'User',
             default => 'Admin',
         };
 

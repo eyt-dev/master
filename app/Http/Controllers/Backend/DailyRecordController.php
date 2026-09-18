@@ -25,7 +25,10 @@ class DailyRecordController extends Controller
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                     $query->whereHas('farm', function ($subQuery) {
                         $subQuery->where('created_by', auth()->id())
-                                 ->orWhere('assigned_to', auth()->id());
+                                 ->orWhere('assigned_to', auth()->id())
+                                 ->orWhereHas('assignedAdmins', function ($q) {
+                                     $q->where('admin_id', auth()->id());
+                                 });
                     })
                     ->orWhere('created_by', auth()->id());
                 })
@@ -243,8 +246,22 @@ class DailyRecordController extends Controller
 
     public function getHangarsByFlock($siteUrl, $flockId)
     {
+        $user = auth()->user();
         $flockId = (int) $flockId;
-        $flock = Flock::findOrFail($flockId);
+        $flock = Flock::with('farm')->findOrFail($flockId);
+
+        // Verify user has access to this flock
+        if ($user->role !== 'SuperAdmin') {
+            $hasAccess = $flock->farm && (
+                $flock->farm->created_by === $user->id ||
+                $flock->farm->assigned_to === $user->id ||
+                $flock->farm->assignedAdmins->contains('id', $user->id)
+            );
+
+            if (!$hasAccess) {
+                abort(403, 'Unauthorized');
+            }
+        }
 
         // Get hangars allocated to this flock via FlockHangar (only Active)
         $flockHangars = \App\Models\FlockHangar::where('flock_id', $flockId)
@@ -338,11 +355,21 @@ class DailyRecordController extends Controller
     public function edit($siteUrl, $id)
     {
         $user = auth()->user();
-        $dailyRecord = DailyRecord::findOrFail($id);
+        $dailyRecord = DailyRecord::with('farm')->findOrFail($id);
 
-        // Verify access: user must be SuperAdmin or have created the record
-        if ($user->role !== 'SuperAdmin' && $dailyRecord->created_by !== $user->id) {
-            abort(403, 'You do not have permission to edit this record.');
+        // Verify access: user must be SuperAdmin, creator, or have access to the farm
+        if ($user->role !== 'SuperAdmin') {
+            $hasAccess = ($dailyRecord->created_by === $user->id) || (
+                $dailyRecord->farm && (
+                    $dailyRecord->farm->created_by === $user->id ||
+                    $dailyRecord->farm->assigned_to === $user->id ||
+                    $dailyRecord->farm->assignedAdmins->contains('id', $user->id)
+                )
+            );
+
+            if (!$hasAccess) {
+                abort(403, 'You do not have permission to edit this record.');
+            }
         }
 
         $flocks = FlockHelper::getAllFlockOptions();
@@ -376,11 +403,21 @@ class DailyRecordController extends Controller
             'hangar_records' => 'nullable|json',
         ]);
 
-        $dailyRecord = DailyRecord::findOrFail($id);
+        $dailyRecord = DailyRecord::with('farm')->findOrFail($id);
 
-        // Verify access: user must be SuperAdmin or have created the record
-        if ($user->role !== 'SuperAdmin' && $dailyRecord->created_by !== $user->id) {
-            abort(403, 'You do not have permission to update this record.');
+        // Verify access: user must be SuperAdmin, creator, or have access to the farm
+        if ($user->role !== 'SuperAdmin') {
+            $hasAccess = ($dailyRecord->created_by === $user->id) || (
+                $dailyRecord->farm && (
+                    $dailyRecord->farm->created_by === $user->id ||
+                    $dailyRecord->farm->assigned_to === $user->id ||
+                    $dailyRecord->farm->assignedAdmins->contains('id', $user->id)
+                )
+            );
+
+            if (!$hasAccess) {
+                abort(403, 'You do not have permission to update this record.');
+            }
         }
 
         if (!$request->has('hangar_records') || !$request->hangar_records) {
@@ -469,11 +506,21 @@ class DailyRecordController extends Controller
     public function destroy($siteUrl, $id, Request $request)
     {
         $user = auth()->user();
-        $dailyRecord = DailyRecord::findOrFail($id);
+        $dailyRecord = DailyRecord::with('farm')->findOrFail($id);
 
-        // Verify access: user must be SuperAdmin or have created the record
-        if ($user->role !== 'SuperAdmin' && $dailyRecord->created_by !== $user->id) {
-            return response()->json(['error' => 'You do not have permission to delete this record.'], 403);
+        // Verify access: user must be SuperAdmin, creator, or have access to the farm
+        if ($user->role !== 'SuperAdmin') {
+            $hasAccess = ($dailyRecord->created_by === $user->id) || (
+                $dailyRecord->farm && (
+                    $dailyRecord->farm->created_by === $user->id ||
+                    $dailyRecord->farm->assigned_to === $user->id ||
+                    $dailyRecord->farm->assignedAdmins->contains('id', $user->id)
+                )
+            );
+
+            if (!$hasAccess) {
+                return response()->json(['error' => 'You do not have permission to delete this record.'], 403);
+            }
         }
 
         try {

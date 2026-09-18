@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\SetupController;
 use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\ComponentController;
 use App\Http\Controllers\Api\FormulationController;
@@ -37,6 +38,11 @@ Route::prefix('auth')->group(function () {
 // Protected routes — require a valid Sanctum token
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('auth/logout', [AuthController::class, 'logout']);
+
+    // Setup endpoints (SuperAdmin only)
+    Route::prefix('setup')->group(function () {
+        Route::post('fix-permissions', [SetupController::class, 'fixPermissions']);
+    });
 
     Route::prefix('profile')->group(function () {
         Route::get('/',               [ProfileController::class, 'show']);

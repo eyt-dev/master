@@ -22,7 +22,10 @@ class FlockController extends Controller
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                     $query->whereHas('farm', function ($subQuery) {
                         $subQuery->where('created_by', auth()->id())
-                                 ->orWhere('assigned_to', auth()->id());
+                                 ->orWhere('assigned_to', auth()->id())
+                                 ->orWhereHas('assignedAdmins', function ($q) {
+                                     $q->where('admin_id', auth()->id());
+                                 });
                     })
                     ->orWhere('created_by', auth()->id());
                 })
@@ -164,13 +167,25 @@ class FlockController extends Controller
 
     public function getHangarsByFarm($siteUrl, $farmId)
     {
+        $user = auth()->user();
+
+        // Verify user has access to this farm
+        if ($user->role !== 'SuperAdmin') {
+            $farm = Farm::where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhere('assigned_to', $user->id)
+                  ->orWhereHas('assignedAdmins', function ($q) use ($user) {
+                      $q->where('admin_id', $user->id);
+                  });
+            })->find($farmId);
+
+            if (!$farm) {
+                return response()->json([]);
+            }
+        }
+
         // Query hangars for the selected farm
-        // Apply the same scoping as HangarController for non-SuperAdmins
         $hangars = Hangar::where('farm_id', $farmId)
-            ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
-                // For non-SuperAdmin, show only hangars they created
-                $query->where('created_by', auth()->id());
-            })
             ->get(['id', 'name']);
 
         // Get flock ID from query parameter if editing
@@ -297,15 +312,30 @@ class FlockController extends Controller
     public function edit($siteUrl, $id)
     {
         $user = auth()->user();
-        $flock = Flock::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
-            $query->where('created_by', $user->id);
-        })->findOrFail($id);
+        $flock = Flock::with('farm')->findOrFail($id);
+
+        // Verify access to the farm
+        if ($user->role !== 'SuperAdmin') {
+            $farm = $flock->farm;
+            $hasAccess = $farm && (
+                $farm->created_by === $user->id ||
+                $farm->assigned_to === $user->id ||
+                $farm->assignedAdmins->contains('id', $user->id)
+            );
+
+            if (!$hasAccess) {
+                abort(403, 'You do not have permission to edit this flock.');
+            }
+        }
 
         if ($user->role === 'SuperAdmin') {
             $farms = Farm::all();
         } else {
             $farms = Farm::where('created_by', $user->id)
                          ->orWhere('assigned_to', $user->id)
+                         ->orWhereHas('assignedAdmins', function ($q) use ($user) {
+                             $q->where('admin_id', $user->id);
+                         })
                          ->get();
         }
 
@@ -327,9 +357,21 @@ class FlockController extends Controller
         ]);
 
         $user = auth()->user();
-        $flock = Flock::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
-            $query->where('created_by', $user->id);
-        })->findOrFail($id);
+        $flock = Flock::with('farm')->findOrFail($id);
+
+        // Verify access to the farm
+        if ($user->role !== 'SuperAdmin') {
+            $farm = $flock->farm;
+            $hasAccess = $farm && (
+                $farm->created_by === $user->id ||
+                $farm->assigned_to === $user->id ||
+                $farm->assignedAdmins->contains('id', $user->id)
+            );
+
+            if (!$hasAccess) {
+                return redirect()->back()->withErrors('You do not have permission to update this flock.');
+            }
+        }
 
         // Check if another flock with the same farm, chicks_supplier, breed, and start_date exists (exclude current flock)
         $existingFlock = Flock::where('farm_id', $request->farm_id)
@@ -398,9 +440,21 @@ class FlockController extends Controller
     public function destroy($siteUrl, $id)
     {
         $user = auth()->user();
-        $flock = Flock::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
-            $query->where('created_by', $user->id);
-        })->findOrFail($id);
+        $flock = Flock::with('farm')->findOrFail($id);
+
+        // Verify access to the farm
+        if ($user->role !== 'SuperAdmin') {
+            $farm = $flock->farm;
+            $hasAccess = $farm && (
+                $farm->created_by === $user->id ||
+                $farm->assigned_to === $user->id ||
+                $farm->assignedAdmins->contains('id', $user->id)
+            );
+
+            if (!$hasAccess) {
+                return response()->json(['error' => 'You do not have permission to delete this flock.'], 403);
+            }
+        }
 
         // Check if flock has any feed stock allocated to it
         $feedStockCount = \App\Models\DailyRecord::where('flock_id', $flock->id)

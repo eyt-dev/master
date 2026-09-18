@@ -327,8 +327,8 @@ class FarmerController extends BaseController
                 'created_from'   => 3,
             ]);
 
-            // Assign PrivateVendor role (type 4 farmers use PrivateVendor role)
-            $role = Role::where('name', 'PrivateVendor')->first();
+            // Assign User role for type 4 farmers
+            $role = Role::where('name', 'User')->first();
             if ($role) {
                 $admin->assignRole($role);
             }

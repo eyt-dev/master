@@ -68,14 +68,15 @@
 			</ul>
 		</li>
 		@endcan
-		
+
+		@canany(['view.admin', 'view.public_vendor', 'view.private_vendor', 'view.user'])
 		<li class="side-item side-item-category mt-4">
 			Customer
 		</li>
 		@php
 			$userType = auth()->user()->type;
 		@endphp
-		
+
 		@can('view.admin')
 			<li class="slide">
 				<a class="side-menu__item" href="{{ route('admins.index', ['username' => $siteSlug]) }}">
@@ -109,7 +110,8 @@
 				</a>
 			</li>
 		@endcan
-		
+		@endcanany
+
 		@canany(['view.game', 'view.wheel'])
 			<li class="side-item side-item-category mt-4">
 				Fortune Wheel
@@ -236,7 +238,7 @@
 
     @endcanany
 
-        @canany(['view.farm', 'view.hangar', 'view.feed_supplier', 'view.slaughter', 'view.chicks_supplier'])
+        @canany(['view.farm', 'view.hangar', 'view.feed_supplier', 'view.slaughter', 'view.chicks_supplier', 'view.flock', 'view.chicken_sale', 'view.feed_material', 'view.material_stock', 'view.daily_record'])
             <li class="side-item side-item-category mt-4">
                 ADD2CARE Farm
             </li>

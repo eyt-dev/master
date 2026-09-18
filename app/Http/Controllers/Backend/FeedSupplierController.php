@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\FeedSupplier;
+use App\Models\Country;
 use Illuminate\Support\Facades\Session;
 
 class FeedSupplierController extends Controller
@@ -36,7 +37,12 @@ class FeedSupplierController extends Controller
 
     public function create()
     {
-        return view('backend.feed-supplier.create');
+        $countries = Country::select('id', 'name', 'dial_code')->orderBy('name')->get()
+            ->map(function ($country) {
+                $country->dial_code_with_plus = '+' . $country->dial_code;
+                return $country;
+            });
+        return view('backend.feed-supplier.create', compact('countries'));
     }
 
     public function store(Request $request, $siteUrl)
@@ -44,17 +50,21 @@ class FeedSupplierController extends Controller
         $request->validate([
             'name' => 'required',
             'location' => 'required',
-            'address' => 'required',
             'contact_person' => 'required',
+            'phone_code' => 'required|string|max:10',
             'mobile_number' => 'required',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         $createData = [
             'name' => $request->name,
             'location' => $request->location,
-            'address' => $request->address,
             'contact_person' => $request->contact_person,
+            'phone_code' => $request->phone_code,
             'mobile_number' => $request->mobile_number,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
             'created_by' => auth()->id()
         ];
         FeedSupplier::create($createData);
@@ -66,7 +76,12 @@ class FeedSupplierController extends Controller
     public function edit($siteUrl, $id)
     {
         $feed_supplier = FeedSupplier::findOrFail($id);
-        return view('backend.feed-supplier.create', compact('feed_supplier'));
+        $countries = Country::select('id', 'name', 'dial_code')->orderBy('name')->get()
+            ->map(function ($country) {
+                $country->dial_code_with_plus = '+' . $country->dial_code;
+                return $country;
+            });
+        return view('backend.feed-supplier.create', compact('feed_supplier', 'countries'));
     }
 
     public function update(Request $request, $siteUrl, $id)
@@ -74,18 +89,22 @@ class FeedSupplierController extends Controller
         $request->validate([
             'name' => 'required',
             'location' => 'required',
-            'address' => 'required',
             'contact_person' => 'required',
+            'phone_code' => 'required|string|max:10',
             'mobile_number' => 'required',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         $feed_supplier = FeedSupplier::findOrFail($id);
         $feed_supplier->update([
             'name' => $request->name,
             'location' => $request->location,
-            'address' => $request->address,
             'contact_person' => $request->contact_person,
+            'phone_code' => $request->phone_code,
             'mobile_number' => $request->mobile_number,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
         ]);
 
         Session::flash('successMsg', 'Feed Supplier updated successfully.');

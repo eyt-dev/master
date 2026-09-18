@@ -47,27 +47,58 @@
     </div>
 
     <div class="row">
-        <!-- Address Textarea -->
-        <div class="col-sm-12 col-md-12">
+        <!-- Phone Code Dropdown -->
+        <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="address" class="form-label">Address <span class="text-red">*</span></label>
-                <textarea class="form-control" name="address" id="address" placeholder="Feed Supplier Address" required="">{{ old('address', $feed_supplier->address ?? '') }}</textarea>
-                @error('address')
-                    <label id="address-error" class="error" for="address">{{ $message }}</label>
+                <label for="phone_code" class="form-label">Phone Code <span class="text-red">*</span></label>
+                <select class="form-control" name="phone_code" id="phone_code" required="">
+                    <option value="">Select Phone Code</option>
+                    @foreach($countries as $country)
+                        <option value="{{ $country->dial_code_with_plus }}" {{ old('phone_code', $feed_supplier->phone_code ?? '') == $country->dial_code_with_plus ? 'selected' : '' }}>
+                            {{ $country->name }} ({{ $country->dial_code_with_plus }})
+                        </option>
+                    @endforeach
+                </select>
+                @error('phone_code')
+                    <label id="phone_code-error" class="error" for="phone_code">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
+
+        <!-- Mobile Number Textbox -->
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="mobile_number" class="form-label">Mobile Number <span class="text-red">*</span></label>
+                <input type="text" class="form-control" name="mobile_number" id="mobile_number" placeholder="Mobile Number"
+                    value="{{ old('mobile_number', $feed_supplier->mobile_number ?? '') }}" required="" maxlength="20" />
+                @error('mobile_number')
+                    <label id="mobile_number-error" class="error" for="mobile_number">{{ $message }}</label>
                 @enderror
             </div>
         </div>
     </div>
 
     <div class="row">
-        <!-- Mobile Number Textbox -->
+        <!-- Latitude Textbox -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="mobile_number" class="form-label">Mobile Number <span class="text-red">*</span></label>
-                <input type="text" class="form-control" name="mobile_number" id="mobile_number" placeholder="Mobile Number"
-                    value="{{ old('mobile_number', $feed_supplier->mobile_number ?? '') }}" required="" />
-                @error('mobile_number')
-                    <label id="mobile_number-error" class="error" for="mobile_number">{{ $message }}</label>
+                <label for="latitude" class="form-label">Latitude</label>
+                <input type="number" class="form-control" name="latitude" id="latitude" placeholder="Latitude (-90 to 90)"
+                    value="{{ old('latitude', $feed_supplier->latitude ?? '') }}" step="0.00000001" min="-90" max="90" />
+                @error('latitude')
+                    <label id="latitude-error" class="error" for="latitude">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
+
+        <!-- Longitude Textbox -->
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="longitude" class="form-label">Longitude</label>
+                <input type="number" class="form-control" name="longitude" id="longitude" placeholder="Longitude (-180 to 180)"
+                    value="{{ old('longitude', $feed_supplier->longitude ?? '') }}" step="0.00000001" min="-180" max="180" />
+                @error('longitude')
+                    <label id="longitude-error" class="error" for="longitude">{{ $message }}</label>
                 @enderror
             </div>
         </div>

@@ -57,8 +57,6 @@
                                     <th>Location</th>
                                     <th>Contact Person</th>
                                     <th>Mobile Number</th>
-                                    <th>Latitude</th>
-                                    <th>Longitude</th>
                                     <th>Created On</th>
                                     <th>Created By</th>
                                     <th>Action</th>
@@ -127,8 +125,6 @@
                 { data: 'location', name: 'location' },
                 { data: 'contact_person', name: 'contact_person' },
                 { data: 'mobile_number', name: 'mobile_number' },
-                { data: 'latitude', name: 'latitude' },
-                { data: 'longitude', name: 'longitude' },
                 { data: 'created_at' },
                 { data: 'creator' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }

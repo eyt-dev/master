@@ -18,6 +18,15 @@ class FeedSupplierController extends Controller
                 })
                 ->orderBy('created_at', 'desc')->get();
             return datatables()->of($data)
+                ->addColumn('mobile_number', function($row) {
+                    if (!$row->mobile_number) {
+                        return 'N/A';
+                    }
+                    if ($row->phone_code) {
+                        return $row->phone_code . $row->mobile_number;
+                    }
+                    return $row->mobile_number;
+                })
                 ->addColumn('creator', function($row) {
                     return $row->creator->name ?? 'N/A';
                 })

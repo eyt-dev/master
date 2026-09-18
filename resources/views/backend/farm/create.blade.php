@@ -77,6 +77,32 @@
     </div>
 
     <div class="row">
+        <!-- Latitude Textbox -->
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="latitude" class="form-label">Latitude</label>
+                <input type="number" class="form-control" name="latitude" id="latitude" placeholder="Latitude (-90 to 90)"
+                    value="{{ old('latitude', $farm->latitude ?? '') }}" step="0.00000001" min="-90" max="90" />
+                @error('latitude')
+                    <label id="latitude-error" class="error" for="latitude">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
+
+        <!-- Longitude Textbox -->
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="longitude" class="form-label">Longitude</label>
+                <input type="number" class="form-control" name="longitude" id="longitude" placeholder="Longitude (-180 to 180)"
+                    value="{{ old('longitude', $farm->longitude ?? '') }}" step="0.00000001" min="-180" max="180" />
+                @error('longitude')
+                    <label id="longitude-error" class="error" for="longitude">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
         <!-- Assigned To Dropdown -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">

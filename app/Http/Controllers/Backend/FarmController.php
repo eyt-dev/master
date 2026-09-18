@@ -75,6 +75,8 @@ class FarmController extends Controller
         $validated = $request->validate([
             'name' => 'required|unique:farms,name',
             'location' => 'required',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'number_of_hangars' => 'required|numeric|min:1',
             'assigned_to' => 'nullable|array',
             'assigned_to.*' => 'exists:admins,id',
@@ -102,6 +104,8 @@ class FarmController extends Controller
         $createData = [
             'name' => $request->name,
             'location' => $request->location,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
             'number_of_hangars' => $request->number_of_hangars,
             'type' => $request->type,
             'phone_code' => $request->phone_code,
@@ -161,6 +165,8 @@ class FarmController extends Controller
         $validated = $request->validate([
             'name' => 'required|unique:farms,name,' . $farm->id,
             'location' => 'required',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'number_of_hangars' => 'required|numeric|min:1',
             'assigned_to' => 'nullable|array',
             'assigned_to.*' => 'exists:admins,id',
@@ -172,6 +178,8 @@ class FarmController extends Controller
         $updateData = [
             'name' => $request->name,
             'location' => $request->location,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
             'number_of_hangars' => $request->number_of_hangars,
             'type' => $request->type,
             'phone_code' => $request->phone_code,

@@ -22,7 +22,7 @@ class MaterialNameSeeder extends Seeder
         ];
 
         foreach ($materials as $material) {
-            MaterialName::firstOrCreate(['name' => $material['name']], $material);
+            MaterialName::updateOrCreate(['name' => $material['name']], $material);
         }
     }
 }

@@ -80,7 +80,7 @@
 				<div class="dropdown profile-dropdown">
 					<a href="{{url('/' . $page='#')}}" class="nav-link pr-0 leading-none" data-toggle="dropdown">
 						<span>
-						<img src="{{Auth::user()->image ? URL::asset(Auth::user()->image) : URL::asset('assets/images/users/2.jpg')}}" alt="user-img" class="avatar avatar-md brround">
+						<img src="{{Auth::user()->image ? asset('storage/' . Auth::user()->image) : URL::asset('assets/images/users/2.jpg')}}" alt="user-img" class="avatar avatar-md brround">
 						</span>
 					</a>
 					<div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow animated">

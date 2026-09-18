@@ -201,26 +201,28 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // Check if admin has active project assignment to Add2Farm
-        $add2FarmProjectId = ProjectHelper::getAdd2FarmProjectId();
+        // Check if admin has active project assignment to Add2Farm (skip for SuperAdmin)
+        if ($admin->role !== 'SuperAdmin') {
+            $add2FarmProjectId = ProjectHelper::getAdd2FarmProjectId();
 
-        if (!$add2FarmProjectId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Add2Farm project configuration not found. Please contact administrator.',
-            ], 500);
-        }
+            if (!$add2FarmProjectId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Add2Farm project configuration not found. Please contact administrator.',
+                ], 500);
+            }
 
-        $projectStatus = \App\Models\AdminProjectStatus::where('admin_id', $admin->id)
-            ->where('project_id', $add2FarmProjectId)
-            ->where('status', 'Active')
-            ->first();
+            $projectStatus = \App\Models\AdminProjectStatus::where('admin_id', $admin->id)
+                ->where('project_id', $add2FarmProjectId)
+                ->where('status', 'Active')
+                ->first();
 
-        if (!$projectStatus) {
-            return response()->json([
-                'success' => false,
-                'message' => $this->translationService->get('project_access_not_active'),
-            ], 403);
+            if (!$projectStatus) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $this->translationService->get('project_access_not_active'),
+                ], 403);
+            }
         }
 
         // Generate new OTP

@@ -261,7 +261,7 @@ class DropdownController extends BaseController
      * Get material names for dropdown
      *
      * Fetch list of all material names for feed and ingredients dropdown.
-     * Returns material id and name for dropdown usage.
+     * Returns material id, name, and type for dropdown usage.
      *
      * @authenticated
      *
@@ -271,39 +271,48 @@ class DropdownController extends BaseController
      *   "data": [
      *     {
      *       "id": 1,
-     *       "name": "Starter feed"
+     *       "name": "Starter feed",
+     *       "type": "Pelleted feed"
      *     },
      *     {
      *       "id": 2,
-     *       "name": "Grower feed"
+     *       "name": "Grower feed",
+     *       "type": "Pelleted feed"
      *     },
      *     {
      *       "id": 3,
-     *       "name": "Finisher feed"
+     *       "name": "Finisher feed",
+     *       "type": "Pelleted feed"
      *     },
      *     {
      *       "id": 4,
-     *       "name": "Corn"
+     *       "name": "Corn",
+     *       "type": "Feed Stuff"
      *     },
      *     {
      *       "id": 5,
-     *       "name": "Soybean meal"
+     *       "name": "Soybean meal",
+     *       "type": "Feed Stuff"
      *     },
      *     {
      *       "id": 6,
-     *       "name": "Wheat"
+     *       "name": "Wheat",
+     *       "type": "Feed Stuff"
      *     },
      *     {
      *       "id": 7,
-     *       "name": "Barley"
+     *       "name": "Barley",
+     *       "type": "Feed Stuff"
      *     },
      *     {
      *       "id": 8,
-     *       "name": "Premix"
+     *       "name": "Premix",
+     *       "type": "Pelleted feed"
      *     },
      *     {
      *       "id": 9,
-     *       "name": "Limestone"
+     *       "name": "Limestone",
+     *       "type": "Feed Stuff"
      *     }
      *   ]
      * }
@@ -323,7 +332,7 @@ class DropdownController extends BaseController
             ], 401);
         }
 
-        $materials = MaterialName::select('id', 'name')
+        $materials = MaterialName::select('id', 'name', 'type')
             ->orderBy('name')
             ->get();
 

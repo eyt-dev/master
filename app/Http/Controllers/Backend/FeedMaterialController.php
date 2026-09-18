@@ -41,7 +41,7 @@ class FeedMaterialController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:material_names',
-            'type' => 'required|in:Pelleted feed,Feedstuff',
+            'type' => 'required|in:Pelleted feed,Feed Stuff',
         ]);
 
         $createData = [
@@ -66,7 +66,7 @@ class FeedMaterialController extends Controller
         $feedmaterial = MaterialName::findOrFail($id);
         $request->validate([
             'name' => 'required|string|max:255|unique:material_names,name,' . $id,
-            'type' => 'required|in:Pelleted feed,Feedstuff',
+            'type' => 'required|in:Pelleted feed,Feed Stuff',
         ]);
         $feedmaterial->update([
             'name' => $request->name,

@@ -32,9 +32,9 @@
                     <label class="custom-control-label" for="type_pelleted">Pelleted feed</label>
                 </div>
                 <div class="custom-control custom-radio">
-                    <input type="radio" class="custom-control-input" id="type_feedstuff" name="type" value="Feedstuff"
-                        {{ old('type', $feedmaterial->type ?? '') == 'Feedstuff' ? 'checked' : '' }} required="">
-                    <label class="custom-control-label" for="type_feedstuff">Feedstuff</label>
+                    <input type="radio" class="custom-control-input" id="type_feedstuff" name="type" value="Feed Stuff"
+                        {{ old('type', $feedmaterial->type ?? '') == 'Feed Stuff' ? 'checked' : '' }} required="">
+                    <label class="custom-control-label" for="type_feedstuff">Feed Stuff</label>
                 </div>
                 @error('type')
                     <label id="type-error" class="error" for="type">{{ $message }}</label>

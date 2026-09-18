@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\AdminProjectStatus;
+use App\Helpers\ProjectHelper;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 
@@ -62,9 +63,9 @@ class SetupController extends Controller
             'details' => [],
         ];
 
-        // Get Add2Farm project ID
-        $project = \App\Models\Project::where('slug', 'add2farm')->first();
-        if (!$project) {
+        // Get Add2Farm project ID using ProjectHelper
+        $projectId = ProjectHelper::getAdd2FarmProjectId();
+        if (!$projectId) {
             $result['errors'][] = 'Add2Farm project not found';
             return $result;
         }
@@ -75,7 +76,7 @@ class SetupController extends Controller
         foreach ($users as $admin) {
             try {
                 $existing = AdminProjectStatus::where('admin_id', $admin->id)
-                    ->where('project_id', $project->id)
+                    ->where('project_id', $projectId)
                     ->first();
 
                 if ($existing) {
@@ -84,7 +85,7 @@ class SetupController extends Controller
                 } else {
                     AdminProjectStatus::create([
                         'admin_id' => $admin->id,
-                        'project_id' => $project->id,
+                        'project_id' => $projectId,
                         'status' => 'Active',
                     ]);
                     $result['created']++;

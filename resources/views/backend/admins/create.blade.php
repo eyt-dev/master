@@ -367,10 +367,122 @@
             };
         }
 
-        $("#admin_form").validate({
+        const $form = $("#admin_form");
+
+        $form.validate({
             ignore: ":hidden",
             rules: validationRules,
             messages: validationMessages,
+            submitHandler: function(form) {
+                handleFormSubmit(form);
+                return false;
+            }
         });
+
+        function handleFormSubmit(form) {
+            const $submitBtn = $form.find('button[type="submit"]');
+            const originalText = $submitBtn.text();
+
+            // Disable submit button during submission
+            $submitBtn.prop('disabled', true).text('Saving...');
+
+            const formData = new FormData(form);
+            const isUpdate = {{ isset($admin->id) ? 'true' : 'false' }};
+
+            $.ajax({
+                url: form.action,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    // Show success message
+                    showSuccessAlert(response.message || 'Saved successfully!');
+
+                    // Refresh the datatable
+                    refreshDatatable();
+
+                    // Redirect after 1.5 seconds
+                    setTimeout(function() {
+                        const redirectUrl = response.redirect_url || '{{ route("admins.index", ["username" => $siteSlug]) }}';
+                        window.location.href = redirectUrl;
+                    }, 1500);
+                },
+                error: function(xhr) {
+                    // Re-enable submit button
+                    $submitBtn.prop('disabled', false).text(originalText);
+
+                    if (xhr.status === 422) {
+                        // Validation errors
+                        const errors = xhr.responseJSON.errors;
+                        clearPreviousErrors();
+                        displayValidationErrors(errors);
+                        showErrorAlert('Please fix the errors below');
+                    } else {
+                        // Other errors
+                        showErrorAlert(xhr.responseJSON.message || 'An error occurred. Please try again.');
+                    }
+                }
+            });
+        }
+
+        function clearPreviousErrors() {
+            $form.find('.error').remove();
+            $form.find('.is-invalid').removeClass('is-invalid');
+        }
+
+        function displayValidationErrors(errors) {
+            $.each(errors, function(field, messages) {
+                const $input = $form.find(`[name="${field}"]`);
+                if ($input.length) {
+                    $input.addClass('is-invalid');
+                    const errorHtml = `<label class="error">${messages[0]}</label>`;
+                    $input.closest('.form-group').append(errorHtml);
+                }
+            });
+        }
+
+        function showSuccessAlert(message) {
+            const alertHtml = `
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fe fe-check-circle mr-2"></i>${message}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            `;
+            $form.prepend(alertHtml);
+            $('html, body').animate({ scrollTop: 0 }, 'slow');
+        }
+
+        function showErrorAlert(message) {
+            const alertHtml = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fe fe-alert-circle mr-2"></i>${message}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            `;
+            $form.prepend(alertHtml);
+            $('html, body').animate({ scrollTop: 0 }, 'slow');
+        }
+
+        function refreshDatatable() {
+            // Try to find and reload datatable
+            try {
+                // Look for parent window if in iframe/modal
+                const $table = $('table.datatable').first();
+                if ($table.length) {
+                    const dt = $table.DataTable();
+                    if (dt && dt.ajax) {
+                        dt.ajax.reload();
+                    }
+                }
+            } catch(e) {
+                console.log('Could not reload datatable:', e);
+            }
+        }
     })();
 </script>

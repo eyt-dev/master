@@ -368,25 +368,35 @@ class AdminController extends Controller
         $admin = Admin::find($id);
 
         if(empty($admin)){
+            if($request->ajax()) {
+                return response()->json(['message' => 'Admin not found'], 404);
+            }
             return redirect()->route('admins.index', ['username' => request()->get('username', request()->segment(1))]);
         }
 
-        $request->validate([
-            'name' => 'required',
-            'username' => 'nullable|string',
-            'email' => 'nullable|email|unique:admins,email,' . $id,
-            'vat_country_code' => 'required',
-            'vat_number' => 'required|max:50',
-            'phone_code' => 'nullable|string|max:10',
-            'password' => 'nullable|min:6',
-            'mobile_number' => 'required|string|max:20|unique:admins,mobile_number,' . $id,
-            'notes' => 'nullable|string|max:1000',
-            'image' => 'nullable|image|mimes:jpeg,png,gif|max:2048',
-            'project_id' => 'nullable|exists:projects,id',
-            'project_rows' => 'nullable|array',
-            'project_rows.*.project_id' => 'nullable|exists:projects,id',
-            'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required',
+                'username' => 'nullable|string',
+                'email' => 'nullable|email|unique:admins,email,' . $id,
+                'vat_country_code' => 'required',
+                'vat_number' => 'required|max:50',
+                'phone_code' => 'nullable|string|max:10',
+                'password' => 'nullable|min:6',
+                'mobile_number' => 'required|string|max:20|unique:admins,mobile_number,' . $id,
+                'notes' => 'nullable|string|max:1000',
+                'image' => 'nullable|image|mimes:jpeg,png,gif|max:2048',
+                'project_id' => 'nullable|exists:projects,id',
+                'project_rows' => 'nullable|array',
+                'project_rows.*.project_id' => 'nullable|exists:projects,id',
+                'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
+            ]);
+        } catch (ValidationException $e) {
+            if($request->ajax()) {
+                return response()->json(['errors' => $e->errors()], 422);
+            }
+            throw $e;
+        }
 
         $this->validateProjectRows($request);
 
@@ -470,7 +480,10 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Admin update error: ' . $e->getMessage());
-            
+
+            if($request->ajax()) {
+                return response()->json(['message' => 'Failed to update admin. Please try again.'], 500);
+            }
             return redirect()->route('admins.edit', ['username' => request()->segment(1), 'admin' => $id])
                 ->with('error', 'Failed to update admin. Please try again.');
         }
@@ -482,6 +495,13 @@ class AdminController extends Controller
             4 => 'admins.users',
             default => 'admins.index',
         };
+
+        if($request->ajax()) {
+            return response()->json([
+                'message' => 'Admin updated successfully!',
+                'redirect_url' => route($routeName, ['username' => request()->get('username', request()->segment(1))])
+            ]);
+        }
 
         return redirect()->route($routeName, ['username' => request()->get('username', request()->segment(1))]);
     }

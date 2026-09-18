@@ -200,22 +200,30 @@
         });
 
         function checkInput() {
-            console.warn(1);
-            $('.permission .check-all').click(function() {
-                var check = this.checked;
-                $(this).parents('.nav-item').find('.check-one').prop("checked", check);
+            // Handle module checkbox (check-all) click
+            $(document).on('click', '.permission .check-all', function() {
+                var isChecked = this.checked;
+                var moduleId = $(this).data('module-id');
+                // Check/uncheck all permissions in this module
+                $('[data-module-id="' + moduleId + '"].check-one').prop('checked', isChecked);
             });
-            $('.permission .check-one').click(function() {
-                var parentItem = $(this).parents('.nav-treeview').parents('.nav-item');
-                var check = $(parentItem).find('.check-one:checked').length == $(parentItem).find(
-                    '.check-one').length;
-                $(parentItem).find('.check-all').prop("checked", check)
+
+            // Handle individual permission checkbox (check-one) click
+            $(document).on('click', '.permission .check-one', function() {
+                var moduleId = $(this).data('module-id');
+                // Count checked permissions in this module
+                var totalPermissions = $('[data-module-id="' + moduleId + '"].check-one').length;
+                var checkedPermissions = $('[data-module-id="' + moduleId + '"].check-one:checked').length;
+                // Check module checkbox if all permissions are checked
+                $('#module-' + moduleId).prop('checked', totalPermissions === checkedPermissions);
             });
+
+            // Initialize: check module checkboxes based on their permissions
             $('.permission .check-all').each(function() {
-                var parentItem = $(this).parents('.nav-item');
-                var check = $(parentItem).find('.check-one:checked').length == $(parentItem).find(
-                    '.check-one').length;
-                $(parentItem).find('.check-all').prop("checked", check)
+                var moduleId = $(this).data('module-id');
+                var totalPermissions = $('[data-module-id="' + moduleId + '"].check-one').length;
+                var checkedPermissions = $('[data-module-id="' + moduleId + '"].check-one:checked').length;
+                $(this).prop('checked', totalPermissions === checkedPermissions && checkedPermissions > 0);
             });
         }
 

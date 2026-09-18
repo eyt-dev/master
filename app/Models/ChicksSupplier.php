@@ -13,10 +13,17 @@ class ChicksSupplier extends Model
         'name',
         'breed',
         'location',
-        'address',
+        'latitude',
+        'longitude',
+        'phone_code',
         'contact_person',
         'mobile_number',
         'created_by',
+    ];
+
+    protected $casts = [
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
     ];
 
     public function creator()

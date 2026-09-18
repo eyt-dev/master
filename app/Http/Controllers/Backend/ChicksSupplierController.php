@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\ChicksSupplier;
+use App\Models\Country;
 use Illuminate\Support\Facades\Session;
 
 class ChicksSupplierController extends Controller
@@ -17,6 +18,20 @@ class ChicksSupplierController extends Controller
                 })
                 ->orderBy('created_at', 'desc')->get();
             return datatables()->of($data)
+                ->addColumn('breed', function($row) {
+                    $breedType = $this->extractBreedType($row->breed);
+                    $badgeClass = ($breedType === 'Broiler') ? 'badge-danger' : 'badge-info';
+                    return '<span class="badge ' . $badgeClass . '">' . $breedType . ' (' . $row->breed . ')</span>';
+                })
+                ->addColumn('mobile_number', function($row) {
+                    if (!$row->mobile_number) {
+                        return 'N/A';
+                    }
+                    if ($row->phone_code) {
+                        return $row->phone_code . $row->mobile_number;
+                    }
+                    return $row->mobile_number;
+                })
                 ->addColumn('creator', function($row) {
                     return $row->creator->name ?? 'N/A';
                 })
@@ -28,7 +43,7 @@ class ChicksSupplierController extends Controller
                          .'<a class="delete-chicks-supplier btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action'])   
+                ->rawColumns(['action', 'breed'])
                 ->make(true);
         }
         return view('backend.chicks-supplier.index');
@@ -36,8 +51,16 @@ class ChicksSupplierController extends Controller
 
     public function create()
     {
-        $breeds = ['Ross', 'Cobb', 'Lohmann White', 'Lohmann Brown'];
-        return view('backend.chicks-supplier.create', compact('breeds'));
+        $breeds = [
+            'Broiler' => ['Ross 308', 'Cobb 500'],
+            'Layer' => ['Lohmann Brown', 'Lohmann White']
+        ];
+        $countries = Country::select('id', 'name', 'dial_code')->orderBy('name')->get()
+            ->map(function ($country) {
+                $country->dial_code_with_plus = '+' . $country->dial_code;
+                return $country;
+            });
+        return view('backend.chicks-supplier.create', compact('breeds', 'countries'));
     }
 
     public function store(Request $request, $siteUrl)
@@ -46,18 +69,22 @@ class ChicksSupplierController extends Controller
             'name' => 'required',
             'breed' => 'required',
             'location' => 'required',
-            'address' => 'required',
             'contact_person' => 'required',
+            'phone_code' => 'required|string|max:10',
             'mobile_number' => 'required',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         $createData = [
             'name' => $request->name,
             'breed' => $request->breed,
             'location' => $request->location,
-            'address' => $request->address,
             'contact_person' => $request->contact_person,
+            'phone_code' => $request->phone_code,
             'mobile_number' => $request->mobile_number,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
             'created_by' => auth()->id()
         ];
         ChicksSupplier::create($createData);
@@ -69,8 +96,16 @@ class ChicksSupplierController extends Controller
     public function edit($siteUrl, $id)
     {
         $chicks_supplier = ChicksSupplier::findOrFail($id);
-        $breeds = ['Ross', 'Cobb', 'Lohmann White', 'Lohmann Brown'];
-        return view('backend.chicks-supplier.create', compact('chicks_supplier', 'breeds'));
+        $breeds = [
+            'Broiler' => ['Ross 308', 'Cobb 500'],
+            'Layer' => ['Lohmann Brown', 'Lohmann White']
+        ];
+        $countries = Country::select('id', 'name', 'dial_code')->orderBy('name')->get()
+            ->map(function ($country) {
+                $country->dial_code_with_plus = '+' . $country->dial_code;
+                return $country;
+            });
+        return view('backend.chicks-supplier.create', compact('chicks_supplier', 'breeds', 'countries'));
     }
 
     public function update(Request $request, $siteUrl, $id)
@@ -79,9 +114,11 @@ class ChicksSupplierController extends Controller
             'name' => 'required',
             'breed' => 'required',
             'location' => 'required',
-            'address' => 'required',
             'contact_person' => 'required',
+            'phone_code' => 'required|string|max:10',
             'mobile_number' => 'required',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         $chicks_supplier = ChicksSupplier::findOrFail($id);
@@ -89,9 +126,11 @@ class ChicksSupplierController extends Controller
             'name' => $request->name,
             'breed' => $request->breed,
             'location' => $request->location,
-            'address' => $request->address,
             'contact_person' => $request->contact_person,
+            'phone_code' => $request->phone_code,
             'mobile_number' => $request->mobile_number,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
         ]);
 
         Session::flash('successMsg', 'Chicks Supplier updated successfully.');
@@ -102,5 +141,19 @@ class ChicksSupplierController extends Controller
     {
         ChicksSupplier::findOrFail($id)->delete();
         return response()->json(['msg' => 'Chicks Supplier deleted successfully.']);
+    }
+
+    private function extractBreedType($breedName)
+    {
+        $broilerBreeds = ['Ross 308', 'Cobb 500'];
+        $layerBreeds = ['Lohmann Brown', 'Lohmann White'];
+
+        if (in_array($breedName, $broilerBreeds)) {
+            return 'Broiler';
+        } elseif (in_array($breedName, $layerBreeds)) {
+            return 'Layer';
+        }
+
+        return 'Layer';
     }
 }

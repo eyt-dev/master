@@ -55,7 +55,6 @@
                                     <th>#</th>
                                     <th>Name</th>
                                     <th>Breed</th>
-                                    <th>Location</th>
                                     <th>Contact Person</th>
                                     <th>Mobile Number</th>
                                     <th>Created By</th>
@@ -124,7 +123,6 @@
                 { data: 'id', name: 'id' },
                 { data: 'name', name: 'name' },
                 { data: 'breed', name: 'breed' },
-                { data: 'location', name: 'location' },
                 { data: 'contact_person', name: 'contact_person' },
                 { data: 'mobile_number', name: 'mobile_number' },
                 { data: 'creator' },

@@ -235,16 +235,22 @@ class FeedStockController extends BaseController
             }
         }
 
-        $validator = Validator::make($data, [
+        // Get material type to determine hangar allocation requirement
+        $materialName = \App\Models\MaterialName::find($data['material_name_id'] ?? null);
+        $hangarAllocationRequired = $materialName && strtolower($materialName->type) === 'pelleted feed';
+
+        $rules = [
             'stock_date' => 'required|date_format:d-m-Y',
             'farm_id' => 'required|integer|exists:farms,id',
             'material_name_id' => 'required|integer|exists:material_names,id',
             'quantity' => 'required|numeric|min:1',
             'supplier_id' => 'required|integer|exists:chicks_suppliers,id',
-            'hangar_allocations' => 'required|array|min:1',
-            'hangar_allocations.*.hangar_id' => 'required|integer|exists:hangars,id',
-            'hangar_allocations.*.quantity' => 'required|numeric|min:0',
-        ]);
+            'hangar_allocations' => $hangarAllocationRequired ? 'required|array|min:1' : 'nullable|array',
+            'hangar_allocations.*.hangar_id' => 'required_with:hangar_allocations|integer|exists:hangars,id',
+            'hangar_allocations.*.quantity' => 'required_with:hangar_allocations|numeric|min:0',
+        ];
+
+        $validator = Validator::make($data, $rules);
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
@@ -266,19 +272,22 @@ class FeedStockController extends BaseController
                 return response()->json(['success' => false, 'message' => 'Farm not found or access denied.'], 403);
             }
 
-            // Validate all hangars belong to this farm
-            $farmHangarIds = Hangar::where('farm_id', $data['farm_id'])->pluck('id')->toArray();
-            $requestHangarIds = array_column($data['hangar_allocations'], 'hangar_id');
-            $invalidHangars = array_diff($requestHangarIds, $farmHangarIds);
+            // Validate hangar allocations only if they are provided
+            if (!empty($data['hangar_allocations'])) {
+                // Validate all hangars belong to this farm
+                $farmHangarIds = Hangar::where('farm_id', $data['farm_id'])->pluck('id')->toArray();
+                $requestHangarIds = array_column($data['hangar_allocations'], 'hangar_id');
+                $invalidHangars = array_diff($requestHangarIds, $farmHangarIds);
 
-            if (!empty($invalidHangars)) {
-                return response()->json(['success' => false, 'message' => 'One or more hangars do not belong to this farm.'], 422);
-            }
+                if (!empty($invalidHangars)) {
+                    return response()->json(['success' => false, 'message' => 'One or more hangars do not belong to this farm.'], 422);
+                }
 
-            // Validate total quantity matches allocations
-            $totalAllocated = collect($data['hangar_allocations'])->sum('quantity');
-            if ($totalAllocated != $data['quantity']) {
-                return response()->json(['success' => false, 'message' => 'Hangar quantities must equal total quantity.'], 422);
+                // Validate total quantity matches allocations
+                $totalAllocated = collect($data['hangar_allocations'])->sum('quantity');
+                if ($totalAllocated != $data['quantity']) {
+                    return response()->json(['success' => false, 'message' => 'Hangar quantities must equal total quantity.'], 422);
+                }
             }
 
             $stockDate = \Carbon\Carbon::createFromFormat('d-m-Y', $data['stock_date']);
@@ -296,21 +305,23 @@ class FeedStockController extends BaseController
                 'created_by' => auth()->id(),
             ]);
 
-            foreach ($data['hangar_allocations'] as $alloc) {
-                // Get the current remaining quantity for this hangar
-                $currentRemaining = MaterialStockHangar::where('hangar_id', $alloc['hangar_id'])
-                    ->latest('created_at')
-                    ->value('remaining_quantity') ?? 0;
+            if (!empty($data['hangar_allocations'])) {
+                foreach ($data['hangar_allocations'] as $alloc) {
+                    // Get the current remaining quantity for this hangar
+                    $currentRemaining = MaterialStockHangar::where('hangar_id', $alloc['hangar_id'])
+                        ->latest('created_at')
+                        ->value('remaining_quantity') ?? 0;
 
-                // Calculate new remaining: current_remaining + new_quantity
-                $newRemaining = $currentRemaining + (float)$alloc['quantity'];
+                    // Calculate new remaining: current_remaining + new_quantity
+                    $newRemaining = $currentRemaining + (float)$alloc['quantity'];
 
-                MaterialStockHangar::create([
-                    'material_stock_id' => $record->id,
-                    'hangar_id' => $alloc['hangar_id'],
-                    'quantity' => (float)$alloc['quantity'],
-                    'remaining_quantity' => $newRemaining,
-                ]);
+                    MaterialStockHangar::create([
+                        'material_stock_id' => $record->id,
+                        'hangar_id' => $alloc['hangar_id'],
+                        'quantity' => (float)$alloc['quantity'],
+                        'remaining_quantity' => $newRemaining,
+                    ]);
+                }
             }
 
             DB::commit();
@@ -378,15 +389,21 @@ class FeedStockController extends BaseController
             }
         }
 
-        $validator = Validator::make($data, [
+        // Get material type to determine hangar allocation requirement
+        $materialName = \App\Models\MaterialName::find($data['material_name_id'] ?? null);
+        $hangarAllocationRequired = $materialName && strtolower($materialName->type) === 'pelleted feed';
+
+        $rules = [
             'stock_date' => 'required|date_format:d-m-Y',
             'material_name_id' => 'required|integer|exists:material_names,id',
             'quantity' => 'required|numeric|min:1',
             'supplier_id' => 'required|integer|exists:chicks_suppliers,id',
-            'hangar_allocations' => 'required|array|min:1',
-            'hangar_allocations.*.hangar_id' => 'required|integer|exists:hangars,id',
-            'hangar_allocations.*.quantity' => 'required|numeric|min:0',
-        ]);
+            'hangar_allocations' => $hangarAllocationRequired ? 'required|array|min:1' : 'nullable|array',
+            'hangar_allocations.*.hangar_id' => 'required_with:hangar_allocations|integer|exists:hangars,id',
+            'hangar_allocations.*.quantity' => 'required_with:hangar_allocations|numeric|min:0',
+        ];
+
+        $validator = Validator::make($data, $rules);
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
@@ -395,19 +412,22 @@ class FeedStockController extends BaseController
         try {
             DB::beginTransaction();
 
-            // Validate all hangars belong to this farm
-            $farmHangarIds = Hangar::where('farm_id', $record->farm_id)->pluck('id')->toArray();
-            $requestHangarIds = array_column($data['hangar_allocations'], 'hangar_id');
-            $invalidHangars = array_diff($requestHangarIds, $farmHangarIds);
+            // Validate hangar allocations only if they are provided
+            if (!empty($data['hangar_allocations'])) {
+                // Validate all hangars belong to this farm
+                $farmHangarIds = Hangar::where('farm_id', $record->farm_id)->pluck('id')->toArray();
+                $requestHangarIds = array_column($data['hangar_allocations'], 'hangar_id');
+                $invalidHangars = array_diff($requestHangarIds, $farmHangarIds);
 
-            if (!empty($invalidHangars)) {
-                return response()->json(['success' => false, 'message' => 'One or more hangars do not belong to this farm.'], 422);
-            }
+                if (!empty($invalidHangars)) {
+                    return response()->json(['success' => false, 'message' => 'One or more hangars do not belong to this farm.'], 422);
+                }
 
-            // Validate total quantity matches allocations
-            $totalAllocated = collect($data['hangar_allocations'])->sum('quantity');
-            if ($totalAllocated != $data['quantity']) {
-                return response()->json(['success' => false, 'message' => 'Hangar quantities must equal total quantity.'], 422);
+                // Validate total quantity matches allocations
+                $totalAllocated = collect($data['hangar_allocations'])->sum('quantity');
+                if ($totalAllocated != $data['quantity']) {
+                    return response()->json(['success' => false, 'message' => 'Hangar quantities must equal total quantity.'], 422);
+                }
             }
 
             $stockDate = \Carbon\Carbon::createFromFormat('d-m-Y', $data['stock_date']);
@@ -423,21 +443,23 @@ class FeedStockController extends BaseController
 
             $record->materialStockHangarAllocations()->delete();
 
-            foreach ($data['hangar_allocations'] as $alloc) {
-                // Get the current remaining quantity for this hangar
-                $currentRemaining = MaterialStockHangar::where('hangar_id', $alloc['hangar_id'])
-                    ->latest('created_at')
-                    ->value('remaining_quantity') ?? 0;
+            if (!empty($data['hangar_allocations'])) {
+                foreach ($data['hangar_allocations'] as $alloc) {
+                    // Get the current remaining quantity for this hangar
+                    $currentRemaining = MaterialStockHangar::where('hangar_id', $alloc['hangar_id'])
+                        ->latest('created_at')
+                        ->value('remaining_quantity') ?? 0;
 
-                // Calculate new remaining: current_remaining + new_quantity
-                $newRemaining = $currentRemaining + (float)$alloc['quantity'];
+                    // Calculate new remaining: current_remaining + new_quantity
+                    $newRemaining = $currentRemaining + (float)$alloc['quantity'];
 
-                MaterialStockHangar::create([
-                    'material_stock_id' => $record->id,
-                    'hangar_id' => $alloc['hangar_id'],
-                    'quantity' => (float)$alloc['quantity'],
-                    'remaining_quantity' => $newRemaining,
-                ]);
+                    MaterialStockHangar::create([
+                        'material_stock_id' => $record->id,
+                        'hangar_id' => $alloc['hangar_id'],
+                        'quantity' => (float)$alloc['quantity'],
+                        'remaining_quantity' => $newRemaining,
+                    ]);
+                }
             }
 
             DB::commit();
@@ -510,6 +532,7 @@ class FeedStockController extends BaseController
             'farm_name' => $record->farm->name,
             'material_name_id' => $record->material_name_id,
             'material_name' => $record->materialName?->name ?? $record->name,
+            'material_type' => $record->materialName?->type,
             'name' => $record->name,
             'quantity' => $this->formatDecimal($record->quantity),
             'supplier_id' => $record->supplier_id,

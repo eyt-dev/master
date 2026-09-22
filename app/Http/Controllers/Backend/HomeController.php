@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\Category;
-use App\Models\ChickenSale;
 use App\Models\ChicksSupplier;
 use App\Models\CompoPrice;
 use App\Models\Component;

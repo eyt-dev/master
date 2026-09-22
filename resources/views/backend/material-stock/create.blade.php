@@ -38,10 +38,20 @@
                 <select class="form-control" name="material_name_id" id="material_name_id" required="">
                     <option value="">Select Material Name</option>
                     @if(isset($materialNames) && $materialNames->count() > 0)
-                        @foreach($materialNames as $material)
-                            <option value="{{ $material->id }}" {{ old('material_name_id', $materialStock->material_name_id ?? '') == $material->id ? 'selected' : '' }}>
-                                {{ $material->name }}
-                            </option>
+                        @php
+                            // Group materials by type
+                            $groupedMaterials = $materialNames->groupBy(function($item) {
+                                return $item->type ?? 'Other';
+                            })->sortKeys();
+                        @endphp
+                        @foreach($groupedMaterials as $type => $materials)
+                            <optgroup label="{{ $type }}">
+                                @foreach($materials as $material)
+                                    <option value="{{ $material->id }}" data-type="{{ $material->type ?? 'N/A' }}" {{ old('material_name_id', $materialStock->material_name_id ?? '') == $material->id ? 'selected' : '' }}>
+                                        {{ $material->name }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
                         @endforeach
                     @else
                         <option disabled>No materials available. Please create a material name first.</option>
@@ -115,12 +125,12 @@
     </div>
 
     <!-- Hangar Allocation Section -->
-    <div class="row">
+    <div class="row" id="hangar_allocation_section" style="display: none;">
         <div class="col-sm-12 col-md-12">
             <div class="form-group">
-                <label class="form-label">Hangar Allocation <span class="text-red">*</span></label>
+                <label class="form-label">Hangar Allocation <span class="text-red" id="hangar_required_asterisk">*</span></label>
                 <small class="form-text text-muted d-block mb-3">Select hangars and enter quantity for each. You can add up to 10 hangars.</small>
-                
+
                 <div id="hangars_allocation_container" class="bg-light rounded-lg p-0" style="border: 1px solid #dee2e6; background-color: #f8f9fa !important; display: none;">
                     <!-- Hangar rows will be generated here -->
                 </div>
@@ -252,48 +262,89 @@
             });
         }
 
+        // Toggle hangar allocation section based on material type
+        function toggleHangarAllocationSection() {
+            var materialId = $('#material_name_id').val();
+            var selectedOption = $('#material_name_id option:selected');
+            var materialType = selectedOption.data('type') || '';
+
+            // Check if material type is "Feed Stock" (case-insensitive)
+            var isFeedStock = materialType.toLowerCase() === 'feed stock';
+
+            if (isFeedStock) {
+                // Hide hangar allocation for feed stock
+                $('#hangar_allocation_section').slideUp(300);
+                $('#hangar_required_asterisk').hide();
+                // Clear hangar data when hiding
+                $('#hangars_allocation_container').html('');
+                $('#hangar_quantities_json').val('');
+            } else {
+                // Show hangar allocation for non-feed stock materials
+                $('#hangar_allocation_section').slideDown(300);
+                $('#hangar_required_asterisk').show();
+            }
+        }
+
+        // When material changes, toggle hangar allocation visibility
+        $('#material_name_id').on('change', function() {
+            toggleHangarAllocationSection();
+            // Also reload hangars if farm is selected
+            var farmId = $('#farm_id').val();
+            if (farmId) {
+                loadHangarsForFarm(farmId);
+            }
+        });
+
         // When farm changes, reload hangars
         $('#farm_id').on('change', function() {
             var farmId = $(this).val();
             loadHangarsForFarm(farmId);
         });
 
-        // On page load (edit mode), load hangars if farm is selected
+        // On page load (edit mode), load hangars if farm is selected and toggle hangar section
         @if(isset($materialStock))
             var farmId = $('#farm_id').val();
             if (farmId) {
                 loadHangarsForFarm(farmId);
             }
+            toggleHangarAllocationSection();
+        @else
+            // On create mode, toggle hangar section based on selected material
+            toggleHangarAllocationSection();
         @endif
 
         // Form validation on submit
         $('#material_stock_form').on('submit', function(e) {
+            var materialType = $('#material_name_id option:selected').data('type') || '';
+            var isFeedStock = materialType.toLowerCase() === 'feed stock';
             var selectedHangars = [];
             var totalQty = 0;
             var hasError = false;
 
-            $('.hangar-quantity-input').each(function() {
-                var hangarId = $(this).data('hangar-id');
-                var quantity = parseFloat($(this).val()) || 0;
-                var remainingQtyText = $('input[name="hangar_remaining_qty[' + hangarId + ']"]').val();
+            // Only validate hangar allocation if it's not feed stock
+            if (!isFeedStock) {
+                $('.hangar-quantity-input').each(function() {
+                    var hangarId = $(this).data('hangar-id');
+                    var quantity = parseFloat($(this).val()) || 0;
+                    var remainingQtyText = $('input[name="hangar_remaining_qty[' + hangarId + ']"]').val();
 
-                // Convert comma to period for calculation
-                var remainingQty = parseFloat(remainingQtyText.replace(',', '.')) || 0;
+                    // Convert comma to period for calculation
+                    var remainingQty = parseFloat(remainingQtyText.replace(',', '.')) || 0;
 
-                if (quantity > 0) {
-                    totalQty += quantity;
-                    selectedHangars.push({
-                        hangar_id: hangarId,
-                        quantity: quantity,
-                        remaining_quantity: remainingQty
-                    });
-                }
-            });
+                    if (quantity > 0) {
+                        totalQty += quantity;
+                        selectedHangars.push({
+                            hangar_id: hangarId,
+                            quantity: quantity,
+                            remaining_quantity: remainingQty
+                        });
+                    }
+                });
 
-            if (selectedHangars.length === 0) {
-                e.preventDefault();
-                swal({
-                    title: 'Validation Error',
+                if (selectedHangars.length === 0) {
+                    e.preventDefault();
+                    swal({
+                        title: 'Validation Error',
                     text: 'Please select at least one hangar with quantity.',
                     icon: 'warning',
                     button: 'OK'
@@ -314,20 +365,24 @@
                 return false;
             }
 
-            // Validate that total hangar quantities match total quantity
-            if (Math.abs(totalQty - qty) > 0.01) {
-                e.preventDefault();
-                swal({
-                    title: 'Validation Error',
-                    text: 'Total of hangar quantities (' + totalQty.toFixed(2) + ') must equal total quantity (' + qty.toFixed(2) + ').',
-                    icon: 'warning',
-                    button: 'OK'
-                });
-                return false;
-            }
+                // Validate that total hangar quantities match total quantity
+                if (Math.abs(totalQty - qty) > 0.01) {
+                    e.preventDefault();
+                    swal({
+                        title: 'Validation Error',
+                        text: 'Total of hangar quantities (' + totalQty.toFixed(2) + ') must equal total quantity (' + qty.toFixed(2) + ').',
+                        icon: 'warning',
+                        button: 'OK'
+                    });
+                    return false;
+                }
 
-            // Store hangar data for submission - this will be sent as JSON
-            $('#hangar_quantities_json').val(JSON.stringify(selectedHangars));
+                // Store hangar data for submission - this will be sent as JSON
+                $('#hangar_quantities_json').val(JSON.stringify(selectedHangars));
+            } else {
+                // For feed stock materials, set empty hangar data
+                $('#hangar_quantities_json').val(JSON.stringify([]));
+            }
         });
     });
 </script>

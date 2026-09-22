@@ -58,7 +58,8 @@
                                     <th>Chicks Supplier</th>
                                     <th>Breed</th>
                                     <th>Start Date</th>
-                                    <th>Total Quantity</th>
+                                    <th>Birds</th>
+                                    <th>Remaining Birds</th>
                                     <th>Hangar 1</th>
                                     <th>Hangar 2</th>
                                     <th>Hangar 3</th>
@@ -134,7 +135,8 @@
             { data: 'chicks_supplier', name: 'chicks_supplier' },
             { data: 'breed', name: 'breed' },
             { data: 'start_date', name: 'start_date' },
-            { data: 'total_quantity', name: 'total_quantity' }
+            { data: 'birds', name: 'birds' },
+            { data: 'remaining_birds', name: 'remaining_birds' }
         ];
 
         // Add exactly 10 fixed hangar columns (hangar1 through hangar10)

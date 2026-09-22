@@ -9,6 +9,7 @@ use App\Models\Farm;
 use App\Models\ChicksSupplier;
 use App\Models\Hangar;
 use App\Models\FlockHangar;
+use App\Models\FlockEnd;
 use App\Models\Admin;
 use App\Helpers\FlockNamingHelper;
 use Illuminate\Support\Facades\Session;
@@ -83,6 +84,23 @@ class FlockController extends Controller
                         $farmDisplay .= ' (Assigned to: ' . $group['farm']->assignedAdmin->name . ')';
                     }
 
+                    // Calculate total remaining birds by getting the latest remaining_birds for each hangar
+                    $remainingBirds = 0;
+                    foreach ($flock->flockHangarAllocations as $allocation) {
+                        // Get the latest FlockEnd record for this hangar
+                        $lastHarvest = FlockEnd::where('flock_id', $flock->id)
+                            ->where('hangar_id', $allocation->hangar_id)
+                            ->latest()
+                            ->first();
+
+                        // If there's a harvest, use remaining_birds from that, otherwise use allocation quantity
+                        if ($lastHarvest) {
+                            $remainingBirds += $lastHarvest->remaining_birds;
+                        } else {
+                            $remainingBirds += $allocation->quantity;
+                        }
+                    }
+
                     $rowData = [
                         'id' => $flock->id,
                         'farm_id' => $flock->farm_id,
@@ -91,7 +109,8 @@ class FlockController extends Controller
                         'chicks_supplier' => $flock->chicksSupplier->name ?? 'N/A',
                         'breed' => $flock->breed,
                         'start_date' => $flock->start_date,
-                        'total_quantity' => $flock->total_quantity,
+                        'birds' => $flock->total_quantity,
+                        'remaining_birds' => $remainingBirds,
                         'created_by' => $flock->creator->name ?? 'N/A',
                         'created_at' => $flock->created_at,
                     ];
@@ -120,6 +139,12 @@ class FlockController extends Controller
                 })
                 ->addColumn('start_date', function($row) {
                     return date('Y-m-d', strtotime($row['start_date']));
+                })
+                ->addColumn('birds', function($row) {
+                    return $row['birds'] ?? 'N/A';
+                })
+                ->addColumn('remaining_birds', function($row) {
+                    return $row['remaining_birds'] ?? 'N/A';
                 })
                 ->addColumn('created_by', function($row) {
                     return $row['created_by'];

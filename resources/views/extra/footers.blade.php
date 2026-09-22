@@ -56,7 +56,7 @@
 														</ul>
 													</div>
 													<div class="col-lg-12 col-sm-12 mt-3 mt-lg-0 text-center">
-														Copyright © 2020 <a href="#">Admintro</a>. Designed by <a href="#">Spruko Technologies Pvt.Ltd</a> All rights reserved.
+														Copyright © 2020 <a href="#">EYT</a>. Designed by <a href="#">EYETACT</a> All rights reserved.
 													</div>
 												</div>
 											</div>
@@ -103,7 +103,7 @@
 														</div>
 													</div>
 													<div class="col-lg-6 col-sm-12 col-md-7 mt-3 mt-lg-0 text-md-right">
-														Copyright © 2020 <a href="#">Admintro</a>.All rights reserved.
+														Copyright © 2020 <a href="#">EYT</a>.All rights reserved.
 													</div>
 												</div>
 											</div>
@@ -159,7 +159,7 @@
 												</div>
 												<div class="row align-items-center flex-row-reverse border-top">
 													<div class="col-lg-12 col-sm-12 mt-lg-0 text-center p-3">
-														Copyright © 2020 <a href="#">Admintro</a>. Designed by <a href="#">Spruko Technologies Pvt.Ltd</a> All rights reserved.
+														Copyright © 2020 <a href="#">EYT</a>. Designed by <a href="#">EYETACT</a> All rights reserved.
 													</div>
 												</div>
 											</div>
@@ -184,7 +184,7 @@
 												<div class="p-4">
 													<div class="row align-items-center">
 														<div class="col-lg-6 col-md-6 d-md-block ">
-															Copyright © 2020 <a href="#">Admintro</a>.
+															Copyright © 2020 <a href="#">EYT</a>.
 														</div>
 														<div class="col-lg-6 col-md-6 text-right privacy">
 															<a href="#" class="btn btn-link" >Privacy</a>
@@ -216,7 +216,7 @@
 											<div class="container">
 												<div class="row align-items-center flex-row-reverse">
 													<div class="col-lg-12 col-sm-12 mt-3 mt-lg-0 text-center">
-														Copyright © 2020 <a href="#">Admintro</a>. Designed by <a href="#">Spruko Technologies Pvt.Ltd</a> All rights reserved.
+														Copyright © 2020 <a href="#">EYT</a>. Designed by <a href="#">EYETACT</a> All rights reserved.
 													</div>
 												</div>
 											</div>

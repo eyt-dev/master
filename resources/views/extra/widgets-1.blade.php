@@ -615,7 +615,7 @@
 										</div>
 									</div>
 									<div class="card-footer text-secondary border-top">
-										Email: <span class="text-primary">victoriacott@Admintro.com</span>
+										Email: <span class="text-primary">victoriacott@EYT.com</span>
 									</div>
 								</div>
 							</div>
@@ -635,7 +635,7 @@
 										</div>
 									</div>
 									<div class="card-footer text-secondary border-top">
-										Email: <span class="text-primary">thomasjaim@Admintro.com</span>
+										Email: <span class="text-primary">thomasjaim@EYT.com</span>
 									</div>
 								</div>
 							</div>
@@ -655,7 +655,7 @@
 										</div>
 									</div>
 									<div class="card-footer text-secondary border-top">
-										Email: <span class="text-primary">rebbacawisely@Admintro.com</span>
+										Email: <span class="text-primary">rebbacawisely@EYT.com</span>
 									</div>
 								</div>
 							</div>

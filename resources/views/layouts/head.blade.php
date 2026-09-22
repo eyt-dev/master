@@ -1,5 +1,5 @@
 <!-- Title -->
-<title>Admitro - Admin Panel HTML template</title>
+<title>EYT - CRM</title>
 
 <!--Favicon -->
 <link rel="icon" href="{{URL::asset('assets/images/brand/favicon.ico')}}" type="image/x-icon"/>

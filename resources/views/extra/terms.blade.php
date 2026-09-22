@@ -27,7 +27,7 @@
 							<div class="col-md-12">
 								<div class="card overflow-hidden">
 									<div class="card-header">
-										<h4 class="card-title">Welcome to Admintro</h4>
+										<h4 class="card-title">Welcome to EYT</h4>
 									</div>
 									<div class="card-body">
 

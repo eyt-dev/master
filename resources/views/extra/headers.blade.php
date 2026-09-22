@@ -34,8 +34,8 @@
 											<div class="container">
 												<div class="d-flex">
 													<a class="header-brand" href="{{url('/' . $page='index')}}">
-														<img src="{{URL::asset('assets/images/brand/logo.png')}}" class="header-brand-img desktop-lgo" alt="Admintro logo">
-														<img src="{{URL::asset('assets/images/brand/logo1.png')}}" class="header-brand-img dark-logo" alt="Admintro logo">
+														<img src="{{URL::asset('assets/images/brand/logo.png')}}" class="header-brand-img desktop-lgo" alt="EYT logo">
+														<img src="{{URL::asset('assets/images/brand/logo1.png')}}" class="header-brand-img dark-logo" alt="EYT logo">
 													</a>
 													<div class="d-flex order-lg-2 ml-auto">
 														<div class="dropdown d-none d-md-flex mt-1" >
@@ -179,8 +179,8 @@
 											<div class="container">
 												<div class="d-flex">
 													<a class="header-brand" href="{{url('/' . $page='index')}}">
-														<img src="{{URL::asset('assets/images/brand/logo1.png')}}" class="header-brand-img desktop-lgo" alt="Admintro logo">
-														<img src="{{URL::asset('assets/images/brand/logo1.png')}}" class="header-brand-img dark-logo" alt="Admintro logo">
+														<img src="{{URL::asset('assets/images/brand/logo1.png')}}" class="header-brand-img desktop-lgo" alt="EYT logo">
+														<img src="{{URL::asset('assets/images/brand/logo1.png')}}" class="header-brand-img dark-logo" alt="EYT logo">
 													</a>
 													<div class="d-flex order-lg-2 ml-auto">
 														<div class="defaultheader d-none d-lg-flex">
@@ -331,8 +331,8 @@
 											<div class="container-fluid">
 												<div class="d-flex">
 													<a class="header-brand" href="{{url('/' . $page='index')}}">
-														<img src="{{URL::asset('assets/images/brand/logo.png')}}" class="header-brand-img desktop-lgo" alt="Admintro logo">
-														<img src="{{URL::asset('assets/images/brand/logo1.png')}}" class="header-brand-img dark-logo" alt="Admintro logo">
+														<img src="{{URL::asset('assets/images/brand/logo.png')}}" class="header-brand-img desktop-lgo" alt="EYT logo">
+														<img src="{{URL::asset('assets/images/brand/logo1.png')}}" class="header-brand-img dark-logo" alt="EYT logo">
 													</a>
 													<div class="d-flex order-lg-2 ml-auto">
 														<a href="#" data-toggle="search" class="nav-link nav-link-lg d-md-none navsearch">
@@ -464,8 +464,8 @@
 											<div class="container-fluid">
 												<div class="d-flex">
 													<a class="header-brand" href="{{url('/' . $page='index')}}">
-														<img src="{{URL::asset('assets/images/brand/logo.png')}}" class="header-brand-img desktop-lgo" alt="Admintro logo">
-														<img src="{{URL::asset('assets/images/brand/logo1.png')}}" class="header-brand-img dark-logo" alt="Admintro logo">
+														<img src="{{URL::asset('assets/images/brand/logo.png')}}" class="header-brand-img desktop-lgo" alt="EYT logo">
+														<img src="{{URL::asset('assets/images/brand/logo1.png')}}" class="header-brand-img dark-logo" alt="EYT logo">
 													</a>
 
 													<div class="d-flex order-lg-2 ml-auto">
@@ -572,8 +572,8 @@
 											<div class="container-fluid">
 												<div class="d-flex">
 													<a class="header-brand" href="{{url('/' . $page='index')}}">
-														<img src="{{URL::asset('assets/images/brand/logo1.png')}}" class="header-brand-img desktop-lgo" alt="Admintro logo">
-														<img src="{{URL::asset('assets/images/brand/logo1.png')}}" class="header-brand-img dark-logo" alt="Admintro logo">
+														<img src="{{URL::asset('assets/images/brand/logo1.png')}}" class="header-brand-img desktop-lgo" alt="EYT logo">
+														<img src="{{URL::asset('assets/images/brand/logo1.png')}}" class="header-brand-img dark-logo" alt="EYT logo">
 													</a>
 													<div class="d-flex order-lg-2 ml-auto">
 														<a href="#" data-toggle="search" class="nav-link nav-link-lg d-md-none navsearch">

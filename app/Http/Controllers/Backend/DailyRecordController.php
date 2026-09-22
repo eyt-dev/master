@@ -271,10 +271,18 @@ class DailyRecordController extends Controller
             })
             ->get()
             ->map(function($allocation) {
+                // Calculate total mortality for this hangar and flock
+                $totalMortality = DailyRecord::where('flock_id', $allocation->flock_id)
+                    ->where('hangar_id', $allocation->hangar_id)
+                    ->sum('mortality');
+
+                $remaining = (int)$allocation->quantity - $totalMortality;
+
                 return [
                     'id' => $allocation->hangar->id,
                     'name' => $allocation->hangar->name,
-                    'quantity' => $allocation->quantity
+                    'quantity' => $allocation->quantity,
+                    'remaining' => max(0, $remaining)
                 ];
             });
 

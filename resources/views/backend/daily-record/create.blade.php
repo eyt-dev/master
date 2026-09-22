@@ -177,7 +177,7 @@
                                     <div class="row">
                                         <div class="col-md-12 mb-3">
                                             <h6 class="mb-0" style="color: #007bff;">
-                                                <i class="fe fe-home mr-2"></i>${hangar.name} (Allocated: ${hangar.quantity})
+                                                <i class="fe fe-home mr-2"></i>${hangar.name} (Allocated: ${hangar.quantity}, Remaining: ${hangar.remaining})
                                             </h6>
                                         </div>
                                     </div>
@@ -199,7 +199,7 @@
                                         ${breedType === 'Broiler' ? `
                                             <div class="col-md-3">
                                                 <div class="form-group mb-0">
-                                                    <label class="form-label mb-1" style="font-size: 0.85rem;">Chicks Weight (Kg)</label>
+                                                    <label class="form-label mb-1" style="font-size: 0.85rem;">Chicks Weight (g)</label>
                                                     <input type="text" class="form-control chicks-weight-input" name="hangar_chicks_weight[${hangar.id}]"
                                                         value="${chicksWeightValue}" placeholder="0,00" data-hangar-id="${hangar.id}" />
                                                 </div>

@@ -167,15 +167,13 @@
     </div>
 
     <div class="row">
-        <!-- Net Weight -->
+        <!-- Net Weight (Auto Calculated) -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="net_weight" class="form-label">Net Weight <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="net_weight" id="net_weight" placeholder="Net Weight" 
-                    value="{{ old('net_weight', $chickenSale->net_weight ?? '') }}" required="" step="0.01" min="0" />
-                @error('net_weight')
-                    <label id="net_weight-error" class="error" for="net_weight">{{ $message }}</label>
-                @enderror
+                <label for="net_weight" class="form-label">Net Weight (Auto)</label>
+                <input type="number" class="form-control" name="net_weight" id="net_weight" placeholder="Auto Calculated"
+                    value="{{ old('net_weight', $chickenSale->net_weight ?? '') }}" readonly step="0.01" min="0" />
+                <small class="text-muted">Gross Weight - (Weight per Cage × Cages Count)</small>
             </div>
         </div>
 
@@ -335,6 +333,23 @@
             }
         });
 
+        // Calculate net weight: gross_weight - (cages_weight * cages_count)
+        function calculateNetWeight() {
+            var grossWeight = parseFloat($('#gross_weight').val()) || 0;
+            var cagesWeight = parseFloat($('#cages_weight').val()) || 0;
+            var cagesCount = parseFloat($('#cages_count').val()) || 0;
+
+            if (grossWeight > 0 && cagesWeight > 0 && cagesCount > 0) {
+                var netWeight = (grossWeight - (cagesWeight * cagesCount)).toFixed(2);
+                $('#net_weight').val(netWeight);
+                calculateAvgWeight();
+            } else {
+                $('#net_weight').val('');
+                $('#avg_weight_per_bird').val('');
+                $('#avg_weight').val('');
+            }
+        }
+
         // Calculate total quantity (Cages × Birds per Cage)
         function calculateQuantity() {
             var cagesCount = parseFloat($('#cages_count').val()) || 0;
@@ -343,18 +358,19 @@
             if (cagesCount > 0 && birdsPerCage > 0) {
                 var totalQty = Math.round(cagesCount * birdsPerCage);
                 $('#quantity_display').val(totalQty);
-                calculateAvgWeight(totalQty);
+                calculateNetWeight();
             } else {
                 $('#quantity_display').val('');
+                $('#net_weight').val('');
                 $('#avg_weight_per_bird').val('');
                 $('#avg_weight').val('');
             }
         }
 
         // Calculate average weight per bird
-        function calculateAvgWeight(quantity) {
+        function calculateAvgWeight() {
             var netWeight = parseFloat($('#net_weight').val()) || 0;
-            var totalQty = quantity || parseFloat($('#quantity_display').val()) || 0;
+            var totalQty = parseFloat($('#quantity_display').val()) || 0;
 
             if (netWeight > 0 && totalQty > 0) {
                 var avgWeight = (netWeight / totalQty).toFixed(2);
@@ -371,8 +387,8 @@
             calculateQuantity();
         });
 
-        $('#net_weight').on('change keyup', function() {
-            calculateAvgWeight();
+        $('#gross_weight, #cages_weight').on('change keyup', function() {
+            calculateNetWeight();
         });
 
         // Trigger calculations on page load if editing

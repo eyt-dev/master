@@ -21,6 +21,7 @@ class FlockEnd extends Model
         'available_birds',
         'remaining_birds',
         'total_weight',
+        'net_weight',
         'avg_weight_per_bird',
         'notes',
         'ended_by',
@@ -30,6 +31,7 @@ class FlockEnd extends Model
         'sale_date' => 'date',
         'cages_weight' => 'decimal:2',
         'total_weight' => 'decimal:2',
+        'net_weight' => 'decimal:2',
         'avg_weight_per_bird' => 'decimal:2',
     ];
 

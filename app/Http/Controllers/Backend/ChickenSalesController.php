@@ -62,7 +62,7 @@ class ChickenSalesController extends Controller
                     return $row->total_birds_harvested ?? 'N/A';
                 })
                 ->addColumn('net_weight', function($row) {
-                    return $row->total_weight ?? 'N/A';
+                    return $row->net_weight ?? 'N/A';
                 })
                 ->addColumn('avg_weight_per_bird', function($row) {
                     return round($row->avg_weight_per_bird, 2);
@@ -179,6 +179,7 @@ class ChickenSalesController extends Controller
 
             $remainingBirds = $availableBirds - $totalBirdsHarvested;
             $saleDate = \Carbon\Carbon::createFromFormat('Y-m-d', $request->sale_date);
+            $netWeight = $request->gross_weight - ($request->cages_weight * $request->cages_count);
 
             $flockEnd = FlockEnd::create([
                 'flock_id' => $request->flock_id,
@@ -192,6 +193,7 @@ class ChickenSalesController extends Controller
                 'available_birds' => $availableBirds,
                 'remaining_birds' => $remainingBirds,
                 'total_weight' => $request->gross_weight,
+                'net_weight' => $netWeight,
                 'avg_weight_per_bird' => $request->avg_weight,
                 'notes' => $request->notes,
                 'ended_by' => auth()->id()
@@ -333,6 +335,7 @@ class ChickenSalesController extends Controller
 
             $remainingBirds = $availableBirds - $totalBirdsHarvested;
             $saleDate = \Carbon\Carbon::createFromFormat('Y-m-d', $request->sale_date);
+            $netWeight = $request->gross_weight - ($request->cages_weight * $request->cages_count);
 
             $flockEnd->update([
                 'flock_id' => $request->flock_id,
@@ -346,6 +349,7 @@ class ChickenSalesController extends Controller
                 'available_birds' => $availableBirds,
                 'remaining_birds' => $remainingBirds,
                 'total_weight' => $request->gross_weight,
+                'net_weight' => $netWeight,
                 'avg_weight_per_bird' => $request->avg_weight,
                 'notes' => $request->notes,
             ]);

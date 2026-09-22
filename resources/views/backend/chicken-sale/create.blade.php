@@ -191,6 +191,19 @@
     <div class="row">
         <div class="col-sm-12">
             <div class="form-group">
+                <label class="form-label">Last 4 Net Weights from Previous Sales</label>
+                <div id="last_net_weights_container" class="alert alert-info" style="display: none;">
+                    <small class="text-muted d-block mb-2">Previous net weights for reference:</small>
+                    <div id="last_net_weights_list"></div>
+                </div>
+                <small class="text-muted d-block">Select a flock above to see previous net weights</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="form-group">
                 <label class="form-label">Batch Weights (Optional)</label>
                 <small class="text-muted d-block mb-2">Enter weight for each batch (leave blank if not applicable)</small>
             </div>
@@ -315,12 +328,14 @@
             }
         });
 
-        // Load hangars when flock is selected
+        // Load hangars and last net weights when flock is selected
         $('#flock_id').on('change', function() {
             var flockId = $(this).val();
             $('#hangar_id').html('<option value="">Select Hangar</option>');
-            
+            $('#last_net_weights_container').hide();
+
             if (flockId) {
+                // Fetch hangars
                 $.ajax({
                     url: "{{ route('chicken-sale.hangars-by-flock', ['username' => $siteSlug, 'flock' => ':flock']) }}".replace(':flock', flockId),
                     type: 'GET',
@@ -328,6 +343,23 @@
                         hangars.forEach(function(hangar) {
                             $('#hangar_id').append('<option value="' + hangar.id + '">' + hangar.name + '</option>');
                         });
+                    }
+                });
+
+                // Fetch last 4 net weights
+                $.ajax({
+                    url: "{{ route('chicken-sale.last-net-weights', ['username' => $siteSlug, 'flock' => ':flock']) }}".replace(':flock', flockId),
+                    type: 'GET',
+                    success: function(netWeights) {
+                        if (netWeights && netWeights.length > 0) {
+                            var htmlContent = '<div class="row">';
+                            netWeights.forEach(function(weight, index) {
+                                htmlContent += '<div class="col-md-3"><strong>Sale ' + (index + 1) + ':</strong> <span class="badge badge-primary">' + parseFloat(weight).toFixed(2) + ' kg</span></div>';
+                            });
+                            htmlContent += '</div>';
+                            $('#last_net_weights_list').html(htmlContent);
+                            $('#last_net_weights_container').show();
+                        }
                     }
                 });
             }

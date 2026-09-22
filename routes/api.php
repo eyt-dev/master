@@ -163,6 +163,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
         Route::get('flock-ends/{id}', [Add2FarmFlockEndController::class, 'show']);
         Route::put('flock-ends/{id}', [Add2FarmFlockEndController::class, 'update']);
         Route::delete('flock-ends/{id}', [Add2FarmFlockEndController::class, 'destroy']);
+        Route::get('flock-ends/last-net-weights/{flock_id}', [Add2FarmFlockEndController::class, 'getLastNetWeights']);
     });
 
     // Daily Records - Type 3 (Supervisor) and Type 4 (Farmer)

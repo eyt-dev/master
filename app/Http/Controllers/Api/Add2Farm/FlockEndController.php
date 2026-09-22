@@ -623,6 +623,68 @@ class FlockEndController extends BaseController
         }
     }
 
+    /**
+     * Get last 4 net weights for a flock
+     *
+     * Retrieve the last 4 net weights from chicken sales for a specific flock.
+     *
+     * @authenticated
+     * @urlParam flock_id integer required The flock ID. Example: 7
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Net weights retrieved successfully.",
+     *   "data": [431.5, 425.0, 420.5, 415.0]
+     * }
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Flock not found."
+     * }
+     */
+    public function getLastNetWeights($flock_id)
+    {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
+        $user = auth()->user();
+
+        $flock = Flock::whereHas('farm', function ($q) use ($user) {
+                $q->where(function ($q) use ($user) {
+                    $q->where('created_by', $user->id)
+                      ->orWhere('assigned_to', $user->id)
+                      ->orWhereHas('assignedAdmins', function ($sq) use ($user) {
+                          $sq->where('admin_id', $user->id);
+                      });
+                });
+            })
+            ->find($flock_id);
+
+        if (!$flock) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Flock not found.',
+            ], 404);
+        }
+
+        $lastNetWeights = FlockEnd::where('flock_id', $flock_id)
+            ->orderBy('created_at', 'desc')
+            ->limit(4)
+            ->pluck('net_weight')
+            ->reverse()
+            ->values()
+            ->toArray();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Net weights retrieved successfully.',
+            'data' => $lastNetWeights,
+        ]);
+    }
+
     private function formatFlockEnd(FlockEnd $flockEnd): array
     {
         $mortality = $flockEnd->available_birds - $flockEnd->total_birds_harvested;

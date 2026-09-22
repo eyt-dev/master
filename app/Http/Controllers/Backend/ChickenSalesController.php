@@ -139,6 +139,40 @@ class ChickenSalesController extends Controller
         return response()->json($hangars);
     }
 
+    public function getLastNetWeights($siteUrl, $flockId)
+    {
+        $user = auth()->user();
+
+        // Verify user has access to this flock
+        if ($user->role !== 'SuperAdmin') {
+            $flock = Flock::with('farm')->find($flockId);
+
+            if (!$flock) {
+                return response()->json([], 404);
+            }
+
+            $hasAccess = $flock->farm && (
+                $flock->farm->created_by === $user->id ||
+                $flock->farm->assigned_to === $user->id ||
+                $flock->farm->assignedAdmins->contains('id', $user->id)
+            );
+
+            if (!$hasAccess) {
+                return response()->json([], 403);
+            }
+        }
+
+        $lastNetWeights = FlockEnd::where('flock_id', $flockId)
+            ->orderBy('created_at', 'desc')
+            ->limit(4)
+            ->pluck('net_weight')
+            ->reverse()
+            ->values()
+            ->toArray();
+
+        return response()->json($lastNetWeights);
+    }
+
     public function store(Request $request, $siteUrl)
     {
         $request->validate([

@@ -7,9 +7,9 @@ use App\Models\Flock;
 class FlockHelper
 {
     /**
-     * Get flock label - uses the flock name field directly
+     * Get flock label - includes farm name and flock name
      * Example: Farm1-Flock1
-     * 
+     *
      * @param Flock|null $flock
      * @return string
      */
@@ -18,14 +18,17 @@ class FlockHelper
         if (!$flock) {
             return 'N/A';
         }
-        
-        // Use the flock name field directly if available
+
+        // Get farm name if farm relationship is loaded
+        $farmName = $flock->farm?->name ?? 'N/A';
+
+        // Use both farm and flock name if flock name is available
         if ($flock->name) {
-            return $flock->name;
+            return $farmName . '-' . $flock->name;
         }
-        
-        // Fallback to N/A if no name exists
-        return 'N/A';
+
+        // Fallback to farm name only if no flock name exists
+        return $farmName;
     }
 
     /**

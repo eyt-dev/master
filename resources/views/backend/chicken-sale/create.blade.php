@@ -49,7 +49,7 @@
                     @if(isset($flocks))
                         @foreach($flocks as $flock)
                             <option value="{{ $flock->id }}" {{ old('flock_id', $chickenSale->flock_id ?? '') == $flock->id ? 'selected' : '' }}>
-                                {{ $flock->name }} - {{ $flock->breed }}
+                                {{ ($flock->farm->name ?? 'N/A') }}-{{ $flock->name }} - {{ $flock->breed }}
                             </option>
                         @endforeach
                     @endif
@@ -321,7 +321,7 @@
                     type: 'GET',
                     success: function(flocks) {
                         flocks.forEach(function(flock) {
-                            $('#flock_id').append('<option value="' + flock.id + '">' + flock.name + ' - ' + flock.breed + '</option>');
+                            $('#flock_id').append('<option value="' + flock.id + '">' + flock.display_name + ' - ' + flock.breed + '</option>');
                         });
                     }
                 });

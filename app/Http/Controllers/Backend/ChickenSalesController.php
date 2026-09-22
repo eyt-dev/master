@@ -106,7 +106,10 @@ class ChickenSalesController extends Controller
 
     public function getFlocksByFarm($siteUrl, $farmId)
     {
-        $flocks = Flock::where('farm_id', $farmId)->get();
+        $flocks = Flock::with('farm')->where('farm_id', $farmId)->get();
+        $flocks->each(function($flock) {
+            $flock->display_name = ($flock->farm->name ?? 'N/A') . '-' . $flock->name;
+        });
         return response()->json($flocks);
     }
 
@@ -295,7 +298,7 @@ class ChickenSalesController extends Controller
                          ->get();
         }
 
-        $flocks = Flock::where('farm_id', $flockEnd->flock->farm_id)->get();
+        $flocks = Flock::with('farm')->where('farm_id', $flockEnd->flock->farm_id)->get();
         $hangars = Hangar::whereHas('flocks', function($query) use ($flockEnd) {
             $query->where('flock_id', $flockEnd->flock_id);
         })->get();

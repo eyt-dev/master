@@ -1867,3 +1867,101 @@ hr.divider:after {
 .page-content .input-group .form-control:focus {
   border-color: #ffffff;
 }
+
+// Dashboard Dynamic Module Cards
+.dash1-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 12px;
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .card-body {
+    padding: 1.5rem;
+  }
+
+  .number-font {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+  }
+
+  .module-icon {
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+
+    &.bg-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    }
+
+    &.bg-success {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+    }
+
+    &.bg-danger {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%) !important;
+    }
+
+    &.bg-warning {
+      background: linear-gradient(135deg, #ffa751 0%, #ffe259 100%) !important;
+    }
+
+    &.bg-info {
+      background: linear-gradient(135deg, #30cfd0 0%, #330867 100%) !important;
+    }
+
+    &.bg-secondary {
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%) !important;
+    }
+
+    &.bg-dark {
+      background: linear-gradient(135deg, #373b44 0%, #4286f4 100%) !important;
+    }
+  }
+}
+
+.dash1-card:hover {
+  .module-icon {
+    transform: scale(1.1);
+  }
+}
+
+// Module Category Headers
+.page-content {
+  h5 {
+    color: #2c3e50;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.75rem;
+  }
+}
+
+// Card Link styling
+a.text-decoration-none {
+  &:hover {
+    text-decoration: none !important;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .dash1-card {
+    .number-font {
+      font-size: 1.75rem;
+    }
+
+    .module-icon {
+      width: 40px !important;
+      height: 40px !important;
+
+      i {
+        font-size: 1rem !important;
+      }
+    }
+  }
+}

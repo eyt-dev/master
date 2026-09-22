@@ -93,9 +93,7 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::post('register', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
 
                 Route::middleware(['auth', 'identify.tenant'])->group(function () {
-                    Route::get('/dashboard', function () {
-                        return view('index');
-                    })->name('dashboard');
+                    Route::get('/dashboard', [App\Http\Controllers\Backend\HomeController::class, 'index'])->name('dashboard');
                     Route::controller(ProfileController::class)->prefix('profile')->group(function () {
                         Route::get('/', 'index')->name('profile.index');
                         Route::get('{id?}', 'index')->name('profile.index');
@@ -434,9 +432,7 @@ if ($currentHost === config('domains.admin_subdomain')) {
         
         Route::group(['prefix' => '{username}'], function () {
             Route::middleware(['auth', 'identify.tenant'])->group(function () {
-                Route::get('/dashboard', function () {
-                return view('index');
-            })->name('dashboard');
+                Route::get('/dashboard', [App\Http\Controllers\Backend\HomeController::class, 'index'])->name('dashboard');
             Route::controller(ProfileController::class)->prefix('profile')->group(function () {
                 Route::get('/', 'index')->name('profile.index');
                 Route::get('{id?}', 'index')->name('profile.index');

@@ -160,6 +160,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
     Route::middleware(['auth:sanctum', 'check.admin.type:0,1,2,3'])->group(function () {
         Route::get('flock-ends', [Add2FarmFlockEndController::class, 'index']);
         Route::post('flock-ends', [Add2FarmFlockEndController::class, 'store']);
+        Route::post('flock-ends/calculate-net-weight', [Add2FarmFlockEndController::class, 'calculateNetWeight']);
         Route::get('flock-ends/{id}', [Add2FarmFlockEndController::class, 'show']);
         Route::put('flock-ends/{id}', [Add2FarmFlockEndController::class, 'update']);
         Route::delete('flock-ends/{id}', [Add2FarmFlockEndController::class, 'destroy']);

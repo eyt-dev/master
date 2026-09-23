@@ -359,6 +359,14 @@
                             htmlContent += '</div>';
                             $('#last_net_weights_list').html(htmlContent);
                             $('#last_net_weights_container').show();
+
+                            // Auto-fill batch weight textboxes with last 4 net weights
+                            netWeights.forEach(function(weight, index) {
+                                var inputId = '#batch_weight_' + (index + 1);
+                                if ($(inputId).length) {
+                                    $(inputId).val(parseFloat(weight).toFixed(2));
+                                }
+                            });
                         }
                     }
                 });

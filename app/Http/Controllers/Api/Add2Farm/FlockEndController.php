@@ -321,6 +321,7 @@ class FlockEndController extends BaseController
                 'available_birds' => $availableBirds,
                 'remaining_birds' => $remainingBirds,
                 'total_weight' => $request->gross_weight,
+                'net_weight' => $request->net_weight,
                 'avg_weight_per_bird' => $request->avg_weight,
                 'notes' => $request->notes,
                 'ended_by' => auth()->id(),
@@ -497,6 +498,7 @@ class FlockEndController extends BaseController
                 'available_birds' => $availableBirds,
                 'remaining_birds' => $remainingBirds,
                 'total_weight' => $request->gross_weight,
+                'net_weight' => $request->net_weight,
                 'avg_weight_per_bird' => $request->avg_weight,
                 'notes' => $request->notes,
             ]);
@@ -685,6 +687,73 @@ class FlockEndController extends BaseController
         ]);
     }
 
+    /**
+     * Calculate net weight from gross weight
+     *
+     * Calculate net weight based on gross weight and optional batch weights.
+     * This endpoint is used to compute netweight before saving.
+     *
+     * @authenticated
+     * @bodyParam gross_weight decimal required Total gross weight (kg). Example: 450
+     * @bodyParam batch_weights array optional Array of batch weights. Example: [225, 225]
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Net weight calculated successfully.",
+     *   "data": {
+     *     "gross_weight": 450,
+     *     "batch_weights": [225, 225],
+     *     "net_weight": 450
+     *   }
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "errors": {"gross_weight": ["The gross weight must be at least 0."]}
+     * }
+     */
+    public function calculateNetWeight(Request $request)
+    {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated. Please provide a valid authentication token.',
+            ], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'gross_weight' => 'required|numeric|min:0',
+            'batch_weights' => 'nullable|array',
+            'batch_weights.*' => 'numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $grossWeight = (float) $request->gross_weight;
+        $batchWeights = $request->batch_weights ?? [];
+
+        if (empty($batchWeights)) {
+            $netWeight = $grossWeight;
+        } else {
+            $totalBatchWeight = array_sum($batchWeights);
+            $netWeight = $totalBatchWeight > 0 ? $totalBatchWeight : $grossWeight;
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Net weight calculated successfully.',
+            'data' => [
+                'gross_weight' => $this->formatDecimal($grossWeight),
+                'batch_weights' => !empty($batchWeights) ? array_map(fn($w) => $this->formatDecimal($w), $batchWeights) : null,
+                'net_weight' => $this->formatDecimal($netWeight),
+            ],
+        ]);
+    }
+
     private function formatFlockEnd(FlockEnd $flockEnd): array
     {
         $mortality = $flockEnd->available_birds - $flockEnd->total_birds_harvested;
@@ -713,6 +782,7 @@ class FlockEndController extends BaseController
             'mortality_rate' => $this->formatDecimal($mortalityRate),
             'remaining_birds' => $flockEnd->remaining_birds,
             'gross_weight' => $this->formatDecimal($flockEnd->total_weight),
+            'net_weight' => $this->formatDecimal($flockEnd->net_weight),
             'batch_weights' => $batchDetails?->batch_weights ?? null,
             'avg_weight' => $this->formatDecimal($flockEnd->avg_weight_per_bird),
             'notes' => $flockEnd->notes,

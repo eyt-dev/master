@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\Add2Farm\DropdownController as Add2FarmDropdownCont
 use App\Http\Controllers\Api\Add2Farm\CountryController as Add2FarmCountryController;
 use App\Http\Controllers\Api\Add2Farm\FeedStockController as Add2FarmFeedStockController;
 use App\Http\Controllers\Api\Add2Farm\HangarMaintenanceController as Add2FarmHangarMaintenanceController;
+use App\Http\Controllers\Api\Add2Farm\FlockEndMaintenanceController as Add2FarmFlockEndMaintenanceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -196,11 +197,12 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
         Route::get('dropdowns/material-names', [Add2FarmDropdownController::class, 'materialNames']);
     });
 
-    // TEMPORARY MAINTENANCE ROUTE - SHOULD BE REMOVED AFTER USE
-    // This route synchronizes hangar status based on flock allocations
-    // Delete this route and the HangarMaintenanceController after running
+    // TEMPORARY MAINTENANCE ROUTES - SHOULD BE REMOVED AFTER USE
+    // These routes synchronize data based on requirements
+    // Delete these routes and the maintenance controllers after running
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('maintenance/hangars/sync-all', [Add2FarmHangarMaintenanceController::class, 'syncAllHangarStatus']);
+        Route::get('maintenance/flock-ends/sync-net-weights', [Add2FarmFlockEndMaintenanceController::class, 'syncNetWeights']);
     });
 
     // File serving route - Public access to uploaded images

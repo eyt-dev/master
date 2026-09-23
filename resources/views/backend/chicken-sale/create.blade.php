@@ -188,18 +188,6 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="form-group">
-                <label class="form-label">Last 4 Net Weights from Previous Sales</label>
-                <div id="last_net_weights_container" class="alert alert-info" style="display: none;">
-                    <small class="text-muted d-block mb-2">Previous net weights for reference:</small>
-                    <div id="last_net_weights_list"></div>
-                </div>
-                <small class="text-muted d-block">Select a flock above to see previous net weights</small>
-            </div>
-        </div>
-    </div>
 
     <div class="row">
         <div class="col-sm-12">
@@ -334,6 +322,11 @@
             $('#hangar_id').html('<option value="">Select Hangar</option>');
             $('#last_net_weights_container').hide();
 
+            // Reset batch weights to 0
+            for (let i = 1; i <= 4; i++) {
+                $('#batch_weight_' + i).val(0);
+            }
+
             if (flockId) {
                 // Fetch hangars
                 $.ajax({
@@ -346,20 +339,12 @@
                     }
                 });
 
-                // Fetch last 4 net weights
+                // Fetch last 4 net weights and auto-fill batch weight fields
                 $.ajax({
                     url: "{{ route('chicken-sale.last-net-weights', ['username' => $siteSlug, 'flock' => ':flock']) }}".replace(':flock', flockId),
                     type: 'GET',
                     success: function(netWeights) {
                         if (netWeights && netWeights.length > 0) {
-                            var htmlContent = '<div class="row">';
-                            netWeights.forEach(function(weight, index) {
-                                htmlContent += '<div class="col-md-3"><strong>Sale ' + (index + 1) + ':</strong> <span class="badge badge-primary">' + parseFloat(weight).toFixed(2) + ' kg</span></div>';
-                            });
-                            htmlContent += '</div>';
-                            $('#last_net_weights_list').html(htmlContent);
-                            $('#last_net_weights_container').show();
-
                             // Auto-fill batch weight textboxes with last 4 net weights
                             netWeights.forEach(function(weight, index) {
                                 var inputId = '#batch_weight_' + (index + 1);

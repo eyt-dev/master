@@ -202,6 +202,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
     // Delete these routes and the maintenance controllers after running
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('maintenance/hangars/sync-all', [Add2FarmHangarMaintenanceController::class, 'syncAllHangarStatus']);
+        Route::get('maintenance/flock-ends/sync-remaining-birds', [Add2FarmFlockEndMaintenanceController::class, 'syncRemainingBirds']);
         Route::get('maintenance/flock-ends/sync-net-weights', [Add2FarmFlockEndMaintenanceController::class, 'syncNetWeights']);
     });
 

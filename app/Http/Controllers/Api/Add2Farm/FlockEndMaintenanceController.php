@@ -15,6 +15,87 @@ use Illuminate\Support\Facades\DB;
 class FlockEndMaintenanceController extends BaseController
 {
     /**
+     * Recalculate remaining_birds for all flock_end records
+     *
+     * Recalculates remaining_birds for all flock_end records based on:
+     * remaining_birds = (hangar_allocated - total_harvested_from_hangar_so_far)
+     *
+     * IMPORTANT: This should be removed after running once!
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function syncRemainingBirds()
+    {
+        try {
+            DB::beginTransaction();
+
+            $recordsUpdated = 0;
+            $errors = [];
+
+            $allRecords = FlockEnd::orderBy('hangar_id')->orderBy('created_at')->get();
+
+            foreach ($allRecords as $record) {
+                try {
+                    $flockHangarAllocation = \App\Models\FlockHangar::where('flock_id', $record->flock_id)
+                        ->where('hangar_id', $record->hangar_id)
+                        ->first();
+
+                    if (!$flockHangarAllocation) {
+                        $errors[] = [
+                            'id' => $record->id,
+                            'reason' => 'Hangar allocation not found for flock_id: ' . $record->flock_id . ', hangar_id: ' . $record->hangar_id
+                        ];
+                        continue;
+                    }
+
+                    $hangarAllocated = $flockHangarAllocation->quantity;
+                    $previousHarvests = FlockEnd::where('flock_id', $record->flock_id)
+                        ->where('hangar_id', $record->hangar_id)
+                        ->where('created_at', '<', $record->created_at)
+                        ->sum('total_birds_harvested');
+
+                    $availableBirds = $hangarAllocated - $previousHarvests;
+                    $remainingBirds = $availableBirds - $record->total_birds_harvested;
+
+                    $record->update([
+                        'available_birds' => $availableBirds,
+                        'remaining_birds' => $remainingBirds,
+                    ]);
+
+                    $recordsUpdated++;
+                } catch (\Exception $e) {
+                    $errors[] = [
+                        'id' => $record->id,
+                        'reason' => $e->getMessage()
+                    ];
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Remaining birds recalculation completed.',
+                'records_updated' => $recordsUpdated,
+                'total_records_processed' => count($allRecords),
+                'errors_count' => count($errors),
+                'errors' => $errors,
+                'warning' => 'REMEMBER: This is a temporary endpoint. Delete this method and remove routes after use!',
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Flock end remaining birds sync error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error during remaining birds recalculation.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Sync net_weight for all flock_end records
      *
      * Calculate and update net_weight for all flock_end records that have NULL or 0 value.

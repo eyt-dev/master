@@ -258,7 +258,7 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('destroy/{chicken_sale}', 'destroy')->name('chicken-sale.destroy')->middleware('permission:delete.chicken_sale');
                         Route::get('flocks-by-farm/{farm}', 'getFlocksByFarm')->name('chicken-sale.flocks-by-farm');
                         Route::get('hangars-by-flock/{flock}', 'getHangarsByFlock')->name('chicken-sale.hangars-by-flock');
-                        Route::get('last-net-weights/{flock}', 'getLastNetWeights')->name('chicken-sale.last-net-weights');
+                        Route::get('last-net-weights/{flock}/{hangar}', 'getLastNetWeights')->name('chicken-sale.last-net-weights');
                     });
                     Route::controller(ProjectController::class)->prefix('project')->group(function () {
                         Route::get('/', 'index')->name('project.index')->middleware('permission:view.project');

@@ -626,12 +626,13 @@ class FlockEndController extends BaseController
     }
 
     /**
-     * Get last 4 net weights for a flock
+     * Get last 4 net weights for a flock and hangar
      *
-     * Retrieve the last 4 net weights from chicken sales for a specific flock.
+     * Retrieve the last 4 net weights from chicken sales for a specific flock and hangar.
      *
      * @authenticated
      * @urlParam flock_id integer required The flock ID. Example: 7
+     * @urlParam hangar_id integer required The hangar ID. Example: 22
      *
      * @response 200 {
      *   "success": true,
@@ -643,7 +644,7 @@ class FlockEndController extends BaseController
      *   "message": "Flock not found."
      * }
      */
-    public function getLastNetWeights($flock_id)
+    public function getLastNetWeights($flock_id, $hangar_id)
     {
         if (!auth()->check()) {
             return response()->json([
@@ -673,6 +674,7 @@ class FlockEndController extends BaseController
         }
 
         $lastNetWeights = FlockEnd::where('flock_id', $flock_id)
+            ->where('hangar_id', $hangar_id)
             ->orderBy('created_at', 'desc')
             ->limit(4)
             ->pluck('net_weight')

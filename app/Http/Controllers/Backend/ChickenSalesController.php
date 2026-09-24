@@ -142,7 +142,7 @@ class ChickenSalesController extends Controller
         return response()->json($hangars);
     }
 
-    public function getLastNetWeights($siteUrl, $flockId)
+    public function getLastNetWeights($siteUrl, $flockId, $hangarId)
     {
         $user = auth()->user();
 
@@ -166,6 +166,7 @@ class ChickenSalesController extends Controller
         }
 
         $lastNetWeights = FlockEnd::where('flock_id', $flockId)
+            ->where('hangar_id', $hangarId)
             ->orderBy('created_at', 'desc')
             ->limit(4)
             ->pluck('net_weight')

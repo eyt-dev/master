@@ -316,11 +316,10 @@
             }
         });
 
-        // Load hangars and last net weights when flock is selected
+        // Load hangars when flock is selected
         $('#flock_id').on('change', function() {
             var flockId = $(this).val();
             $('#hangar_id').html('<option value="">Select Hangar</option>');
-            $('#last_net_weights_container').hide();
 
             // Reset batch weights to 0
             for (let i = 1; i <= 4; i++) {
@@ -338,10 +337,23 @@
                         });
                     }
                 });
+            }
+        });
 
+        // Load last net weights when hangar is selected
+        $('#hangar_id').on('change', function() {
+            var flockId = $('#flock_id').val();
+            var hangarId = $(this).val();
+
+            // Reset batch weights to 0
+            for (let i = 1; i <= 4; i++) {
+                $('#batch_weight_' + i).val(0);
+            }
+
+            if (flockId && hangarId) {
                 // Fetch last 4 net weights and auto-fill batch weight fields
                 $.ajax({
-                    url: "{{ route('chicken-sale.last-net-weights', ['username' => $siteSlug, 'flock' => ':flock']) }}".replace(':flock', flockId),
+                    url: "{{ route('chicken-sale.last-net-weights', ['username' => $siteSlug, 'flock' => ':flock', 'hangar' => ':hangar']) }}".replace(':flock', flockId).replace(':hangar', hangarId),
                     type: 'GET',
                     success: function(netWeights) {
                         if (netWeights && netWeights.length > 0) {

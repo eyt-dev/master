@@ -63,6 +63,7 @@ class HomeController extends Controller
     private function getModuleStats($user)
     {
         $modules = [];
+        $isSuperAdmin = $user->role === 'SuperAdmin';
 
         // Main Category
         $modules['main'] = [
@@ -77,36 +78,56 @@ class HomeController extends Controller
         ];
 
         if ($user->can('view.admin')) {
+            $adminCount = Admin::where('type', 'admin')
+                ->when(!$isSuperAdmin, function ($q) use ($user) {
+                    $q->where('created_by', $user->id);
+                })
+                ->count();
             $modules['customer']['items'][] = [
                 'name' => 'Admins',
-                'count' => Admin::where('type', 'admin')->count(),
+                'count' => $adminCount,
                 'route' => 'admins.index',
                 'icon' => 'fe-user'
             ];
         }
 
         if ($user->can('view.public_vendor')) {
+            $publicVendorCount = Admin::where('type', 'public_vendor')
+                ->when(!$isSuperAdmin, function ($q) use ($user) {
+                    $q->where('created_by', $user->id);
+                })
+                ->count();
             $modules['customer']['items'][] = [
                 'name' => 'Public Vendors',
-                'count' => Admin::where('type', 'public_vendor')->count(),
+                'count' => $publicVendorCount,
                 'route' => 'admins.publicVendor',
                 'icon' => 'fe-shopping-cart'
             ];
         }
 
         if ($user->can('view.private_vendor')) {
+            $privateVendorCount = Admin::where('type', 'private_vendor')
+                ->when(!$isSuperAdmin, function ($q) use ($user) {
+                    $q->where('created_by', $user->id);
+                })
+                ->count();
             $modules['customer']['items'][] = [
                 'name' => 'Private Vendors',
-                'count' => Admin::where('type', 'private_vendor')->count(),
+                'count' => $privateVendorCount,
                 'route' => 'admins.privateVendor',
                 'icon' => 'fe-lock'
             ];
         }
 
         if ($user->can('view.user')) {
+            $userCount = Admin::where('type', 'user')
+                ->when(!$isSuperAdmin, function ($q) use ($user) {
+                    $q->where('created_by', $user->id);
+                })
+                ->count();
             $modules['customer']['items'][] = [
                 'name' => 'Users',
-                'count' => Admin::where('type', 'user')->count(),
+                'count' => $userCount,
                 'route' => 'admins.users',
                 'icon' => 'fe-users'
             ];
@@ -251,90 +272,163 @@ class HomeController extends Controller
         ];
 
         if ($user->can('view.farm')) {
+            $farmCount = Farm::when(!$isSuperAdmin, function ($q) use ($user) {
+                    $q->where(function ($subQ) use ($user) {
+                        $subQ->where('created_by', $user->id)
+                             ->orWhere('assigned_to', $user->id)
+                             ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                                 $query->where('admin_id', $user->id);
+                             });
+                    });
+                })
+                ->count();
             $modules['farm']['items'][] = [
                 'name' => 'Farms',
-                'count' => Farm::count(),
+                'count' => $farmCount,
                 'route' => 'farm.index',
                 'icon' => 'fe-home'
             ];
         }
 
         if ($user->can('view.hangar')) {
+            $hangarCount = Hangar::when(!$isSuperAdmin, function ($q) use ($user) {
+                    $q->whereHas('farm', function ($subQ) use ($user) {
+                        $subQ->where(function ($farmQ) use ($user) {
+                            $farmQ->where('created_by', $user->id)
+                                  ->orWhere('assigned_to', $user->id)
+                                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                                      $query->where('admin_id', $user->id);
+                                  });
+                        });
+                    });
+                })
+                ->count();
             $modules['farm']['items'][] = [
                 'name' => 'Hangars',
-                'count' => Hangar::count(),
+                'count' => $hangarCount,
                 'route' => 'hangar.index',
                 'icon' => 'fe-inbox'
             ];
         }
 
         if ($user->can('view.feed_supplier')) {
+            $feedSupplierCount = FeedSupplier::when(!$isSuperAdmin, function ($q) use ($user) {
+                    $q->where('created_by', $user->id);
+                })
+                ->count();
             $modules['farm']['items'][] = [
                 'name' => 'Feed Suppliers',
-                'count' => FeedSupplier::count(),
+                'count' => $feedSupplierCount,
                 'route' => 'feed-supplier.index',
                 'icon' => 'fe-anchor'
             ];
         }
 
         if ($user->can('view.slaughter')) {
+            $slaughterCount = Slaughter::when(!$isSuperAdmin, function ($q) use ($user) {
+                    $q->where('created_by', $user->id);
+                })
+                ->count();
             $modules['farm']['items'][] = [
                 'name' => 'Slaughters',
-                'count' => Slaughter::count(),
+                'count' => $slaughterCount,
                 'route' => 'slaughter.index',
                 'icon' => 'fe-alert-circle'
             ];
         }
 
         if ($user->can('view.chicks_supplier')) {
+            $chicksSupplierCount = ChicksSupplier::when(!$isSuperAdmin, function ($q) use ($user) {
+                    $q->where('created_by', $user->id);
+                })
+                ->count();
             $modules['farm']['items'][] = [
                 'name' => 'Chicks Suppliers',
-                'count' => ChicksSupplier::count(),
+                'count' => $chicksSupplierCount,
                 'route' => 'chicks-supplier.index',
                 'icon' => 'fe-truck'
             ];
         }
 
         if ($user->can('view.flock')) {
+            $flockCount = Flock::when(!$isSuperAdmin, function ($q) use ($user) {
+                    $q->whereHas('farm', function ($subQ) use ($user) {
+                        $subQ->where(function ($farmQ) use ($user) {
+                            $farmQ->where('created_by', $user->id)
+                                  ->orWhere('assigned_to', $user->id)
+                                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                                      $query->where('admin_id', $user->id);
+                                  });
+                        });
+                    })
+                    ->orWhere('created_by', $user->id);
+                })
+                ->count();
             $modules['farm']['items'][] = [
                 'name' => 'Flocks',
-                'count' => Flock::count(),
+                'count' => $flockCount,
                 'route' => 'flock.index',
                 'icon' => 'fe-target'
             ];
         }
 
         if ($user->can('view.chicken_sale')) {
+            $flockEndCount = FlockEnd::when(!$isSuperAdmin, function ($q) use ($user) {
+                    $q->whereHas('flock.farm', function ($subQ) use ($user) {
+                        $subQ->where(function ($farmQ) use ($user) {
+                            $farmQ->where('created_by', $user->id)
+                                  ->orWhere('assigned_to', $user->id)
+                                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                                      $query->where('admin_id', $user->id);
+                                  });
+                        });
+                    })
+                    ->orWhere('created_by', $user->id);
+                })
+                ->count();
             $modules['farm']['items'][] = [
                 'name' => 'Ending Flock',
-                'count' => FlockEnd::count(),
+                'count' => $flockEndCount,
                 'route' => 'chicken-sale.index',
                 'icon' => 'fe-shopping-bag'
             ];
         }
 
         if ($user->can('view.feed_material')) {
+            $materialNameCount = \DB::table('material_names')
+                ->when(!$isSuperAdmin, function ($q) use ($user) {
+                    $q->where('created_by', $user->id);
+                })
+                ->count();
             $modules['farm']['items'][] = [
                 'name' => 'Feed Materials',
-                'count' => \DB::table('material_names')->count(),
+                'count' => $materialNameCount,
                 'route' => 'feedmaterial.index',
                 'icon' => 'fe-layers'
             ];
         }
 
         if ($user->can('view.material_stock')) {
+            $materialStockCount = MaterialStock::when(!$isSuperAdmin, function ($q) use ($user) {
+                    $q->where('created_by', $user->id);
+                })
+                ->count();
             $modules['farm']['items'][] = [
                 'name' => 'Feed Stock',
-                'count' => MaterialStock::count(),
+                'count' => $materialStockCount,
                 'route' => 'material-stock.index',
                 'icon' => 'fe-inbox'
             ];
         }
 
         if ($user->can('view.daily_record')) {
+            $dailyRecordCount = DailyRecord::when(!$isSuperAdmin, function ($q) use ($user) {
+                    $q->where('created_by', $user->id);
+                })
+                ->count();
             $modules['farm']['items'][] = [
                 'name' => 'Daily Records',
-                'count' => DailyRecord::count(),
+                'count' => $dailyRecordCount,
                 'route' => 'daily-record.index',
                 'icon' => 'fe-calendar'
             ];

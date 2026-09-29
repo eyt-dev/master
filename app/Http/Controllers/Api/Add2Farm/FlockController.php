@@ -380,6 +380,8 @@ class FlockController extends BaseController
      *         "start_date": "2026-05-18",
      *         "total_quantity": 12500,
      *         "remaining_birds": 12000,
+     *         "feed_consumed": 250.50,
+     *         "feed_remaining": 500.00,
      *         "created_by": 1,
      *         "created_by_name": "Admin Name",
      *         "created_at": "2026-08-07T10:30:00Z",
@@ -1259,6 +1261,27 @@ class FlockController extends BaseController
             }
         }
 
+        // Fetch daily records for feed calculations and metrics
+        $dailyRecords = DailyRecord::where('flock_id', $flock->id)->get();
+        $feedConsumed = round($dailyRecords->sum('feed_kg'), 2);
+
+        // Get hangar IDs for this flock
+        $hangarIds = $flock->flockHangarAllocations->pluck('hangar_id')->toArray();
+
+        // Calculate total feed remaining from material stock hangars
+        $feedRemaining = 0;
+        if (!empty($hangarIds)) {
+            $feedRemaining = \App\Models\MaterialStockHangar::whereIn('hangar_id', $hangarIds)
+                ->latest('created_at')
+                ->get()
+                ->groupBy('hangar_id')
+                ->map(function ($records) {
+                    return $records->first()->remaining_quantity ?? 0;
+                })
+                ->sum();
+            $feedRemaining = round($feedRemaining, 2);
+        }
+
         // Build base response
         $response = [
             'id'                    => $flock->id,
@@ -1274,6 +1297,8 @@ class FlockController extends BaseController
             'age'                   => $age,
             'total_quantity'        => $flock->total_quantity,
             'remaining_birds'       => $remainingBirds,
+            'feed_consumed'         => $feedConsumed,
+            'feed_remaining'        => $feedRemaining,
             'hangar_allocations'    => $hangarAllocations,
             'assignment'            => $assignment,
             'created_by'            => $flock->created_by,
@@ -1288,9 +1313,6 @@ class FlockController extends BaseController
         } else {
             $response['flock-condition'] = $isEnded ? 'layer-ended' : 'layer-active';
         }
-
-        // Fetch daily records for conditional metrics
-        $dailyRecords = DailyRecord::where('flock_id', $flock->id)->get();
 
         // Calculate metrics based on flock type and status
         if ($isBroiler) {

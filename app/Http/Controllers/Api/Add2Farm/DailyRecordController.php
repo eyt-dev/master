@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DailyRecord;
 use App\Models\Flock;
 use App\Models\Farm;
+use App\Models\MaterialStockHangar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -577,6 +578,30 @@ class DailyRecordController extends BaseController
             ], 422);
         }
 
+        // Validate feed stock availability
+        foreach ($request->hangars as $hangarData) {
+            $feedKg = (float)$hangarData['feed_kg'];
+            $hangarId = $hangarData['hangar_id'];
+
+            $currentRemaining = MaterialStockHangar::where('hangar_id', $hangarId)
+                ->latest('created_at')
+                ->value('remaining_quantity') ?? 0;
+
+            if ($feedKg > $currentRemaining) {
+                $hangar = \App\Models\Hangar::find($hangarId);
+                $hangarName = $hangar?->name ?? 'Hangar #' . $hangarId;
+                $remainingMsg = $currentRemaining > 0
+                    ? "only {$currentRemaining} kg available"
+                    : "out of stock";
+
+                return response()->json([
+                    'success' => false,
+                    'message' => "Insufficient feed in {$hangarName} - {$remainingMsg}",
+                    'errors' => ['hangars' => ["Insufficient feed in {$hangarName} - {$remainingMsg}"]],
+                ], 422);
+            }
+        }
+
         try {
             DB::beginTransaction();
 
@@ -599,6 +624,8 @@ class DailyRecordController extends BaseController
                     'created_by'    => auth()->id(),
                 ]);
                 $records[] = $record;
+
+                $this->recalculateRemainingFeed($request->flock_id, $hangarData['hangar_id']);
             }
 
             DB::commit();
@@ -778,6 +805,30 @@ class DailyRecordController extends BaseController
             ], 422);
         }
 
+        // Validate feed stock availability
+        foreach ($request->hangars as $hangarData) {
+            $feedKg = (float)$hangarData['feed_kg'];
+            $hangarId = $hangarData['hangar_id'];
+
+            $currentRemaining = MaterialStockHangar::where('hangar_id', $hangarId)
+                ->latest('created_at')
+                ->value('remaining_quantity') ?? 0;
+
+            if ($feedKg > $currentRemaining) {
+                $hangar = \App\Models\Hangar::find($hangarId);
+                $hangarName = $hangar?->name ?? 'Hangar #' . $hangarId;
+                $remainingMsg = $currentRemaining > 0
+                    ? "only {$currentRemaining} kg available"
+                    : "out of stock";
+
+                return response()->json([
+                    'success' => false,
+                    'message' => "Insufficient feed in {$hangarName} - {$remainingMsg}",
+                    'errors' => ['hangars' => ["Insufficient feed in {$hangarName} - {$remainingMsg}"]],
+                ], 422);
+            }
+        }
+
         try {
             DB::beginTransaction();
 
@@ -815,6 +866,8 @@ class DailyRecordController extends BaseController
                     'created_by'    => auth()->id(),
                 ]);
                 $records[] = $newRecord;
+
+                $this->recalculateRemainingFeed($request->flock_id, $hangarData['hangar_id']);
             }
 
             DB::commit();
@@ -908,20 +961,37 @@ class DailyRecordController extends BaseController
 
             // Check if hangar_id is provided to delete only one hangar's record
             if ($request->query('hangar_id')) {
+                $hangarId = $request->query('hangar_id');
                 // Delete only the specific hangar's record for this date
                 $deletedCount = DailyRecord::where('record_date', $record->record_date)
                     ->where('farm_id', $record->farm_id)
                     ->where('flock_id', $record->flock_id)
-                    ->where('hangar_id', $request->query('hangar_id'))
+                    ->where('hangar_id', $hangarId)
                     ->where('created_by', auth()->id())
                     ->delete();
+
+                if ($deletedCount > 0) {
+                    $this->recalculateRemainingFeed($record->flock_id, $hangarId);
+                }
             } else {
+                // Get all affected hangars before deletion
+                $affectedHangars = DailyRecord::where('record_date', $record->record_date)
+                    ->where('farm_id', $record->farm_id)
+                    ->where('flock_id', $record->flock_id)
+                    ->pluck('hangar_id')
+                    ->unique();
+
                 // Delete all records for this date, farm, and flock (all hangars for that day)
                 $deletedCount = DailyRecord::where('record_date', $record->record_date)
                     ->where('farm_id', $record->farm_id)
                     ->where('flock_id', $record->flock_id)
                     ->where('created_by', auth()->id())
                     ->delete();
+
+                // Recalculate remaining for all affected hangars
+                foreach ($affectedHangars as $hangarId) {
+                    $this->recalculateRemainingFeed($record->flock_id, $hangarId);
+                }
             }
 
             DB::commit();
@@ -1498,6 +1568,26 @@ class DailyRecordController extends BaseController
         return $groupedByDate->map(function ($groupedRecord) {
             return $this->formatDailyAggregateRecordWithHangars($groupedRecord);
         })->first();
+    }
+
+    private function recalculateRemainingFeed($flockId, $hangarId)
+    {
+        $totalFeedAdded = MaterialStockHangar::where('hangar_id', $hangarId)->sum('quantity');
+
+        $totalFeedConsumed = DailyRecord::where('flock_id', $flockId)
+            ->where('hangar_id', $hangarId)
+            ->sum('feed_kg');
+
+        $remainingQuantity = $totalFeedAdded - $totalFeedConsumed;
+        $remainingQuantity = max(0, $remainingQuantity);
+
+        $latestStockHangar = MaterialStockHangar::where('hangar_id', $hangarId)
+            ->latest('created_at')
+            ->first();
+
+        if ($latestStockHangar) {
+            $latestStockHangar->update(['remaining_quantity' => $remainingQuantity]);
+        }
     }
 
 }

@@ -11,6 +11,8 @@ use App\Models\Hangar;
 use App\Models\Flock;
 use App\Models\FlockHangar;
 use App\Models\Admin;
+use App\Models\MaterialStock;
+use App\Models\MaterialStockHangar;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -141,6 +143,26 @@ class DailyRecordController extends Controller
                 ->make(true);
         }
         return view('backend.daily-record.index');
+    }
+
+    private function recalculateRemainingFeed($flockId, $hangarId)
+    {
+        $totalFeedAdded = MaterialStockHangar::where('hangar_id', $hangarId)->sum('quantity');
+
+        $totalFeedConsumed = DailyRecord::where('flock_id', $flockId)
+            ->where('hangar_id', $hangarId)
+            ->sum('feed_kg');
+
+        $remainingQuantity = $totalFeedAdded - $totalFeedConsumed;
+        $remainingQuantity = max(0, $remainingQuantity);
+
+        $latestStockHangar = MaterialStockHangar::where('hangar_id', $hangarId)
+            ->latest('created_at')
+            ->first();
+
+        if ($latestStockHangar) {
+            $latestStockHangar->update(['remaining_quantity' => $remainingQuantity]);
+        }
     }
 
     private function extractBreedType($breedString)
@@ -326,6 +348,23 @@ class DailyRecordController extends Controller
                     return back()->withErrors(['hangar_records' => 'Eggs Weight is required for Layer breeds.']);
                 }
             }
+
+            // Validate feed stock availability
+            $feedKg = (float)$record['feed_kg'];
+            $hangarId = $record['hangar_id'];
+            $hangar = Hangar::find($hangarId);
+            $hangarName = $hangar?->name ?? 'Hangar #' . $hangarId;
+
+            $currentRemaining = MaterialStockHangar::where('hangar_id', $hangarId)
+                ->latest('created_at')
+                ->value('remaining_quantity') ?? 0;
+
+            if ($feedKg > $currentRemaining) {
+                $remainingMsg = $currentRemaining > 0
+                    ? "only {$currentRemaining} kg available"
+                    : "out of stock";
+                return back()->withErrors(['hangar_records' => "Insufficient feed in {$hangarName} - {$remainingMsg}"]);
+            }
         }
 
         try {
@@ -348,6 +387,8 @@ class DailyRecordController extends Controller
                     'notes' => $record['notes'] ?? null,
                     'created_by' => auth()->id()
                 ]);
+
+                $this->recalculateRemainingFeed($request->flock_id, $record['hangar_id']);
             }
 
             DB::commit();
@@ -454,6 +495,23 @@ class DailyRecordController extends Controller
                     return back()->withErrors(['hangar_records' => 'Eggs Weight is required for Layer breeds.']);
                 }
             }
+
+            // Validate feed stock availability
+            $feedKg = (float)$record['feed_kg'];
+            $hangarId = $record['hangar_id'];
+            $hangar = Hangar::find($hangarId);
+            $hangarName = $hangar?->name ?? 'Hangar #' . $hangarId;
+
+            $currentRemaining = MaterialStockHangar::where('hangar_id', $hangarId)
+                ->latest('created_at')
+                ->value('remaining_quantity') ?? 0;
+
+            if ($feedKg > $currentRemaining) {
+                $remainingMsg = $currentRemaining > 0
+                    ? "only {$currentRemaining} kg available"
+                    : "out of stock";
+                return back()->withErrors(['hangar_records' => "Insufficient feed in {$hangarName} - {$remainingMsg}"]);
+            }
         }
 
         try {
@@ -499,6 +557,8 @@ class DailyRecordController extends Controller
                         'created_by' => auth()->id()
                     ]);
                 }
+
+                $this->recalculateRemainingFeed($request->flock_id, $record['hangar_id']);
             }
 
             DB::commit();
@@ -536,20 +596,37 @@ class DailyRecordController extends Controller
 
             // Check if hangar_id is provided to delete only one hangar's record
             if ($request->query('hangar_id')) {
+                $hangarId = $request->query('hangar_id');
                 // Delete only the specific hangar's record for this date
                 $deletedCount = DailyRecord::where('record_date', $dailyRecord->record_date)
                     ->where('farm_id', $dailyRecord->farm_id)
                     ->where('flock_id', $dailyRecord->flock_id)
-                    ->where('hangar_id', $request->query('hangar_id'))
+                    ->where('hangar_id', $hangarId)
                     ->delete();
+
+                if ($deletedCount > 0) {
+                    $this->recalculateRemainingFeed($dailyRecord->flock_id, $hangarId);
+                }
 
                 $message = $deletedCount > 0 ? 'Daily Record deleted successfully.' : 'Record not found.';
             } else {
+                // Get all affected hangars before deletion
+                $affectedHangars = DailyRecord::where('record_date', $dailyRecord->record_date)
+                    ->where('farm_id', $dailyRecord->farm_id)
+                    ->where('flock_id', $dailyRecord->flock_id)
+                    ->pluck('hangar_id')
+                    ->unique();
+
                 // Delete all records for this date, farm, and flock (all hangars for that day)
                 DailyRecord::where('record_date', $dailyRecord->record_date)
                     ->where('farm_id', $dailyRecord->farm_id)
                     ->where('flock_id', $dailyRecord->flock_id)
                     ->delete();
+
+                // Recalculate remaining for all affected hangars
+                foreach ($affectedHangars as $hangarId) {
+                    $this->recalculateRemainingFeed($dailyRecord->flock_id, $hangarId);
+                }
 
                 $message = 'Daily Records deleted successfully.';
             }

@@ -243,4 +243,20 @@ class Admin extends Authenticatable
         })->exists() ? 1 : 0;
     }
 
+    public function userDevices()
+    {
+        return $this->hasMany(UserDevice::class, 'user_id');
+    }
+
+    public function activeDevice()
+    {
+        return $this->hasOne(UserDevice::class, 'user_id')
+                    ->where('is_active', true);
+    }
+
+    public function refreshSessions()
+    {
+        return $this->hasMany(RefreshSession::class, 'user_id');
+    }
+
 }

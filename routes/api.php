@@ -95,6 +95,7 @@ Route::prefix('add2farm/auth')->middleware('set.add2farm.language')->group(funct
     Route::post('resend-otp', [Add2FarmAuthController::class, 'resendOtp']);
     Route::post('forgot-password', [Add2FarmAuthController::class, 'forgotPassword']);
     Route::post('reset-password', [Add2FarmAuthController::class, 'resetPassword'])->middleware('validate.password.reset.token');
+    Route::post('refresh-token', [Add2FarmAuthController::class, 'refreshToken']);
 });
 
 // Add2Farm public data routes (countries, dropdowns, etc.)
@@ -107,7 +108,8 @@ Route::prefix('add2farm')->middleware('set.add2farm.language')->group(function (
 // Add2Farm protected routes — require a valid Sanctum token
 Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2farm.language', 'convert.european.numbers'])->group(function () {
     // Public endpoints (no auth required for Scribe)
-    Route::post('auth/logout', [Add2FarmAuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::post('auth/logout', [Add2FarmAuthController::class, 'logout'])->middleware(['auth:sanctum', 'check.token.expiry']);
+    Route::post('auth/device-token', [Add2FarmAuthController::class, 'registerDeviceToken'])->middleware(['auth:sanctum', 'check.token.expiry']);
 
     // User profile endpoints (protected)
     Route::prefix('profile')->middleware('auth:sanctum')->group(function () {

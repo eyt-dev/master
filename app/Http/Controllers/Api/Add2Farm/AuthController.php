@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\AdminProjectStatus;
 use App\Models\Contact;
+use App\Models\UserDevice;
+use App\Models\RefreshSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -13,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Laravel\Sanctum\PersonalAccessToken;
 use App\Services\Add2Farm\TranslationService;
+use App\Services\Add2Farm\AuthTokenService;
 use App\Helpers\ProjectHelper;
 
 /**
@@ -22,10 +25,12 @@ use App\Helpers\ProjectHelper;
 class AuthController extends Controller
 {
     protected TranslationService $translationService;
+    protected AuthTokenService $tokenService;
 
-    public function __construct(TranslationService $translationService)
+    public function __construct(TranslationService $translationService, AuthTokenService $tokenService)
     {
         $this->translationService = $translationService;
+        $this->tokenService = $tokenService;
     }
     /**
      * Register a new Add2Farm user
@@ -237,15 +242,20 @@ class AuthController extends Controller
     }
 
     /**
-     * Verify OTP and obtain authentication token
+     * Verify OTP and obtain authentication tokens
      *
      * Verify the 6-digit OTP sent to user's mobile number.
      * On successful verification:
      * - Account status is set to Active (if Inactive)
-     * - Sanctum auth token is generated
+     * - Short-lived access token and long-lived refresh token are generated
      * - OTP is cleared from database
+     * - Device is registered/updated with FCM token
      *
      * Development Override: OTP '000000' is accepted for testing.
+     *
+     * One User = One Device Rule:
+     * - If user logs in on a different device, the previous device becomes inactive
+     * - The new device is set as the active device
      *
      * Mobile number format:
      * - Can include phone code: "+91 09033487938" or "+9109033487938"
@@ -255,11 +265,20 @@ class AuthController extends Controller
      * @unauthenticated
      * @bodyParam mobile_number string required User's mobile number (with or without phone code). Example: +91 09033487938
      * @bodyParam otp string required 6-digit OTP code. Example: 123456
+     * @bodyParam device_id string required Unique device identifier. Example: abc123xyz789
+     * @bodyParam platform string required Device platform: android or ios. Example: android
+     * @bodyParam fcm_token string optional Firebase Cloud Messaging token. Example: eABC123...
+     * @bodyParam app_version string optional Mobile app version. Example: 1.0.0
+     * @bodyParam context string optional Flow context (registration or forgot_password). Example: registration
      *
      * @response 200 {
      *   "success": true,
      *   "message": "OTP verified successfully.",
-     *   "token": "1|add2farm-token|...",
+     *   "access_token": "1|add2farm-access-token|...",
+     *   "refresh_token": "long-random-token-string",
+     *   "token_type": "Bearer",
+     *   "expires_in": 900,
+     *   "refresh_expires_in": 2592000,
      *   "user": {
      *     "id": 1,
      *     "name": "John Doe",
@@ -286,6 +305,10 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'mobile_number' => 'required|string|max:50',
             'otp'           => 'required|string|size:6|regex:/^\d+$/',
+            'device_id'     => 'required|string|max:255',
+            'platform'      => 'required|string|in:android,ios',
+            'fcm_token'     => 'nullable|string|max:500',
+            'app_version'   => 'nullable|string|max:50',
             'context'       => 'nullable|string|in:registration,forgot_password',
         ]);
 
@@ -361,24 +384,37 @@ class AuthController extends Controller
                 $admin->update(['status' => 'Active']);
             }
 
-            // Revoke previous tokens
-            $admin->tokens()->delete();
+            // Generate access and refresh tokens with device registration
+            $tokens = $this->tokenService->generateTokens(
+                $admin,
+                $request->device_id,
+                $request->platform,
+                $request->app_version
+            );
 
-            // Generate new token
-            $token = $admin->createToken('add2farm-token')->plainTextToken;
+            // Update device FCM token if provided
+            if ($request->fcm_token) {
+                UserDevice::where('device_id', $request->device_id)->update([
+                    'fcm_token' => $request->fcm_token,
+                ]);
+            }
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
                 'message' => $this->translationService->get('otp_verified_successfully'),
-                'token'   => $token,
+                'access_token' => $tokens['access_token'],
+                'refresh_token' => $tokens['refresh_token'],
+                'token_type' => $tokens['token_type'],
+                'expires_in' => $tokens['expires_in'],
+                'refresh_expires_in' => $tokens['refresh_expires_in'],
                 'user'    => $this->formatUser($admin->fresh()),
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('OTP verification error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('OTP verification error: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -636,7 +672,8 @@ class AuthController extends Controller
     /**
      * Logout user
      *
-     * Revoke the current access token and logout the authenticated user.
+     * Revoke the current access token, refresh tokens, and deactivate the device.
+     * The user will need to login again with OTP to obtain new tokens.
      *
      * @authenticated
      * @response 200 {
@@ -655,21 +692,40 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $token = $user->currentAccessToken();
+        try {
+            DB::beginTransaction();
 
-        if (!$token) {
+            // Revoke access token
+            $token = $user->currentAccessToken();
+            if ($token) {
+                $token->delete();
+            }
+
+            // Revoke all refresh tokens for this user
+            $user->refreshSessions()->where('is_revoked', false)->update([
+                'is_revoked' => true,
+                'revoked_at' => now(),
+            ]);
+
+            // Deactivate all devices
+            $user->userDevices()->update(['is_active' => false]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => $this->translationService->get('logged_out_successfully'),
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Logout error: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => $this->translationService->get('invalid_or_expired_token'),
-            ], 401);
+                'message' => $this->translationService->get('logout_failed'),
+            ], 500);
         }
-
-        $token->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => $this->translationService->get('logged_out_successfully'),
-        ]);
     }
 
     /**
@@ -705,6 +761,205 @@ class AuthController extends Controller
     private function getStatusLabel($status): string
     {
         return $this->translationService->getStatusLabel($status);
+    }
+
+    /**
+     * Refresh access token
+     *
+     * Use the refresh token to obtain a new access token without re-entering OTP.
+     * The refresh token must be valid and not expired.
+     *
+     * @unauthenticated
+     * @bodyParam refresh_token string required The refresh token received during login. Example: long-random-token-string
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Access token refreshed successfully.",
+     *   "access_token": "1|add2farm-access-token|...",
+     *   "token_type": "Bearer",
+     *   "expires_in": 900
+     * }
+     * @response 401 {
+     *   "success": false,
+     *   "message": "Invalid or expired refresh token."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "errors": {"refresh_token": ["The refresh token field is required."]}
+     * }
+     */
+    public function refreshToken(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'refresh_token' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            // Find the refresh session with the given token
+            $refreshSessions = RefreshSession::where('is_revoked', false)
+                ->where('expires_at', '>', now())
+                ->get();
+
+            $refreshSession = $refreshSessions->first(function ($session) use ($request) {
+                return Hash::check($request->refresh_token, $session->token);
+            });
+
+            if (!$refreshSession) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid or expired refresh token.',
+                ], 401);
+            }
+
+            $admin = $refreshSession->user;
+
+            if (!$admin) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $this->translationService->get('user_not_found'),
+                ], 404);
+            }
+
+            // Generate new access token
+            $tokenData = $this->tokenService->refreshAccessToken($request->refresh_token, $admin);
+
+            if (!$tokenData) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid or expired refresh token.',
+                ], 401);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Access token refreshed successfully.',
+                'access_token' => $tokenData['access_token'],
+                'token_type' => $tokenData['token_type'],
+                'expires_in' => $tokenData['expires_in'],
+            ]);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Token refresh error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to refresh token.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Register or update device with FCM token
+     *
+     * Register a mobile device or update its FCM token for push notifications.
+     * The authenticated user must be logged in via OAuth token.
+     * One user can only have one active device (previous device is deactivated).
+     *
+     * @authenticated
+     * @bodyParam device_id string required Unique device identifier. Example: abc123xyz789
+     * @bodyParam fcm_token string required Firebase Cloud Messaging token. Example: eABC123...
+     * @bodyParam platform string required Device platform: android or ios. Example: android
+     * @bodyParam app_version string optional Mobile app version. Example: 1.0.0
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Device token registered successfully.",
+     *   "device": {
+     *     "id": 1,
+     *     "device_id": "abc123xyz789",
+     *     "platform": "android",
+     *     "app_version": "1.0.0",
+     *     "is_active": true,
+     *     "last_seen_at": "2026-09-29T10:30:00Z"
+     *   }
+     * }
+     * @response 401 {
+     *   "success": false,
+     *   "message": "Unauthenticated."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "errors": {
+     *     "device_id": ["The device id field is required."],
+     *     "fcm_token": ["The fcm token field is required."]
+     *   }
+     * }
+     */
+    public function registerDeviceToken(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'device_id'  => 'required|string|max:255',
+            'fcm_token'  => 'required|string|max:500',
+            'platform'   => 'required|string|in:android,ios',
+            'app_version' => 'nullable|string|max:50',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Deactivate any existing active device for this user (one device per user)
+            $user->userDevices()->where('is_active', true)->update(['is_active' => false]);
+
+            // Create or update device
+            $device = UserDevice::updateOrCreate(
+                ['device_id' => $request->device_id],
+                [
+                    'user_id' => $user->id,
+                    'fcm_token' => $request->fcm_token,
+                    'platform' => $request->platform,
+                    'app_version' => $request->app_version,
+                    'is_active' => true,
+                    'last_seen_at' => now(),
+                ]
+            );
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Device token registered successfully.',
+                'device' => [
+                    'id' => $device->id,
+                    'device_id' => $device->device_id,
+                    'platform' => $device->platform,
+                    'app_version' => $device->app_version,
+                    'is_active' => $device->is_active,
+                    'last_seen_at' => $device->last_seen_at,
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Device registration error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to register device token.',
+            ], 500);
+        }
     }
 
     /**

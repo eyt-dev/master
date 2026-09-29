@@ -379,6 +379,7 @@ class FlockController extends BaseController
      *         "breed": "Broiler,Cobb 500",
      *         "start_date": "2026-05-18",
      *         "total_quantity": 12500,
+     *         "remaining_birds": 12000,
      *         "created_by": 1,
      *         "created_by_name": "Admin Name",
      *         "created_at": "2026-08-07T10:30:00Z",
@@ -1243,6 +1244,21 @@ class FlockController extends BaseController
         // Get total bird allocation
         $totalBird = $flock->flockHangarAllocations->sum('quantity');
 
+        // Calculate total remaining birds by getting the latest remaining_birds for each hangar
+        $remainingBirds = 0;
+        foreach ($flock->flockHangarAllocations as $allocation) {
+            $lastHarvest = FlockEnd::where('flock_id', $flock->id)
+                ->where('hangar_id', $allocation->hangar_id)
+                ->latest()
+                ->first();
+
+            if ($lastHarvest) {
+                $remainingBirds += $lastHarvest->remaining_birds;
+            } else {
+                $remainingBirds += $allocation->quantity;
+            }
+        }
+
         // Build base response
         $response = [
             'id'                    => $flock->id,
@@ -1257,6 +1273,7 @@ class FlockController extends BaseController
             'status'                => $status,
             'age'                   => $age,
             'total_quantity'        => $flock->total_quantity,
+            'remaining_birds'       => $remainingBirds,
             'hangar_allocations'    => $hangarAllocations,
             'assignment'            => $assignment,
             'created_by'            => $flock->created_by,

@@ -383,7 +383,7 @@ class HomeController extends Controller
                                   });
                         });
                     })
-                    ->orWhere('created_by', $user->id);
+                    ->orWhere('ended_by', $user->id);
                 })
                 ->count();
             $modules['farm']['items'][] = [

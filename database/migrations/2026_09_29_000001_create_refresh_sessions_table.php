@@ -13,7 +13,8 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')
                 ->comment('Reference to the user (admin)');
             $table->unsignedBigInteger('device_id')
-                ->comment('Reference to the device');
+                ->nullable()
+                ->comment('Reference to the device (linked when device is registered)');
             $table->text('token')
                 ->unique()
                 ->comment('Refresh token (hashed for security)');
@@ -41,6 +42,7 @@ return new class extends Migration
             // Indexes
             $table->index(['user_id', 'is_revoked']);
             $table->index(['expires_at', 'is_revoked']);
+            $table->index(['device_id']);
         });
     }
 

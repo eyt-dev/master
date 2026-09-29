@@ -249,13 +249,10 @@ class AuthController extends Controller
      * - Account status is set to Active (if Inactive)
      * - Short-lived access token and long-lived refresh token are generated
      * - OTP is cleared from database
-     * - Device is registered/updated with FCM token
+     *
+     * Device registration is a SEPARATE step (call /device-token after login).
      *
      * Development Override: OTP '000000' is accepted for testing.
-     *
-     * One User = One Device Rule:
-     * - If user logs in on a different device, the previous device becomes inactive
-     * - The new device is set as the active device
      *
      * Mobile number format:
      * - Can include phone code: "+91 09033487938" or "+9109033487938"
@@ -265,10 +262,6 @@ class AuthController extends Controller
      * @unauthenticated
      * @bodyParam mobile_number string required User's mobile number (with or without phone code). Example: +91 09033487938
      * @bodyParam otp string required 6-digit OTP code. Example: 123456
-     * @bodyParam device_id string required Unique device identifier. Example: abc123xyz789
-     * @bodyParam platform string required Device platform: android or ios. Example: android
-     * @bodyParam fcm_token string optional Firebase Cloud Messaging token. Example: eABC123...
-     * @bodyParam app_version string optional Mobile app version. Example: 1.0.0
      * @bodyParam context string optional Flow context (registration or forgot_password). Example: registration
      *
      * @response 200 {
@@ -305,10 +298,6 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'mobile_number' => 'required|string|max:50',
             'otp'           => 'required|string|size:6|regex:/^\d+$/',
-            'device_id'     => 'required|string|max:255',
-            'platform'      => 'required|string|in:android,ios',
-            'fcm_token'     => 'nullable|string|max:500',
-            'app_version'   => 'nullable|string|max:50',
             'context'       => 'nullable|string|in:registration,forgot_password',
         ]);
 
@@ -384,20 +373,8 @@ class AuthController extends Controller
                 $admin->update(['status' => 'Active']);
             }
 
-            // Generate access and refresh tokens with device registration
-            $tokens = $this->tokenService->generateTokens(
-                $admin,
-                $request->device_id,
-                $request->platform,
-                $request->app_version
-            );
-
-            // Update device FCM token if provided
-            if ($request->fcm_token) {
-                UserDevice::where('device_id', $request->device_id)->update([
-                    'fcm_token' => $request->fcm_token,
-                ]);
-            }
+            // Generate access and refresh tokens (device registration is separate)
+            $tokens = $this->tokenService->generateTokens($admin);
 
             DB::commit();
 
@@ -920,9 +897,6 @@ class AuthController extends Controller
         try {
             DB::beginTransaction();
 
-            // Deactivate any existing active device for this user (one device per user)
-            $user->userDevices()->where('is_active', true)->update(['is_active' => false]);
-
             // Create or update device
             $device = UserDevice::updateOrCreate(
                 ['device_id' => $request->device_id],
@@ -935,6 +909,9 @@ class AuthController extends Controller
                     'last_seen_at' => now(),
                 ]
             );
+
+            // Register device and link refresh tokens, enforce one-device-per-user
+            $this->tokenService->registerDevice($user, $device);
 
             DB::commit();
 

@@ -59,13 +59,13 @@ class FeedStockController extends BaseController
             return response()->json(['success' => false, 'message' => 'Farm not found or access denied.'], 403);
         }
 
-        // Get all hangars and their remaining quantities
+        // Get all hangars and their remaining quantities (sum across all pelleted feed allocations)
         $hangars = Hangar::where('farm_id', $farm_id)
             ->get()
             ->map(function ($hangar) {
                 $remaining = MaterialStockHangar::where('hangar_id', $hangar->id)
-                    ->latest('created_at')
-                    ->value('remaining_quantity') ?? 0;
+                    ->byMaterialType('pelleted feed')
+                    ->sum('remaining_quantity') ?? 0;
 
                 return [
                     'hangar_id' => $hangar->id,
@@ -311,11 +311,11 @@ class FeedStockController extends BaseController
                 foreach ($data['hangar_allocations'] as $alloc) {
                     $remainingQuantity = (float)$alloc['quantity'];
 
-                    // Only accumulate remaining_quantity for Pelleted feed
+                    // Only accumulate remaining_quantity for Pelleted feed (CREATE mode: old + new)
                     if ($isPelletedFeed) {
                         $currentRemaining = MaterialStockHangar::where('hangar_id', $alloc['hangar_id'])
-                            ->latest('created_at')
-                            ->value('remaining_quantity') ?? 0;
+                            ->byMaterialType('pelleted feed')
+                            ->sum('remaining_quantity') ?? 0;
 
                         $remainingQuantity = $currentRemaining + (float)$alloc['quantity'];
                     }
@@ -452,16 +452,8 @@ class FeedStockController extends BaseController
                 $isPelletedFeed = $materialName && strtolower($materialName->type) === 'pelleted feed';
 
                 foreach ($data['hangar_allocations'] as $alloc) {
+                    // EDIT mode: just use entered quantity (no accumulation)
                     $remainingQuantity = (float)$alloc['quantity'];
-
-                    // Only accumulate remaining_quantity for Pelleted feed
-                    if ($isPelletedFeed) {
-                        $currentRemaining = MaterialStockHangar::where('hangar_id', $alloc['hangar_id'])
-                            ->latest('created_at')
-                            ->value('remaining_quantity') ?? 0;
-
-                        $remainingQuantity = $currentRemaining + (float)$alloc['quantity'];
-                    }
 
                     MaterialStockHangar::create([
                         'material_stock_id' => $record->id,

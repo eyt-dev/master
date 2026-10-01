@@ -160,11 +160,11 @@
             var container = $('#hangars_allocation_container');
             var noHangarsMsg = $('#no_hangars_message');
 
-            // Check if material type is feedstock/feed stuff - don't load hangars if it is
+            // Check if material type is "pelleted feed" - only load hangars for pelleted feed
             var materialType = ($('#material_name_id option:selected').data('type') || '').toLowerCase();
-            var isFeedStuff = materialType === 'feed stuff';
+            var isPelletedFeed = materialType === 'pelleted feed';
 
-            if (isFeedStuff) {
+            if (!isPelletedFeed) {
                 container.hide();
                 noHangarsMsg.hide();
                 return;
@@ -221,8 +221,14 @@
                 var defaultRemaining = parseFloat(hangar.remaining.replace(',', '.')) || 0;
                 var existingQty = parseInt(quantity) || 0;
 
-                // Calculate new remaining: default_remaining + entered_quantity
-                var calculatedRemaining = defaultRemaining + existingQty;
+                // Calculate new remaining based on create vs edit mode
+                @if(isset($materialStock))
+                    // Edit mode: just use entered quantity (FIFO will recalculate)
+                    var calculatedRemaining = existingQty;
+                @else
+                    // Create mode: add old remaining + entered quantity
+                    var calculatedRemaining = defaultRemaining + existingQty;
+                @endif
 
                 var html = `
                     <div class="d-flex align-items-center justify-content-between p-3" style="border-bottom: 1px solid #dee2e6;">
@@ -261,8 +267,14 @@
                 var defaultRemaining = parseFloat($(this).data('default-remaining')) || 0;
                 var enteredQty = parseFloat($(this).val()) || 0;
 
-                // Calculate: default_remaining + entered_quantity
-                var newRemaining = defaultRemaining + enteredQty;
+                // Calculate based on create vs edit mode
+                @if(isset($materialStock))
+                    // Edit mode: just use entered quantity (FIFO will recalculate)
+                    var newRemaining = enteredQty;
+                @else
+                    // Create mode: add default_remaining + entered_quantity
+                    var newRemaining = defaultRemaining + enteredQty;
+                @endif
 
                 // Format with comma for display
                 var formattedRemaining = newRemaining.toFixed(2).replace('.', ',');
@@ -278,20 +290,20 @@
             var selectedOption = $('#material_name_id option:selected');
             var materialType = (selectedOption.data('type') || '').toLowerCase();
 
-            // Check if material type is feed material (various formats)
-            var isFeedStuff = materialType === 'feed stuff';
+            // Show hangar allocation ONLY for "pelleted feed" material type
+            var isPelletedFeed = materialType === 'pelleted feed';
 
-            if (isFeedStuff) {
-                // Hide hangar allocation for feed stock
+            if (isPelletedFeed) {
+                // Show hangar allocation for pelleted feed only
+                $('#hangar_allocation_section').slideDown(300);
+                $('#hangar_required_asterisk').show();
+            } else {
+                // Hide hangar allocation for all other materials
                 $('#hangar_allocation_section').slideUp(300);
                 $('#hangar_required_asterisk').hide();
                 // Clear hangar data when hiding
                 $('#hangars_allocation_container').html('');
                 $('#hangar_quantities_json').val('');
-            } else {
-                // Show hangar allocation for non-feed stock materials
-                $('#hangar_allocation_section').slideDown(300);
-                $('#hangar_required_asterisk').show();
             }
         }
 
@@ -305,16 +317,16 @@
             }
         });
 
-        // When farm changes, reload hangars (only if not feedstock)
+        // When farm changes, reload hangars (only if pelleted feed)
         $('#farm_id').on('change', function() {
             var farmId = $(this).val();
-            var materialType = ($(this).val(), $('#material_name_id option:selected').data('type') || '').toLowerCase();
-            var isFeedStuff = materialType === 'feed stuff';
+            var materialType = ($('#material_name_id option:selected').data('type') || '').toLowerCase();
+            var isPelletedFeed = materialType === 'pelleted feed';
 
-            if (!isFeedStuff) {
+            if (isPelletedFeed) {
                 loadHangarsForFarm(farmId);
             } else {
-                // Clear hangars if feedstock
+                // Clear hangars if not pelleted feed
                 $('#hangars_allocation_container').html('');
                 $('#hangar_quantities_json').val('');
             }
@@ -325,8 +337,8 @@
             toggleHangarAllocationSection();
             var farmId = $('#farm_id').val();
             var materialType = ($('#material_name_id option:selected').data('type') || '').toLowerCase();
-            var isFeedStuff = materialType === 'feed stuff';
-            if (farmId && !isFeedMaterial) {
+            var isPelletedFeed = materialType === 'pelleted feed';
+            if (farmId && isPelletedFeed) {
                 loadHangarsForFarm(farmId);
             }
         @else
@@ -339,11 +351,11 @@
             e.preventDefault();
 
             var materialType = ($('#material_name_id option:selected').data('type') || '').toLowerCase();
-            var isFeedStuff = materialType === 'feed stuff';
+            var isPelletedFeed = materialType === 'pelleted feed';
             var selectedHangars = [];
             var totalQty = 0;
 
-            if (!isFeedStuff) {
+            if (isPelletedFeed) {
                 $('.hangar-quantity-input').each(function() {
                     var hangarId = $(this).data('hangar-id');
                     var quantity = parseFloat($(this).val()) || 0;

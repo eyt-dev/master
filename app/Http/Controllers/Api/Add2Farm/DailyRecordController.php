@@ -578,34 +578,18 @@ class DailyRecordController extends BaseController
             ], 422);
         }
 
-        // Validate feed stock availability
+        // Validate feed stock availability (FIFO - First In First Out)
         foreach ($request->hangars as $hangarData) {
             $feedKg = (float)$hangarData['feed_kg'];
             $hangarId = $hangarData['hangar_id'];
 
-            // Get the hangar's farm
             $hangar = \App\Models\Hangar::find($hangarId);
+            $hangarName = $hangar?->name ?? 'Hangar #' . $hangarId;
             $farmId = $hangar?->farm_id;
 
-            // Get total remaining from hangar allocations
-            $hangarRemaining = MaterialStockHangar::where('hangar_id', $hangarId)
-                ->latest('created_at')
-                ->value('remaining_quantity') ?? 0;
-
-            // If hangar allocation is empty, check for Feed Stuff materials without hangar allocation
-            if ($hangarRemaining == 0 && $farmId) {
-                $feedStuffRemaining = \App\Models\MaterialStock::where('farm_id', $farmId)
-                    ->whereHas('materialName', function($q) {
-                        $q->where('type', 'Feed Stuff');
-                    })
-                    ->sum('quantity');
-                $currentRemaining = $feedStuffRemaining;
-            } else {
-                $currentRemaining = $hangarRemaining;
-            }
+            $currentRemaining = $this->getAvailableFeedFIFO($hangarId, $farmId);
 
             if ($feedKg > $currentRemaining) {
-                $hangarName = $hangar?->name ?? 'Hangar #' . $hangarId;
                 $remainingMsg = $currentRemaining > 0
                     ? "only {$currentRemaining} kg available"
                     : "out of stock";
@@ -825,41 +809,29 @@ class DailyRecordController extends BaseController
         $oldRecordsToDelete = DailyRecord::where('record_date', $record->record_date)
             ->where('farm_id', $flock->farm_id)
             ->where('flock_id', $record->flock_id)
-            ->where('created_by', auth()->id())
+            ->where('id', '!=', $id)
             ->get()
             ->groupBy('hangar_id');
 
-        // Validate feed stock availability (accounting for old records being deleted)
+        // Validate feed stock availability (FIFO - First In First Out, accounting for deleted records)
         foreach ($request->hangars as $hangarData) {
             $feedKg = (float)$hangarData['feed_kg'];
             $hangarId = $hangarData['hangar_id'];
 
             $hangar = \App\Models\Hangar::find($hangarId);
+            $hangarName = $hangar?->name ?? 'Hangar #' . $hangarId;
             $farmId = $hangar?->farm_id;
 
-            // Get total remaining from hangar allocations
-            $hangarRemaining = MaterialStockHangar::where('hangar_id', $hangarId)
-                ->latest('created_at')
-                ->value('remaining_quantity') ?? 0;
+            $currentRemaining = $this->getAvailableFeedFIFO($hangarId, $farmId);
 
-            // If hangar allocation is empty, check for Feed Stuff materials without hangar allocation
-            if ($hangarRemaining == 0 && $farmId) {
-                $feedStuffRemaining = \App\Models\MaterialStock::where('farm_id', $farmId)
-                    ->whereHas('materialName', function($q) {
-                        $q->where('type', 'Feed Stuff');
-                    })
-                    ->sum('quantity');
-                $currentRemaining = $feedStuffRemaining;
-            } else {
-                $currentRemaining = $hangarRemaining;
-            }
-
-            // Add back the old feed_kg that will be freed up from deleted records
-            $oldFeedKgForHangar = $oldRecordsToDelete->get($hangarId)?->sum('feed_kg') ?? 0;
-            $availableStock = $currentRemaining + $oldFeedKgForHangar;
+            // Add back the old feed_kg that will be freed up from:
+            // 1. Deleted records (other records for same date/flock)
+            // 2. Current record being updated (its old feed amount)
+            $oldFeedKgFromDeletedRecords = $oldRecordsToDelete->get($hangarId)?->sum('feed_kg') ?? 0;
+            $oldFeedKgFromCurrentRecord = ($hangarId == $record->hangar_id) ? $record->feed_kg : 0;
+            $availableStock = $currentRemaining + $oldFeedKgFromDeletedRecords + $oldFeedKgFromCurrentRecord;
 
             if ($feedKg > $availableStock) {
-                $hangarName = $hangar?->name ?? 'Hangar #' . $hangarId;
                 $remainingMsg = $availableStock > 0
                     ? "only {$availableStock} kg available"
                     : "out of stock";
@@ -881,13 +853,21 @@ class DailyRecordController extends BaseController
             // Get the farm_id from the flock
             $flock = Flock::findOrFail($request->flock_id);
 
-            // Delete all existing records for this date, flock, and farm
-            // Use the old record's date if it exists, to ensure proper deletion
+            // Get old hangars before deletion to recalculate remaining for all affected ones
             $oldDate = $record->record_date;
+            $affectedHangars = DailyRecord::where('record_date', $oldDate)
+                ->where('farm_id', $flock->farm_id)
+                ->where('flock_id', $request->flock_id)
+                ->pluck('hangar_id')
+                ->unique()
+                ->merge(collect($request->hangars)->pluck('hangar_id')->unique())
+                ->unique();
+
+            // Delete all existing records for this date, flock, and farm
             DailyRecord::where('record_date', $oldDate)
                 ->where('farm_id', $flock->farm_id)
                 ->where('flock_id', $request->flock_id)
-                ->where('created_by', auth()->id())
+                ->where('id', '!=', $id)
                 ->delete();
 
             $records = [];
@@ -909,8 +889,11 @@ class DailyRecordController extends BaseController
                     'created_by'    => auth()->id(),
                 ]);
                 $records[] = $newRecord;
+            }
 
-                $this->recalculateRemainingFeed($hangarData['hangar_id']);
+            // Recalculate remaining for all affected hangars
+            foreach ($affectedHangars as $hangarId) {
+                $this->recalculateRemainingFeed($hangarId);
             }
 
             DB::commit();
@@ -1613,36 +1596,43 @@ class DailyRecordController extends BaseController
         })->first();
     }
 
+    private function getAvailableFeedFIFO($hangarId, $farmId)
+    {
+        $totalRemaining = MaterialStockHangar::where('hangar_id', $hangarId)
+            ->byMaterialType('pelleted feed')
+            ->sum('remaining_quantity');
+
+        return $totalRemaining ?? 0;
+    }
+
     private function recalculateRemainingFeed($hangarId)
     {
         $stockHangars = MaterialStockHangar::where('hangar_id', $hangarId)
-            ->with('materialStock.materialName')
+            ->byMaterialType('pelleted feed')
+            ->orderBy('created_at', 'asc')
             ->get();
 
         if ($stockHangars->isEmpty()) {
             return;
         }
 
-        $pelletedFeeds = [];
-        $totalFeedAdded = 0;
-
-        foreach ($stockHangars as $sh) {
-            $materialType = $sh->materialStock?->materialName?->type;
-            if ($materialType && strtolower($materialType) === 'pelleted feed') {
-                $pelletedFeeds[] = $sh;
-                $totalFeedAdded += $sh->quantity;
-            }
-        }
-
-        if (empty($pelletedFeeds)) {
-            return;
-        }
-
         $totalFeedConsumed = DailyRecord::where('hangar_id', $hangarId)->sum('feed_kg');
-        $remainingQuantity = max(0, $totalFeedAdded - $totalFeedConsumed);
 
-        foreach ($pelletedFeeds as $pelletedFeed) {
-            $pelletedFeed->update(['remaining_quantity' => $remainingQuantity]);
+        $consumedSoFar = 0;
+        $updates = [];
+
+        foreach ($stockHangars as $pelletedFeed) {
+            $stillNeeded = $totalFeedConsumed - $consumedSoFar;
+            $consumedFromThis = min($pelletedFeed->quantity, $stillNeeded);
+
+            $updates[$pelletedFeed->id] = $pelletedFeed->quantity - $consumedFromThis;
+            $consumedSoFar += $consumedFromThis;
+
+            if ($consumedSoFar >= $totalFeedConsumed) break;
+        }
+
+        foreach ($updates as $id => $remaining) {
+            MaterialStockHangar::where('id', $id)->update(['remaining_quantity' => $remaining]);
         }
     }
 

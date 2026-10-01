@@ -4,15 +4,14 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Helpers\FlockHelper;
-use Illuminate\Http\Request;
 use App\Models\DailyRecord;
-use App\Models\Farm;
 use App\Models\Hangar;
 use App\Models\Flock;
 use App\Models\FlockHangar;
-use App\Models\Admin;
 use App\Models\MaterialStock;
 use App\Models\MaterialStockHangar;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -24,7 +23,7 @@ class DailyRecordController extends Controller
     {
         if ($request->ajax()) {
             // Get unique flock/date combinations
-            $data = DailyRecord::with('farm.assignedAdmin', 'flock', 'creator')
+            $data = DailyRecord::with('farm.assignedAdmin', 'flock', 'creator', 'hangar', 'flockHangar')
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                     $query->whereHas('farm', function ($subQuery) {
                         $subQuery->where('created_by', auth()->id())
@@ -43,7 +42,7 @@ class DailyRecordController extends Controller
                 })
                 ->map(function($group) {
                     $firstRecord = $group->first();
-                    $flockLabel = $firstRecord->flock ? \App\Helpers\FlockHelper::getFlockLabel($firstRecord->flock) : 'N/A';
+                    $flockLabel = $firstRecord->flock ? FlockHelper::getFlockLabel($firstRecord->flock) : 'N/A';
                     $breedType = $firstRecord->flock ? $this->extractBreedType($firstRecord->flock->breed) : 'Layer';
                     $breedName = $firstRecord->flock ? $this->extractBreedName($firstRecord->flock->breed) : 'N/A';
 
@@ -63,16 +62,11 @@ class DailyRecordController extends Controller
                         'created_by' => $firstRecord->creator->name ?? 'N/A',
                         'created_at' => $firstRecord->created_at,
                         'hangars' => $group->map(function($record) {
-                            // Get allocated quantity from FlockHangar
-                            $flockHangar = FlockHangar::where('flock_id', $record->flock_id)
-                                ->where('hangar_id', $record->hangar_id)
-                                ->first();
-
                             return [
                                 'id' => $record->id,
                                 'hangar_id' => $record->hangar_id,
                                 'hangar_name' => $record->hangar->name ?? 'N/A',
-                                'allocated_quantity' => $flockHangar->quantity ?? 'N/A',
+                                'allocated_quantity' => $record->flockHangar->quantity ?? 'N/A',
                                 'feed_kg' => $record->feed_kg,
                                 'eggs_tray_30' => $record->eggs_tray_30,
                                 'eggs_count' => $record->eggs_count,
@@ -148,35 +142,42 @@ class DailyRecordController extends Controller
 
     private function recalculateRemainingFeed($hangarId)
     {
-        $latestStockHangar = MaterialStockHangar::where('hangar_id', $hangarId)
-            ->latest('created_at')
-            ->first();
+        $stockHangars = MaterialStockHangar::where('hangar_id', $hangarId)
+            ->byMaterialType('pelleted feed')
+            ->orderBy('created_at', 'asc')
+            ->get();
 
-        if (!$latestStockHangar) {
+        if ($stockHangars->isEmpty()) {
             return;
         }
 
-        $materialStock = $latestStockHangar->materialStock;
-        if (!$materialStock) {
-            return;
+        $totalFeedConsumed = DailyRecord::where('hangar_id', $hangarId)->sum('feed_kg');
+
+        $consumedSoFar = 0;
+        $updates = [];
+
+        foreach ($stockHangars as $pelletedFeed) {
+            $stillNeeded = $totalFeedConsumed - $consumedSoFar;
+            $consumedFromThis = min($pelletedFeed->quantity, $stillNeeded);
+
+            $updates[$pelletedFeed->id] = $pelletedFeed->quantity - $consumedFromThis;
+            $consumedSoFar += $consumedFromThis;
+
+            if ($consumedSoFar >= $totalFeedConsumed) break;
         }
 
-        $materialName = $materialStock->materialName;
-        $materialType = $materialName ? strtolower($materialName->type) : '';
-
-        if ($materialType !== 'pelleted feed') {
-            return;
+        foreach ($updates as $id => $remaining) {
+            MaterialStockHangar::where('id', $id)->update(['remaining_quantity' => $remaining]);
         }
+    }
 
-        $totalFeedAdded = MaterialStockHangar::where('hangar_id', $hangarId)->sum('quantity');
+    private function getAvailableFeedFIFO($hangarId, $farmId)
+    {
+        $totalRemaining = MaterialStockHangar::where('hangar_id', $hangarId)
+            ->byMaterialType('pelleted feed')
+            ->sum('remaining_quantity');
 
-        $totalFeedConsumed = DailyRecord::where('hangar_id', $hangarId)
-            ->sum('feed_kg');
-
-        $remainingQuantity = $totalFeedAdded - $totalFeedConsumed;
-        $remainingQuantity = max(0, $remainingQuantity);
-
-        $latestStockHangar->update(['remaining_quantity' => $remainingQuantity]);
+        return $totalRemaining ?? 0;
     }
 
     private function extractBreedType($breedString)
@@ -282,16 +283,15 @@ class DailyRecordController extends Controller
 
     public function getHangarsByFlock($siteUrl, $flockId)
     {
-        $user = auth()->user();
         $flockId = (int) $flockId;
         $flock = Flock::with('farm')->findOrFail($flockId);
 
         // Verify user has access to this flock
-        if ($user->role !== 'SuperAdmin') {
+        if (auth()->user()->role !== 'SuperAdmin') {
             $hasAccess = $flock->farm && (
-                $flock->farm->created_by === $user->id ||
-                $flock->farm->assigned_to === $user->id ||
-                $flock->farm->assignedAdmins->contains('id', $user->id)
+                $flock->farm->created_by === auth()->id() ||
+                $flock->farm->assigned_to === auth()->id() ||
+                $flock->farm->assignedAdmins->contains('id', auth()->id())
             );
 
             if (!$hasAccess) {
@@ -300,30 +300,33 @@ class DailyRecordController extends Controller
         }
 
         // Get hangars allocated to this flock via FlockHangar (only Active)
-        $flockHangars = \App\Models\FlockHangar::where('flock_id', $flockId)
+        $flockHangars = FlockHangar::where('flock_id', $flockId)
             ->with('hangar')
             ->whereHas('hangar', function ($q) {
                 $q->where('status', 'Active');
             })
+            ->get();
+
+        $mortalities = DailyRecord::where('flock_id', $flockId)
+            ->select('hangar_id', DB::raw('SUM(mortality) as total_mortality'))
+            ->groupBy('hangar_id')
             ->get()
-            ->map(function($allocation) {
-                // Calculate total mortality for this hangar and flock
-                $totalMortality = DailyRecord::where('flock_id', $allocation->flock_id)
-                    ->where('hangar_id', $allocation->hangar_id)
-                    ->sum('mortality');
+            ->keyBy('hangar_id');
 
-                $remaining = (int)$allocation->quantity - $totalMortality;
+        $hangarsData = $flockHangars->map(function($allocation) use ($mortalities) {
+            $totalMortality = $mortalities->get($allocation->hangar_id)?->total_mortality ?? 0;
+            $remaining = (int)$allocation->quantity - $totalMortality;
 
-                return [
-                    'id' => $allocation->hangar->id,
-                    'name' => $allocation->hangar->name,
-                    'quantity' => $allocation->quantity,
-                    'remaining' => max(0, $remaining)
-                ];
-            });
+            return [
+                'id' => $allocation->hangar->id,
+                'name' => $allocation->hangar->name,
+                'quantity' => $allocation->quantity,
+                'remaining' => max(0, $remaining)
+            ];
+        });
 
         return response()->json([
-            'hangars' => $flockHangars,
+            'hangars' => $hangarsData,
             'breed_type' => $this->extractBreedType($flock->breed)
         ]);
     }
@@ -342,7 +345,7 @@ class DailyRecordController extends Controller
             }
             return back()->withErrors($validator->errors());
         }
-
+        
         if (!$request->has('hangar_records') || !$request->hangar_records) {
             $error = ['hangar_records' => 'Please add at least one hangar record.'];
             if ($request->expectsJson()) {
@@ -390,29 +393,14 @@ class DailyRecordController extends Controller
                 }
             }
 
-            // Validate feed stock availability
+            // Validate feed stock availability (FIFO - First In First Out)
             $feedKg = (float)$record['feed_kg'];
             $hangarId = $record['hangar_id'];
             $hangar = Hangar::find($hangarId);
             $hangarName = $hangar?->name ?? 'Hangar #' . $hangarId;
             $farmId = $hangar?->farm_id;
 
-            // Get total remaining from hangar allocations
-            $hangarRemaining = MaterialStockHangar::where('hangar_id', $hangarId)
-                ->latest('created_at')
-                ->value('remaining_quantity') ?? 0;
-
-            // If hangar allocation is empty, check for Feed Stuff materials without hangar allocation
-            if ($hangarRemaining == 0 && $farmId) {
-                $feedStuffRemaining = MaterialStock::where('farm_id', $farmId)
-                    ->whereHas('materialName', function($q) {
-                        $q->where('type', 'Feed Stuff');
-                    })
-                    ->sum('quantity');
-                $currentRemaining = $feedStuffRemaining;
-            } else {
-                $currentRemaining = $hangarRemaining;
-            }
+            $currentRemaining = $this->getAvailableFeedFIFO($hangarId, $farmId);
 
             if ($feedKg > $currentRemaining) {
                 $remainingMsg = $currentRemaining > 0
@@ -429,7 +417,7 @@ class DailyRecordController extends Controller
         try {
             DB::beginTransaction();
 
-            $recordDate = \Carbon\Carbon::createFromFormat('Y-m-d', $request->record_date);
+            $recordDate = Carbon::createFromFormat('Y-m-d', $request->record_date);
 
             foreach ($hangarRecords as $record) {
                 DailyRecord::create([
@@ -491,7 +479,7 @@ class DailyRecordController extends Controller
 
         $flocks = FlockHelper::getAllFlockOptions();
 
-        $flockHangars = \App\Models\FlockHangar::where('flock_id', $dailyRecord->flock_id)
+        $flockHangars = FlockHangar::where('flock_id', $dailyRecord->flock_id)
             ->with('hangar')
             ->get()
             ->map(function($allocation) {
@@ -590,29 +578,14 @@ class DailyRecordController extends Controller
                 }
             }
 
-            // Validate feed stock availability (accounting for old records being deleted)
+            // Validate feed stock availability (FIFO - First In First Out, accounting for deleted records)
             $feedKg = (float)$record['feed_kg'];
             $hangarId = $record['hangar_id'];
             $hangar = Hangar::find($hangarId);
             $hangarName = $hangar?->name ?? 'Hangar #' . $hangarId;
             $farmId = $hangar?->farm_id;
 
-            // Get total remaining from hangar allocations
-            $hangarRemaining = MaterialStockHangar::where('hangar_id', $hangarId)
-                ->latest('created_at')
-                ->value('remaining_quantity') ?? 0;
-
-            // If hangar allocation is empty, check for Feed Stuff materials without hangar allocation
-            if ($hangarRemaining == 0 && $farmId) {
-                $feedStuffRemaining = MaterialStock::where('farm_id', $farmId)
-                    ->whereHas('materialName', function($q) {
-                        $q->where('type', 'Feed Stuff');
-                    })
-                    ->sum('quantity');
-                $currentRemaining = $feedStuffRemaining;
-            } else {
-                $currentRemaining = $hangarRemaining;
-            }
+            $currentRemaining = $this->getAvailableFeedFIFO($hangarId, $farmId);
 
             // Add back the old feed_kg that will be freed up from deleted records
             $oldFeedKgForHangar = $oldRecordsToDelete->get($hangarId)?->sum('feed_kg') ?? 0;
@@ -629,7 +602,7 @@ class DailyRecordController extends Controller
         try {
             DB::beginTransaction();
 
-            $recordDate = \Carbon\Carbon::createFromFormat('Y-m-d', $request->record_date);
+            $recordDate = Carbon::createFromFormat('Y-m-d', $request->record_date);
 
             // Delete old records for this flock on this date
             DailyRecord::where('flock_id', $request->flock_id)

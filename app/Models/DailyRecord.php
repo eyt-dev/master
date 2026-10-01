@@ -50,4 +50,9 @@ class DailyRecord extends Model
     {
         return $this->belongsTo(Admin::class, 'created_by');
     }
+
+    public function flockHangar()
+    {
+        return $this->belongsTo(FlockHangar::class, ['flock_id', 'hangar_id'], ['flock_id', 'hangar_id']);
+    }
 }

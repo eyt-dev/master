@@ -30,4 +30,11 @@ class MaterialStockHangar extends Model
     {
         return $this->belongsTo(Hangar::class, 'hangar_id');
     }
+
+    public function scopeByMaterialType($query, $type)
+    {
+        return $query->whereHas('materialStock.materialName', function($q) use ($type) {
+            $q->whereRaw('LOWER(type) = ?', [strtolower($type)]);
+        });
+    }
 }

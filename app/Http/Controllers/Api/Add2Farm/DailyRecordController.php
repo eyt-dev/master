@@ -1615,35 +1615,35 @@ class DailyRecordController extends BaseController
 
     private function recalculateRemainingFeed($hangarId)
     {
-        $latestStockHangar = MaterialStockHangar::where('hangar_id', $hangarId)
-            ->latest('created_at')
-            ->first();
+        $stockHangars = MaterialStockHangar::where('hangar_id', $hangarId)
+            ->with('materialStock.materialName')
+            ->get();
 
-        if (!$latestStockHangar) {
+        if ($stockHangars->isEmpty()) {
             return;
         }
 
-        $materialStock = $latestStockHangar->materialStock;
-        if (!$materialStock) {
+        $pelletedFeeds = [];
+        $totalFeedAdded = 0;
+
+        foreach ($stockHangars as $sh) {
+            $materialType = $sh->materialStock?->materialName?->type;
+            if ($materialType && strtolower($materialType) === 'pelleted feed') {
+                $pelletedFeeds[] = $sh;
+                $totalFeedAdded += $sh->quantity;
+            }
+        }
+
+        if (empty($pelletedFeeds)) {
             return;
         }
 
-        $materialName = $materialStock->materialName;
-        $materialType = $materialName ? strtolower($materialName->type) : '';
+        $totalFeedConsumed = DailyRecord::where('hangar_id', $hangarId)->sum('feed_kg');
+        $remainingQuantity = max(0, $totalFeedAdded - $totalFeedConsumed);
 
-        if ($materialType !== 'pelleted feed') {
-            return;
+        foreach ($pelletedFeeds as $pelletedFeed) {
+            $pelletedFeed->update(['remaining_quantity' => $remainingQuantity]);
         }
-
-        $totalFeedAdded = MaterialStockHangar::where('hangar_id', $hangarId)->sum('quantity');
-
-        $totalFeedConsumed = DailyRecord::where('hangar_id', $hangarId)
-            ->sum('feed_kg');
-
-        $remainingQuantity = $totalFeedAdded - $totalFeedConsumed;
-        $remainingQuantity = max(0, $remainingQuantity);
-
-        $latestStockHangar->update(['remaining_quantity' => $remainingQuantity]);
     }
 
 }

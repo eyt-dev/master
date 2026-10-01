@@ -16,6 +16,7 @@ use App\Models\MaterialStockHangar;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class DailyRecordController extends Controller
 {
@@ -145,24 +146,37 @@ class DailyRecordController extends Controller
         return view('backend.daily-record.index');
     }
 
-    private function recalculateRemainingFeed($flockId, $hangarId)
+    private function recalculateRemainingFeed($hangarId)
     {
+        $latestStockHangar = MaterialStockHangar::where('hangar_id', $hangarId)
+            ->latest('created_at')
+            ->first();
+
+        if (!$latestStockHangar) {
+            return;
+        }
+
+        $materialStock = $latestStockHangar->materialStock;
+        if (!$materialStock) {
+            return;
+        }
+
+        $materialName = $materialStock->materialName;
+        $materialType = $materialName ? strtolower($materialName->type) : '';
+
+        if ($materialType !== 'pelleted feed') {
+            return;
+        }
+
         $totalFeedAdded = MaterialStockHangar::where('hangar_id', $hangarId)->sum('quantity');
 
-        $totalFeedConsumed = DailyRecord::where('flock_id', $flockId)
-            ->where('hangar_id', $hangarId)
+        $totalFeedConsumed = DailyRecord::where('hangar_id', $hangarId)
             ->sum('feed_kg');
 
         $remainingQuantity = $totalFeedAdded - $totalFeedConsumed;
         $remainingQuantity = max(0, $remainingQuantity);
 
-        $latestStockHangar = MaterialStockHangar::where('hangar_id', $hangarId)
-            ->latest('created_at')
-            ->first();
-
-        if ($latestStockHangar) {
-            $latestStockHangar->update(['remaining_quantity' => $remainingQuantity]);
-        }
+        $latestStockHangar->update(['remaining_quantity' => $remainingQuantity]);
     }
 
     private function extractBreedType($breedString)
@@ -222,7 +236,7 @@ class DailyRecordController extends Controller
         $breedType = $row['breed_type'] ?? 'Layer';
         $feedKg = number_format((float) $hangar['feed_kg'], 2, ',', '.');
         $eggsWeight = number_format((float) $hangar['eggs_weight'], 2, ',', '.');
-        $chicksWeight = number_format((float) $hangar['chicks_weight'], 2, ',', '.');
+        $chicksWeightG = number_format((float) $hangar['chicks_weight'] * 1000, 0, ',', '.');
 
         $html = 'Qty: ' . $hangar['allocated_quantity'] . '<br>' .
                 'Feed: ' . $feedKg . ' kg<br>' .
@@ -234,7 +248,7 @@ class DailyRecordController extends Controller
                      '<br>Eggs(C): ' . $hangar['eggs_count'] .
                      '<br>Eggs Weight: ' . $eggsWeight . ' kg';
         } else {
-            $html .= '<br>Chicks Weight: ' . $chicksWeight . ' kg';
+            $html .= '<br>Chicks Weight: ' . $chicksWeightG . ' g';
         }
 
         // Add notes if present
@@ -316,14 +330,25 @@ class DailyRecordController extends Controller
 
     public function store(Request $request, $siteUrl)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'record_date' => 'required|date_format:Y-m-d',
             'flock_id' => 'required|exists:flocks,id',
             'hangar_records' => 'nullable|json',
         ]);
 
+        if ($validator->fails()) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+            }
+            return back()->withErrors($validator->errors());
+        }
+
         if (!$request->has('hangar_records') || !$request->hangar_records) {
-            return back()->withErrors(['hangar_records' => 'Please add at least one hangar record.']);
+            $error = ['hangar_records' => 'Please add at least one hangar record.'];
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'errors' => $error], 422);
+            }
+            return back()->withErrors($error);
         }
 
         $flock = Flock::findOrFail($request->flock_id);
@@ -331,21 +356,37 @@ class DailyRecordController extends Controller
         $hangarRecords = json_decode($request->hangar_records, true);
 
         if (empty($hangarRecords)) {
-            return back()->withErrors(['hangar_records' => 'Please add at least one hangar record.']);
+            $error = ['hangar_records' => 'Please add at least one hangar record.'];
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'errors' => $error], 422);
+            }
+            return back()->withErrors($error);
         }
 
         // Validate based on breed type before transaction
         foreach ($hangarRecords as $record) {
             if (!isset($record['feed_kg']) || $record['feed_kg'] === '' || $record['feed_kg'] === null) {
-                return back()->withErrors(['hangar_records' => 'Feed (kg) is required.']);
+                $error = ['hangar_records' => 'Feed (kg) is required.'];
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'errors' => $error], 422);
+                }
+                return back()->withErrors($error);
             }
             if (!isset($record['mortality']) || $record['mortality'] === '' || $record['mortality'] === null) {
-                return back()->withErrors(['hangar_records' => 'Mortality is required.']);
+                $error = ['hangar_records' => 'Mortality is required.'];
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'errors' => $error], 422);
+                }
+                return back()->withErrors($error);
             }
 
             if ($breedType === 'Layer') {
                 if (!isset($record['eggs_weight']) || $record['eggs_weight'] === '' || $record['eggs_weight'] === null) {
-                    return back()->withErrors(['hangar_records' => 'Eggs Weight is required for Layer breeds.']);
+                    $error = ['hangar_records' => 'Eggs Weight is required for Layer breeds.'];
+                    if ($request->expectsJson()) {
+                        return response()->json(['success' => false, 'errors' => $error], 422);
+                    }
+                    return back()->withErrors($error);
                 }
             }
 
@@ -354,16 +395,34 @@ class DailyRecordController extends Controller
             $hangarId = $record['hangar_id'];
             $hangar = Hangar::find($hangarId);
             $hangarName = $hangar?->name ?? 'Hangar #' . $hangarId;
+            $farmId = $hangar?->farm_id;
 
-            $currentRemaining = MaterialStockHangar::where('hangar_id', $hangarId)
+            // Get total remaining from hangar allocations
+            $hangarRemaining = MaterialStockHangar::where('hangar_id', $hangarId)
                 ->latest('created_at')
                 ->value('remaining_quantity') ?? 0;
+
+            // If hangar allocation is empty, check for Feed Stuff materials without hangar allocation
+            if ($hangarRemaining == 0 && $farmId) {
+                $feedStuffRemaining = MaterialStock::where('farm_id', $farmId)
+                    ->whereHas('materialName', function($q) {
+                        $q->where('type', 'Feed Stuff');
+                    })
+                    ->sum('quantity');
+                $currentRemaining = $feedStuffRemaining;
+            } else {
+                $currentRemaining = $hangarRemaining;
+            }
 
             if ($feedKg > $currentRemaining) {
                 $remainingMsg = $currentRemaining > 0
                     ? "only {$currentRemaining} kg available"
                     : "out of stock";
-                return back()->withErrors(['hangar_records' => "Insufficient feed in {$hangarName} - {$remainingMsg}"]);
+                $error = ['hangar_records' => "Insufficient feed in {$hangarName} - {$remainingMsg}"];
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'errors' => $error], 422);
+                }
+                return back()->withErrors($error);
             }
         }
 
@@ -382,22 +441,31 @@ class DailyRecordController extends Controller
                     'eggs_tray_30' => (int)($record['eggs_tray_30'] ?? 0),
                     'eggs_count' => (int)($record['eggs_count'] ?? 0),
                     'eggs_weight' => (float)($record['eggs_weight'] ?? 0),
-                    'chicks_weight' => (float)($record['chicks_weight'] ?? 0),
+                    'chicks_weight' => (float)($record['chicks_weight'] ?? 0) / 1000,
                     'mortality' => (int)($record['mortality'] ?? 0),
                     'notes' => $record['notes'] ?? null,
                     'created_by' => auth()->id()
                 ]);
 
-                $this->recalculateRemainingFeed($request->flock_id, $record['hangar_id']);
+                $this->recalculateRemainingFeed($record['hangar_id']);
             }
 
             DB::commit();
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => 'Daily Records created successfully.'], 201);
+            }
+
             Session::flash('successMsg', 'Daily Records created successfully.');
             return redirect()->route('daily-record.index', ['username' => request()->segment(1)]);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Daily record creation error: ' . $e->getMessage());
-            return back()->withErrors('Failed to create daily records: ' . $e->getMessage());
+            $message = 'Failed to create daily records: ' . $e->getMessage();
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 500);
+            }
+            return back()->withErrors($message);
         }
     }
 
@@ -446,11 +514,18 @@ class DailyRecordController extends Controller
     {
         $user = auth()->user();
 
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'record_date' => 'required|date_format:Y-m-d',
             'flock_id' => 'required|exists:flocks,id',
             'hangar_records' => 'nullable|json',
         ]);
+
+        if ($validator->fails()) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+            }
+            return back()->withErrors($validator->errors());
+        }
 
         $dailyRecord = DailyRecord::with('farm')->findOrFail($id);
 
@@ -465,12 +540,20 @@ class DailyRecordController extends Controller
             );
 
             if (!$hasAccess) {
-                abort(403, 'You do not have permission to update this record.');
+                $message = 'You do not have permission to update this record.';
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $message], 403);
+                }
+                abort(403, $message);
             }
         }
 
         if (!$request->has('hangar_records') || !$request->hangar_records) {
-            return back()->withErrors(['hangar_records' => 'Please add at least one hangar record.']);
+            $error = ['hangar_records' => 'Please add at least one hangar record.'];
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'errors' => $error], 422);
+            }
+            return back()->withErrors($error);
         }
 
         $flock = Flock::findOrFail($request->flock_id);
@@ -478,8 +561,19 @@ class DailyRecordController extends Controller
         $hangarRecords = json_decode($request->hangar_records, true);
 
         if (empty($hangarRecords)) {
-            return back()->withErrors(['hangar_records' => 'Please add at least one hangar record.']);
+            $error = ['hangar_records' => 'Please add at least one hangar record.'];
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'errors' => $error], 422);
+            }
+            return back()->withErrors($error);
         }
+
+        // Get old records that will be deleted to account for freed-up stock
+        $oldRecordsToDelete = DailyRecord::where('flock_id', $request->flock_id)
+            ->where('record_date', $dailyRecord->record_date)
+            ->where('id', '!=', $id)
+            ->get()
+            ->groupBy('hangar_id');
 
         // Validate based on breed type before transaction
         foreach ($hangarRecords as $record) {
@@ -496,19 +590,37 @@ class DailyRecordController extends Controller
                 }
             }
 
-            // Validate feed stock availability
+            // Validate feed stock availability (accounting for old records being deleted)
             $feedKg = (float)$record['feed_kg'];
             $hangarId = $record['hangar_id'];
             $hangar = Hangar::find($hangarId);
             $hangarName = $hangar?->name ?? 'Hangar #' . $hangarId;
+            $farmId = $hangar?->farm_id;
 
-            $currentRemaining = MaterialStockHangar::where('hangar_id', $hangarId)
+            // Get total remaining from hangar allocations
+            $hangarRemaining = MaterialStockHangar::where('hangar_id', $hangarId)
                 ->latest('created_at')
                 ->value('remaining_quantity') ?? 0;
 
-            if ($feedKg > $currentRemaining) {
-                $remainingMsg = $currentRemaining > 0
-                    ? "only {$currentRemaining} kg available"
+            // If hangar allocation is empty, check for Feed Stuff materials without hangar allocation
+            if ($hangarRemaining == 0 && $farmId) {
+                $feedStuffRemaining = MaterialStock::where('farm_id', $farmId)
+                    ->whereHas('materialName', function($q) {
+                        $q->where('type', 'Feed Stuff');
+                    })
+                    ->sum('quantity');
+                $currentRemaining = $feedStuffRemaining;
+            } else {
+                $currentRemaining = $hangarRemaining;
+            }
+
+            // Add back the old feed_kg that will be freed up from deleted records
+            $oldFeedKgForHangar = $oldRecordsToDelete->get($hangarId)?->sum('feed_kg') ?? 0;
+            $availableStock = $currentRemaining + $oldFeedKgForHangar;
+
+            if ($feedKg > $availableStock) {
+                $remainingMsg = $availableStock > 0
+                    ? "only {$availableStock} kg available"
                     : "out of stock";
                 return back()->withErrors(['hangar_records' => "Insufficient feed in {$hangarName} - {$remainingMsg}"]);
             }
@@ -537,7 +649,7 @@ class DailyRecordController extends Controller
                         'eggs_tray_30' => (int)($record['eggs_tray_30'] ?? 0),
                         'eggs_count' => (int)($record['eggs_count'] ?? 0),
                         'eggs_weight' => (float)($record['eggs_weight'] ?? 0),
-                        'chicks_weight' => (float)($record['chicks_weight'] ?? 0),
+                        'chicks_weight' => (float)($record['chicks_weight'] ?? 0) / 1000,
                         'mortality' => (int)($record['mortality'] ?? 0),
                         'notes' => $record['notes'] ?? null,
                     ]);
@@ -551,23 +663,32 @@ class DailyRecordController extends Controller
                         'eggs_tray_30' => (int)($record['eggs_tray_30'] ?? 0),
                         'eggs_count' => (int)($record['eggs_count'] ?? 0),
                         'eggs_weight' => (float)($record['eggs_weight'] ?? 0),
-                        'chicks_weight' => (float)($record['chicks_weight'] ?? 0),
+                        'chicks_weight' => (float)($record['chicks_weight'] ?? 0) / 1000,
                         'mortality' => (int)($record['mortality'] ?? 0),
                         'notes' => $record['notes'] ?? null,
                         'created_by' => auth()->id()
                     ]);
                 }
 
-                $this->recalculateRemainingFeed($request->flock_id, $record['hangar_id']);
+                $this->recalculateRemainingFeed($record['hangar_id']);
             }
 
             DB::commit();
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => 'Daily Record updated successfully.'], 200);
+            }
+
             Session::flash('successMsg', 'Daily Record updated successfully.');
             return redirect()->route('daily-record.index', ['username' => request()->segment(1)]);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Daily record update error: ' . $e->getMessage());
-            return back()->withErrors('Failed to update daily records: ' . $e->getMessage());
+            $message = 'Failed to update daily records: ' . $e->getMessage();
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 500);
+            }
+            return back()->withErrors($message);
         }
     }
 
@@ -605,7 +726,7 @@ class DailyRecordController extends Controller
                     ->delete();
 
                 if ($deletedCount > 0) {
-                    $this->recalculateRemainingFeed($dailyRecord->flock_id, $hangarId);
+                    $this->recalculateRemainingFeed($hangarId);
                 }
 
                 $message = $deletedCount > 0 ? 'Daily Record deleted successfully.' : 'Record not found.';
@@ -625,7 +746,7 @@ class DailyRecordController extends Controller
 
                 // Recalculate remaining for all affected hangars
                 foreach ($affectedHangars as $hangarId) {
-                    $this->recalculateRemainingFeed($dailyRecord->flock_id, $hangarId);
+                    $this->recalculateRemainingFeed($hangarId);
                 }
 
                 $message = 'Daily Records deleted successfully.';

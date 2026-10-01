@@ -140,11 +140,13 @@ class FlockController extends Controller
                 ->addColumn('start_date', function($row) {
                     return date('Y-m-d', strtotime($row['start_date']));
                 })
-                ->addColumn('birds', function($row) {
-                    return $row['birds'] ?? 'N/A';
-                })
-                ->addColumn('remaining_birds', function($row) {
-                    return $row['remaining_birds'] ?? 'N/A';
+                ->addColumn('birds_summary', function($row) {
+                    $total = $row['birds'] ?? 0;
+                    $remaining = $row['remaining_birds'] ?? 0;
+                    return '<div style="font-size: 0.9rem; line-height: 1.6;">
+                            <strong>Total:</strong> ' . $total . '<br>
+                            <strong>Remaining:</strong> ' . $remaining . '
+                            </div>';
                 })
                 ->addColumn('created_by', function($row) {
                     return $row['created_by'];
@@ -166,7 +168,7 @@ class FlockController extends Controller
                          .'<a class="delete-flock btn btn-sm btn-danger" data-id="'.$row['id'].'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action', 'breed'])
+                ->rawColumns(['action', 'breed', 'birds_summary'])
                 ->make(true);
         }
 

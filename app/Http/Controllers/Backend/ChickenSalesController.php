@@ -58,11 +58,15 @@ class ChickenSalesController extends Controller
                 ->addColumn('slaughter', function($row) {
                     return $row->slaughter->name ?? 'N/A';
                 })
-                ->addColumn('birds', function($row) {
-                    return $row->total_birds_harvested ?? 'N/A';
-                })
-                ->addColumn('remaining_birds', function($row) {
-                    return $row->remaining_birds ?? 'N/A';
+                ->addColumn('birds_summary', function($row) {
+                    $total = $row->available_birds ?? 0;
+                    $sold = $row->total_birds_harvested ?? 0;
+                    $remaining = $row->remaining_birds ?? 0;
+                    return '<div style="font-size: 0.9rem; line-height: 1.6;">
+                            <strong>Total:</strong> ' . $total . '<br>
+                            <strong>Sold:</strong> ' . $sold . '<br>
+                            <strong>Remaining:</strong> ' . $remaining . '
+                            </div>';
                 })
                 ->addColumn('net_weight', function($row) {
                     return $row->net_weight ?? 'N/A';
@@ -81,7 +85,7 @@ class ChickenSalesController extends Controller
                          .'<a class="delete-chicken-sale btn btn-sm btn-danger" data-id="'.$row->id.'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action', 'flock', 'farm'])
+                ->rawColumns(['action', 'flock', 'farm', 'birds_summary'])
                 ->make(true);
         }
         return view('backend.chicken-sale.index');

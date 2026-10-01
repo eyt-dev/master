@@ -58,8 +58,7 @@
                                     <th>Flock</th>
                                     <th>Hangar</th>
                                     <th>Sold To</th>
-                                    <th>Birds</th>
-                                    <th>Remaining Birds</th>
+                                    <th>Birds Summary</th>
                                     <th>Net Weight</th>
                                     <th>Avg Weight/Bird</th>
                                     <th>Created By</th>
@@ -131,8 +130,7 @@
                 { data: 'flock', name: 'flock' },
                 { data: 'hangar', name: 'hangar' },
                 { data: 'slaughter', name: 'slaughter' },
-                { data: 'birds', name: 'birds' },
-                { data: 'remaining_birds', name: 'remaining_birds' },
+                { data: 'birds_summary', name: 'birds_summary', orderable: false, searchable: false },
                 { data: 'net_weight', name: 'net_weight' },
                 { data: 'avg_weight_per_bird', name: 'avg_weight_per_bird' },
                 { data: 'creator' },

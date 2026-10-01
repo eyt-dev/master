@@ -160,6 +160,16 @@
             var container = $('#hangars_allocation_container');
             var noHangarsMsg = $('#no_hangars_message');
 
+            // Check if material type is feedstock/feed stuff - don't load hangars if it is
+            var materialType = ($('#material_name_id option:selected').data('type') || '').toLowerCase();
+            var isFeedStuff = materialType === 'feed stuff';
+
+            if (isFeedStuff) {
+                container.hide();
+                noHangarsMsg.hide();
+                return;
+            }
+
             if (!farmId) {
                 container.hide();
                 noHangarsMsg.show().text('Please select a farm first.');
@@ -266,12 +276,12 @@
         function toggleHangarAllocationSection() {
             var materialId = $('#material_name_id').val();
             var selectedOption = $('#material_name_id option:selected');
-            var materialType = selectedOption.data('type') || '';
+            var materialType = (selectedOption.data('type') || '').toLowerCase();
 
-            // Check if material type is "Feed Stock" (case-insensitive)
-            var isFeedStock = materialType.toLowerCase() === 'feed stock';
+            // Check if material type is feed material (various formats)
+            var isFeedStuff = materialType === 'feed stuff';
 
-            if (isFeedStock) {
+            if (isFeedStuff) {
                 // Hide hangar allocation for feed stock
                 $('#hangar_allocation_section').slideUp(300);
                 $('#hangar_required_asterisk').hide();
@@ -295,40 +305,49 @@
             }
         });
 
-        // When farm changes, reload hangars
+        // When farm changes, reload hangars (only if not feedstock)
         $('#farm_id').on('change', function() {
             var farmId = $(this).val();
-            loadHangarsForFarm(farmId);
+            var materialType = ($(this).val(), $('#material_name_id option:selected').data('type') || '').toLowerCase();
+            var isFeedStuff = materialType === 'feed stuff';
+
+            if (!isFeedStuff) {
+                loadHangarsForFarm(farmId);
+            } else {
+                // Clear hangars if feedstock
+                $('#hangars_allocation_container').html('');
+                $('#hangar_quantities_json').val('');
+            }
         });
 
         // On page load (edit mode), load hangars if farm is selected and toggle hangar section
         @if(isset($materialStock))
+            toggleHangarAllocationSection();
             var farmId = $('#farm_id').val();
-            if (farmId) {
+            var materialType = ($('#material_name_id option:selected').data('type') || '').toLowerCase();
+            var isFeedStuff = materialType === 'feed stuff';
+            if (farmId && !isFeedMaterial) {
                 loadHangarsForFarm(farmId);
             }
-            toggleHangarAllocationSection();
         @else
             // On create mode, toggle hangar section based on selected material
             toggleHangarAllocationSection();
         @endif
 
-        // Form validation on submit
+        // Form submission via AJAX
         $('#material_stock_form').on('submit', function(e) {
-            var materialType = $('#material_name_id option:selected').data('type') || '';
-            var isFeedStock = materialType.toLowerCase() === 'feed stock';
+            e.preventDefault();
+
+            var materialType = ($('#material_name_id option:selected').data('type') || '').toLowerCase();
+            var isFeedStuff = materialType === 'feed stuff';
             var selectedHangars = [];
             var totalQty = 0;
-            var hasError = false;
 
-            // Only validate hangar allocation if it's not feed stock
-            if (!isFeedStock) {
+            if (!isFeedStuff) {
                 $('.hangar-quantity-input').each(function() {
                     var hangarId = $(this).data('hangar-id');
                     var quantity = parseFloat($(this).val()) || 0;
                     var remainingQtyText = $('input[name="hangar_remaining_qty[' + hangarId + ']"]').val();
-
-                    // Convert comma to period for calculation
                     var remainingQty = parseFloat(remainingQtyText.replace(',', '.')) || 0;
 
                     if (quantity > 0) {
@@ -342,47 +361,68 @@
                 });
 
                 if (selectedHangars.length === 0) {
-                    e.preventDefault();
-                    swal({
-                        title: 'Validation Error',
-                    text: 'Please select at least one hangar with quantity.',
-                    icon: 'warning',
-                    button: 'OK'
-                });
-                return false;
-            }
-
-            // Validate quantity is entered
-            var qty = parseFloat($('#quantity').val());
-            if (!qty || qty < 1) {
-                e.preventDefault();
-                swal({
-                    title: 'Validation Error',
-                    text: 'Please enter a valid total quantity.',
-                    icon: 'warning',
-                    button: 'OK'
-                });
-                return false;
-            }
-
-                // Validate that total hangar quantities match total quantity
-                if (Math.abs(totalQty - qty) > 0.01) {
-                    e.preventDefault();
-                    swal({
-                        title: 'Validation Error',
-                        text: 'Total of hangar quantities (' + totalQty.toFixed(2) + ') must equal total quantity (' + qty.toFixed(2) + ').',
-                        icon: 'warning',
-                        button: 'OK'
-                    });
+                    swal({title: 'Validation Error', text: 'Please select at least one hangar with quantity.', icon: 'warning', button: 'OK'});
                     return false;
                 }
 
-                // Store hangar data for submission - this will be sent as JSON
+                var qty = parseFloat($('#quantity').val());
+                if (!qty || qty < 1) {
+                    swal({title: 'Validation Error', text: 'Please enter a valid total quantity.', icon: 'warning', button: 'OK'});
+                    return false;
+                }
+
+                if (Math.abs(totalQty - qty) > 0.01) {
+                    swal({title: 'Validation Error', text: 'Total of hangar quantities (' + totalQty.toFixed(2) + ') must equal total quantity (' + qty.toFixed(2) + ').', icon: 'warning', button: 'OK'});
+                    return false;
+                }
+
                 $('#hangar_quantities_json').val(JSON.stringify(selectedHangars));
             } else {
-                // For feed stock materials, set empty hangar data
                 $('#hangar_quantities_json').val(JSON.stringify([]));
             }
+
+            var $form = $(this);
+            var $submitBtn = $form.find('button[type="submit"]');
+            var originalText = $submitBtn.text();
+            $submitBtn.prop('disabled', true).text('Saving...');
+
+            $.ajax({
+                url: $form.attr('action'),
+                type: $form.attr('method'),
+                data: $form.serialize(),
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                success: function(response) {
+                    if (response.success) {
+                        swal({title: 'Success', text: response.message, icon: 'success', button: 'OK'}, function() {
+                            $('#material_stock_form_modal').modal('hide');
+                            $('#material_stock_table').DataTable().ajax.reload();
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    var $alertContainer = $form.find('.alert-danger').first();
+                    if (xhr.status === 422 && xhr.responseJSON.errors) {
+                        var errors = xhr.responseJSON.errors;
+                        var errorHtml = '<div><strong>Errors:</strong><ul>';
+                        for (var field in errors) {
+                            var msgs = Array.isArray(errors[field]) ? errors[field] : [errors[field]];
+                            msgs.forEach(function(msg) {
+                                errorHtml += '<li>' + msg + '</li>';
+                            });
+                        }
+                        errorHtml += '</ul></div>';
+                        if ($alertContainer.length) {
+                            $alertContainer.html(errorHtml).show();
+                        } else {
+                            $form.prepend('<div class="alert alert-danger alert-dismissible fade show" role="alert">' + errorHtml + '<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
+                        }
+                        window.scrollTo(0, $form.offset().top - 50);
+                    } else {
+                        swal({title: 'Error', text: 'An error occurred. Please try again.', icon: 'error', button: 'OK'});
+                    }
+                    $submitBtn.prop('disabled', false).text(originalText);
+                }
+            });
         });
     });
 </script>

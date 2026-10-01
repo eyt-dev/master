@@ -257,7 +257,7 @@
                 });
         }
 
-        // Form submission
+        // Form submission via AJAX
         $('#daily_record_form').on('submit', function(e) {
             e.preventDefault();
 
@@ -266,20 +266,14 @@
 
             container.find('.hangar-record-row').each(function() {
                 var hangarId = $(this).data('hangar-id');
-
-                // Convert comma to dot for decimal values - safely handle undefined
                 var feedValue = ($(this).find('.feed-input').val() || '').replace(',', '.');
                 var feedKg = parseFloat(feedValue) || 0;
-
                 var eggsTray = parseInt($(this).find('.eggs-tray-input').val()) || 0;
                 var eggsCount = parseInt($(this).find('.eggs-count-input').val()) || 0;
-
                 var eggsWeightValue = ($(this).find('.eggs-weight-input').val() || '').replace(',', '.');
                 var eggsWeight = parseFloat(eggsWeightValue) || 0;
-
                 var chicksWeightValue = ($(this).find('.chicks-weight-input').val() || '').replace(',', '.');
                 var chicksWeight = parseFloat(chicksWeightValue) || 0;
-
                 var mortality = parseInt($(this).find('.mortality-input').val()) || 0;
                 var notes = $(this).find('.notes-input').val() || '';
 
@@ -296,27 +290,55 @@
             });
 
             if (hangarRecords.length === 0) {
-                swal({
-                    title: 'Validation Error',
-                    text: 'Please select a flock and enter hangar details.',
-                    icon: 'warning',
-                    button: 'OK'
-                });
+                swal({title: 'Validation Error', text: 'Please select a flock and enter hangar details.', icon: 'warning', button: 'OK'});
                 return false;
             }
 
-            // Remove any existing hangar_records input
-            $('input[name="hangar_records"]').remove();
+            var $form = $(this);
+            var $submitBtn = $form.find('button[type="submit"]');
+            var originalText = $submitBtn.text();
+            $submitBtn.prop('disabled', true).text('Saving...');
 
-            // Store hangar records as JSON
-            $('<input>').attr({
-                type: 'hidden',
-                name: 'hangar_records',
-                value: JSON.stringify(hangarRecords)
-            }).appendTo('#daily_record_form');
+            var formData = $form.serializeArray();
+            formData.push({name: 'hangar_records', value: JSON.stringify(hangarRecords)});
 
-            // Now submit the form (won't trigger submit event again)
-            this.submit();
+            $.ajax({
+                url: $form.attr('action'),
+                type: $form.attr('method'),
+                data: $.param(formData),
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                success: function(response) {
+                    if (response.success) {
+                        swal({title: 'Success', text: response.message, icon: 'success', button: 'OK'}, function() {
+                            $('#daily_record_form_modal').modal('hide');
+                            $('#daily_record_table').DataTable().ajax.reload();
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    var $alertContainer = $form.find('.alert-danger').first();
+                    if (xhr.status === 422 && xhr.responseJSON.errors) {
+                        var errors = xhr.responseJSON.errors;
+                        var errorHtml = '<div><strong>Errors:</strong><ul>';
+                        for (var field in errors) {
+                            var msgs = Array.isArray(errors[field]) ? errors[field] : [errors[field]];
+                            msgs.forEach(function(msg) {
+                                errorHtml += '<li>' + msg + '</li>';
+                            });
+                        }
+                        errorHtml += '</ul></div>';
+                        if ($alertContainer.length) {
+                            $alertContainer.html(errorHtml).show();
+                        } else {
+                            $form.prepend('<div class="alert alert-danger alert-dismissible fade show" role="alert">' + errorHtml + '<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>');
+                        }
+                        window.scrollTo(0, $form.offset().top - 50);
+                    } else {
+                        swal({title: 'Error', text: 'An error occurred. Please try again.', icon: 'error', button: 'OK'});
+                    }
+                    $submitBtn.prop('disabled', false).text(originalText);
+                }
+            });
         });
 
         // Trigger flock loading on page load if in edit mode

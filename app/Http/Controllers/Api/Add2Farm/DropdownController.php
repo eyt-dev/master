@@ -83,4 +83,48 @@ class DropdownController extends BaseController
             'data' => $feedSuppliers,
         ]);
     }
+
+    /**
+     * Get material types dropdown
+     *
+     * Returns list of available material types for dropdown selection.
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Material types retrieved successfully.",
+     *   "data": [
+     *     {
+     *       "value": "pelleted_feed",
+     *       "label": "Pelleted Feed"
+     *     },
+     *     {
+     *       "value": "mash_feed",
+     *       "label": "Mash Feed"
+     *     },
+     *     {
+     *       "value": "feed_ingredient",
+     *       "label": "Feed Ingredient"
+     *     },
+     *     {
+     *       "value": "premix",
+     *       "label": "Premix"
+     *     }
+     *   ]
+     * }
+     */
+    public function materialTypes()
+    {
+        $types = [
+            ['value' => 'pelleted_feed', 'label' => 'Pelleted Feed'],
+            ['value' => 'mash_feed', 'label' => 'Mash Feed'],
+            ['value' => 'feed_ingredient', 'label' => 'Feed Ingredient'],
+            ['value' => 'premix', 'label' => 'Premix'],
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Material types retrieved successfully.',
+            'data' => $types,
+        ]);
+    }
 }

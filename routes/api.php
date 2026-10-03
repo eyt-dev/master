@@ -201,6 +201,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
         Route::get('dropdowns/breeds', [Add2FarmDropdownController::class, 'breeds']);
         Route::get('dropdowns/slaughterers', [Add2FarmDropdownController::class, 'slaughterers']);
         Route::get('dropdowns/material-names', [Add2FarmDropdownController::class, 'materialNames']);
+        Route::get('dropdowns/material-types', [Add2FarmDropdownController::class, 'materialTypes']);
     });
 
     // TEMPORARY MAINTENANCE ROUTES - SHOULD BE REMOVED AFTER USE

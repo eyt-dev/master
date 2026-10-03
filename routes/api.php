@@ -137,6 +137,11 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
     });
 
     // Farms - Type 2 (Farm Owner) and Type 3 (Supervisor) can access
+    // Dropdowns - Public (no authentication required)
+    Route::prefix('dropdowns')->group(function () {
+        Route::get('farm-types', [Add2FarmDropdownController::class, 'farmTypes']);
+    });
+
     Route::middleware(['auth:sanctum', 'check.admin.type:0,1,2'])->group(function () {
         Route::get('farms', [Add2FarmFarmController::class, 'index']);
         Route::post('farms', [Add2FarmFarmController::class, 'store']);
@@ -191,6 +196,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('dropdowns/farms', [Add2FarmDropdownController::class, 'farms']);
         Route::get('dropdowns/suppliers', [Add2FarmDropdownController::class, 'suppliers']);
+        Route::get('dropdowns/feed_suppliers', [Add2FarmDropdownController::class, 'feedSuppliers']);
         Route::get('dropdowns/supervisors', [Add2FarmDropdownController::class, 'supervisors']);
         Route::get('dropdowns/breeds', [Add2FarmDropdownController::class, 'breeds']);
         Route::get('dropdowns/slaughterers', [Add2FarmDropdownController::class, 'slaughterers']);

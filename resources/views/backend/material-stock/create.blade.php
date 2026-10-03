@@ -205,30 +205,15 @@
 
             // Check if editing - load previous data
             var existingAllocations = {};
-            var existingRemaining = {};
             @if(isset($materialStockHangars))
                 @foreach($materialStockHangars as $msh)
                     existingAllocations[{{ $msh->hangar_id }}] = {{ $msh->quantity }};
-                    existingRemaining[{{ $msh->hangar_id }}] = {{ $msh->remaining_quantity }};
                 @endforeach
             @endif
 
-            // Build the hangar list with Qty and Remaining Qty columns
+            // Build the hangar list with Qty column only
             hangars.forEach(function(hangar) {
                 var quantity = existingAllocations[hangar.id] || '';
-
-                // Get the current remaining from AJAX response
-                var defaultRemaining = parseFloat(hangar.remaining.replace(',', '.')) || 0;
-                var existingQty = parseInt(quantity) || 0;
-
-                // Calculate new remaining based on create vs edit mode
-                @if(isset($materialStock))
-                    // Edit mode: just use entered quantity (FIFO will recalculate)
-                    var calculatedRemaining = existingQty;
-                @else
-                    // Create mode: add old remaining + entered quantity
-                    var calculatedRemaining = defaultRemaining + existingQty;
-                @endif
 
                 var html = `
                     <div class="d-flex align-items-center justify-content-between p-3" style="border-bottom: 1px solid #dee2e6;">
@@ -238,18 +223,13 @@
                             </div>
                             <div>
                                 <p class="mb-0 font-weight-600" style="color: #212529;">${hangar.name}</p>
-                                <small class="text-muted" style="font-size: 11px;">Current: ${hangar.remaining}</small>
+                                <small class="text-muted" style="font-size: 11px;">Current Remaining: ${hangar.remaining} kg</small>
                             </div>
                         </div>
                         <div class="ml-3" style="min-width: 150px;">
-                            <label style="font-size: 12px; color: #666;">Qty</label>
+                            <label style="font-size: 12px; color: #666;">Allocation Qty</label>
                             <input type="number" class="form-control hangar-quantity-input" name="hangar_qty[${hangar.id}]"
-                                placeholder="0" value="${quantity}" min="0" step="0.01" data-hangar-id="${hangar.id}" data-default-remaining="${defaultRemaining}" />
-                        </div>
-                        <div class="ml-3" style="min-width: 150px;">
-                            <label style="font-size: 12px; color: #666;">Remaining</label>
-                            <input type="text" class="form-control hangar-remaining-qty-input" name="hangar_remaining_qty[${hangar.id}]"
-                                placeholder="0" value="${calculatedRemaining.toFixed(2).replace('.', ',')}" readonly data-hangar-id="${hangar.id}" style="background-color: #f0f0f0;" />
+                                placeholder="0" value="${quantity}" min="0" step="0.01" data-hangar-id="${hangar.id}" />
                         </div>
                     </div>
                 `;
@@ -262,26 +242,7 @@
 
         // Attach event listeners for quantity inputs
         function attachEventListeners() {
-            $(document).off('input', '.hangar-quantity-input').on('input', '.hangar-quantity-input', function() {
-                var hangarId = $(this).data('hangar-id');
-                var defaultRemaining = parseFloat($(this).data('default-remaining')) || 0;
-                var enteredQty = parseFloat($(this).val()) || 0;
-
-                // Calculate based on create vs edit mode
-                @if(isset($materialStock))
-                    // Edit mode: just use entered quantity (FIFO will recalculate)
-                    var newRemaining = enteredQty;
-                @else
-                    // Create mode: add default_remaining + entered_quantity
-                    var newRemaining = defaultRemaining + enteredQty;
-                @endif
-
-                // Format with comma for display
-                var formattedRemaining = newRemaining.toFixed(2).replace('.', ',');
-
-                // Update the remaining field
-                $('input[name="hangar_remaining_qty[' + hangarId + ']"]').val(formattedRemaining);
-            });
+            // Event listener removed - no longer tracking remaining quantity on form
         }
 
         // Toggle hangar allocation section based on material type
@@ -359,15 +320,12 @@
                 $('.hangar-quantity-input').each(function() {
                     var hangarId = $(this).data('hangar-id');
                     var quantity = parseFloat($(this).val()) || 0;
-                    var remainingQtyText = $('input[name="hangar_remaining_qty[' + hangarId + ']"]').val();
-                    var remainingQty = parseFloat(remainingQtyText.replace(',', '.')) || 0;
 
                     if (quantity > 0) {
                         totalQty += quantity;
                         selectedHangars.push({
                             hangar_id: hangarId,
-                            quantity: quantity,
-                            remaining_quantity: remainingQty
+                            quantity: quantity
                         });
                     }
                 });

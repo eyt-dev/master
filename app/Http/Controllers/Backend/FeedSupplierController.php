@@ -122,7 +122,31 @@ class FeedSupplierController extends Controller
 
     public function destroy($siteUrl, $id)
     {
-        FeedSupplier::findOrFail($id)->delete();
+        $supplier = FeedSupplier::findOrFail($id);
+
+        $dependentRecords = [];
+
+        $materialStocksCount = \App\Models\MaterialStock::where('supplier_id', $supplier->id)->count();
+        if ($materialStocksCount > 0) {
+            $dependentRecords['Material Stocks'] = $materialStocksCount;
+        }
+
+        if (!empty($dependentRecords)) {
+            $message = 'Cannot delete supplier "' . $supplier->name . '". The following related data exists: ';
+            $details = [];
+            foreach ($dependentRecords as $type => $count) {
+                $details[] = $count . ' ' . $type;
+            }
+            $message .= implode(', ', $details) . '. Please remove all material stocks using this supplier before deleting.';
+
+            return response()->json([
+                'msg' => $message,
+                'error' => true,
+                'dependentRecords' => $dependentRecords
+            ], 422);
+        }
+
+        $supplier->delete();
         return response()->json(['msg' => 'Feed Supplier deleted successfully.']);
     }
 }

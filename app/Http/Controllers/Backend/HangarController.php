@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Hangar;
 use App\Models\Farm;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\DB;
+use App\Models\DailyRecord;
+use App\Models\MaterialStockHangar;
 
 class HangarController extends Controller
 {
@@ -46,6 +49,17 @@ class HangarController extends Controller
                 ->addColumn('created_at', function($row) {
                     return date('Y-m-d', strtotime($row->created_at));
                 })
+                ->addColumn('remaining_feed', function($row) {
+                    $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $row->id)
+                        ->byMaterialType('pelleted feed')
+                        ->sum('quantity') ?? 0;
+
+                    $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $row->id)
+                        ->sum('feed_kg') ?? 0;
+
+                    $remaining = max(0, $totalStock - $totalConsumed);
+                    return number_format($remaining, 2) . ' kg';
+                })
                 ->addColumn('action', function($row) {
                     return '<a class="edit-hangar btn btn-sm btn-success" data-path="'.route('hangar.edit', ['username' => request()->segment(1),  'hangar' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
                          .'<a class="delete-hangar btn btn-sm btn-danger" data-path="'.route('hangar.destroy', ['username' => request()->segment(1), 'hangar' => $row->id]).'" title="Delete"><i class="fa fa-trash"></i></a>';
@@ -76,7 +90,7 @@ class HangarController extends Controller
         $request->validate([
             'farm_id' => 'required',
             'name' => 'required|string',
-            'area_sqm' => 'required|numeric',
+            'area_sqm' => 'required|integer|min:0',
             'layer_hens' => 'required|integer',
             'broiler_hens' => 'required|integer',
         ]);
@@ -84,7 +98,7 @@ class HangarController extends Controller
         $createData = [
             'farm_id' => $request->farm_id,
             'name' => $request->name,
-            'area_sqm' => $request->area_sqm,
+            'area_sqm' => (int) $request->area_sqm,
             'layer_hens' => $request->layer_hens,
             'broiler_hens' => $request->broiler_hens,
             'created_by' => auth()->id()
@@ -146,7 +160,7 @@ class HangarController extends Controller
         $request->validate([
             'farm_id' => 'required',
             'name' => 'required|string',
-            'area_sqm' => 'required|numeric',
+            'area_sqm' => 'required|integer|min:0',
             'layer_hens' => 'required|integer',
             'broiler_hens' => 'required|integer',
         ]);
@@ -154,7 +168,7 @@ class HangarController extends Controller
         $hangar->update([
             'farm_id' => $request->farm_id,
             'name' => $request->name,
-            'area_sqm' => $request->area_sqm,
+            'area_sqm' => (int) $request->area_sqm,
             'layer_hens' => $request->layer_hens,
             'broiler_hens' => $request->broiler_hens,
         ]);
@@ -180,14 +194,36 @@ class HangarController extends Controller
             }
         }
 
-        // Check if hangar has any flocks assigned to it
-        $flockCount = $hangar->flocks()->count();
-        if ($flockCount > 0) {
+        // Check for dependent records before deletion
+        $dependentRecords = [];
+
+        $dailyRecordsCount = \App\Models\DailyRecord::where('hangar_id', $hangar->id)->count();
+        if ($dailyRecordsCount > 0) {
+            $dependentRecords['Daily Records'] = $dailyRecordsCount;
+        }
+
+        $materialStockCount = \App\Models\MaterialStockHangar::where('hangar_id', $hangar->id)->count();
+        if ($materialStockCount > 0) {
+            $dependentRecords['Material Stock Allocations'] = $materialStockCount;
+        }
+
+        if (!empty($dependentRecords)) {
+            $message = 'Cannot delete hangar "' . $hangar->name . '". The following related data exists: ';
+            $details = [];
+            foreach ($dependentRecords as $type => $count) {
+                $details[] = $count . ' ' . $type;
+            }
+            $message .= implode(', ', $details) . '. Please remove all related data before deleting this hangar.';
+
             return response()->json([
-                'msg' => 'Cannot delete hangar. It has ' . $flockCount . ' flock(s) assigned to it.',
-                'error' => true
+                'msg' => $message,
+                'error' => true,
+                'dependentRecords' => $dependentRecords
             ], 422);
         }
+
+        // Auto-remove flock allocations when deleting hangar
+        \App\Models\FlockHangar::where('hangar_id', $hangar->id)->delete();
 
         $hangar->delete();
         return response()->json(['msg' => 'Hangar deleted successfully.']);

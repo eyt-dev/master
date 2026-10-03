@@ -7,6 +7,9 @@ use App\Models\Farm;
 use App\Models\Admin;
 use App\Models\Country;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\DB;
+use App\Models\DailyRecord;
+use App\Models\Hangar;
 
 class FarmController extends Controller
 {
@@ -216,7 +219,41 @@ class FarmController extends Controller
 
     public function destroy($siteUrl, $id)
     {
-        Farm::findOrFail($id)->delete();
+        $farm = Farm::with('flocks', 'hangars')->findOrFail($id);
+
+        $dependentRecords = [];
+
+        $flocksCount = \App\Models\Flock::where('farm_id', $farm->id)->count();
+        if ($flocksCount > 0) {
+            $dependentRecords['Flocks'] = $flocksCount;
+        }
+
+        $hangarsCount = \App\Models\Hangar::where('farm_id', $farm->id)->count();
+        if ($hangarsCount > 0) {
+            $dependentRecords['Hangars'] = $hangarsCount;
+        }
+
+        $dailyRecordsCount = \App\Models\DailyRecord::where('farm_id', $farm->id)->count();
+        if ($dailyRecordsCount > 0) {
+            $dependentRecords['Daily Records'] = $dailyRecordsCount;
+        }
+
+        if (!empty($dependentRecords)) {
+            $message = 'Cannot delete farm "' . $farm->name . '". The following related data exists: ';
+            $details = [];
+            foreach ($dependentRecords as $type => $count) {
+                $details[] = $count . ' ' . $type;
+            }
+            $message .= implode(', ', $details) . '. Please remove all related data before deleting this farm.';
+
+            return response()->json([
+                'msg' => $message,
+                'error' => true,
+                'dependentRecords' => $dependentRecords
+            ], 422);
+        }
+
+        $farm->delete();
         return response()->json(['msg' => 'Farm deleted successfully.']);
     }
 }

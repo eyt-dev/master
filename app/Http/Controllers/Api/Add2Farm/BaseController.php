@@ -121,4 +121,21 @@ class BaseController extends Controller
             return "Week {$weeks}";
         }
     }
+
+    /**
+     * Calculate remaining feed for a hangar
+     * Remaining = Total Feed Stock - Total Daily Record Consumption
+     * Simple calculation at hangar level (not per feed entry)
+     */
+    protected function getHangarRemainingFeed($hangarId)
+    {
+        $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $hangarId)
+            ->byMaterialType('pelleted feed')
+            ->sum('quantity') ?? 0;
+
+        $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $hangarId)
+            ->sum('feed_kg') ?? 0;
+
+        return max(0, $totalStock - $totalConsumed);
+    }
 }

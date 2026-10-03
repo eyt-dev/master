@@ -6,10 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\MaterialStock;
 use App\Models\Farm;
-use App\Models\ChicksSupplier;
+use App\Models\FeedSupplier;
 use App\Models\Hangar;
 use App\Models\MaterialStockHangar;
 use App\Models\MaterialName;
+use App\Models\DailyRecord;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -72,9 +73,20 @@ class MaterialStockController extends Controller
                     return date('Y-m-d', strtotime($row->created_at));
                 })
                 ->addColumn('quantity', function($row) {
-                    // Use eager loaded relationship instead of querying
-                    $hangarAllocations = $row->materialStockHangarAllocations;
-                    $totalRemaining = $hangarAllocations->sum('remaining_quantity');
+                    // Get hangars for this feed stock entry and calculate total remaining
+                    $hangarIds = $row->materialStockHangarAllocations->pluck('hangar_id')->toArray();
+                    $totalRemaining = 0;
+
+                    foreach ($hangarIds as $hangarId) {
+                        $totalStock = MaterialStockHangar::where('hangar_id', $hangarId)
+                            ->byMaterialType('pelleted feed')
+                            ->sum('quantity') ?? 0;
+
+                        $totalConsumed = DailyRecord::where('hangar_id', $hangarId)
+                            ->sum('feed_kg') ?? 0;
+
+                        $totalRemaining += max(0, $totalStock - $totalConsumed);
+                    }
 
                     return 'Total: ' . number_format($row->quantity, 2) . ' kg<br>' .
                            'Remaining: ' . number_format($totalRemaining, 2) . ' kg';
@@ -91,70 +103,80 @@ class MaterialStockController extends Controller
                 ->addColumn('hangar1', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[0]) && $allocations[0]->hangar) {
-                        return $allocations[0]->hangar->name . '<br>Qty: ' . $allocations[0]->quantity . '<br>Remaining: ' . $allocations[0]->remaining_quantity;
+                        $remaining = $this->getHangarRemainingFeed($allocations[0]->hangar_id);
+                        return $allocations[0]->hangar->name . '<br>Qty: ' . $allocations[0]->quantity . '<br>Remaining: ' . number_format($remaining, 2);
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar2', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[1]) && $allocations[1]->hangar) {
-                        return $allocations[1]->hangar->name . '<br>Qty: ' . $allocations[1]->quantity . '<br>Remaining: ' . $allocations[1]->remaining_quantity;
+                        $remaining = $this->getHangarRemainingFeed($allocations[1]->hangar_id);
+                        return $allocations[1]->hangar->name . '<br>Qty: ' . $allocations[1]->quantity . '<br>Remaining: ' . number_format($remaining, 2);
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar3', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[2]) && $allocations[2]->hangar) {
-                        return $allocations[2]->hangar->name . '<br>Qty: ' . $allocations[2]->quantity . '<br>Remaining: ' . $allocations[2]->remaining_quantity;
+                        $remaining = $this->getHangarRemainingFeed($allocations[2]->hangar_id);
+                        return $allocations[2]->hangar->name . '<br>Qty: ' . $allocations[2]->quantity . '<br>Remaining: ' . number_format($remaining, 2);
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar4', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[3]) && $allocations[3]->hangar) {
-                        return $allocations[3]->hangar->name . '<br>Qty: ' . $allocations[3]->quantity . '<br>Remaining: ' . $allocations[3]->remaining_quantity;
+                        $remaining = $this->getHangarRemainingFeed($allocations[3]->hangar_id);
+                        return $allocations[3]->hangar->name . '<br>Qty: ' . $allocations[3]->quantity . '<br>Remaining: ' . number_format($remaining, 2);
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar5', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[4]) && $allocations[4]->hangar) {
-                        return $allocations[4]->hangar->name . '<br>Qty: ' . $allocations[4]->quantity . '<br>Remaining: ' . $allocations[4]->remaining_quantity;
+                        $remaining = $this->getHangarRemainingFeed($allocations[4]->hangar_id);
+                        return $allocations[4]->hangar->name . '<br>Qty: ' . $allocations[4]->quantity . '<br>Remaining: ' . number_format($remaining, 2);
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar6', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[5]) && $allocations[5]->hangar) {
-                        return $allocations[5]->hangar->name . '<br>Qty: ' . $allocations[5]->quantity . '<br>Remaining: ' . $allocations[5]->remaining_quantity;
+                        $remaining = $this->getHangarRemainingFeed($allocations[5]->hangar_id);
+                        return $allocations[5]->hangar->name . '<br>Qty: ' . $allocations[5]->quantity . '<br>Remaining: ' . number_format($remaining, 2);
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar7', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[6]) && $allocations[6]->hangar) {
-                        return $allocations[6]->hangar->name . '<br>Qty: ' . $allocations[6]->quantity . '<br>Remaining: ' . $allocations[6]->remaining_quantity;
+                        $remaining = $this->getHangarRemainingFeed($allocations[6]->hangar_id);
+                        return $allocations[6]->hangar->name . '<br>Qty: ' . $allocations[6]->quantity . '<br>Remaining: ' . number_format($remaining, 2);
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar8', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[7]) && $allocations[7]->hangar) {
-                        return $allocations[7]->hangar->name . '<br>Qty: ' . $allocations[7]->quantity . '<br>Remaining: ' . $allocations[7]->remaining_quantity;
+                        $remaining = $this->getHangarRemainingFeed($allocations[7]->hangar_id);
+                        return $allocations[7]->hangar->name . '<br>Qty: ' . $allocations[7]->quantity . '<br>Remaining: ' . number_format($remaining, 2);
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar9', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[8]) && $allocations[8]->hangar) {
-                        return $allocations[8]->hangar->name . '<br>Qty: ' . $allocations[8]->quantity . '<br>Remaining: ' . $allocations[8]->remaining_quantity;
+                        $remaining = $this->getHangarRemainingFeed($allocations[8]->hangar_id);
+                        return $allocations[8]->hangar->name . '<br>Qty: ' . $allocations[8]->quantity . '<br>Remaining: ' . number_format($remaining, 2);
                     }
                     return 'N/A';
                 })
                 ->addColumn('hangar10', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[9]) && $allocations[9]->hangar) {
-                        return $allocations[9]->hangar->name . '<br>Qty: ' . $allocations[9]->quantity . '<br>Remaining: ' . $allocations[9]->remaining_quantity;
+                        $remaining = $this->getHangarRemainingFeed($allocations[9]->hangar_id);
+                        return $allocations[9]->hangar->name . '<br>Qty: ' . $allocations[9]->quantity . '<br>Remaining: ' . number_format($remaining, 2);
                     }
                     return 'N/A';
                 })
@@ -182,7 +204,7 @@ class MaterialStockController extends Controller
             $farms = Farm::query();
         }
 
-        $suppliers = ChicksSupplier::all();
+        $suppliers = FeedSupplier::all();
         $materialNames = MaterialName::all();
         $farms = $farms->get();
 
@@ -211,15 +233,8 @@ class MaterialStockController extends Controller
             ->select('id', 'name')
             ->get();
 
-        $hangarIds = $hangars->pluck('id')->toArray();
-        $latestStocks = MaterialStockHangar::whereIn('hangar_id', $hangarIds)
-            ->orderBy('created_at', 'DESC')
-            ->get()
-            ->groupBy('hangar_id')
-            ->map(fn($items) => $items->first());
-
-        $hangars = $hangars->map(function ($hangar) use ($latestStocks) {
-            $remaining = $latestStocks->get($hangar->id)?->remaining_quantity ?? 0;
+        $hangars = $hangars->map(function ($hangar) {
+            $remaining = $this->getHangarRemainingFeed($hangar->id);
             return [
                 'id' => $hangar->id,
                 'name' => $hangar->name,
@@ -293,24 +308,13 @@ class MaterialStockController extends Controller
                 'created_by' => auth()->id()
             ]);
 
-            // Save hangar allocations with accumulated remaining quantity if provided
+            // Save hangar allocations if provided
             if (!empty($hangarQuantities)) {
-                $hangarIds = array_column($hangarQuantities, 'hangar_id');
-                // $latestStocks = MaterialStockHangar::whereIn('hangar_id', $hangarIds)
-                //     ->orderBy('created_at', 'DESC')
-                //     ->get()
-                //     ->groupBy('hangar_id')
-                //     ->map(fn($items) => $items->first());
-
                 foreach ($hangarQuantities as $allocation) {
-                    // $currentRemaining = $latestStocks->get($allocation['hangar_id'])?->remaining_quantity ?? 0;
-                    // $remainingQuantity = $currentRemaining + (float)$allocation['quantity'];
-
                     MaterialStockHangar::create([
                         'material_stock_id' => $materialStock->id,
                         'hangar_id' => $allocation['hangar_id'],
                         'quantity' => (float)$allocation['quantity'],
-                        'remaining_quantity' => (float)$allocation['remaining_quantity']
                     ]);
                 }
             } 
@@ -499,51 +503,14 @@ class MaterialStockController extends Controller
             // Delete old allocations
             $materialStock->materialStockHangarAllocations()->delete();
 
-            // Save new allocations with accumulated remaining quantity if provided
+            // Save new allocations
             if (!empty($hangarQuantities)) {
-                $isPelletedFeed = $materialName && strtolower($materialName->type) === 'pelleted feed';
-
-                if ($isPelletedFeed) {
-                    $hangarIds = array_column($hangarQuantities, 'hangar_id');
-                    $latestStocks = MaterialStockHangar::whereIn('hangar_id', $hangarIds)
-                        ->orderBy('created_at', 'DESC')
-                        ->get()
-                        ->groupBy('hangar_id')
-                        ->map(fn($items) => $items->first());
-                }
-
                 foreach ($hangarQuantities as $allocation) {
-                    $remainingQuantity = (float)$allocation['quantity'];
-
-                    if ($isPelletedFeed) {
-                        $currentRemaining = $latestStocks->get($allocation['hangar_id'])?->remaining_quantity ?? 0;
-                        $remainingQuantity = $currentRemaining + (float)$allocation['quantity'];
-                    }
-
                     MaterialStockHangar::create([
                         'material_stock_id' => $materialStock->id,
                         'hangar_id' => $allocation['hangar_id'],
                         'quantity' => (float)$allocation['quantity'],
-                        'remaining_quantity' => $remainingQuantity
                     ]);
-                }
-            } else {
-                // For Feed Stuff with no hangar allocation, create tracking records for each hangar
-                $isFeedStuff = $materialName && strtolower($materialName->type) === 'feed stuff';
-                if ($isFeedStuff) {
-                    $farmHangars = Hangar::where('farm_id', $request->farm_id)->get();
-                    $quantityPerHangar = count($farmHangars) > 0
-                        ? (float)$request->quantity / count($farmHangars)
-                        : (float)$request->quantity;
-
-                    foreach ($farmHangars as $hangar) {
-                        MaterialStockHangar::create([
-                            'material_stock_id' => $materialStock->id,
-                            'hangar_id' => $hangar->id,
-                            'quantity' => $quantityPerHangar,
-                            'remaining_quantity' => $quantityPerHangar
-                        ]);
-                    }
                 }
             }
 
@@ -596,5 +563,17 @@ class MaterialStockController extends Controller
             Log::error('Material stock deletion error: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to delete material stock: ' . $e->getMessage()], 500);
         }
+    }
+
+    private function getHangarRemainingFeed($hangarId)
+    {
+        $totalStock = MaterialStockHangar::where('hangar_id', $hangarId)
+            ->byMaterialType('pelleted feed')
+            ->sum('quantity') ?? 0;
+
+        $totalConsumed = DailyRecord::where('hangar_id', $hangarId)
+            ->sum('feed_kg') ?? 0;
+
+        return max(0, $totalStock - $totalConsumed);
     }
 }

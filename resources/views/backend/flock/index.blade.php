@@ -178,6 +178,29 @@
                             }, function(result) {
                                 table.ajax.reload();
                             });
+                        },
+                        error: function(response) {
+                            if (response.status === 422) {
+                                var data = response.responseJSON;
+                                var errorMsg = data.msg || "Cannot delete this flock";
+                                swal({
+                                    title: "Cannot Delete",
+                                    text: errorMsg,
+                                    icon: "error",
+                                    buttons: {
+                                        confirm: {
+                                            text: "OK",
+                                            value: true
+                                        }
+                                    }
+                                });
+                            } else {
+                                swal({
+                                    title: "Error",
+                                    text: "Something went wrong. Please try again.",
+                                    icon: "error"
+                                });
+                            }
                         }
                     });
                 }

@@ -483,15 +483,31 @@ class FlockController extends Controller
             }
         }
 
-        // Check if flock has any feed stock allocated to it
-        $feedStockCount = \App\Models\DailyRecord::where('flock_id', $flock->id)
-            ->where('feed_kg', '>', 0)
-            ->count();
+        // Check for dependent records before deletion
+        $dependentRecords = [];
 
-        if ($feedStockCount > 0) {
+        $dailyRecordsCount = \App\Models\DailyRecord::where('flock_id', $flock->id)->count();
+        if ($dailyRecordsCount > 0) {
+            $dependentRecords['Daily Records'] = $dailyRecordsCount;
+        }
+
+        $flockEndsCount = \App\Models\FlockEnd::where('flock_id', $flock->id)->count();
+        if ($flockEndsCount > 0) {
+            $dependentRecords['Flock End Records'] = $flockEndsCount;
+        }
+
+        if (!empty($dependentRecords)) {
+            $message = 'Cannot delete flock "' . $flock->name . '". The following related data exists: ';
+            $details = [];
+            foreach ($dependentRecords as $type => $count) {
+                $details[] = $count . ' ' . $type;
+            }
+            $message .= implode(', ', $details) . '. Please remove all related data before deleting this flock.';
+
             return response()->json([
-                'msg' => 'Cannot delete flock. It has ' . $feedStockCount . ' feed stock allocation(s). Please remove all feed stock allocations before deleting this flock.',
-                'error' => true
+                'msg' => $message,
+                'error' => true,
+                'dependentRecords' => $dependentRecords
             ], 422);
         }
 

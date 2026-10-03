@@ -139,7 +139,31 @@ class ChicksSupplierController extends Controller
 
     public function destroy($siteUrl, $id)
     {
-        ChicksSupplier::findOrFail($id)->delete();
+        $supplier = ChicksSupplier::findOrFail($id);
+
+        $dependentRecords = [];
+
+        $flocksCount = \App\Models\Flock::where('chicks_supplier_id', $supplier->id)->count();
+        if ($flocksCount > 0) {
+            $dependentRecords['Flocks'] = $flocksCount;
+        }
+
+        if (!empty($dependentRecords)) {
+            $message = 'Cannot delete supplier "' . $supplier->name . '". The following related data exists: ';
+            $details = [];
+            foreach ($dependentRecords as $type => $count) {
+                $details[] = $count . ' ' . $type;
+            }
+            $message .= implode(', ', $details) . '. Please remove all flocks using this supplier before deleting.';
+
+            return response()->json([
+                'msg' => $message,
+                'error' => true,
+                'dependentRecords' => $dependentRecords
+            ], 422);
+        }
+
+        $supplier->delete();
         return response()->json(['msg' => 'Chicks Supplier deleted successfully.']);
     }
 

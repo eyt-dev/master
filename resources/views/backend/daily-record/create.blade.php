@@ -177,7 +177,7 @@
                                     <div class="row">
                                         <div class="col-md-12 mb-3">
                                             <h6 class="mb-0" style="color: #007bff;">
-                                                <i class="fe fe-home mr-2"></i>${hangar.name} (Allocated: ${hangar.quantity}, Remaining: ${hangar.remaining})
+                                                <i class="fe fe-home mr-2"></i>${hangar.name} (Allocated Birds: ${hangar.quantity}, Remaining Feed: ${hangar.remaining} kg)
                                             </h6>
                                         </div>
                                     </div>

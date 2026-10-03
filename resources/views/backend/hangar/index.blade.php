@@ -59,6 +59,7 @@
                                     <th>Layer Hens</th>
                                     <th>Broiler Hens</th>
                                     <th>Status</th>
+                                    <th>Remaining Feed</th>
                                     <th>Created By</th>
                                     <th>Created At</th>
                                     <th>Action</th>
@@ -128,6 +129,7 @@
                 { data: 'layer_hens', name: 'layer_hens' },
                 { data: 'broiler_hens', name: 'broiler_hens' },
                 { data: 'status', name: 'status' },
+                { data: 'remaining_feed', name: 'remaining_feed' },
                 { data: 'creator' },
                 { data: 'created_at', name: 'created_at' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
@@ -157,6 +159,29 @@
                             }, function(result) {
                                 location.reload();
                             });
+                        },
+                        error: function(response) {
+                            if (response.status === 422) {
+                                var data = response.responseJSON;
+                                var errorMsg = data.msg || "Cannot delete this hangar";
+                                swal({
+                                    title: "Cannot Delete",
+                                    text: errorMsg,
+                                    icon: "error",
+                                    buttons: {
+                                        confirm: {
+                                            text: "OK",
+                                            value: true
+                                        }
+                                    }
+                                });
+                            } else {
+                                swal({
+                                    title: "Error",
+                                    text: "Something went wrong. Please try again.",
+                                    icon: "error"
+                                });
+                            }
                         }
                     });
                 }

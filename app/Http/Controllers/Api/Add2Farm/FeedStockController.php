@@ -306,25 +306,11 @@ class FeedStockController extends BaseController
             ]);
 
             if (!empty($data['hangar_allocations'])) {
-                $isPelletedFeed = $materialName && strtolower($materialName->type) === 'pelleted feed';
-
                 foreach ($data['hangar_allocations'] as $alloc) {
-                    $remainingQuantity = (float)$alloc['quantity'];
-
-                    // Only accumulate remaining_quantity for Pelleted feed (CREATE mode: old + new)
-                    if ($isPelletedFeed) {
-                        $currentRemaining = MaterialStockHangar::where('hangar_id', $alloc['hangar_id'])
-                            ->byMaterialType('pelleted feed')
-                            ->sum('remaining_quantity') ?? 0;
-
-                        $remainingQuantity = $currentRemaining + (float)$alloc['quantity'];
-                    }
-
                     MaterialStockHangar::create([
                         'material_stock_id' => $record->id,
                         'hangar_id' => $alloc['hangar_id'],
                         'quantity' => (float)$alloc['quantity'],
-                        'remaining_quantity' => $remainingQuantity,
                     ]);
                 }
             }
@@ -449,17 +435,11 @@ class FeedStockController extends BaseController
             $record->materialStockHangarAllocations()->delete();
 
             if (!empty($data['hangar_allocations'])) {
-                $isPelletedFeed = $materialName && strtolower($materialName->type) === 'pelleted feed';
-
                 foreach ($data['hangar_allocations'] as $alloc) {
-                    // EDIT mode: just use entered quantity (no accumulation)
-                    $remainingQuantity = (float)$alloc['quantity'];
-
                     MaterialStockHangar::create([
                         'material_stock_id' => $record->id,
                         'hangar_id' => $alloc['hangar_id'],
                         'quantity' => (float)$alloc['quantity'],
-                        'remaining_quantity' => $remainingQuantity,
                     ]);
                 }
             }
@@ -544,7 +524,7 @@ class FeedStockController extends BaseController
                 'hangar_name' => $a->hangar->name,
                 'status' => $a->hangar->status,
                 'quantity' => $this->formatDecimal($a->quantity),
-                'remaining_quantity' => $this->formatDecimal($a->remaining_quantity),
+                'remaining_quantity' => $this->formatDecimal($this->getHangarRemainingFeed($a->hangar_id)),
             ]),
             'created_by' => $record->created_by,
             'created_by_name' => $record->creator->name,

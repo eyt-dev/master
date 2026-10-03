@@ -154,44 +154,16 @@ class DailyRecordController extends Controller
         return view('backend.daily-record.index');
     }
 
-    private function recalculateRemainingFeed($hangarId)
-    {
-        $stockHangars = MaterialStockHangar::where('hangar_id', $hangarId)
-            ->byMaterialType('pelleted feed')
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        if ($stockHangars->isEmpty()) {
-            return;
-        }
-
-        $totalFeedConsumed = DailyRecord::where('hangar_id', $hangarId)->sum('feed_kg');
-
-        $consumedSoFar = 0;
-        $updates = [];
-
-        foreach ($stockHangars as $pelletedFeed) {
-            $stillNeeded = $totalFeedConsumed - $consumedSoFar;
-            $consumedFromThis = min($pelletedFeed->quantity, $stillNeeded);
-
-            $updates[$pelletedFeed->id] = $pelletedFeed->quantity - $consumedFromThis;
-            $consumedSoFar += $consumedFromThis;
-
-            if ($consumedSoFar >= $totalFeedConsumed) break;
-        }
-
-        foreach ($updates as $id => $remaining) {
-            MaterialStockHangar::where('id', $id)->update(['remaining_quantity' => $remaining]);
-        }
-    }
-
     private function getAvailableFeedFIFO($hangarId, $farmId)
     {
-        $totalRemaining = MaterialStockHangar::where('hangar_id', $hangarId)
+        $totalStock = MaterialStockHangar::where('hangar_id', $hangarId)
             ->byMaterialType('pelleted feed')
-            ->sum('remaining_quantity');
+            ->sum('quantity') ?? 0;
 
-        return $totalRemaining ?? 0;
+        $totalConsumed = DailyRecord::where('hangar_id', $hangarId)
+            ->sum('feed_kg') ?? 0;
+
+        return max(0, $totalStock - $totalConsumed);
     }
 
     private function extractBreedType($breedString)
@@ -327,15 +299,21 @@ class DailyRecordController extends Controller
             ->get()
             ->keyBy('hangar_id');
 
-        $hangarsData = $flockHangars->map(function($allocation) use ($mortalities) {
-            $totalMortality = $mortalities->get($allocation->hangar_id)?->total_mortality ?? 0;
-            $remaining = (int)$allocation->quantity - $totalMortality;
+        $hangarsData = $flockHangars->map(function($allocation) {
+            $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $allocation->hangar_id)
+                ->byMaterialType('pelleted feed')
+                ->sum('quantity') ?? 0;
+
+            $totalConsumed = DailyRecord::where('hangar_id', $allocation->hangar_id)
+                ->sum('feed_kg') ?? 0;
+
+            $remainingFeed = max(0, $totalStock - $totalConsumed);
 
             return [
                 'id' => $allocation->hangar->id,
                 'name' => $allocation->hangar->name,
                 'quantity' => $allocation->quantity,
-                'remaining' => max(0, $remaining)
+                'remaining' => number_format($remainingFeed, 2, '.', '')
             ];
         });
 
@@ -448,8 +426,6 @@ class DailyRecordController extends Controller
                     'notes' => $record['notes'] ?? null,
                     'created_by' => auth()->id()
                 ]);
-
-                $this->recalculateRemainingFeed($record['hangar_id']);
             }
 
             DB::commit();
@@ -577,6 +553,12 @@ class DailyRecordController extends Controller
             ->get()
             ->groupBy('hangar_id');
 
+        // Get ALL old records for this date/flock to find the correct one for each hangar
+        $allOldRecordsForDate = DailyRecord::where('flock_id', $request->flock_id)
+            ->where('record_date', $dailyRecord->record_date)
+            ->get()
+            ->keyBy('hangar_id');
+
         // Validate based on breed type before transaction
         foreach ($hangarRecords as $record) {
             if (!isset($record['feed_kg']) || $record['feed_kg'] === '' || $record['feed_kg'] === null) {
@@ -603,9 +585,10 @@ class DailyRecordController extends Controller
 
             // Add back the old feed_kg that will be freed up from:
             // 1. Deleted records (other records for same date/flock)
-            // 2. Current record being updated (its old feed amount)
+            // 2. Current record being updated (its old feed amount) - get the OLD record for THIS specific hangar
             $oldFeedKgFromDeletedRecords = $oldRecordsToDelete->get($hangarId)?->sum('feed_kg') ?? 0;
-            $oldFeedKgFromCurrentRecord = ($record['hangar_id'] == $hangarId) ? $dailyRecord->feed_kg : 0;
+            $oldRecordForThisHangar = $allOldRecordsForDate->get($hangarId);
+            $oldFeedKgFromCurrentRecord = $oldRecordForThisHangar?->feed_kg ?? 0;
             $availableStock = $currentRemaining + $oldFeedKgFromDeletedRecords + $oldFeedKgFromCurrentRecord;
 
             if ($feedKg > $availableStock) {
@@ -620,60 +603,39 @@ class DailyRecordController extends Controller
             DB::beginTransaction();
 
             $recordDate = Carbon::createFromFormat('Y-m-d', $request->record_date);
-            $oldHangarId = $dailyRecord->hangar_id;
+
+            // Get all OLD hangars affected before any deletions (for recalculation)
+            $oldHangarsAffected = DailyRecord::where('flock_id', $request->flock_id)
+                ->where('record_date', $recordDate)
+                ->pluck('hangar_id')
+                ->unique()
+                ->toArray();
 
             // Delete old records for this flock on this date
             DailyRecord::where('flock_id', $request->flock_id)
                 ->where('record_date', $recordDate)
-                ->where('id', '!=', $id)
                 ->delete();
 
-            $hangarsToRecalculate = [];
+            $newHangarsAffected = [];
 
-            // Update or create records for each hangar
-            foreach ($hangarRecords as $index => $record) {
-                if ($index === 0) {
-                    $dailyRecord->update([
-                        'record_date' => $recordDate,
-                        'farm_id' => $flock->farm_id,
-                        'hangar_id' => $record['hangar_id'],
-                        'flock_id' => $request->flock_id,
-                        'feed_kg' => (float)($record['feed_kg'] ?? 0),
-                        'eggs_tray_30' => (int)($record['eggs_tray_30'] ?? 0),
-                        'eggs_count' => (int)($record['eggs_count'] ?? 0),
-                        'eggs_weight' => (float)($record['eggs_weight'] ?? 0),
-                        'chicks_weight' => (float)($record['chicks_weight'] ?? 0) / 1000,
-                        'mortality' => (int)($record['mortality'] ?? 0),
-                        'notes' => $record['notes'] ?? null,
-                    ]);
-                } else {
-                    DailyRecord::create([
-                        'record_date' => $recordDate,
-                        'farm_id' => $flock->farm_id,
-                        'hangar_id' => $record['hangar_id'],
-                        'flock_id' => $request->flock_id,
-                        'feed_kg' => (float)($record['feed_kg'] ?? 0),
-                        'eggs_tray_30' => (int)($record['eggs_tray_30'] ?? 0),
-                        'eggs_count' => (int)($record['eggs_count'] ?? 0),
-                        'eggs_weight' => (float)($record['eggs_weight'] ?? 0),
-                        'chicks_weight' => (float)($record['chicks_weight'] ?? 0) / 1000,
-                        'mortality' => (int)($record['mortality'] ?? 0),
-                        'notes' => $record['notes'] ?? null,
-                        'created_by' => auth()->id()
-                    ]);
-                }
+            // Create records for each hangar
+            foreach ($hangarRecords as $record) {
+                DailyRecord::create([
+                    'record_date' => $recordDate,
+                    'farm_id' => $flock->farm_id,
+                    'hangar_id' => $record['hangar_id'],
+                    'flock_id' => $request->flock_id,
+                    'feed_kg' => (float)($record['feed_kg'] ?? 0),
+                    'eggs_tray_30' => (int)($record['eggs_tray_30'] ?? 0),
+                    'eggs_count' => (int)($record['eggs_count'] ?? 0),
+                    'eggs_weight' => (float)($record['eggs_weight'] ?? 0),
+                    'chicks_weight' => (float)($record['chicks_weight'] ?? 0) / 1000,
+                    'mortality' => (int)($record['mortality'] ?? 0),
+                    'notes' => $record['notes'] ?? null,
+                    'created_by' => auth()->id()
+                ]);
 
-                $hangarsToRecalculate[] = $record['hangar_id'];
-            }
-
-            // If hangar was changed, also recalculate old hangar
-            if ($oldHangarId !== $hangarsToRecalculate[0]) {
-                $hangarsToRecalculate[] = $oldHangarId;
-            }
-
-            // Recalculate remaining feed for all affected hangars
-            foreach (array_unique($hangarsToRecalculate) as $hangarId) {
-                $this->recalculateRemainingFeed($hangarId);
+                $newHangarsAffected[] = $record['hangar_id'];
             }
 
             DB::commit();
@@ -728,10 +690,6 @@ class DailyRecordController extends Controller
                     ->where('hangar_id', $hangarId)
                     ->delete();
 
-                if ($deletedCount > 0) {
-                    $this->recalculateRemainingFeed($hangarId);
-                }
-
                 $message = $deletedCount > 0 ? 'Daily Record deleted successfully.' : 'Record not found.';
             } else {
                 // Get all affected hangars before deletion
@@ -746,11 +704,6 @@ class DailyRecordController extends Controller
                     ->where('farm_id', $dailyRecord->farm_id)
                     ->where('flock_id', $dailyRecord->flock_id)
                     ->delete();
-
-                // Recalculate remaining for all affected hangars
-                foreach ($affectedHangars as $hangarId) {
-                    $this->recalculateRemainingFeed($hangarId);
-                }
 
                 $message = 'Daily Records deleted successfully.';
             }

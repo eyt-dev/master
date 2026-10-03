@@ -1139,11 +1139,19 @@ class DailyRecordController extends BaseController
             $flockStatus = $endDate ? 'Completed' : 'Active';
         }
 
-        // Get remaining quantities from latest MaterialStockHangar records for this farm
+        // Get remaining quantities for all hangars in this farm
         $farmHangars = \App\Models\Hangar::where('farm_id', $record->farm_id)->pluck('id');
-        $remainingQty = \App\Models\MaterialStockHangar::whereIn('hangar_id', $farmHangars)
-            ->latest('created_at')
-            ->first()?->remaining_quantity ?? 0;
+        $remainingQty = 0;
+        foreach ($farmHangars as $hangarId) {
+            $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $hangarId)
+                ->byMaterialType('pelleted feed')
+                ->sum('quantity') ?? 0;
+
+            $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $hangarId)
+                ->sum('feed_kg') ?? 0;
+
+            $remainingQty += max(0, $totalStock - $totalConsumed);
+        }
 
         return [
             'period'          => $weekLabel,
@@ -1184,11 +1192,19 @@ class DailyRecordController extends BaseController
             $flockStatus = $endDate ? 'Completed' : 'Active';
         }
 
-        // Get remaining quantities from latest MaterialStockHangar records for this farm
+        // Get remaining quantities for all hangars in this farm
         $farmHangars = \App\Models\Hangar::where('farm_id', $record->farm_id)->pluck('id');
-        $remainingQty = \App\Models\MaterialStockHangar::whereIn('hangar_id', $farmHangars)
-            ->latest('created_at')
-            ->first()?->remaining_quantity ?? 0;
+        $remainingQty = 0;
+        foreach ($farmHangars as $hangarId) {
+            $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $hangarId)
+                ->byMaterialType('pelleted feed')
+                ->sum('quantity') ?? 0;
+
+            $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $hangarId)
+                ->sum('feed_kg') ?? 0;
+
+            $remainingQty += max(0, $totalStock - $totalConsumed);
+        }
 
         return [
             'period'          => $monthLabel,
@@ -1244,11 +1260,15 @@ class DailyRecordController extends BaseController
             $totalChicksWeight = $hangarRecords->sum('chicks_weight');
             $totalMortality = $hangarRecords->sum('mortality');
 
-            // Get remaining quantity from latest MaterialStockHangar record
-            $materialStockHangar = \App\Models\MaterialStockHangar::where('hangar_id', $firstHangarRecord->hangar_id)
-                ->latest('created_at')
-                ->first();
-            $remainingQty = $materialStockHangar?->remaining_quantity ?? 0;
+            // Get remaining quantity for this hangar
+            $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $firstHangarRecord->hangar_id)
+                ->byMaterialType('pelleted feed')
+                ->sum('quantity') ?? 0;
+
+            $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $firstHangarRecord->hangar_id)
+                ->sum('feed_kg') ?? 0;
+
+            $remainingQty = max(0, $totalStock - $totalConsumed);
 
             $hangarData = [
                 'id' => $firstHangarRecord->id,
@@ -1333,17 +1353,29 @@ class DailyRecordController extends BaseController
 
         // Get remaining quantities from latest MaterialStockHangar records for this farm
         $farmHangars = \App\Models\Hangar::where('farm_id', $firstRecord->farm_id)->pluck('id');
-        $totalRemainingQty = \App\Models\MaterialStockHangar::whereIn('hangar_id', $farmHangars)
-            ->latest('created_at')
-            ->first()?->remaining_quantity ?? 0;
+        $totalRemainingQty = 0;
+        foreach ($farmHangars as $hangarId) {
+            $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $hangarId)
+                ->byMaterialType('pelleted feed')
+                ->sum('quantity') ?? 0;
+
+            $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $hangarId)
+                ->sum('feed_kg') ?? 0;
+
+            $totalRemainingQty += max(0, $totalStock - $totalConsumed);
+        }
 
         // Format hangar details - include only breed-specific fields
         $hangars = $records->map(function ($record) use ($isBroiler) {
             // Get remaining quantity for this specific hangar
-            $materialStockHangar = \App\Models\MaterialStockHangar::where('hangar_id', $record->hangar_id)
-                ->latest('created_at')
-                ->first();
-            $remainingQty = $materialStockHangar?->remaining_quantity ?? 0;
+            $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $record->hangar_id)
+                ->byMaterialType('pelleted feed')
+                ->sum('quantity') ?? 0;
+
+            $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $record->hangar_id)
+                ->sum('feed_kg') ?? 0;
+
+            $remainingQty = max(0, $totalStock - $totalConsumed);
 
             $hangarData = [
                 'id' => $record->id,
@@ -1432,10 +1464,14 @@ class DailyRecordController extends BaseController
             $totalChicksWeight = $hangarRecords->sum('chicks_weight');
             $totalMortality = $hangarRecords->sum('mortality');
 
-            $materialStockHangar = \App\Models\MaterialStockHangar::where('hangar_id', $firstHangarRecord->hangar_id)
-                ->latest('created_at')
-                ->first();
-            $remainingQty = $materialStockHangar?->remaining_quantity ?? 0;
+            $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $firstHangarRecord->hangar_id)
+                ->byMaterialType('pelleted feed')
+                ->sum('quantity') ?? 0;
+
+            $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $firstHangarRecord->hangar_id)
+                ->sum('feed_kg') ?? 0;
+
+            $remainingQty = max(0, $totalStock - $totalConsumed);
 
             $hangarData = [
                 'id' => $firstHangarRecord->id,
@@ -1517,10 +1553,14 @@ class DailyRecordController extends BaseController
             $totalChicksWeight = $hangarRecords->sum('chicks_weight');
             $totalMortality = $hangarRecords->sum('mortality');
 
-            $materialStockHangar = \App\Models\MaterialStockHangar::where('hangar_id', $firstHangarRecord->hangar_id)
-                ->latest('created_at')
-                ->first();
-            $remainingQty = $materialStockHangar?->remaining_quantity ?? 0;
+            $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $firstHangarRecord->hangar_id)
+                ->byMaterialType('pelleted feed')
+                ->sum('quantity') ?? 0;
+
+            $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $firstHangarRecord->hangar_id)
+                ->sum('feed_kg') ?? 0;
+
+            $remainingQty = max(0, $totalStock - $totalConsumed);
 
             $hangarData = [
                 'id' => $firstHangarRecord->id,
@@ -1598,42 +1638,14 @@ class DailyRecordController extends BaseController
 
     private function getAvailableFeedFIFO($hangarId, $farmId)
     {
-        $totalRemaining = MaterialStockHangar::where('hangar_id', $hangarId)
+        $totalStock = MaterialStockHangar::where('hangar_id', $hangarId)
             ->byMaterialType('pelleted feed')
-            ->sum('remaining_quantity');
+            ->sum('quantity') ?? 0;
 
-        return $totalRemaining ?? 0;
-    }
+        $totalConsumed = DailyRecord::where('hangar_id', $hangarId)
+            ->sum('feed_kg') ?? 0;
 
-    private function recalculateRemainingFeed($hangarId)
-    {
-        $stockHangars = MaterialStockHangar::where('hangar_id', $hangarId)
-            ->byMaterialType('pelleted feed')
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        if ($stockHangars->isEmpty()) {
-            return;
-        }
-
-        $totalFeedConsumed = DailyRecord::where('hangar_id', $hangarId)->sum('feed_kg');
-
-        $consumedSoFar = 0;
-        $updates = [];
-
-        foreach ($stockHangars as $pelletedFeed) {
-            $stillNeeded = $totalFeedConsumed - $consumedSoFar;
-            $consumedFromThis = min($pelletedFeed->quantity, $stillNeeded);
-
-            $updates[$pelletedFeed->id] = $pelletedFeed->quantity - $consumedFromThis;
-            $consumedSoFar += $consumedFromThis;
-
-            if ($consumedSoFar >= $totalFeedConsumed) break;
-        }
-
-        foreach ($updates as $id => $remaining) {
-            MaterialStockHangar::where('id', $id)->update(['remaining_quantity' => $remaining]);
-        }
+        return max(0, $totalStock - $totalConsumed);
     }
 
 }

@@ -28,6 +28,7 @@ class FlockController extends BaseController
      * @authenticated
      * @queryParam farm_id integer optional Filter by farm ID. Example: 1
      * @queryParam status string optional Filter by status (active, pending). Example: active
+     * @queryParam completion_status string optional Filter by completion status (all, active, completed). Default: all. Example: active
      * @queryParam start_date string optional Filter flocks starting from this date (format: Y-m-d). Example: 2026-01-01
      * @queryParam end_date string optional Filter flocks up to this date (format: Y-m-d). Example: 2026-06-30
      * @queryParam period integer optional Filter by period in months (3, 6, 12). Example: 6
@@ -75,6 +76,14 @@ class FlockController extends BaseController
             ], 422);
         }
 
+        // Validate completion_status parameter if provided
+        if ($request->completion_status && !in_array(strtolower($request->completion_status), ['all', 'active', 'completed'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Completion status must be one of: all, active, completed',
+            ], 422);
+        }
+
         // Calculate aggregates for available flocks
         $allFlocks = Flock::whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
@@ -111,17 +120,12 @@ class FlockController extends BaseController
             ->select('id', 'farm_id', 'total_quantity', 'start_date')
             ->get();
 
-        $totalQty = $allFlocks->sum('total_quantity');
+        $totalBirds = $allFlocks->sum('total_quantity');
         $totalFarms = $allFlocks->pluck('farm_id')->unique()->count();
 
         // Count active flocks (started on or before today)
         $activeFlocks = $allFlocks->filter(function ($flock) {
             return $flock->start_date && $flock->start_date->format('Y-m-d') <= now()->format('Y-m-d');
-        })->count();
-
-        // Count pending flocks (not yet started)
-        $completedFlocks = $allFlocks->filter(function ($flock) {
-            return $flock->start_date && $flock->start_date->format('Y-m-d') > now()->format('Y-m-d');
         })->count();
 
         $flocks = Flock::whereHas('farm', function ($q) use ($user) {
@@ -164,10 +168,39 @@ class FlockController extends BaseController
             return $this->formatFlock($flock);
         });
 
+        // Apply completion_status filter
+        $completionStatus = strtolower($request->completion_status ?? 'all');
+        if ($completionStatus !== 'all') {
+            $data = $data->filter(function ($flock) use ($completionStatus) {
+                if ($completionStatus === 'completed') {
+                    return $flock['remaining_birds'] == 0;
+                } elseif ($completionStatus === 'active') {
+                    return $flock['remaining_birds'] > 0;
+                }
+                return true;
+            })->values();
+        }
+
+        $totalFlocks = $data->count();
+        $totalRemainingBirds = $data->sum('remaining_birds');
+
+        // Count completed flocks (flocks with remaining_birds = 0)
+        $completedFlocks = $data->filter(function ($flock) {
+            return $flock['remaining_birds'] == 0;
+        })->count();
+
+        // Calculate total birds in active flocks
+        $totalBirdsActiveFlocks = $data->filter(function ($flock) {
+            return $flock['remaining_birds'] > 0;
+        })->sum('total_quantity');
+
         return response()->json([
             'success' => true,
             'message' => 'Available flocks retrieved successfully.',
-            'total_qty' => $totalQty,
+            'total_flocks' => $totalFlocks,
+            'total_birds' => $totalBirds,
+            'total_birds_active_flock' => $totalBirdsActiveFlocks,
+            'total_remaining_birds' => $totalRemainingBirds,
             'total_farms' => $totalFarms,
             'active_flocks' => $activeFlocks,
             'completed_flocks' => $completedFlocks,
@@ -358,6 +391,7 @@ class FlockController extends BaseController
      * @queryParam search string optional Search by flock name. Example: Flock1
      * @queryParam farm_id integer optional Filter by farm ID. Example: 1
      * @queryParam status string optional Filter by status (active, pending). Example: active
+     * @queryParam completion_status string optional Filter by completion status (all, active, completed). Default: all. Example: active
      * @queryParam start_date string optional Filter flocks starting from this date (format: Y-m-d). Example: 2026-01-01
      * @queryParam end_date string optional Filter flocks up to this date (format: Y-m-d). Example: 2026-06-30
      * @queryParam period integer optional Filter by period in months (3, 6, 12). Example: 6
@@ -412,6 +446,14 @@ class FlockController extends BaseController
             ], 422);
         }
 
+        // Validate completion_status parameter if provided
+        if ($request->completion_status && !in_array(strtolower($request->completion_status), ['all', 'active', 'completed'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Completion status must be one of: all, active, completed',
+            ], 422);
+        }
+
         // Calculate aggregates for all flocks of logged-in user
         $allFlocks = Flock::whereHas('farm', function ($q) use ($user) {
                 $q->where(function ($q) use ($user) {
@@ -425,17 +467,12 @@ class FlockController extends BaseController
             ->select('id', 'farm_id', 'total_quantity', 'start_date')
             ->get();
 
-        $totalQty = $allFlocks->sum('total_quantity');
+        $totalBirds = $allFlocks->sum('total_quantity');
         $totalFarms = $allFlocks->pluck('farm_id')->unique()->count();
 
         // Count active flocks (started on or before today)
         $activeFlocks = $allFlocks->filter(function ($flock) {
             return $flock->start_date && $flock->start_date->format('Y-m-d') <= now()->format('Y-m-d');
-        })->count();
-
-        // Count pending flocks (not yet started)
-        $completedFlocks = $allFlocks->filter(function ($flock) {
-            return $flock->start_date && $flock->start_date->format('Y-m-d') > now()->format('Y-m-d');
         })->count();
 
         $flocks = Flock::whereHas('farm', function ($q) use ($user) {
@@ -484,10 +521,39 @@ class FlockController extends BaseController
             return $this->formatFlock($flock);
         }));
 
+        // Apply completion_status filter
+        $completionStatus = strtolower($request->completion_status ?? 'all');
+        if ($completionStatus !== 'all') {
+            $flocks->setCollection($flocks->getCollection()->filter(function ($flock) use ($completionStatus) {
+                if ($completionStatus === 'completed') {
+                    return $flock['remaining_birds'] == 0;
+                } elseif ($completionStatus === 'active') {
+                    return $flock['remaining_birds'] > 0;
+                }
+                return true;
+            })->values());
+        }
+
+        $totalFlocks = $flocks->count();
+        $totalRemainingBirds = $flocks->sum('remaining_birds');
+
+        // Count completed flocks (flocks with remaining_birds = 0)
+        $completedFlocks = $flocks->filter(function ($flock) {
+            return $flock['remaining_birds'] == 0;
+        })->count();
+
+        // Calculate total birds in active flocks
+        $totalBirdsActiveFlocks = $flocks->filter(function ($flock) {
+            return $flock['remaining_birds'] > 0;
+        })->sum('total_quantity');
+
         return response()->json([
             'success' => true,
             'message' => $this->translationService->get('flocks_retrieved_successfully'),
-            'total_qty' => $totalQty,
+            'total_flocks' => $totalFlocks,
+            'total_birds' => $totalBirds,
+            'total_birds_active_flock' => $totalBirdsActiveFlocks,
+            'total_remaining_birds' => $totalRemainingBirds,
             'total_farms' => $totalFarms,
             'active_flocks' => $activeFlocks,
             'completed_flocks' => $completedFlocks,
@@ -651,7 +717,8 @@ class FlockController extends BaseController
             'updated_at' => $flock->updated_at,
             'flock-condition' => $isBroiler ? ($isEnded ? 'broiler-ended' : 'broiler-active') : ($isEnded ? 'layer-ended' : 'layer-active'),
             'live_birds' => $liveBirds,
-            'mortality_rate' => round($mortalityRate, 2),
+            'mortality' => $totalMortality,
+            'mortality_rate' => round($mortalityRate, 2) . '%',
             'feed_consumed' => number_format($totalFeedKg, 2) . ' kg',
             'avg_weight' => $avgWeight ? round($avgWeight, 2) . ' kg' : 'N/A',
             'chart_data' => $chartData,
@@ -1074,15 +1141,35 @@ class FlockController extends BaseController
             ], 404);
         }
 
-        // Check if flock has any feed stock allocated to it
-        $feedStockCount = \App\Models\DailyRecord::where('flock_id', $flock->id)
-            ->where('feed_kg', '>', 0)
-            ->count();
+        // Check for dependent records before deletion
+        $dependentRecords = [];
 
-        if ($feedStockCount > 0) {
+        $dailyRecordsCount = \App\Models\DailyRecord::where('flock_id', $flock->id)->count();
+        if ($dailyRecordsCount > 0) {
+            $dependentRecords['Daily Records'] = $dailyRecordsCount;
+        }
+
+        $flockEndsCount = \App\Models\FlockEnd::where('flock_id', $flock->id)->count();
+        if ($flockEndsCount > 0) {
+            $dependentRecords['Flock End Records'] = $flockEndsCount;
+        }
+
+        $flockHangarsCount = \App\Models\FlockHangar::where('flock_id', $flock->id)->count();
+        if ($flockHangarsCount > 0) {
+            $dependentRecords['Hangar Allocations'] = $flockHangarsCount;
+        }
+
+        if (!empty($dependentRecords)) {
+            $details = [];
+            foreach ($dependentRecords as $type => $count) {
+                $details[] = $count . ' ' . $type;
+            }
+            $message = 'Cannot delete flock. The following related data exists: ' . implode(', ', $details) . '. Please remove all related data before deleting this flock.';
+
             return response()->json([
                 'success' => false,
-                'message' => 'Cannot delete flock. It has ' . $feedStockCount . ' feed stock allocation(s). Please remove all feed stock allocations before deleting this flock.',
+                'message' => $message,
+                'dependentRecords' => $dependentRecords
             ], 422);
         }
 
@@ -1264,21 +1351,43 @@ class FlockController extends BaseController
         // Fetch daily records for feed calculations and metrics
         $dailyRecords = DailyRecord::where('flock_id', $flock->id)->get();
         $feedConsumed = round($dailyRecords->sum('feed_kg'), 2);
+        $totalMortality = $dailyRecords->sum('mortality');
+        $totalFeedKg = $dailyRecords->sum('feed_kg');
+        $totalEggs = $dailyRecords->sum('eggs_count');
+
+        // Calculate mortality rate
+        $mortalityRate = $totalBird > 0 ? ($totalMortality / $totalBird) * 100 : 0;
+
+        // Calculate FCR based on flock type and status
+        $latestFlockEnd = $flock->flockEnds()->latest('sale_date')->first();
+        $isEnded = (bool) $latestFlockEnd?->sale_date;
+        $fcr = 0;
+        if ($isBroiler && $isEnded) {
+            // For broilers at harvest: FCR = feed_kg per kg of weight
+            $totalWeight = $latestFlockEnd->total_weight ?? 0;
+            $fcr = $totalWeight > 0 ? round($totalFeedKg / $totalWeight, 2) : 0;
+        } elseif (!$isBroiler) {
+            // For layers: FCR = feed_kg per egg
+            $fcr = $totalEggs > 0 ? round($totalFeedKg / $totalEggs, 2) : 0;
+        }
 
         // Get hangar IDs for this flock
         $hangarIds = $flock->flockHangarAllocations->pluck('hangar_id')->toArray();
 
-        // Calculate total feed remaining from material stock hangars
+        // Calculate total feed remaining from all hangars in this flock
+        // Remaining = Total Feed Stock - Total Daily Record Consumption
         $feedRemaining = 0;
         if (!empty($hangarIds)) {
-            $feedRemaining = \App\Models\MaterialStockHangar::whereIn('hangar_id', $hangarIds)
-                ->latest('created_at')
-                ->get()
-                ->groupBy('hangar_id')
-                ->map(function ($records) {
-                    return $records->first()->remaining_quantity ?? 0;
-                })
-                ->sum();
+            foreach ($hangarIds as $hangarId) {
+                $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $hangarId)
+                    ->byMaterialType('pelleted feed')
+                    ->sum('quantity') ?? 0;
+
+                $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $hangarId)
+                    ->sum('feed_kg') ?? 0;
+
+                $feedRemaining += max(0, $totalStock - $totalConsumed);
+            }
             $feedRemaining = round($feedRemaining, 2);
         }
 
@@ -1297,6 +1406,9 @@ class FlockController extends BaseController
             'age'                   => $age,
             'total_quantity'        => $flock->total_quantity,
             'remaining_birds'       => $remainingBirds,
+            'is_completed'          => $remainingBirds == 0,
+            'mortality_rate'        => round($mortalityRate, 2) . '%',
+            'fcr'                   => $fcr,
             'feed_consumed'         => $feedConsumed,
             'feed_remaining'        => $feedRemaining,
             'hangar_allocations'    => $hangarAllocations,

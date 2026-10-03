@@ -30,7 +30,8 @@ class FarmController extends BaseController
      * @queryParam per_page integer optional Items per page. Default: 15. Example: 20
      * @queryParam search string optional Search by name or location. Example: Main Farm
      * @queryParam farm_name string optional Filter by farm name. Example: Main Farm
-     * @queryParam type string optional Filter by farm type. Example: Layer
+     * @queryParam type string optional Filter by farm type. Example: closed_system
+     * @queryParam status string optional Filter by farm status (Active or Inactive). Example: Active
      * @queryParam assigned_to integer optional Filter by assigned admin ID. Example: 1
      *
      * @response 200 {
@@ -88,6 +89,15 @@ class FarmController extends BaseController
             })
             ->when($request->type, function ($q) use ($request) {
                 return $q->where('type', $request->type);
+            })
+            ->when($request->status, function ($q) use ($request) {
+                $status = strtolower($request->status);
+                if ($status === 'active') {
+                    return $q->whereHas('flocks');
+                } elseif ($status === 'inactive') {
+                    return $q->whereDoesntHave('flocks');
+                }
+                return $q;
             })
             ->when($request->assigned_to, function ($q) use ($request) {
                 return $q->where('assigned_to', $request->assigned_to);
@@ -188,7 +198,7 @@ class FarmController extends BaseController
      * @bodyParam assigned_to integer optional Admin ID (Type 4 Farmer) to assign this farm to. Example: 1
      * @bodyParam hangars array required Array of hangar objects (length must equal number_of_hangars). Example: [{"name": "Hangar 1", "area_sqm": 1000, "layer_hens": 5000, "status": "Active"}, {"name": "Hangar 2", "area_sqm": 1200, "layer_hens": 6000, "status": "Active"}, {"name": "Hangar 3", "area_sqm": 1100, "layer_hens": 5500, "status": "Inactive"}]
      * @bodyParam hangars[].name string required Hangar name. Example: Hangar 1
-     * @bodyParam hangars[].area_sqm numeric optional Hangar area in square meters. Example: 1000
+     * @bodyParam hangars[].area_sqm integer optional Hangar area in square meters. Example: 1000
      * @bodyParam hangars[].layer_hens integer optional Number of layer hens. Example: 5000
      * @bodyParam hangars[].broiler_hens integer optional Number of broiler hens. Example: 0
      * @bodyParam hangars[].status string optional Hangar status (Active or Inactive). Default: Active. Example: Active
@@ -277,7 +287,7 @@ class FarmController extends BaseController
             'assigned_to.*'             => 'integer|exists:admins,id',
             'hangars'                   => 'required|array|min:1',
             'hangars.*.name'            => 'required|string|max:255',
-            'hangars.*.area_sqm'        => 'required|numeric|min:0',
+            'hangars.*.area_sqm'        => 'required|integer|min:0',
             'hangars.*.layer_hens'      => 'nullable|integer|min:0',
             'hangars.*.broiler_hens'    => 'nullable|integer|min:0',
         ]);
@@ -329,7 +339,7 @@ class FarmController extends BaseController
                 Hangar::create([
                     'farm_id'       => $farm->id,
                     'name'          => $hangarData['name'],
-                    'area_sqm'      => $hangarData['area_sqm'] ?? null,
+                    'area_sqm'      => (int) $hangarData['area_sqm'],
                     'layer_hens'    => $hangarData['layer_hens'] ?? null,
                     'broiler_hens'  => $hangarData['broiler_hens'] ?? null,
                     'created_by'    => auth()->id(),
@@ -394,7 +404,7 @@ class FarmController extends BaseController
      * @bodyParam hangars array required Array of hangar objects (length must equal number_of_hangars). Example: [{"id": 1, "name": "Hangar 1 Updated", "area_sqm": 1100, "layer_hens": 5500, "status": "Active"}, {"id": 2, "name": "Hangar 2 Updated", "area_sqm": 1300, "layer_hens": 6500, "status": "Inactive"}, {"name": "Hangar 3 New", "area_sqm": 1000, "layer_hens": 5000, "status": "Active"}]
      * @bodyParam hangars[].id integer optional Hangar ID (if updating existing hangar). Example: 1
      * @bodyParam hangars[].name string required Hangar name. Example: Hangar 1 Updated
-     * @bodyParam hangars[].area_sqm numeric optional Hangar area in square meters. Example: 1100
+     * @bodyParam hangars[].area_sqm integer optional Hangar area in square meters. Example: 1100
      * @bodyParam hangars[].layer_hens integer optional Number of layer hens. Example: 5500
      * @bodyParam hangars[].broiler_hens integer optional Number of broiler hens. Example: 0
      * @bodyParam hangars[].status string optional Hangar status (Active or Inactive). Default: Active. Example: Active
@@ -492,7 +502,7 @@ class FarmController extends BaseController
             'hangars'                   => 'required|array|min:1',
             'hangars.*.id'              => 'nullable|integer|exists:hangars,id',
             'hangars.*.name'            => 'required|string|max:255',
-            'hangars.*.area_sqm'        => 'required|numeric|min:0',
+            'hangars.*.area_sqm'        => 'required|integer|min:0',
             'hangars.*.layer_hens'      => 'nullable|integer|min:0',
             'hangars.*.broiler_hens'    => 'nullable|integer|min:0',
         ]);
@@ -577,7 +587,7 @@ class FarmController extends BaseController
                     // Update existing hangar
                     Hangar::where('id', $hangarData['id'])->update([
                         'name'          => $hangarData['name'],
-                        'area_sqm'      => $hangarData['area_sqm'] ?? null,
+                        'area_sqm'      => (int) $hangarData['area_sqm'],
                         'layer_hens'    => $hangarData['layer_hens'] ?? null,
                         'broiler_hens'  => $hangarData['broiler_hens'] ?? null,
                     ]);
@@ -586,7 +596,7 @@ class FarmController extends BaseController
                     Hangar::create([
                         'farm_id'       => $farm->id,
                         'name'          => $hangarData['name'],
-                        'area_sqm'      => $hangarData['area_sqm'] ?? null,
+                        'area_sqm'      => (int) $hangarData['area_sqm'],
                         'layer_hens'    => $hangarData['layer_hens'] ?? null,
                         'broiler_hens'  => $hangarData['broiler_hens'] ?? null,
                         'created_by'    => auth()->id(),
@@ -634,7 +644,7 @@ class FarmController extends BaseController
     /**
      * Delete a farm
      *
-     * Delete a farm and all its related records.
+     * Delete a farm. Cannot delete if farm has related flocks, hangars, or daily records.
      *
      * @authenticated
      * @urlParam id integer required The farm ID. Example: 1
@@ -646,6 +656,15 @@ class FarmController extends BaseController
      * @response 404 {
      *   "success": false,
      *   "message": "Farm not found."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Cannot delete farm. It has 2 flocks, 5 hangars, and 12 daily records. Please remove all related records before deleting this farm.",
+     *   "dependentRecords": {
+     *     "Flocks": 2,
+     *     "Hangars": 5,
+     *     "Daily Records": 12
+     *   }
      * }
      */
     public function destroy($id)
@@ -673,10 +692,41 @@ class FarmController extends BaseController
             ], 404);
         }
 
+        // Check for dependent records before deletion
+        $dependentRecords = [];
+
+        $flocksCount = \App\Models\Flock::where('farm_id', $farm->id)->count();
+        if ($flocksCount > 0) {
+            $dependentRecords['Flocks'] = $flocksCount;
+        }
+
+        $hangarsCount = \App\Models\Hangar::where('farm_id', $farm->id)->count();
+        if ($hangarsCount > 0) {
+            $dependentRecords['Hangars'] = $hangarsCount;
+        }
+
+        $dailyRecordsCount = \App\Models\DailyRecord::where('farm_id', $farm->id)->count();
+        if ($dailyRecordsCount > 0) {
+            $dependentRecords['Daily Records'] = $dailyRecordsCount;
+        }
+
+        if (!empty($dependentRecords)) {
+            $details = [];
+            foreach ($dependentRecords as $type => $count) {
+                $details[] = $count . ' ' . $type;
+            }
+            $message = "Cannot delete farm '{$farm->name}'. It has " . implode(', ', $details) . '. Please remove all related records before deleting this farm.';
+
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+                'dependentRecords' => $dependentRecords
+            ], 422);
+        }
+
         try {
             DB::beginTransaction();
 
-            // Delete the farm
             $farm->delete();
 
             DB::commit();
@@ -723,15 +773,38 @@ class FarmController extends BaseController
         }
 
         $hangars = $farm->hangars->map(function ($hangar) {
+            $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $hangar->id)
+                ->byMaterialType('pelleted feed')
+                ->sum('quantity') ?? 0;
+
+            $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $hangar->id)
+                ->sum('feed_kg') ?? 0;
+
+            $remaining = max(0, $totalStock - $totalConsumed);
+
             return [
                 'id'            => $hangar->id,
                 'name'          => $hangar->name,
-                'area_sqm'      => $this->formatDecimal($hangar->area_sqm),
+                'area_sqm'      => $hangar->area_sqm,
                 'layer_hens'    => $hangar->layer_hens,
                 'broiler_hens'  => $hangar->broiler_hens,
                 'status'        => $hangar->status,
+                'remaining_feed' => $this->formatDecimal($remaining),
             ];
         })->toArray();
+
+        // Calculate total remaining feed across all hangars
+        $totalRemainingFeed = 0;
+        foreach ($farm->hangars as $hangar) {
+            $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $hangar->id)
+                ->byMaterialType('pelleted feed')
+                ->sum('quantity') ?? 0;
+
+            $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $hangar->id)
+                ->sum('feed_kg') ?? 0;
+
+            $totalRemainingFeed += max(0, $totalStock - $totalConsumed);
+        }
 
         // Format assigned admins
         $assignedAdmins = $farm->assignedAdmins->map(function ($admin) {
@@ -781,6 +854,7 @@ class FarmController extends BaseController
             'hangars_count'         => $totalHangars,
             'area'                  => $totalArea,
             'birds'                 => $totalBirds,
+            'total_remaining_feed'  => $this->formatDecimal($totalRemainingFeed),
             'hangars'               => $hangars,
             'created_at'            => $farm->created_at,
         ];

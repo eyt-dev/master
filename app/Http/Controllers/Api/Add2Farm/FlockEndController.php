@@ -560,7 +560,7 @@ class FlockEndController extends BaseController
     /**
      * Delete a harvest record
      *
-     * Delete a harvest record for a flock.
+     * Delete a harvest record for a flock. Cannot delete if harvest has related end details.
      *
      * @authenticated
      * @urlParam id integer required The harvest record ID. Example: 4
@@ -572,6 +572,13 @@ class FlockEndController extends BaseController
      * @response 404 {
      *   "success": false,
      *   "message": "Harvest record not found."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Cannot delete harvest record. It has 5 end details. Please remove all related data before deleting this harvest record.",
+     *   "dependentRecords": {
+     *     "Flock End Details": 5
+     *   }
      * }
      */
     public function destroy($id)
@@ -602,6 +609,28 @@ class FlockEndController extends BaseController
             ], 404);
         }
 
+        // Check for dependent records before deletion
+        $dependentRecords = [];
+
+        $flockEndDetailsCount = \App\Models\FlockEndDetail::where('flock_end_id', $flockEnd->id)->count();
+        if ($flockEndDetailsCount > 0) {
+            $dependentRecords['Flock End Details'] = $flockEndDetailsCount;
+        }
+
+        if (!empty($dependentRecords)) {
+            $details = [];
+            foreach ($dependentRecords as $type => $count) {
+                $details[] = $count . ' ' . $type;
+            }
+            $message = 'Cannot delete harvest record. It has ' . implode(', ', $details) . '. Please remove all related data before deleting this harvest record.';
+
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+                'dependentRecords' => $dependentRecords
+            ], 422);
+        }
+
         try {
             DB::beginTransaction();
 
@@ -621,7 +650,7 @@ class FlockEndController extends BaseController
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete harvest record.',
-                'error' => $e->getMessage(),
+                'error' => env('APP_DEBUG') ? $e->getMessage() : null,
             ], 500);
         }
     }

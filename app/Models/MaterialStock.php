@@ -33,7 +33,7 @@ class MaterialStock extends Model
 
     public function supplier()
     {
-        return $this->belongsTo(ChicksSupplier::class, 'supplier_id');
+        return $this->belongsTo(FeedSupplier::class, 'supplier_id');
     }
 
     public function materialName()

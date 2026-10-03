@@ -18,10 +18,14 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use App\Models\CountryRegion;
 use App\Models\Country;
+use Illuminate\Support\Facades\DB;
+use App\Models\Flock;
+use App\Models\Farm;
+use App\Models\Hangar;
+use App\Models\DailyRecord;
 use App\Models\Contact;
 use App\Models\Project;
 use App\Models\AdminProjectStatus;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
@@ -514,11 +518,58 @@ class AdminController extends Controller
      */
     public function destroy(Request $request, $siteUrl, $id)
     {
-        $adminDelete = Admin::find($id)->delete();
-        if($adminDelete)
+        $admin = Admin::find($id);
+        if (!$admin) {
+            return response()->json(['msg' => 'Admin not found'], 404);
+        }
+
+        $dependentRecords = [];
+
+        $flocksCount = \App\Models\Flock::where('created_by', $admin->id)->count();
+        if ($flocksCount > 0) {
+            $dependentRecords['Flocks Created'] = $flocksCount;
+        }
+
+        $farmsCreatedCount = \App\Models\Farm::where('created_by', $admin->id)->count();
+        if ($farmsCreatedCount > 0) {
+            $dependentRecords['Farms Created'] = $farmsCreatedCount;
+        }
+
+        $farmsAssignedCount = \App\Models\Farm::where('assigned_to', $admin->id)->count();
+        if ($farmsAssignedCount > 0) {
+            $dependentRecords['Farms Assigned'] = $farmsAssignedCount;
+        }
+
+        $hangarsCount = \App\Models\Hangar::where('created_by', $admin->id)->count();
+        if ($hangarsCount > 0) {
+            $dependentRecords['Hangars Created'] = $hangarsCount;
+        }
+
+        $dailyRecordsCount = \App\Models\DailyRecord::where('created_by', $admin->id)->count();
+        if ($dailyRecordsCount > 0) {
+            $dependentRecords['Daily Records Created'] = $dailyRecordsCount;
+        }
+
+        if (!empty($dependentRecords)) {
+            $message = 'Cannot delete admin "' . $admin->name . '". The following related data exists: ';
+            $details = [];
+            foreach ($dependentRecords as $type => $count) {
+                $details[] = $count . ' ' . $type;
+            }
+            $message .= implode(', ', $details) . '. Please reassign or remove all related data before deleting this admin.';
+
+            return response()->json([
+                'msg' => $message,
+                'error' => true,
+                'dependentRecords' => $dependentRecords
+            ], 422);
+        }
+
+        $adminDelete = $admin->delete();
+        if ($adminDelete)
             return response()->json(['msg' => 'Deleted successfully!']);
 
-        return response()->json(['msg' => 'Something went wrong, Please try again'],500);
+        return response()->json(['msg' => 'Something went wrong, Please try again'], 500);
     }
 
     public function users(Request $request, $siteUrl)

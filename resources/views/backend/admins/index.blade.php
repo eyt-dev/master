@@ -342,7 +342,7 @@
 
         $(document).on('click', '.delete-admin', function() {
             var id = $(this).attr("data-id");
-          
+
             const siteSlug = "{{ request()->get('username', $siteSlug) }}";
             const destroyUrlTemplate = "{{ route('admins.destroy', ['username' => '__SITE__', 'admin' => '__ID__']) }}";
             const destroyUrl = destroyUrlTemplate
@@ -370,6 +370,29 @@
                             }, function(result) {
                                 location.reload();
                             });
+                        },
+                        error: function(response) {
+                            if (response.status === 422) {
+                                var data = response.responseJSON;
+                                var errorMsg = data.msg || "Cannot delete this admin";
+                                swal({
+                                    title: "Cannot Delete",
+                                    text: errorMsg,
+                                    icon: "error",
+                                    buttons: {
+                                        confirm: {
+                                            text: "OK",
+                                            value: true
+                                        }
+                                    }
+                                });
+                            } else {
+                                swal({
+                                    title: "Error",
+                                    text: "Something went wrong. Please try again.",
+                                    icon: "error"
+                                });
+                            }
                         }
                     });
                 }

@@ -1647,5 +1647,11 @@ class DailyRecordController extends BaseController
 
         return max(0, $totalStock - $totalConsumed);
     }
-
+    
+    private function recalculateRemainingFeed($hangarId)
+    {
+        // Remaining feed is calculated dynamically, no caching needed
+        // This method is called after create/update/delete operations
+        // but remaining is always computed as: totalStock - totalConsumed
+    }
 }

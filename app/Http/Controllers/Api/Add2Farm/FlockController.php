@@ -679,13 +679,38 @@ class FlockController extends BaseController
         $chartData = $this->generateChartData($dailyRecords, $flock, $totalBird, $isLayer);
 
         // Format hangar allocations with details
-        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) {
+        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock) {
+            // Get daily records for this hangar
+            $hangarDailyRecords = DailyRecord::where('flock_id', $flock->id)
+                ->where('hangar_id', $allocation->hangar_id)
+                ->get();
+
+            // Get the latest flock end record for this hangar
+            $lastHarvestRecord = FlockEnd::where('flock_id', $flock->id)
+                ->where('hangar_id', $allocation->hangar_id)
+                ->latest()
+                ->first();
+
+            // Calculate metrics
+            $totalMortality = $hangarDailyRecords->sum('mortality');
+            $mortalityRate = $allocation->quantity > 0 ? ($totalMortality / $allocation->quantity) * 100 : 0;
+            $feedConsumed = round($hangarDailyRecords->sum('feed_kg'), 2);
+            $avgWeight = $hangarDailyRecords->avg('chicks_weight');
+
+            // Calculate live birds for this hangar
+            $liveBirds = $allocation->quantity - ($lastHarvestRecord?->total_birds_harvested ?? 0) - $totalMortality;
+            $liveBirds = max(0, $liveBirds);
+
             return [
                 'hangar_id'     => $allocation->hangar_id,
                 'hangar_name'   => $allocation->hangar?->name,
                 'quantity'      => $allocation->quantity,
                 'area_sqm'      => $allocation->hangar?->area_sqm,
                 'status'        => $allocation->hangar?->status,
+                'live_birds'    => $liveBirds,
+                'mortality_rate' => round($mortalityRate, 2),
+                'feed_consumed' => $feedConsumed,
+                'avg_weight'    => $avgWeight ? round($avgWeight, 2) : 0,
             ];
         })->toArray();
 
@@ -1307,13 +1332,38 @@ class FlockController extends BaseController
         $assignment = (auth()->check() && $flock->created_by === auth()->id()) ? 1 : 0;
 
         // Format hangar allocations with details
-        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) {
+        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock) {
+            // Get daily records for this hangar
+            $hangarDailyRecords = DailyRecord::where('flock_id', $flock->id)
+                ->where('hangar_id', $allocation->hangar_id)
+                ->get();
+
+            // Get the latest flock end record for this hangar
+            $lastHarvestRecord = FlockEnd::where('flock_id', $flock->id)
+                ->where('hangar_id', $allocation->hangar_id)
+                ->latest()
+                ->first();
+
+            // Calculate metrics
+            $totalMortality = $hangarDailyRecords->sum('mortality');
+            $mortalityRate = $allocation->quantity > 0 ? ($totalMortality / $allocation->quantity) * 100 : 0;
+            $feedConsumed = round($hangarDailyRecords->sum('feed_kg'), 2);
+            $avgWeight = $hangarDailyRecords->avg('chicks_weight');
+
+            // Calculate live birds for this hangar
+            $liveBirds = $allocation->quantity - ($lastHarvestRecord?->total_birds_harvested ?? 0) - $totalMortality;
+            $liveBirds = max(0, $liveBirds);
+
             return [
                 'hangar_id'     => $allocation->hangar_id,
                 'hangar_name'   => $allocation->hangar?->name,
                 'quantity'      => $allocation->quantity,
                 'area_sqm'      => $allocation->hangar?->area_sqm,
                 'status'        => $allocation->hangar?->status,
+                'live_birds'    => $liveBirds,
+                'mortality_rate' => round($mortalityRate, 2),
+                'feed_consumed' => $feedConsumed,
+                'avg_weight'    => $avgWeight ? round($avgWeight, 2) : 0,
             ];
         })->toArray();
 

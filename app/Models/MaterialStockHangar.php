@@ -31,8 +31,9 @@ class MaterialStockHangar extends Model
 
     public function scopeByMaterialType($query, $type)
     {
-        return $query->whereHas('materialStock.materialName', function($q) use ($type) {
-            $q->whereRaw('LOWER(type) = ?', [strtolower($type)]);
+        return $query->whereHas('materialStock.materialName.materialType', function($q) use ($type) {
+            $q->where('material_types.value', strtolower(str_replace(' ', '_', $type)))
+              ->orWhere('material_types.name', $type);
         });
     }
 }

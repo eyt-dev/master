@@ -100,16 +100,27 @@ class SupervisorController extends BaseController
             ->when($request->status, function ($q) use ($request) {
                 $status = strtolower($request->status);
                 if ($status === 'active') {
-                    return $q->whereExists(function ($query) {
-                        $query->selectRaw(1)
-                            ->from('farms')
-                            ->whereRaw('farms.assigned_to = admins.id');
+                    return $q->where(function ($query) {
+                        $query->whereExists(function ($subquery) {
+                            $subquery->selectRaw(1)
+                                ->from('farms')
+                                ->whereRaw('farms.assigned_to = admins.id');
+                        })->orWhereExists(function ($subquery) {
+                            $subquery->selectRaw(1)
+                                ->from('farm_admin')
+                                ->whereRaw('farm_admin.admin_id = admins.id');
+                        });
                     });
                 } elseif ($status === 'inactive') {
                     return $q->whereNotExists(function ($query) {
                         $query->selectRaw(1)
                             ->from('farms')
                             ->whereRaw('farms.assigned_to = admins.id');
+                    })
+                    ->whereNotExists(function ($query) {
+                        $query->selectRaw(1)
+                            ->from('farm_admin')
+                            ->whereRaw('farm_admin.admin_id = admins.id');
                     });
                 }
                 return $q;

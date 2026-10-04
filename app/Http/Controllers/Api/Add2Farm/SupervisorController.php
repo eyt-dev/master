@@ -76,7 +76,12 @@ class SupervisorController extends BaseController
         $inactiveSupervisors = 0;
 
         foreach ($allSupervisors as $supervisor) {
-            $farm = \App\Models\Farm::where('assigned_to', $supervisor->id)->first();
+            $farm = \App\Models\Farm::where(function ($q) use ($supervisor) {
+                $q->where('assigned_to', $supervisor->id)
+                  ->orWhereHas('assignedAdmins', function ($query) use ($supervisor) {
+                      $query->where('admin_id', $supervisor->id);
+                  });
+            })->first();
             if ($farm) {
                 $activeSupervisors++;
             } else {
@@ -93,7 +98,21 @@ class SupervisorController extends BaseController
                 });
             })
             ->when($request->status, function ($q) use ($request) {
-                return $q->where('status', $request->status);
+                $status = strtolower($request->status);
+                if ($status === 'active') {
+                    return $q->whereExists(function ($query) {
+                        $query->selectRaw(1)
+                            ->from('farms')
+                            ->whereRaw('farms.assigned_to = admins.id');
+                    });
+                } elseif ($status === 'inactive') {
+                    return $q->whereNotExists(function ($query) {
+                        $query->selectRaw(1)
+                            ->from('farms')
+                            ->whereRaw('farms.assigned_to = admins.id');
+                    });
+                }
+                return $q;
             })
             ->when($request->farm_name, function ($q) use ($request) {
                 return $q->whereExists(function ($query) use ($request) {

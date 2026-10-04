@@ -7,6 +7,7 @@ use App\Models\ChicksSupplier;
 use App\Models\Admin;
 use App\Models\FeedSupplier;
 use App\Models\MaterialName;
+use App\Models\Slaughter;
 use Illuminate\Http\Request;
 
 /**
@@ -231,7 +232,7 @@ class DropdownController extends BaseController
     /**
      * Get slaughterers for dropdown
      *
-     * Returns list of slaughterers (type 5) for harvest/sale operations.
+     * Returns list of all slaughterers for harvest/sale operations.
      *
      * @authenticated
      *
@@ -240,7 +241,7 @@ class DropdownController extends BaseController
      *   "message": "Slaughterers retrieved successfully.",
      *   "data": [
      *     {
-     *       "id": 5,
+     *       "id": 1,
      *       "name": "Slaughterer Name"
      *     }
      *   ]
@@ -248,8 +249,7 @@ class DropdownController extends BaseController
      */
     public function slaughterers()
     {
-        $slaughterers = Admin::where('type', 5)
-            ->select('id', 'name')
+        $slaughterers = Slaughter::select('id', 'name')
             ->orderBy('name')
             ->get();
 

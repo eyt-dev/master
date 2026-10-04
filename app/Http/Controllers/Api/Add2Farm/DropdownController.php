@@ -267,7 +267,7 @@ class DropdownController extends BaseController
      * Can be filtered by material type using query parameter.
      *
      * @authenticated
-     * @queryParam material_type string Optional filter by material type (e.g., pelleted_feed, mash_feed)
+     * @queryParam material_type string Optional filter by material type (e.g., pelleted_feed, mash_feed, feed_ingredient, premix)
      *
      * @response 200 {
      *   "success": true,
@@ -276,7 +276,7 @@ class DropdownController extends BaseController
      *     {
      *       "id": 1,
      *       "name": "Layer Pellets",
-     *       "type": "Pelleted Feed"
+     *       "type": "Pelleted feed"
      *     }
      *   ]
      * }
@@ -286,7 +286,16 @@ class DropdownController extends BaseController
         $query = MaterialName::select('id', 'name', 'type');
 
         if ($request->has('material_type')) {
-            $query->where('type', $request->input('material_type'));
+            $materialType = $request->input('material_type');
+            $typeMapping = [
+                'pelleted_feed' => 'Pelleted Feed',
+                'mash_feed' => 'Feed Stuff',
+                'feed_ingredient' => 'Feed Stuff',
+                'premix' => 'Feed Stuff',
+            ];
+
+            $dbType = $typeMapping[$materialType] ?? $materialType;
+            $query->where('type', $dbType);
         }
 
         $materials = $query->orderBy('name')->get();

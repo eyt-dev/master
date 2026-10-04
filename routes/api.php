@@ -102,6 +102,17 @@ Route::prefix('add2farm')->middleware('set.add2farm.language')->group(function (
     Route::get('countries', [Add2FarmCountryController::class, 'index']);
     Route::get('countries/dropdown', [Add2FarmCountryController::class, 'dropdown']);
     Route::get('countries/{id}', [Add2FarmCountryController::class, 'show']);
+
+    // Public dropdown endpoints (no authentication required)
+    Route::prefix('dropdowns')->group(function () {
+        Route::get('farm-types', [Add2FarmDropdownController::class, 'farmTypes']);
+        Route::get('suppliers', [Add2FarmDropdownController::class, 'suppliers']);
+        Route::get('breeds', [Add2FarmDropdownController::class, 'breeds']);
+        Route::get('slaughterers', [Add2FarmDropdownController::class, 'slaughterers']);
+        Route::get('material-names', [Add2FarmDropdownController::class, 'materialNames']);
+        Route::get('material-types', [Add2FarmDropdownController::class, 'materialTypes']);
+        Route::get('feed_suppliers', [Add2FarmDropdownController::class, 'feedSuppliers']);
+    });
 });
 
 // Add2Farm protected routes — require a valid Sanctum token
@@ -192,16 +203,10 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
         Route::get('hangar-remaining/{farm_id}', [Add2FarmFeedStockController::class, 'getHangarRemaining']);
     });
 
-    // Dropdowns - Accessible to authenticated users
+    // Dropdowns - Protected (require authentication)
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('dropdowns/farms', [Add2FarmDropdownController::class, 'farms']);
-        Route::get('dropdowns/suppliers', [Add2FarmDropdownController::class, 'suppliers']);
-        Route::get('dropdowns/feed_suppliers', [Add2FarmDropdownController::class, 'feedSuppliers']);
         Route::get('dropdowns/supervisors', [Add2FarmDropdownController::class, 'supervisors']);
-        Route::get('dropdowns/breeds', [Add2FarmDropdownController::class, 'breeds']);
-        Route::get('dropdowns/slaughterers', [Add2FarmDropdownController::class, 'slaughterers']);
-        Route::get('dropdowns/material-names', [Add2FarmDropdownController::class, 'materialNames']);
-        Route::get('dropdowns/material-types', [Add2FarmDropdownController::class, 'materialTypes']);
     });
 
     // TEMPORARY MAINTENANCE ROUTES - SHOULD BE REMOVED AFTER USE

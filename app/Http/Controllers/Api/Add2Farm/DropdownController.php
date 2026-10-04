@@ -289,9 +289,9 @@ class DropdownController extends BaseController
             $materialType = $request->input('material_type');
             $typeMapping = [
                 'pelleted_feed' => 'Pelleted Feed',
-                'mash_feed' => 'Feed Stuff',
-                'feed_ingredient' => 'Feed Stuff',
-                'premix' => 'Feed Stuff',
+                'mash_feed' => 'Mash Feed',
+                'feed_ingredient' => 'Feed Ingredient',
+                'premix' => 'Premix',
             ];
 
             $dbType = $typeMapping[$materialType] ?? $materialType;

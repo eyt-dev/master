@@ -27,14 +27,24 @@
             <div class="form-group">
                 <label class="form-label">Type <span class="text-red">*</span></label>
                 <div class="custom-control custom-radio">
-                    <input type="radio" class="custom-control-input" id="type_pelleted" name="type" value="Pelleted feed"
-                        {{ old('type', $feedmaterial->type ?? '') == 'Pelleted feed' ? 'checked' : '' }} required="">
-                    <label class="custom-control-label" for="type_pelleted">Pelleted feed</label>
+                    <input type="radio" class="custom-control-input" id="type_pelleted_feed" name="type" value="Pelleted Feed"
+                        {{ old('type', $feedmaterial->type ?? '') == 'Pelleted Feed' ? 'checked' : '' }} required="">
+                    <label class="custom-control-label" for="type_pelleted_feed">Pelleted Feed</label>
                 </div>
                 <div class="custom-control custom-radio">
-                    <input type="radio" class="custom-control-input" id="type_feedstuff" name="type" value="Feed Stuff"
-                        {{ old('type', $feedmaterial->type ?? '') == 'Feed Stuff' ? 'checked' : '' }} required="">
-                    <label class="custom-control-label" for="type_feedstuff">Feed Stuff</label>
+                    <input type="radio" class="custom-control-input" id="type_mash_feed" name="type" value="Mash Feed"
+                        {{ old('type', $feedmaterial->type ?? '') == 'Mash Feed' ? 'checked' : '' }} required="">
+                    <label class="custom-control-label" for="type_mash_feed">Mash Feed</label>
+                </div>
+                <div class="custom-control custom-radio">
+                    <input type="radio" class="custom-control-input" id="type_feed_ingredient" name="type" value="Feed Ingredient"
+                        {{ old('type', $feedmaterial->type ?? '') == 'Feed Ingredient' ? 'checked' : '' }} required="">
+                    <label class="custom-control-label" for="type_feed_ingredient">Feed Ingredient</label>
+                </div>
+                <div class="custom-control custom-radio">
+                    <input type="radio" class="custom-control-input" id="type_premix" name="type" value="Premix"
+                        {{ old('type', $feedmaterial->type ?? '') == 'Premix' ? 'checked' : '' }} required="">
+                    <label class="custom-control-label" for="type_premix">Premix</label>
                 </div>
                 @error('type')
                     <label id="type-error" class="error" for="type">{{ $message }}</label>

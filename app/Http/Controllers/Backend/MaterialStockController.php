@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\MaterialStock;
 use App\Models\Farm;
 use App\Models\FeedSupplier;
+use App\Models\ChicksSupplier;
 use App\Models\Hangar;
 use App\Models\MaterialStockHangar;
 use App\Models\MaterialName;
@@ -249,14 +250,14 @@ class MaterialStockController extends Controller
     {
         // Get material type to determine hangar allocation requirement
         $materialName = MaterialName::find($request->material_name_id);
-    
-        $materialType = $materialName ? strtolower($materialName->type) : '';
-        // Hangar allocation required only if NOT Feed Stuff
-        $hangarAllocationRequired = $materialType !== 'feed stuff';
+
+        $materialType = $materialName ? strtolower(str_replace(' ', '_', $materialName->type)) : '';
+        // Hangar allocation required for pelleted_feed and mash_feed only
+        $hangarAllocationRequired = in_array($materialType, ['pelleted_feed', 'mash_feed']);
 
         $rules = [
             'farm_id' => 'required|exists:farms,id',
-            'supplier_id' => 'required|exists:chicks_suppliers,id',
+            'supplier_id' => 'required|exists:feed_suppliers,id',
             'material_name_id' => 'required|exists:material_names,id',
             'stock_date' => 'required|date_format:Y-m-d',
             'quantity' => 'required|numeric|min:1',
@@ -383,7 +384,7 @@ class MaterialStockController extends Controller
             $farms = Farm::query();
         }
 
-        $suppliers = ChicksSupplier::all();
+        $suppliers = FeedSupplier::all();
         $materialNames = MaterialName::all();
         $materialStockHangars = MaterialStockHangar::where('material_stock_id', $materialStock->id)->get();
         $farms = $farms->get();
@@ -397,13 +398,13 @@ class MaterialStockController extends Controller
 
         // Get material type to determine hangar allocation requirement
         $materialName = MaterialName::find($request->material_name_id);
-        $materialType = $materialName ? strtolower($materialName->type) : '';
-        // Hangar allocation required only if NOT Feed Stuff
-        $hangarAllocationRequired = $materialType !== 'feed stuff';
+        $materialType = $materialName ? strtolower(str_replace(' ', '_', $materialName->type)) : '';
+        // Hangar allocation required for pelleted_feed and mash_feed only
+        $hangarAllocationRequired = in_array($materialType, ['pelleted_feed', 'mash_feed']);
 
         $rules = [
             'farm_id' => 'required|exists:farms,id',
-            'supplier_id' => 'required|exists:chicks_suppliers,id',
+            'supplier_id' => 'required|exists:feed_suppliers,id',
             'material_name_id' => 'required|exists:material_names,id',
             'stock_date' => 'required|date_format:Y-m-d',
             'quantity' => 'required|numeric|min:1',

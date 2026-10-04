@@ -160,11 +160,11 @@
             var container = $('#hangars_allocation_container');
             var noHangarsMsg = $('#no_hangars_message');
 
-            // Check if material type is "pelleted feed" - only load hangars for pelleted feed
+            // Check if material type requires hangar allocation (pelleted feed or mash feed)
             var materialType = ($('#material_name_id option:selected').data('type') || '').toLowerCase();
-            var isPelletedFeed = materialType === 'pelleted feed';
+            var requiresHangarAllocation = materialType === 'pelleted feed' || materialType === 'mash feed';
 
-            if (!isPelletedFeed) {
+            if (!requiresHangarAllocation) {
                 container.hide();
                 noHangarsMsg.hide();
                 return;
@@ -251,15 +251,15 @@
             var selectedOption = $('#material_name_id option:selected');
             var materialType = (selectedOption.data('type') || '').toLowerCase();
 
-            // Show hangar allocation ONLY for "pelleted feed" material type
-            var isPelletedFeed = materialType === 'pelleted feed';
+            // Show hangar allocation for pelleted feed and mash feed
+            var requiresHangarAllocation = materialType === 'pelleted feed' || materialType === 'mash feed';
 
-            if (isPelletedFeed) {
-                // Show hangar allocation for pelleted feed only
+            if (requiresHangarAllocation) {
+                // Show hangar allocation for pelleted feed and mash feed
                 $('#hangar_allocation_section').slideDown(300);
                 $('#hangar_required_asterisk').show();
             } else {
-                // Hide hangar allocation for all other materials
+                // Hide hangar allocation for feed ingredient and premix
                 $('#hangar_allocation_section').slideUp(300);
                 $('#hangar_required_asterisk').hide();
                 // Clear hangar data when hiding
@@ -278,16 +278,16 @@
             }
         });
 
-        // When farm changes, reload hangars (only if pelleted feed)
+        // When farm changes, reload hangars (only if pelleted feed or mash feed)
         $('#farm_id').on('change', function() {
             var farmId = $(this).val();
             var materialType = ($('#material_name_id option:selected').data('type') || '').toLowerCase();
-            var isPelletedFeed = materialType === 'pelleted feed';
+            var requiresHangarAllocation = materialType === 'pelleted feed' || materialType === 'mash feed';
 
-            if (isPelletedFeed) {
+            if (requiresHangarAllocation) {
                 loadHangarsForFarm(farmId);
             } else {
-                // Clear hangars if not pelleted feed
+                // Clear hangars if not pelleted feed or mash feed
                 $('#hangars_allocation_container').html('');
                 $('#hangar_quantities_json').val('');
             }
@@ -298,8 +298,8 @@
             toggleHangarAllocationSection();
             var farmId = $('#farm_id').val();
             var materialType = ($('#material_name_id option:selected').data('type') || '').toLowerCase();
-            var isPelletedFeed = materialType === 'pelleted feed';
-            if (farmId && isPelletedFeed) {
+            var requiresHangarAllocation = materialType === 'pelleted feed' || materialType === 'mash feed';
+            if (farmId && requiresHangarAllocation) {
                 loadHangarsForFarm(farmId);
             }
         @else
@@ -312,11 +312,11 @@
             e.preventDefault();
 
             var materialType = ($('#material_name_id option:selected').data('type') || '').toLowerCase();
-            var isPelletedFeed = materialType === 'pelleted feed';
+            var requiresHangarAllocation = materialType === 'pelleted feed' || materialType === 'mash feed';
             var selectedHangars = [];
             var totalQty = 0;
 
-            if (isPelletedFeed) {
+            if (requiresHangarAllocation) {
                 $('.hangar-quantity-input').each(function() {
                     var hangarId = $(this).data('hangar-id');
                     var quantity = parseFloat($(this).val()) || 0;

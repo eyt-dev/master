@@ -263,9 +263,11 @@ class DropdownController extends BaseController
     /**
      * Get material names for dropdown
      *
-     * Returns list of all material names with their types.
+     * Returns list of material names with their types.
+     * Can be filtered by material type using query parameter.
      *
      * @authenticated
+     * @queryParam material_type string Optional filter by material type (e.g., pelleted_feed, mash_feed)
      *
      * @response 200 {
      *   "success": true,
@@ -279,11 +281,15 @@ class DropdownController extends BaseController
      *   ]
      * }
      */
-    public function materialNames()
+    public function materialNames(Request $request)
     {
-        $materials = MaterialName::select('id', 'name', 'type')
-            ->orderBy('name')
-            ->get();
+        $query = MaterialName::select('id', 'name', 'type');
+
+        if ($request->has('material_type')) {
+            $query->where('type', $request->input('material_type'));
+        }
+
+        $materials = $query->orderBy('name')->get();
 
         return response()->json([
             'success' => true,
@@ -377,19 +383,23 @@ class DropdownController extends BaseController
      *   "data": [
      *     {
      *       "value": "pelleted_feed",
-     *       "label": "Pelleted Feed"
+     *       "label": "Pelleted Feed",
+     *       "hangar_allocation": true
      *     },
      *     {
      *       "value": "mash_feed",
-     *       "label": "Mash Feed"
+     *       "label": "Mash Feed",
+     *       "hangar_allocation": true
      *     },
      *     {
      *       "value": "feed_ingredient",
-     *       "label": "Feed Ingredient"
+     *       "label": "Feed Ingredient",
+     *       "hangar_allocation": false
      *     },
      *     {
      *       "value": "premix",
-     *       "label": "Premix"
+     *       "label": "Premix",
+     *       "hangar_allocation": false
      *     }
      *   ]
      * }
@@ -397,10 +407,10 @@ class DropdownController extends BaseController
     public function materialTypes()
     {
         $types = [
-            ['value' => 'pelleted_feed', 'label' => 'Pelleted Feed'],
-            ['value' => 'mash_feed', 'label' => 'Mash Feed'],
-            ['value' => 'feed_ingredient', 'label' => 'Feed Ingredient'],
-            ['value' => 'premix', 'label' => 'Premix'],
+            ['value' => 'pelleted_feed', 'label' => 'Pelleted Feed', 'hangar_allocation' => true],
+            ['value' => 'mash_feed', 'label' => 'Mash Feed', 'hangar_allocation' => true],
+            ['value' => 'feed_ingredient', 'label' => 'Feed Ingredient', 'hangar_allocation' => false],
+            ['value' => 'premix', 'label' => 'Premix', 'hangar_allocation' => false],
         ];
 
         return response()->json([

@@ -15,6 +15,7 @@ use App\Http\Controllers\Backend\WheelController;
 use App\Http\Controllers\Backend\StoreViewController;
 use App\Http\Controllers\Backend\CategoryController;
 use App\Http\Controllers\Backend\FeedMaterialController;
+use App\Http\Controllers\Backend\MaterialTypeController;
 use App\Http\Controllers\Backend\FarmController;
 use App\Http\Controllers\Backend\HangarController;
 use App\Http\Controllers\Backend\FeedSupplierController;
@@ -178,6 +179,12 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('{feedmaterial}/edit', 'edit')->name('feedmaterial.edit')->middleware('permission:edit.feed_material');
                         Route::post('{feedmaterial}', 'update')->name('feedmaterial.update')->middleware('permission:edit.feed_material');
                         Route::get('destroy/{feedmaterial}', 'destroy')->name('feedmaterial.destroy')->middleware('permission:delete.feed_material');
+                    });
+                    Route::controller(MaterialTypeController::class)->prefix('material-type')->group(function () {
+                        Route::get('/', 'index')->name('material-type.index');
+                        Route::post('/', 'store')->name('material-type.store');
+                        Route::put('{materialType}', 'update')->name('material-type.update');
+                        Route::delete('{materialType}', 'destroy')->name('material-type.destroy');
                     });
                     Route::controller(FarmController::class)->prefix('farm')->group(function () {
                         Route::get('/', 'index')->name('farm.index')->middleware('permission:view.farm');
@@ -517,6 +524,12 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::get('{feedmaterial}/edit', 'edit')->name('feedmaterial.edit')->middleware('permission:edit.feed_material');
                 Route::post('{feedmaterial}', 'update')->name('feedmaterial.update')->middleware('permission:edit.feed_material');
                 Route::get('destroy/{feedmaterial}', 'destroy')->name('feedmaterial.destroy')->middleware('permission:delete.feed_material');
+            });
+            Route::controller(MaterialTypeController::class)->prefix('material-type')->group(function () {
+                Route::get('/', 'index')->name('material-type.index');
+                Route::post('/', 'store')->name('material-type.store');
+                Route::put('{materialType}', 'update')->name('material-type.update');
+                Route::delete('{materialType}', 'destroy')->name('material-type.destroy');
             });
             Route::controller(FarmController::class)->prefix('farm')->group(function () {
                 Route::get('/', 'index')->name('farm.index')->middleware('permission:view.farm');

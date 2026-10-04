@@ -7,6 +7,7 @@ use App\Models\ChicksSupplier;
 use App\Models\Admin;
 use App\Models\FeedSupplier;
 use App\Models\MaterialName;
+use App\Models\MaterialType;
 use App\Models\Slaughter;
 use Illuminate\Http\Request;
 
@@ -283,22 +284,24 @@ class DropdownController extends BaseController
      */
     public function materialNames(Request $request)
     {
-        $query = MaterialName::select('id', 'name', 'type');
+        $query = MaterialName::with('materialType')->select('id', 'name', 'material_type_id');
 
         if ($request->has('material_type')) {
             $materialType = $request->input('material_type');
-            $typeMapping = [
-                'pelleted_feed' => 'Pelleted Feed',
-                'mash_feed' => 'Mash Feed',
-                'feed_ingredient' => 'Feed Ingredient',
-                'premix' => 'Premix',
-            ];
+            $materialTypeRecord = MaterialType::where('value', $materialType)->first();
 
-            $dbType = $typeMapping[$materialType] ?? $materialType;
-            $query->where('type', $dbType);
+            if ($materialTypeRecord) {
+                $query->where('material_type_id', $materialTypeRecord->id);
+            }
         }
 
-        $materials = $query->orderBy('name')->get();
+        $materials = $query->orderBy('name')->get()->map(function ($material) {
+            return [
+                'id' => $material->id,
+                'name' => $material->name,
+                'type' => $material->materialType?->name ?? 'N/A',
+            ];
+        });
 
         return response()->json([
             'success' => true,
@@ -415,12 +418,10 @@ class DropdownController extends BaseController
      */
     public function materialTypes()
     {
-        $types = [
-            ['value' => 'pelleted_feed', 'label' => 'Pelleted Feed', 'hangar_allocation' => true],
-            ['value' => 'mash_feed', 'label' => 'Mash Feed', 'hangar_allocation' => true],
-            ['value' => 'feed_ingredient', 'label' => 'Feed Ingredient', 'hangar_allocation' => false],
-            ['value' => 'premix', 'label' => 'Premix', 'hangar_allocation' => false],
-        ];
+        $types = MaterialType::select('value', 'name as label', 'hangar_allocation')
+            ->orderBy('id')
+            ->get()
+            ->toArray();
 
         return response()->json([
             'success' => true,

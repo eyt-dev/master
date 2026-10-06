@@ -59,12 +59,12 @@ class ProfileController extends Controller
      * Update user profile
      *
      * Update the authenticated user's profile information including name, email, username, mobile number, and phone code.
-     * If mobile number is changed, OTP is sent to the new mobile number and must be verified via the verify OTP endpoint with context "change-mobile".
+     * If mobile number is changed, OTP is sent to the new mobile number and must be verified via the verify OTP endpoint.
      *
      * @authenticated
      * @bodyParam name string The user's full name. Example: Jane Doe
-     * @bodyParam email string The user's email address. Must be unique (except current). Example: jane@example.com
-     * @bodyParam username string The user's username. Must be unique (except current). Example: janedoe
+     * @bodyParam email string optional The user's email address. Must be unique (except current). Example: jane@example.com
+     * @bodyParam username string optional The user's username. Must be unique (except current). Example: janedoe
      * @bodyParam mobile_number string required The user's mobile number. Example: 1234567890
      * @bodyParam phone_code string required The user's phone code. Example: +1
      * @response 200 {
@@ -103,8 +103,8 @@ class ProfileController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name'           => 'sometimes|required|string|max:255',
-            'email'          => 'sometimes|required|email|max:255|unique:admins,email,' . $user->id,
-            'username'       => 'sometimes|required|string|max:255|unique:admins,username,' . $user->id,
+            'email'          => 'nullable|email|max:255|unique:admins,email,' . $user->id,
+            'username'       => 'nullable|string|max:255|unique:admins,username,' . $user->id,
             'mobile_number'  => 'required|string|max:20|unique:admins,mobile_number,' . $user->id,
             'phone_code'     => 'required|string|max:10',
         ]);

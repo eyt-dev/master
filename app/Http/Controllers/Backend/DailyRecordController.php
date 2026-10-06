@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Helpers\FlockHelper;
+use App\Helpers\DecimalHelper;
 use App\Models\DailyRecord;
 use App\Models\Hangar;
 use App\Models\Flock;
@@ -221,9 +222,9 @@ class DailyRecordController extends Controller
         }
 
         $breedType = $row['breed_type'] ?? 'Layer';
-        $feedKg = number_format((float) $hangar['feed_kg'], 2, ',', '.');
-        $eggsWeight = number_format((float) $hangar['eggs_weight'], 2, ',', '.');
-        $chicksWeightG = number_format((float) $hangar['chicks_weight'] * 1000, 0, ',', '.');
+        $feedKg = DecimalHelper::formatEuropean((float) $hangar['feed_kg'], 2);
+        $eggsWeight = DecimalHelper::formatEuropean((float) $hangar['eggs_weight'], 2);
+        $chicksWeightG = DecimalHelper::formatEuropean((float) $hangar['chicks_weight'] * 1000, 0);
 
         $html = 'Qty: ' . $hangar['allocated_quantity'] . '<br>' .
                 'Feed: ' . $feedKg . ' kg<br>' .
@@ -313,7 +314,7 @@ class DailyRecordController extends Controller
                 'id' => $allocation->hangar->id,
                 'name' => $allocation->hangar->name,
                 'quantity' => $allocation->quantity,
-                'remaining' => number_format($remainingFeed, 2, '.', '')
+                'remaining' => DecimalHelper::formatEuropean($remainingFeed, 2)
             ];
         });
 

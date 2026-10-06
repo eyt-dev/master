@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Constants\Unit;
+use App\Helpers\DecimalHelper;
 use App\Http\Requests\StoreCompoPriceRequest;
 use App\Http\Requests\UpdateCompoPriceRequest;
 use App\Models\Component;
@@ -28,8 +29,7 @@ class CompoPriceController extends Controller
                     return $row->component->name;
                 })
                 ->addColumn('price', function ($row) {
-                    // European format: dot thousands, comma decimal e.g. 1.234,56
-                    return number_format((float) $row->price, 2, ',', '.');
+                    return DecimalHelper::formatEuropean((float) $row->price, 2);
                 })
                 ->addColumn('unit', function ($row) {
                     return Unit::getUnit()[$row->unit];

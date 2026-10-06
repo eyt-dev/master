@@ -4,7 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
-use NumberFormatter;
+use App\Helpers\DecimalHelper;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,11 +25,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        Blade::directive('formatNumber', function ($expression) {
+            return "<?php echo \App\Helpers\DecimalHelper::formatEuropean($expression, 2); ?>";
+        });
+
+        Blade::directive('formatPrice', function ($expression) {
+            return "<?php echo \App\Helpers\DecimalHelper::formatEuropean($expression, 2); ?>";
+        });
+
+        Blade::directive('formatQuantity', function ($expression) {
+            return "<?php echo \App\Helpers\DecimalHelper::formatEuropean($expression, 2); ?>";
+        });
+
         Blade::directive('money', function ($expression) {
-            return "<?php 
-                \$formatter = new NumberFormatter('de_DE', NumberFormatter::DECIMAL);
-                echo \$formatter->format($expression);
-            ?>";
+            return "<?php echo \App\Helpers\DecimalHelper::formatEuropean($expression, 2); ?>";
         });
     }
 }

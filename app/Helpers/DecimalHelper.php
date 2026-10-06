@@ -87,4 +87,29 @@ class DecimalHelper
 
         return $data;
     }
+
+    /**
+     * Format number with European formatting (thousands separator: ., decimal separator: ,)
+     * Examples: 1234.56 → "1.234,56", 10000 → "10.000", 1234567.89 → "1.234.567,89"
+     * Input: 1234.56 (float/int)
+     * Output: "1.234,56" (string)
+     */
+    public static function formatEuropean($value, $decimals = 2)
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        // Format with thousands separator (.) and decimal separator (,)
+        return number_format((float) $value, $decimals, ',', '.');
+    }
+
+    /**
+     * Format number as European style for display purposes
+     * Alias for formatEuropean for semantic clarity
+     */
+    public static function formatForDisplay($value, $decimals = 2)
+    {
+        return self::formatEuropean($value, $decimals);
+    }
 }

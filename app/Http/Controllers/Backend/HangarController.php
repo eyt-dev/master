@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\DecimalHelper;
 use Illuminate\Http\Request;
 use App\Models\Hangar;
 use App\Models\Farm;
@@ -58,7 +59,7 @@ class HangarController extends Controller
                         ->sum('feed_kg') ?? 0;
 
                     $remaining = max(0, $totalStock - $totalConsumed);
-                    return number_format($remaining, 2) . ' kg';
+                    return DecimalHelper::formatEuropean($remaining, 2) . ' kg';
                 })
                 ->addColumn('action', function($row) {
                     return '<a class="edit-hangar btn btn-sm btn-success" data-path="'.route('hangar.edit', ['username' => request()->segment(1),  'hangar' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'

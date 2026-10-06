@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Add2Farm;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\DecimalHelper;
 use App\Models\Flock;
 use App\Models\Farm;
 use App\Models\FlockHangar;
@@ -744,7 +745,7 @@ class FlockController extends BaseController
             'live_birds' => $liveBirds,
             'mortality' => $totalMortality,
             'mortality_rate' => round($mortalityRate, 2) . '%',
-            'feed_consumed' => number_format($totalFeedKg, 2) . ' kg',
+            'feed_consumed' => DecimalHelper::formatEuropean($totalFeedKg, 2) . ' kg',
             'avg_weight' => $avgWeight ? round($avgWeight, 2) . ' kg' : 'N/A',
             'chart_data' => $chartData,
         ];

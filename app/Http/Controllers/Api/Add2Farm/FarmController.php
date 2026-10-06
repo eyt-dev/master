@@ -283,8 +283,7 @@ class FarmController extends BaseController
             'phone_code'                => 'nullable|string|max:10',
             'mobile_number'             => 'nullable|string|max:20',
             'number_of_hangars'         => 'required|integer|min:1|max:999',
-            'assigned_to'               => 'nullable|array',
-            'assigned_to.*'             => 'integer|exists:admins,id',
+            'assigned_to'               => 'nullable|integer|exists:admins,id',
             'hangars'                   => 'required|array|min:1',
             'hangars.*.name'            => 'required|string|max:255',
             'hangars.*.area_sqm'        => 'required|integer|min:0',
@@ -320,18 +319,14 @@ class FarmController extends BaseController
                 'mobile_number'      => $request->mobile_number,
                 'number_of_hangars'  => $request->number_of_hangars,
                 'created_by'         => auth()->id(),
+                'assigned_to'        => $request->assigned_to ?? null,
             ];
-
-            // Keep first assigned_to for backward compatibility
-            if ($request->filled('assigned_to') && is_array($request->assigned_to) && count($request->assigned_to) > 0) {
-                $farmData['assigned_to'] = $request->assigned_to[0];
-            }
 
             $farm = Farm::create($farmData);
 
-            // Assign to multiple admins
-            if ($request->filled('assigned_to') && is_array($request->assigned_to)) {
-                $farm->assignedAdmins()->sync($request->assigned_to);
+            // Assign to single admin
+            if ($request->filled('assigned_to')) {
+                $farm->assignedAdmins()->attach($request->assigned_to);
             }
 
             // Create hangars
@@ -497,8 +492,7 @@ class FarmController extends BaseController
             'phone_code'                => 'nullable|string|max:10',
             'mobile_number'             => 'nullable|string|max:20',
             'number_of_hangars'         => 'required|integer|min:1|max:999',
-            'assigned_to'               => 'nullable|array',
-            'assigned_to.*'             => 'integer|exists:admins,id',
+            'assigned_to'               => 'nullable|integer|exists:admins,id',
             'hangars'                   => 'required|array|min:1',
             'hangars.*.id'              => 'nullable|integer|exists:hangars,id',
             'hangars.*.name'            => 'required|string|max:255',
@@ -534,20 +528,14 @@ class FarmController extends BaseController
                 'phone_code'         => $request->phone_code,
                 'mobile_number'      => $request->mobile_number,
                 'number_of_hangars'  => $request->number_of_hangars,
+                'assigned_to'        => $request->assigned_to ?? null,
             ];
-
-            // Keep first assigned_to for backward compatibility
-            if ($request->filled('assigned_to') && is_array($request->assigned_to) && count($request->assigned_to) > 0) {
-                $updateData['assigned_to'] = $request->assigned_to[0];
-            } else {
-                $updateData['assigned_to'] = null;
-            }
 
             $farm->update($updateData);
 
-            // Assign to multiple admins
-            if ($request->filled('assigned_to') && is_array($request->assigned_to)) {
-                $farm->assignedAdmins()->sync($request->assigned_to);
+            // Assign to single admin
+            if ($request->filled('assigned_to')) {
+                $farm->assignedAdmins()->sync([$request->assigned_to]);
             } else {
                 $farm->assignedAdmins()->detach();
             }
@@ -806,14 +794,6 @@ class FarmController extends BaseController
             $totalRemainingFeed += max(0, $totalStock - $totalConsumed);
         }
 
-        // Format assigned admins
-        $assignedAdmins = $farm->assignedAdmins->map(function ($admin) {
-            return [
-                'id'   => $admin->id,
-                'name' => $admin->name,
-            ];
-        })->toArray();
-
         // Check if farm has flocks
         $hasFlocks = $farm->flocks()->exists();
 
@@ -821,8 +801,7 @@ class FarmController extends BaseController
         $isAssignedToUser = false;
         if (auth()->check()) {
             $isAssignedToUser = $farm->created_by === auth()->id() ||
-                               $farm->assigned_to === auth()->id() ||
-                               $farm->assignedAdmins->contains('id', auth()->id());
+                               $farm->assigned_to === auth()->id();
         }
         $assignment = $isAssignedToUser ? 1 : 0;
 
@@ -846,7 +825,6 @@ class FarmController extends BaseController
             'number_of_hangars'     => $farm->number_of_hangars,
             'assigned_to'           => $farm->assigned_to,
             'assigned_admin_name'   => $farm->assignedAdmin?->name ?? null,
-            'assigned_admins'       => $assignedAdmins,
             'created_by_name'       => $farm->creator?->name ?? null,
             'assignment'            => $assignment,
             'has_flocks'            => $hasFlocks,

@@ -81,8 +81,7 @@ class FarmController extends Controller
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'number_of_hangars' => 'required|numeric|min:1',
-            'assigned_to' => 'nullable|array',
-            'assigned_to.*' => 'exists:admins,id',
+            'assigned_to' => 'nullable|integer|exists:admins,id',
             'type' => 'required',
             'phone_code' => 'nullable|string|max:10',
             'mobile_number' => 'nullable|string|max:20',
@@ -113,19 +112,15 @@ class FarmController extends Controller
             'type' => $request->type,
             'phone_code' => $request->phone_code,
             'mobile_number' => $request->mobile_number,
-            'created_by' => auth()->id()
+            'created_by' => auth()->id(),
+            'assigned_to' => $request->assigned_to ?? null,
         ];
-
-        // Keep first assigned_to for backward compatibility
-        if ($request->filled('assigned_to') && is_array($request->assigned_to) && count($request->assigned_to) > 0) {
-            $createData['assigned_to'] = $request->assigned_to[0];
-        }
 
         $farm = Farm::create($createData);
 
-        // Assign to multiple admins
-        if ($request->filled('assigned_to') && is_array($request->assigned_to)) {
-            $farm->assignedAdmins()->sync($request->assigned_to);
+        // Assign to single admin
+        if ($request->filled('assigned_to')) {
+            $farm->assignedAdmins()->attach($request->assigned_to);
         }
 
         if ($request->expectsJson() || $request->ajax()) {
@@ -171,8 +166,7 @@ class FarmController extends Controller
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'number_of_hangars' => 'required|numeric|min:1',
-            'assigned_to' => 'nullable|array',
-            'assigned_to.*' => 'exists:admins,id',
+            'assigned_to' => 'nullable|integer|exists:admins,id',
             'type' => 'required',
             'phone_code' => 'nullable|string|max:10',
             'mobile_number' => 'nullable|string|max:20',
@@ -187,20 +181,14 @@ class FarmController extends Controller
             'type' => $request->type,
             'phone_code' => $request->phone_code,
             'mobile_number' => $request->mobile_number,
+            'assigned_to' => $request->assigned_to ?? null,
         ];
-
-        // Keep first assigned_to for backward compatibility
-        if ($request->filled('assigned_to') && is_array($request->assigned_to) && count($request->assigned_to) > 0) {
-            $updateData['assigned_to'] = $request->assigned_to[0];
-        } else {
-            $updateData['assigned_to'] = null;
-        }
 
         $farm->update($updateData);
 
-        // Assign to multiple admins
-        if ($request->filled('assigned_to') && is_array($request->assigned_to)) {
-            $farm->assignedAdmins()->sync($request->assigned_to);
+        // Assign to single admin
+        if ($request->filled('assigned_to')) {
+            $farm->assignedAdmins()->sync([$request->assigned_to]);
         } else {
             $farm->assignedAdmins()->detach();
         }

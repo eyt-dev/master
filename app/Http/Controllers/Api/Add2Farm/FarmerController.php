@@ -335,13 +335,20 @@ class FarmerController extends BaseController
                 ]);
             }
 
-            // Assign farmer to farms if farm_id or farm_ids provided
+            // Assign farmer to farm if farm_id provided
             if ($request->filled('farm_id')) {
-                $admin->farms()->attach($request->farm_id);
-            }
+                $farm = \App\Models\Farm::findOrFail($request->farm_id);
 
-            if ($request->filled('farm_ids')) {
-                $admin->farms()->sync($request->farm_ids);
+                // Check if farm already has an assignment
+                if ($farm->assignedAdmins()->exists()) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This farm is already assigned to another user. Each farm can only be managed by one user.',
+                    ], 422);
+                }
+
+                $admin->farms()->attach($request->farm_id);
             }
 
             // Create project status records if provided
@@ -542,13 +549,24 @@ class FarmerController extends BaseController
                 $admin->syncRoles([$role->id]);
             }
 
-            // Handle farm assignments (support multiple farms)
+            // Handle farm assignment (single farm only)
             if ($request->filled('farm_id')) {
-                $admin->farms()->attach($request->farm_id);
-            }
+                $farm = \App\Models\Farm::findOrFail($request->farm_id);
 
-            if ($request->filled('farm_ids')) {
-                $admin->farms()->sync($request->farm_ids);
+                // Check if farm already has a different assignment
+                $existingAssignment = $farm->assignedAdmins()
+                    ->where('admin_id', '!=', $admin->id)
+                    ->exists();
+
+                if ($existingAssignment) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This farm is already assigned to another user. Each farm can only be managed by one user.',
+                    ], 422);
+                }
+
+                $admin->farms()->sync([$request->farm_id]);
             }
 
             // Update project statuses if provided
@@ -679,12 +697,16 @@ class FarmerController extends BaseController
               });
         })->first();
 
-        // Format assigned farms as comma-separated string
-        $assignedFarmsArray = $admin->farms->pluck('name')->toArray();
-        $assignedFarmsString = !empty($assignedFarmsArray) ? implode(', ', $assignedFarmsArray) : null;
+        // Format assigned farms as array
+        $assignedFarmsArray = $admin->farms->map(function ($farm) {
+            return [
+                'id'   => $farm->id,
+                'name' => $farm->name,
+            ];
+        })->toArray();
 
         // Status is Active if farm assigned, otherwise Inactive
-        $displayStatus = ($farm || !empty($assignedFarmsArray)) ? 'Active' : 'Inactive';
+        $displayStatus = !empty($assignedFarmsArray) ? 'Active' : 'Inactive';
 
         return [
             'id'            => $admin->id,
@@ -699,9 +721,7 @@ class FarmerController extends BaseController
             'notes'         => $admin->notes ?? null,
             'image'         => $admin->image ?? null,
             'image_url'     => $imageUrl,
-            'farm_id'       => $farm?->id ?? null,
-            'farm_name'     => $farm?->name ?? null,
-            'assigned_farms' => $assignedFarmsString,
+            'farms'         => $assignedFarmsArray,
             'created_by_name' => $admin->creator?->name ?? null,
             'created_at'    => $admin->created_at,
         ];

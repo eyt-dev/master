@@ -313,14 +313,20 @@ class SupervisorController extends BaseController
                 ]);
             }
 
-            // Assign supervisor to farm(s) if farm_id or farm_ids provided
+            // Assign supervisor to farm if farm_id provided
             if ($request->filled('farm_id')) {
                 $farm = \App\Models\Farm::findOrFail($request->farm_id);
-                $admin->farms()->attach($farm->id);
-            }
 
-            if ($request->filled('farm_ids')) {
-                $admin->farms()->sync($request->farm_ids);
+                // Check if farm already has an assignment
+                if ($farm->assignedAdmins()->exists()) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This farm is already assigned to another user. Each farm can only be managed by one user.',
+                    ], 422);
+                }
+
+                $admin->farms()->attach($farm->id);
             }
 
             DB::commit();
@@ -499,13 +505,24 @@ class SupervisorController extends BaseController
                 $admin->syncRoles([$role->id]);
             }
 
-            // Handle farm assignment (support multiple farms)
+            // Handle farm assignment (single farm only)
             if ($request->filled('farm_id')) {
-                $admin->farms()->attach($request->farm_id);
-            }
+                $farm = \App\Models\Farm::findOrFail($request->farm_id);
 
-            if ($request->filled('farm_ids')) {
-                $admin->farms()->sync($request->farm_ids);
+                // Check if farm already has a different assignment
+                $existingAssignment = $farm->assignedAdmins()
+                    ->where('admin_id', '!=', $admin->id)
+                    ->exists();
+
+                if ($existingAssignment) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This farm is already assigned to another user. Each farm can only be managed by one user.',
+                    ], 422);
+                }
+
+                $admin->farms()->sync([$request->farm_id]);
             }
 
             DB::commit();
@@ -610,12 +627,13 @@ class SupervisorController extends BaseController
             $admin->load('farms');
         }
 
-        // Get first farm from pivot table for backward compatibility
-        $farm = $admin->farms->first();
-
-        // Format assigned farms as comma-separated string
-        $assignedFarmsArray = $admin->farms->pluck('name')->toArray();
-        $assignedFarmsString = !empty($assignedFarmsArray) ? implode(', ', $assignedFarmsArray) : null;
+        // Format assigned farms as array
+        $assignedFarmsArray = $admin->farms->map(function ($farm) {
+            return [
+                'id'   => $farm->id,
+                'name' => $farm->name,
+            ];
+        })->toArray();
 
         // Status is Active if farm assigned, otherwise Inactive
         $displayStatus = !empty($assignedFarmsArray) ? 'Active' : 'Inactive';
@@ -633,9 +651,7 @@ class SupervisorController extends BaseController
             'notes'         => $admin->notes ?? null,
             'image'         => $admin->image ?? null,
             'image_url'     => $imageUrl,
-            'farm_id'       => $farm?->id ?? null,
-            'farm_name'     => $farm?->name ?? null,
-            'assigned_farms' => $assignedFarmsString,
+            'farms'         => $assignedFarmsArray,
             'created_by_name' => $admin->creator?->name ?? null,
             'created_at'    => $admin->created_at,
         ];

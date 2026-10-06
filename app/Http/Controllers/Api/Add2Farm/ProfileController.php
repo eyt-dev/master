@@ -58,12 +58,15 @@ class ProfileController extends Controller
     /**
      * Update user profile
      *
-     * Update the authenticated user's profile information including name, email, and username.
+     * Update the authenticated user's profile information including name, email, username, mobile number, and phone code.
+     * If mobile number is changed, OTP is sent to the new mobile number and must be verified via the verify OTP endpoint with context "change-mobile".
      *
      * @authenticated
      * @bodyParam name string The user's full name. Example: Jane Doe
      * @bodyParam email string The user's email address. Must be unique (except current). Example: jane@example.com
      * @bodyParam username string The user's username. Must be unique (except current). Example: janedoe
+     * @bodyParam mobile_number string required The user's mobile number. Example: 1234567890
+     * @bodyParam phone_code string required The user's phone code. Example: +1
      * @response 200 {
      *   "success": true,
      *   "message": "Profile updated successfully.",
@@ -72,9 +75,13 @@ class ProfileController extends Controller
      *     "name": "Jane Doe",
      *     "email": "jane@example.com",
      *     "username": "janedoe",
+     *     "phone_code": "+1",
+     *     "mobile_number": "1234567890",
      *     "type": 3,
      *     "status": "Active"
-     *   }
+     *   },
+     *   "otp_required": true,
+     *   "otp_message": "OTP sent to your new mobile number"
      * }
      * @response 422 {
      *   "success": false,
@@ -95,9 +102,11 @@ class ProfileController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name'     => 'sometimes|required|string|max:255',
-            'email'    => 'sometimes|required|email|max:255|unique:admins,email,' . $user->id,
-            'username' => 'sometimes|required|string|max:255|unique:admins,username,' . $user->id,
+            'name'           => 'sometimes|required|string|max:255',
+            'email'          => 'sometimes|required|email|max:255|unique:admins,email,' . $user->id,
+            'username'       => 'sometimes|required|string|max:255|unique:admins,username,' . $user->id,
+            'mobile_number'  => 'required|string|max:20|unique:admins,mobile_number,' . $user->id,
+            'phone_code'     => 'required|string|max:10',
         ]);
 
         if ($validator->fails()) {
@@ -107,13 +116,31 @@ class ProfileController extends Controller
             ], 422);
         }
 
-        $user->update($request->only(['name', 'email', 'username']));
+        $oldMobileNumber = $user->mobile_number;
+        $newMobileNumber = $request->mobile_number;
+        $isMobileNumberChanged = $oldMobileNumber !== $newMobileNumber;
 
-        return response()->json([
+        $updateData = $request->only(['name', 'email', 'username', 'mobile_number', 'phone_code']);
+
+        if ($isMobileNumberChanged) {
+            $updateData['mobile_verification_pending'] = true;
+        }
+
+        $user->update($updateData);
+
+        $response = [
             'success' => true,
             'message' => $this->translationService->get('profile_updated_successfully'),
-            'user'    => $this->formatUser($user),
-        ]);
+            'user'    => $this->formatUser($user->fresh()),
+        ];
+
+        if ($isMobileNumberChanged) {
+            $user->generateOtp();
+            $response['otp_required'] = true;
+            $response['otp_message'] = $this->translationService->get('otp_sent_to_new_mobile');
+        }
+
+        return response()->json($response);
     }
 
     /**

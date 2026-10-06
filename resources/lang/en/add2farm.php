@@ -7,6 +7,8 @@ return [
         'registration_successful' => 'Registration successful.',
         'otp_verified_successfully' => 'OTP verified successfully.',
         'otp_verified_password_reset' => 'OTP verified successfully. You can now reset your password.',
+        'mobile_number_verified_successfully' => 'Mobile number verified successfully.',
+        'otp_sent_to_new_mobile' => 'OTP sent to your new mobile number.',
         'invalid_credentials' => 'Invalid credentials.',
         'account_disabled' => 'Your account has been disabled.',
         'user_not_found' => 'User not found.',

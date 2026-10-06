@@ -7,6 +7,8 @@ return [
         'registration_successful' => 'تم التسجيل بنجاح.',
         'otp_verified_successfully' => 'تم التحقق من رمز التحقق بنجاح.',
         'otp_verified_password_reset' => 'تم التحقق من رمز التحقق بنجاح. يمكنك الآن إعادة تعيين كلمة المرور.',
+        'mobile_number_verified_successfully' => 'تم التحقق من رقم الهاتف المحمول بنجاح.',
+        'otp_sent_to_new_mobile' => 'تم إرسال رمز التحقق إلى رقم الهاتف المحمول الجديد.',
         'invalid_credentials' => 'بيانات اعتماد غير صحيحة.',
         'account_disabled' => 'تم تعطيل حسابك.',
         'user_not_found' => 'لم يتم العثور على المستخدم.',

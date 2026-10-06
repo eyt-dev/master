@@ -75,6 +75,7 @@ class Kernel extends HttpKernel
         'reject.password.reset.token' => \App\Http\Middleware\RejectPasswordResetToken::class,
         'set.add2farm.language' => \App\Http\Middleware\SetAdd2FarmLanguage::class,
         'convert.european.numbers' => \App\Http\Middleware\ConvertEuropeanNumbers::class,
+        'check.mobile.verification.pending' => \App\Http\Middleware\CheckMobileVerificationPending::class,
         // 'admin.domain.access' => \App\Http\Middleware\AdminDomainAccess::class,
     ];
 }

@@ -286,7 +286,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'mobile_number' => 'required|string|max:50',
             'otp'           => 'required|string|size:6|regex:/^\d+$/',
-            'context'       => 'nullable|string|in:registration,forgot_password',
+            'context'       => 'nullable|string|in:registration,forgot_password,change-mobile',
         ]);
 
         if ($validator->fails()) {
@@ -338,6 +338,11 @@ class AuthController extends Controller
 
             $context = $request->input('context', 'registration');
 
+            // Clear mobile verification pending flag if it was set (verified new mobile number)
+            if ($admin->mobile_verification_pending) {
+                $admin->update(['mobile_verification_pending' => false]);
+            }
+
             // For forgot password flow: return only verification token, don't login user
             if ($context === 'forgot_password') {
                 // Delete old password-reset tokens for this user
@@ -355,7 +360,18 @@ class AuthController extends Controller
                 ]);
             }
 
-            // For registration flow: login the user
+            // For change-mobile flow: return success with updated user data
+            if ($context === 'change-mobile') {
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => $this->translationService->get('mobile_number_verified_successfully'),
+                    'user'    => $this->formatUser($admin->fresh()),
+                ]);
+            }
+
+            // For registration/login flow: login the user
             // Update account status to Active if Inactive
             if ($admin->status === 'Inactive') {
                 $admin->update(['status' => 'Active']);

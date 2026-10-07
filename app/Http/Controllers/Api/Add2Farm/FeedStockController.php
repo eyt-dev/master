@@ -237,15 +237,19 @@ class FeedStockController extends BaseController
             }
         }
 
+        // Get dynamic material types from database
+        $materialTypes = \App\Models\MaterialType::pluck('value')->toArray();
+        $materialTypesString = implode(',', $materialTypes);
+
         // Check if hangar allocation is required based on material_type
         $materialType = strtolower($data['material_type'] ?? '');
-        $hangarAllocationRequired = in_array($materialType, ['pelleted_feed', 'mash_feed']);
+        $hangarAllocationRequired = \App\Models\MaterialType::where('value', $materialType)->value('hangar_allocation') ?? false;
 
         $rules = [
             'stock_date' => 'required|date_format:d-m-Y',
             'farm_id' => 'required|integer|exists:farms,id',
             'material_name_id' => 'required|integer|exists:material_names,id',
-            'material_type' => 'required|string|in:pelleted_feed,mash_feed,feed_ingredient,premix',
+            'material_type' => 'required|string|in:' . $materialTypesString,
             'quantity' => 'required|numeric|min:1',
             'supplier_id' => 'required|integer|exists:feed_suppliers,id',
             'hangar_allocations' => $hangarAllocationRequired ? 'required|array|min:1' : 'nullable|array',
@@ -395,14 +399,18 @@ class FeedStockController extends BaseController
             }
         }
 
+        // Get dynamic material types from database
+        $materialTypes = \App\Models\MaterialType::pluck('value')->toArray();
+        $materialTypesString = implode(',', $materialTypes);
+
         // Check if hangar allocation is required based on material_type
         $materialType = strtolower($data['material_type'] ?? '');
-        $hangarAllocationRequired = in_array($materialType, ['pelleted_feed', 'mash_feed']);
+        $hangarAllocationRequired = \App\Models\MaterialType::where('value', $materialType)->value('hangar_allocation') ?? false;
 
         $rules = [
             'stock_date' => 'required|date_format:d-m-Y',
             'material_name_id' => 'required|integer|exists:material_names,id',
-            'material_type' => 'required|string|in:pelleted_feed,mash_feed,feed_ingredient,premix',
+            'material_type' => 'required|string|in:' . $materialTypesString,
             'quantity' => 'required|numeric|min:1',
             'supplier_id' => 'required|integer|exists:feed_suppliers,id',
             'hangar_allocations' => $hangarAllocationRequired ? 'required|array|min:1' : 'nullable|array',

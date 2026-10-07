@@ -138,4 +138,28 @@ class BaseController extends Controller
 
         return max(0, $totalStock - $totalConsumed);
     }
+
+    /**
+     * Get farms accessible by user
+     * If user is SUPER_ADMIN (type=0), returns all farms
+     * Otherwise returns only farms user has direct access to (created_by, assigned_to, or assignedAdmins)
+     */
+    protected function getAccessibleFarmIds()
+    {
+        $user = auth()->user();
+
+        // SUPER_ADMIN (type = 0) has access to all farms
+        if ($user->type === \App\Models\Admin::SUPER_ADMIN) {
+            return \App\Models\Farm::pluck('id');
+        }
+
+        // Regular users have access only to their assigned farms
+        return \App\Models\Farm::where(function ($q) use ($user) {
+            $q->where('created_by', $user->id)
+              ->orWhere('assigned_to', $user->id)
+              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                  $query->where('admin_id', $user->id);
+              });
+        })->pluck('id');
+    }
 }

@@ -44,16 +44,9 @@ class FeedStockController extends BaseController
             return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
         }
 
-        $user = auth()->user();
-
         // Verify farm access
-        $farm = Farm::where(function ($q) use ($user) {
-            $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id)
-              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                  $query->where('admin_id', $user->id);
-              });
-        })->find($farm_id);
+        $accessibleFarmIds = $this->getAccessibleFarmIds();
+        $farm = Farm::whereIn('id', $accessibleFarmIds)->find($farm_id);
 
         if (!$farm) {
             return response()->json(['success' => false, 'message' => 'Farm not found or access denied.'], 403);
@@ -113,26 +106,18 @@ class FeedStockController extends BaseController
             return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
         }
 
-        $user = auth()->user();
+        // Get accessible farms (includes all farms if user is SUPER_ADMIN)
+        $accessibleFarmIds = $this->getAccessibleFarmIds();
 
-        // Debug: Check if user has access to any farms
-        $userFarms = Farm::where(function ($q) use ($user) {
-            $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id)
-              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                  $query->where('admin_id', $user->id);
-              });
-        })->pluck('id');
-
-        if ($userFarms->isEmpty()) {
+        if ($accessibleFarmIds->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'message' => 'No farms accessible to this user.',
-                'debug' => ['user_id' => $user->id, 'accessible_farms' => []]
+                'debug' => ['user_id' => auth()->id(), 'accessible_farms' => []]
             ], 403);
         }
 
-        $records = MaterialStock::whereIn('farm_id', $userFarms)
+        $records = MaterialStock::whereIn('farm_id', $accessibleFarmIds)
             ->when($request->farm_id, fn($q) => $q->where('farm_id', $request->farm_id))
             ->when($request->search, fn($q) => $q->where('name', 'like', "%{$request->search}%"))
             ->with('farm', 'supplier', 'creator', 'materialName', 'materialStockHangarAllocations.hangar')
@@ -163,17 +148,9 @@ class FeedStockController extends BaseController
             return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
         }
 
-        $user = auth()->user();
+        $accessibleFarmIds = $this->getAccessibleFarmIds();
 
-        $record = MaterialStock::whereHas('farm', function ($q) use ($user) {
-                $q->where(function ($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id)
-                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                          $query->where('admin_id', $user->id);
-                      });
-                });
-            })
+        $record = MaterialStock::whereIn('farm_id', $accessibleFarmIds)
             ->with('farm', 'supplier', 'creator', 'materialName', 'materialStockHangarAllocations.hangar')
             ->find($id);
 
@@ -223,8 +200,6 @@ class FeedStockController extends BaseController
             return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
         }
 
-        $user = auth()->user();
-
         // Convert comma-formatted decimals to period format for validation
         $data = $request->all();
 
@@ -267,13 +242,8 @@ class FeedStockController extends BaseController
             DB::beginTransaction();
 
             // Verify farm access
-            $farm = Farm::where(function ($q) use ($user) {
-                $q->where('created_by', $user->id)
-                  ->orWhere('assigned_to', $user->id)
-                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                      $query->where('admin_id', $user->id);
-                  });
-            })->find($data['farm_id']);
+            $accessibleFarmIds = $this->getAccessibleFarmIds();
+            $farm = Farm::whereIn('id', $accessibleFarmIds)->find($data['farm_id']);
 
             if (!$farm) {
                 return response()->json(['success' => false, 'message' => 'Farm not found or access denied.'], 403);
@@ -371,18 +341,8 @@ class FeedStockController extends BaseController
             return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
         }
 
-        $user = auth()->user();
-
-        $record = MaterialStock::whereHas('farm', function ($q) use ($user) {
-                $q->where(function ($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id)
-                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                          $query->where('admin_id', $user->id);
-                      });
-                });
-            })
-            ->find($id);
+        $accessibleFarmIds = $this->getAccessibleFarmIds();
+        $record = MaterialStock::whereIn('farm_id', $accessibleFarmIds)->find($id);
 
         if (!$record) {
             return response()->json(['success' => false, 'message' => 'Material stock not found.'], 404);
@@ -509,18 +469,8 @@ class FeedStockController extends BaseController
             return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
         }
 
-        $user = auth()->user();
-
-        $record = MaterialStock::whereHas('farm', function ($q) use ($user) {
-                $q->where(function ($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id)
-                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                          $query->where('admin_id', $user->id);
-                      });
-                });
-            })
-            ->find($id);
+        $accessibleFarmIds = $this->getAccessibleFarmIds();
+        $record = MaterialStock::whereIn('farm_id', $accessibleFarmIds)->find($id);
 
         if (!$record) {
             return response()->json(['success' => false, 'message' => 'Material stock not found.'], 404);

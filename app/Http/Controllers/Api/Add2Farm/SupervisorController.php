@@ -65,10 +65,14 @@ class SupervisorController extends BaseController
             ], 401);
         }
 
+        // If SUPER_ADMIN, show all supervisors; otherwise only supervisors created by current user
+        $supervisorQuery = Admin::where('type', self::ADMIN_TYPE);
+        if (!$this->isSuperAdmin()) {
+            $supervisorQuery->where('created_by', auth()->id());
+        }
+
         // Get all supervisors for counting
-        $allSupervisors = Admin::where('type', self::ADMIN_TYPE)
-            ->where('created_by', auth()->id())
-            ->get();
+        $allSupervisors = $supervisorQuery->get();
 
         // Count total, active (with farm), and inactive (without farm)
         $totalSupervisors = $allSupervisors->count();
@@ -89,8 +93,13 @@ class SupervisorController extends BaseController
             }
         }
 
-        $supervisors = Admin::where('type', self::ADMIN_TYPE)
-            ->where('created_by', auth()->id())
+        // Rebuild the query for paginated results
+        $supervisorsQuery = Admin::where('type', self::ADMIN_TYPE);
+        if (!$this->isSuperAdmin()) {
+            $supervisorsQuery->where('created_by', auth()->id());
+        }
+
+        $supervisors = $supervisorsQuery
             ->when($request->search, function ($q) use ($request) {
                 return $q->where(function ($query) use ($request) {
                     $query->where('name', 'like', "%{$request->search}%")
@@ -176,8 +185,13 @@ class SupervisorController extends BaseController
             ], 401);
         }
 
-        $admin = Admin::where('type', self::ADMIN_TYPE)
-            ->where('created_by', auth()->id())
+        // If SUPER_ADMIN, can view any supervisor; otherwise only supervisors created by current user
+        $adminQuery = Admin::where('type', self::ADMIN_TYPE);
+        if (!$this->isSuperAdmin()) {
+            $adminQuery->where('created_by', auth()->id());
+        }
+
+        $admin = $adminQuery
             ->with('creator', 'farms')
             ->find($id);
 

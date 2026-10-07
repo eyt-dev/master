@@ -61,16 +61,20 @@ class FarmController extends BaseController
     {
         $user = auth()->user();
 
-        // Filter by user's own farms or assigned farms
-        // Type 2 (Farm Owner) sees farms they created
-        // Type 3 (Supervisor) sees farms where they are assigned
-        $userFarms = Farm::where(function ($q) use ($user) {
-            $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id)
-              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                  $query->where('admin_id', $user->id);
-              });
-        });
+        // If SUPER_ADMIN (type = 0), show all farms; otherwise show only assigned farms
+        if ((int)$user->type === Admin::SUPER_ADMIN) {
+            $userFarms = Farm::query();
+        } else {
+            // Type 2 (Farm Owner) sees farms they created
+            // Type 3 (Supervisor) sees farms where they are assigned
+            $userFarms = Farm::where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhere('assigned_to', $user->id)
+                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                      $query->where('admin_id', $user->id);
+                  });
+            });
+        }
 
         // Get total, active, and inactive farm counts for this user
         $totalFarms = (clone $userFarms)->count();
@@ -158,13 +162,19 @@ class FarmController extends BaseController
         }
 
         $user = auth()->user();
-        $farm = Farm::where(function ($q) use ($user) {
-            $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id)
-              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                  $query->where('admin_id', $user->id);
-              });
-        })->with('assignedAdmin', 'assignedAdmins', 'creator', 'hangars')->find($id);
+
+        // If SUPER_ADMIN (type = 0), access all farms; otherwise check user's assigned farms
+        if ((int)$user->type === Admin::SUPER_ADMIN) {
+            $farm = Farm::with('assignedAdmin', 'assignedAdmins', 'creator', 'hangars')->find($id);
+        } else {
+            $farm = Farm::where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhere('assigned_to', $user->id)
+                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                      $query->where('admin_id', $user->id);
+                  });
+            })->with('assignedAdmin', 'assignedAdmins', 'creator', 'hangars')->find($id);
+        }
 
         if (!$farm) {
             return response()->json([
@@ -468,13 +478,19 @@ class FarmController extends BaseController
         }
 
         $user = auth()->user();
-        $farm = Farm::where(function ($q) use ($user) {
-            $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id)
-              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                  $query->where('admin_id', $user->id);
-              });
-        })->find($id);
+
+        // If SUPER_ADMIN (type = 0), access all farms; otherwise check user's assigned farms
+        if ((int)$user->type === Admin::SUPER_ADMIN) {
+            $farm = Farm::find($id);
+        } else {
+            $farm = Farm::where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhere('assigned_to', $user->id)
+                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                      $query->where('admin_id', $user->id);
+                  });
+            })->find($id);
+        }
 
         if (!$farm) {
             return response()->json([
@@ -665,13 +681,19 @@ class FarmController extends BaseController
         }
 
         $user = auth()->user();
-        $farm = Farm::where(function ($q) use ($user) {
-            $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id)
-              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                  $query->where('admin_id', $user->id);
-              });
-        })->find($id);
+
+        // If SUPER_ADMIN (type = 0), access all farms; otherwise check user's assigned farms
+        if ((int)$user->type === Admin::SUPER_ADMIN) {
+            $farm = Farm::find($id);
+        } else {
+            $farm = Farm::where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhere('assigned_to', $user->id)
+                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
+                      $query->where('admin_id', $user->id);
+                  });
+            })->find($id);
+        }
 
         if (!$farm) {
             return response()->json([

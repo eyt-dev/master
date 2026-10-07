@@ -65,10 +65,14 @@ class FarmerController extends BaseController
             ], 401);
         }
 
+        // If SUPER_ADMIN, show all farmers; otherwise only farmers created by current user
+        $farmerQuery = Admin::where('type', self::ADMIN_TYPE);
+        if (!$this->isSuperAdmin()) {
+            $farmerQuery->where('created_by', auth()->id());
+        }
+
         // Get all farmers for counting
-        $allFarmers = Admin::where('type', self::ADMIN_TYPE)
-            ->where('created_by', auth()->id())
-            ->get();
+        $allFarmers = $farmerQuery->get();
 
         // Count total, active (with farm), and inactive (without farm)
         $totalFarmers = $allFarmers->count();
@@ -89,8 +93,13 @@ class FarmerController extends BaseController
             }
         }
 
-        $farmers = Admin::where('type', self::ADMIN_TYPE)
-            ->where('created_by', auth()->id())
+        // Rebuild the query for paginated results
+        $farmersQuery = Admin::where('type', self::ADMIN_TYPE);
+        if (!$this->isSuperAdmin()) {
+            $farmersQuery->where('created_by', auth()->id());
+        }
+
+        $farmers = $farmersQuery
             ->when($request->search, function ($q) use ($request) {
                 return $q->where(function ($query) use ($request) {
                     $query->where('name', 'like', "%{$request->search}%")
@@ -176,8 +185,13 @@ class FarmerController extends BaseController
             ], 401);
         }
 
-        $admin = Admin::where('type', self::ADMIN_TYPE)
-            ->where('created_by', auth()->id())
+        // If SUPER_ADMIN, can view any farmer; otherwise only farmers created by current user
+        $adminQuery = Admin::where('type', self::ADMIN_TYPE);
+        if (!$this->isSuperAdmin()) {
+            $adminQuery->where('created_by', auth()->id());
+        }
+
+        $admin = $adminQuery
             ->with('creator', 'projectStatuses', 'farms')
             ->find($id);
 

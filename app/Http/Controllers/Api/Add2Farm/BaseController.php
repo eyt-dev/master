@@ -140,6 +140,14 @@ class BaseController extends Controller
     }
 
     /**
+     * Check if current user is SUPER_ADMIN (type = 0)
+     */
+    protected function isSuperAdmin(): bool
+    {
+        return (int)auth()->user()->type === \App\Models\Admin::SUPER_ADMIN;
+    }
+
+    /**
      * Get farms accessible by user
      * If user is SUPER_ADMIN (type=0), returns all farms
      * Otherwise returns only farms user has direct access to (created_by, assigned_to, or assignedAdmins)
@@ -148,8 +156,8 @@ class BaseController extends Controller
     {
         $user = auth()->user();
 
-        // SUPER_ADMIN (type = 0) has access to all farms
-        if ($user->type === \App\Models\Admin::SUPER_ADMIN) {
+        // SUPER_ADMIN (type = 0) has access to all farms (handles both int and string type values)
+        if ($this->isSuperAdmin()) {
             return \App\Models\Farm::pluck('id');
         }
 

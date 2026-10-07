@@ -67,8 +67,6 @@ class FlockController extends BaseController
             ], 401);
         }
 
-        $user = auth()->user();
-
         // Validate period parameter if provided
         if ($request->period && !in_array((int)$request->period, [3, 6, 12])) {
             return response()->json([
@@ -85,13 +83,11 @@ class FlockController extends BaseController
             ], 422);
         }
 
+        // Get accessible farms for this user (includes all farms if superadmin)
+        $accessibleFarmIds = $this->getAccessibleFarmIds();
+
         // Calculate aggregates for available flocks
-        $allFlocks = Flock::whereHas('farm', function ($q) use ($user) {
-                $q->where(function ($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
-                });
-            })
+        $allFlocks = Flock::whereIn('farm_id', $accessibleFarmIds)
             ->when($request->farm_id, function ($q) use ($request) {
                 return $q->where('farm_id', $request->farm_id);
             })
@@ -129,12 +125,7 @@ class FlockController extends BaseController
             return $flock->start_date && $flock->start_date->format('Y-m-d') <= now()->format('Y-m-d');
         })->count();
 
-        $flocks = Flock::whereHas('farm', function ($q) use ($user) {
-                $q->where(function ($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
-                });
-            })
+        $flocks = Flock::whereIn('farm_id', $accessibleFarmIds)
             ->when($request->farm_id, function ($q) use ($request) {
                 return $q->where('farm_id', $request->farm_id);
             })
@@ -248,17 +239,9 @@ class FlockController extends BaseController
             ], 401);
         }
 
-        $user = auth()->user();
+        $accessibleFarmIds = $this->getAccessibleFarmIds();
 
-        $flock = Flock::whereHas('farm', function ($q) use ($user) {
-                $q->where(function ($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id)
-                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                          $query->where('admin_id', $user->id);
-                      });
-                });
-            })
+        $flock = Flock::whereIn('farm_id', $accessibleFarmIds)
             ->with('flockHangarAllocations.hangar')
             ->find($flockId);
 
@@ -330,16 +313,9 @@ class FlockController extends BaseController
             ], 401);
         }
 
-        $user = auth()->user();
-
         // Verify user has access to this farm
-        $farm = Farm::where(function ($q) use ($user) {
-            $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id)
-              ->orWhereHas('assignedAdmins', function ($q) use ($user) {
-                  $q->where('admin_id', $user->id);
-              });
-        })->find($farmId);
+        $accessibleFarmIds = $this->getAccessibleFarmIds();
+        $farm = Farm::whereIn('id', $accessibleFarmIds)->find($farmId);
 
         if (!$farm) {
             return response()->json([
@@ -437,8 +413,6 @@ class FlockController extends BaseController
             ], 401);
         }
 
-        $user = auth()->user();
-
         // Validate period parameter if provided
         if ($request->period && !in_array((int)$request->period, [3, 6, 12])) {
             return response()->json([
@@ -455,16 +429,11 @@ class FlockController extends BaseController
             ], 422);
         }
 
+        // Get accessible farms for this user (includes all farms if superadmin)
+        $accessibleFarmIds = $this->getAccessibleFarmIds();
+
         // Calculate aggregates for all flocks of logged-in user
-        $allFlocks = Flock::whereHas('farm', function ($q) use ($user) {
-                $q->where(function ($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id)
-                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                          $query->where('admin_id', $user->id);
-                      });
-                });
-            })
+        $allFlocks = Flock::whereIn('farm_id', $accessibleFarmIds)
             ->select('id', 'farm_id', 'total_quantity', 'start_date')
             ->get();
 
@@ -476,15 +445,7 @@ class FlockController extends BaseController
             return $flock->start_date && $flock->start_date->format('Y-m-d') <= now()->format('Y-m-d');
         })->count();
 
-        $flocks = Flock::whereHas('farm', function ($q) use ($user) {
-                $q->where(function ($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id)
-                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                          $query->where('admin_id', $user->id);
-                      });
-                });
-            })
+        $flocks = Flock::whereIn('farm_id', $accessibleFarmIds)
             ->when($request->search, function ($q) use ($request) {
                 return $q->where('name', 'like', "%{$request->search}%");
             })
@@ -610,17 +571,9 @@ class FlockController extends BaseController
             ], 401);
         }
 
-        $user = auth()->user();
+        $accessibleFarmIds = $this->getAccessibleFarmIds();
 
-        $flock = Flock::whereHas('farm', function ($q) use ($user) {
-                $q->where(function ($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id)
-                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                          $query->where('admin_id', $user->id);
-                      });
-                });
-            })
+        $flock = Flock::whereIn('farm_id', $accessibleFarmIds)
             ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnds')
             ->find($id);
 
@@ -865,18 +818,10 @@ class FlockController extends BaseController
             ], 422);
         }
 
-        // Verify user has access to the farm
-        $user = auth()->user();
-        if ($user->role !== 'SuperAdmin') {
-            $farm = Farm::where(function ($q) use ($user) {
-                $q->where('created_by', $user->id)
-                  ->orWhere('assigned_to', $user->id)
-                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                      $query->where('admin_id', $user->id);
-                  });
-            })->find($request->farm_id);
-
-            if (!$farm) {
+        // Verify user has access to the farm (superadmin can access all farms)
+        if (!$this->isSuperAdmin()) {
+            $accessibleFarmIds = $this->getAccessibleFarmIds();
+            if (!$accessibleFarmIds->contains($request->farm_id)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Farm not found or access denied.',
@@ -985,18 +930,9 @@ class FlockController extends BaseController
             ], 401);
         }
 
-        $user = auth()->user();
+        $accessibleFarmIds = $this->getAccessibleFarmIds();
 
-        $flock = Flock::whereHas('farm', function ($q) use ($user) {
-                $q->where(function ($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id)
-                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                          $query->where('admin_id', $user->id);
-                      });
-                });
-            })
-            ->find($id);
+        $flock = Flock::whereIn('farm_id', $accessibleFarmIds)->find($id);
 
         if (!$flock) {
             return response()->json([
@@ -1147,18 +1083,9 @@ class FlockController extends BaseController
             ], 401);
         }
 
-        $user = auth()->user();
+        $accessibleFarmIds = $this->getAccessibleFarmIds();
 
-        $flock = Flock::whereHas('farm', function ($q) use ($user) {
-                $q->where(function ($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id)
-                      ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                          $query->where('admin_id', $user->id);
-                      });
-                });
-            })
-            ->find($id);
+        $flock = Flock::whereIn('farm_id', $accessibleFarmIds)->find($id);
 
         if (!$flock) {
             return response()->json([

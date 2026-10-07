@@ -80,12 +80,7 @@ class SupervisorController extends BaseController
         $inactiveSupervisors = 0;
 
         foreach ($allSupervisors as $supervisor) {
-            $farm = \App\Models\Farm::where(function ($q) use ($supervisor) {
-                $q->where('assigned_to', $supervisor->id)
-                  ->orWhereHas('assignedAdmins', function ($query) use ($supervisor) {
-                      $query->where('admin_id', $supervisor->id);
-                  });
-            })->first();
+            $farm = \App\Models\Farm::where('assigned_to', $supervisor->id)->first();
             if ($farm) {
                 $activeSupervisors++;
             } else {
@@ -332,7 +327,7 @@ class SupervisorController extends BaseController
                 $farm = \App\Models\Farm::findOrFail($request->farm_id);
 
                 // Check if farm already has an assignment
-                if ($farm->assignedAdmins()->exists()) {
+                if ($farm->assigned_to !== null) {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
@@ -340,7 +335,7 @@ class SupervisorController extends BaseController
                     ], 422);
                 }
 
-                $admin->farms()->attach($farm->id);
+                $farm->update(['assigned_to' => $admin->id]);
             }
 
             DB::commit();
@@ -353,11 +348,16 @@ class SupervisorController extends BaseController
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Supervisor creation error: ' . $e->getMessage());
+            \Log::error('Supervisor creation error: ' . $e->getMessage() . ' | ' . $e->getFile() . ':' . $e->getLine());
 
             return response()->json([
                 'success' => false,
-                'message' => $this->translationService->get('operation_failed'),
+                'message' => 'Error: ' . $e->getMessage(),
+                'debug_info' => app()->environment() === 'local' ? [
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ] : null,
             ], 500);
         }
     }
@@ -524,11 +524,7 @@ class SupervisorController extends BaseController
                 $farm = \App\Models\Farm::findOrFail($request->farm_id);
 
                 // Check if farm already has a different assignment
-                $existingAssignment = $farm->assignedAdmins()
-                    ->where('admin_id', '!=', $admin->id)
-                    ->exists();
-
-                if ($existingAssignment) {
+                if ($farm->assigned_to !== null && $farm->assigned_to !== $admin->id) {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
@@ -536,7 +532,7 @@ class SupervisorController extends BaseController
                     ], 422);
                 }
 
-                $admin->farms()->sync([$request->farm_id]);
+                $farm->update(['assigned_to' => $admin->id]);
             }
 
             DB::commit();

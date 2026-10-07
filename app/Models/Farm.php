@@ -27,14 +27,7 @@ class Farm extends Model
         'longitude' => 'decimal:8',
     ];
 
-    // Many-to-many relationship with admins (supervisors/farmers)
-    public function assignedAdmins()
-    {
-        return $this->belongsToMany(Admin::class, 'admin_farm', 'farm_id', 'admin_id')
-                    ->withTimestamps();
-    }
-
-    // Define Relationship with assigned admin (for backward compatibility - returns first assigned)
+    // Relationship with assigned admin (farm has one assigned farmer/supervisor)
     public function assignedAdmin()
     {
         return $this->belongsTo(Admin::class, 'assigned_to');

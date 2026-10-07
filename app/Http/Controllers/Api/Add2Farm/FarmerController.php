@@ -80,12 +80,7 @@ class FarmerController extends BaseController
         $inactiveFarmers = 0;
 
         foreach ($allFarmers as $farmer) {
-            $farm = \App\Models\Farm::where(function ($q) use ($farmer) {
-                $q->where('assigned_to', $farmer->id)
-                  ->orWhereHas('assignedAdmins', function ($query) use ($farmer) {
-                      $query->where('admin_id', $farmer->id);
-                  });
-            })->first();
+            $farm = \App\Models\Farm::where('assigned_to', $farmer->id)->first();
             if ($farm) {
                 $activeFarmers++;
             } else {
@@ -354,7 +349,7 @@ class FarmerController extends BaseController
                 $farm = \App\Models\Farm::findOrFail($request->farm_id);
 
                 // Check if farm already has an assignment
-                if ($farm->assignedAdmins()->exists()) {
+                if ($farm->assigned_to !== null) {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
@@ -362,7 +357,7 @@ class FarmerController extends BaseController
                     ], 422);
                 }
 
-                $admin->farms()->attach($request->farm_id);
+                $farm->update(['assigned_to' => $admin->id]);
             }
 
             // Create project status records if provided
@@ -390,11 +385,16 @@ class FarmerController extends BaseController
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Farmer creation error: ' . $e->getMessage());
+            \Log::error('Farmer creation error: ' . $e->getMessage() . ' | ' . $e->getFile() . ':' . $e->getLine());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create farmer.',
+                'message' => 'Error: ' . $e->getMessage(),
+                'debug_info' => app()->environment() === 'local' ? [
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ] : null,
             ], 500);
         }
     }
@@ -568,11 +568,7 @@ class FarmerController extends BaseController
                 $farm = \App\Models\Farm::findOrFail($request->farm_id);
 
                 // Check if farm already has a different assignment
-                $existingAssignment = $farm->assignedAdmins()
-                    ->where('admin_id', '!=', $admin->id)
-                    ->exists();
-
-                if ($existingAssignment) {
+                if ($farm->assigned_to !== null && $farm->assigned_to !== $admin->id) {
                     DB::rollBack();
                     return response()->json([
                         'success' => false,
@@ -580,7 +576,7 @@ class FarmerController extends BaseController
                     ], 422);
                 }
 
-                $admin->farms()->sync([$request->farm_id]);
+                $farm->update(['assigned_to' => $admin->id]);
             }
 
             // Update project statuses if provided
@@ -704,12 +700,7 @@ class FarmerController extends BaseController
         }
 
         // Load first assigned farm for backward compatibility
-        $farm = \App\Models\Farm::where(function ($q) use ($admin) {
-            $q->where('assigned_to', $admin->id)
-              ->orWhereHas('assignedAdmins', function ($query) use ($admin) {
-                  $query->where('admin_id', $admin->id);
-              });
-        })->first();
+        $farm = \App\Models\Farm::where('assigned_to', $admin->id)->first();
 
         // Format assigned farms as array
         $assignedFarmsArray = $admin->farms->map(function ($farm) {

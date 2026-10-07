@@ -69,10 +69,7 @@ class FarmController extends BaseController
             // Type 3 (Supervisor) sees farms where they are assigned
             $userFarms = Farm::where(function ($q) use ($user) {
                 $q->where('created_by', $user->id)
-                  ->orWhere('assigned_to', $user->id)
-                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                      $query->where('admin_id', $user->id);
-                  });
+                  ->orWhere('assigned_to', $user->id);
             });
         }
 
@@ -165,15 +162,12 @@ class FarmController extends BaseController
 
         // If SUPER_ADMIN (type = 0), access all farms; otherwise check user's assigned farms
         if ((int)$user->type === Admin::SUPER_ADMIN) {
-            $farm = Farm::with('assignedAdmin', 'assignedAdmins', 'creator', 'hangars')->find($id);
+            $farm = Farm::with('assignedAdmin', 'creator', 'hangars')->find($id);
         } else {
             $farm = Farm::where(function ($q) use ($user) {
                 $q->where('created_by', $user->id)
-                  ->orWhere('assigned_to', $user->id)
-                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                      $query->where('admin_id', $user->id);
-                  });
-            })->with('assignedAdmin', 'assignedAdmins', 'creator', 'hangars')->find($id);
+                  ->orWhere('assigned_to', $user->id);
+            })->with('assignedAdmin', 'creator', 'hangars')->find($id);
         }
 
         if (!$farm) {
@@ -348,7 +342,7 @@ class FarmController extends BaseController
 
             DB::commit();
 
-            $farm->load('assignedAdmin', 'assignedAdmins', 'creator', 'hangars');
+            $farm->load('assignedAdmin', 'creator', 'hangars');
 
             return response()->json([
                 'success' => true,
@@ -480,10 +474,7 @@ class FarmController extends BaseController
         } else {
             $farm = Farm::where(function ($q) use ($user) {
                 $q->where('created_by', $user->id)
-                  ->orWhere('assigned_to', $user->id)
-                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                      $query->where('admin_id', $user->id);
-                  });
+                  ->orWhere('assigned_to', $user->id);
             })->find($id);
         }
 
@@ -598,7 +589,7 @@ class FarmController extends BaseController
 
             DB::commit();
 
-            $farm->load('assignedAdmin', 'assignedAdmins', 'creator', 'hangars');
+            $farm->load('assignedAdmin', 'creator', 'hangars');
 
             return response()->json([
                 'success' => true,
@@ -676,10 +667,7 @@ class FarmController extends BaseController
         } else {
             $farm = Farm::where(function ($q) use ($user) {
                 $q->where('created_by', $user->id)
-                  ->orWhere('assigned_to', $user->id)
-                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                      $query->where('admin_id', $user->id);
-                  });
+                  ->orWhere('assigned_to', $user->id);
             })->find($id);
         }
 
@@ -765,9 +753,9 @@ class FarmController extends BaseController
             $farm->load('hangars');
         }
 
-        // Always load assigned admins if not already loaded
-        if (!$farm->relationLoaded('assignedAdmins')) {
-            $farm->load('assignedAdmins');
+        // Always load assigned admin if not already loaded
+        if (!$farm->relationLoaded('assignedAdmin')) {
+            $farm->load('assignedAdmin');
         }
 
         $hangars = $farm->hangars->map(function ($hangar) {

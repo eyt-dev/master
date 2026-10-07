@@ -229,11 +229,10 @@ class Admin extends Authenticatable
         return $this->mobile_number;
     }
 
-    // Many-to-many relationship with farms
+    // One-to-many relationship with farms (admin can have multiple farms)
     public function farms()
     {
-        return $this->belongsToMany(Farm::class, 'admin_farm', 'admin_id', 'farm_id')
-                    ->withTimestamps();
+        return $this->hasMany(Farm::class, 'assigned_to');
     }
 
     public function hasAssignment(): int

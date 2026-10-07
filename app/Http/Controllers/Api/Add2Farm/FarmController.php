@@ -334,11 +334,6 @@ class FarmController extends BaseController
 
             $farm = Farm::create($farmData);
 
-            // Assign to single admin
-            if ($request->filled('assigned_to')) {
-                $farm->assignedAdmins()->attach($request->assigned_to);
-            }
-
             // Create hangars
             foreach ($request->hangars as $hangarData) {
                 Hangar::create([
@@ -548,13 +543,6 @@ class FarmController extends BaseController
             ];
 
             $farm->update($updateData);
-
-            // Assign to single admin
-            if ($request->filled('assigned_to')) {
-                $farm->assignedAdmins()->sync([$request->assigned_to]);
-            } else {
-                $farm->assignedAdmins()->detach();
-            }
 
             // Update hangars
             // Check if any hangars to be deleted have flocks assigned
@@ -823,8 +811,7 @@ class FarmController extends BaseController
         $isAssignedToUser = false;
         if (auth()->check()) {
             $isAssignedToUser = $farm->created_by === auth()->id() ||
-                               $farm->assigned_to === auth()->id() ||
-                               $farm->assignedAdmins->contains('id', auth()->id());
+                               $farm->assigned_to === auth()->id();
         }
         $assignment = $isAssignedToUser ? 1 : 0;
 
@@ -837,15 +824,6 @@ class FarmController extends BaseController
         // Calculate total birds from all flocks
         $totalBirds = $farm->flocks()->sum('total_quantity') ?? 0;
 
-        // Get assigned admin - check both direct assignment and pivot table
-        $assignedAdminId = $farm->assigned_to;
-        $assignedAdminName = $farm->assignedAdmin?->name ?? null;
-
-        if (!$assignedAdminName && $farm->assignedAdmins->isNotEmpty()) {
-            $assignedAdminId = $farm->assignedAdmins->first()->id;
-            $assignedAdminName = $farm->assignedAdmins->first()->name;
-        }
-
         return [
             'id'                    => $farm->id,
             'name'                  => $farm->name,
@@ -855,8 +833,8 @@ class FarmController extends BaseController
             'type'                  => $farm->type,
             'mobile_number'         => $farm->getFullPhoneNumber(),
             'number_of_hangars'     => $farm->number_of_hangars,
-            'assigned_to'           => $assignedAdminId,
-            'assigned_admin_name'   => $assignedAdminName,
+            'assigned_to'           => $farm->assigned_to,
+            'assigned_admin_name'   => $farm->assignedAdmin?->name ?? null,
             'created_by_name'       => $farm->creator?->name ?? null,
             'assignment'            => $assignment,
             'has_flocks'            => $hasFlocks,

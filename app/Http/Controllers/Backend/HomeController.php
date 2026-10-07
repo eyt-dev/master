@@ -275,10 +275,7 @@ class HomeController extends Controller
             $farmCount = Farm::when(!$isSuperAdmin, function ($q) use ($user) {
                     $q->where(function ($subQ) use ($user) {
                         $subQ->where('created_by', $user->id)
-                             ->orWhere('assigned_to', $user->id)
-                             ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                                 $query->where('admin_id', $user->id);
-                             });
+                             ->orWhere('assigned_to', $user->id);
                     });
                 })
                 ->count();
@@ -295,10 +292,7 @@ class HomeController extends Controller
                     $q->whereHas('farm', function ($subQ) use ($user) {
                         $subQ->where(function ($farmQ) use ($user) {
                             $farmQ->where('created_by', $user->id)
-                                  ->orWhere('assigned_to', $user->id)
-                                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                                      $query->where('admin_id', $user->id);
-                                  });
+                                  ->orWhere('assigned_to', $user->id);
                         });
                     });
                 })
@@ -355,10 +349,7 @@ class HomeController extends Controller
                     $q->whereHas('farm', function ($subQ) use ($user) {
                         $subQ->where(function ($farmQ) use ($user) {
                             $farmQ->where('created_by', $user->id)
-                                  ->orWhere('assigned_to', $user->id)
-                                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                                      $query->where('admin_id', $user->id);
-                                  });
+                                  ->orWhere('assigned_to', $user->id);
                         });
                     })
                     ->orWhere('created_by', $user->id);
@@ -377,10 +368,7 @@ class HomeController extends Controller
                     $q->whereHas('flock.farm', function ($subQ) use ($user) {
                         $subQ->where(function ($farmQ) use ($user) {
                             $farmQ->where('created_by', $user->id)
-                                  ->orWhere('assigned_to', $user->id)
-                                  ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                                      $query->where('admin_id', $user->id);
-                                  });
+                                  ->orWhere('assigned_to', $user->id);
                         });
                     })
                     ->orWhere('ended_by', $user->id);

@@ -150,7 +150,7 @@ class BaseController extends Controller
     /**
      * Get farms accessible by user
      * If user is SUPER_ADMIN (type=0), returns all farms
-     * Otherwise returns only farms user has direct access to (created_by, assigned_to, or assignedAdmins)
+     * Otherwise returns only farms user has direct access to (created_by or assigned_to)
      */
     protected function getAccessibleFarmIds()
     {
@@ -164,10 +164,7 @@ class BaseController extends Controller
         // Regular users have access only to their assigned farms
         return \App\Models\Farm::where(function ($q) use ($user) {
             $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id)
-              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                  $query->where('admin_id', $user->id);
-              });
+              ->orWhere('assigned_to', $user->id);
         })->pluck('id');
     }
 }

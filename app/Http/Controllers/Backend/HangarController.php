@@ -20,10 +20,7 @@ class HangarController extends Controller
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                     $query->whereHas('farm', function ($subQuery) {
                         $subQuery->where('created_by', auth()->id())
-                                 ->orWhere('assigned_to', auth()->id())
-                                 ->orWhereHas('assignedAdmins', function ($q) {
-                                     $q->where('admin_id', auth()->id());
-                                 });
+                                 ->orWhere('assigned_to', auth()->id());
                     })
                     ->orWhere('created_by', auth()->id());
                 })
@@ -78,10 +75,7 @@ class HangarController extends Controller
         $siteSlug = request()->segment(1);
         $farms = Farm::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
             $query->where('created_by', $user->id)
-                  ->orWhere('assigned_to', $user->id)
-                  ->orWhereHas('assignedAdmins', function ($q) use ($user) {
-                      $q->where('admin_id', $user->id);
-                  });
+                  ->orWhere('assigned_to', $user->id);
         })->get();
         return view('backend.hangar.create', compact('farms', 'siteSlug'));
     }
@@ -120,8 +114,7 @@ class HangarController extends Controller
             $isOwnHangar = ($hangar->created_by === $user->id);
             $hasFarmAccess = $hangar->farm &&
                 ($hangar->farm->created_by === $user->id ||
-                 $hangar->farm->assigned_to === $user->id ||
-                 $hangar->farm->assignedAdmins->contains('id', $user->id));
+                 $hangar->farm->assigned_to === $user->id);
 
             if (!$isOwnHangar && !$hasFarmAccess) {
                 abort(403, 'Unauthorized');
@@ -133,9 +126,6 @@ class HangarController extends Controller
         $farms = Farm::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
             $query->where('created_by', $user->id)
                   ->orWhere('assigned_to', $user->id)
-                  ->orWhereHas('assignedAdmins', function ($q) use ($user) {
-                      $q->where('admin_id', $user->id);
-                  });
         })->get();
 
         return view('backend.hangar.create', compact('hangar', 'farms', 'siteSlug'));
@@ -150,8 +140,7 @@ class HangarController extends Controller
             $isOwnHangar = ($hangar->created_by === $user->id);
             $hasFarmAccess = $hangar->farm &&
                 ($hangar->farm->created_by === $user->id ||
-                 $hangar->farm->assigned_to === $user->id ||
-                 $hangar->farm->assignedAdmins->contains('id', $user->id));
+                 $hangar->farm->assigned_to === $user->id);
 
             if (!$isOwnHangar && !$hasFarmAccess) {
                 abort(403, 'Unauthorized');
@@ -187,8 +176,7 @@ class HangarController extends Controller
             $isOwnHangar = ($hangar->created_by === $user->id);
             $hasFarmAccess = $hangar->farm &&
                 ($hangar->farm->created_by === $user->id ||
-                 $hangar->farm->assigned_to === $user->id ||
-                 $hangar->farm->assignedAdmins->contains('id', $user->id));
+                 $hangar->farm->assigned_to === $user->id);
 
             if (!$isOwnHangar && !$hasFarmAccess) {
                 abort(403, 'Unauthorized');

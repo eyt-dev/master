@@ -221,10 +221,7 @@ class MaterialStockController extends Controller
         // Verify user has access to the farm
         $farm = Farm::where(function ($q) use ($user) {
             $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id)
-              ->orWhereHas('assignedAdmins', function ($q) use ($user) {
-                  $q->where('admin_id', $user->id);
-              });
+              ->orWhere('assigned_to', $user->id);
         })->find($farmId);
 
         if (!$farm && $user->role !== 'SuperAdmin') {
@@ -363,10 +360,7 @@ class MaterialStockController extends Controller
         // Verify user has access to the farm
         $farm = Farm::where(function ($q) use ($user) {
             $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id)
-              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                  $query->where('admin_id', $user->id);
-              });
+              ->orWhere('assigned_to', $user->id);
         })->find($materialStock->farm_id);
 
         if (!$farm && $user->role !== 'SuperAdmin') {
@@ -375,10 +369,7 @@ class MaterialStockController extends Controller
 
         $farms = Farm::where(function($query) use ($user) {
             $query->where('created_by', $user->id)
-                  ->orWhere('assigned_to', $user->id)
-                  ->orWhereHas('assignedAdmins', function ($q) use ($user) {
-                      $q->where('admin_id', $user->id);
-                  });
+                  ->orWhere('assigned_to', $user->id);
         });
 
         if ($user->role === 'SuperAdmin') {
@@ -425,10 +416,7 @@ class MaterialStockController extends Controller
         // Verify user has access to the farm
         $farm = Farm::where(function ($q) use ($user) {
             $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id)
-              ->orWhereHas('assignedAdmins', function ($query) use ($user) {
-                  $query->where('admin_id', $user->id);
-              });
+              ->orWhere('assigned_to', $user->id);
         })->find($request->farm_id);
 
         if (!$farm && $user->role !== 'SuperAdmin') {
@@ -545,8 +533,7 @@ class MaterialStockController extends Controller
             $farm = $materialStock->farm;
             $hasAccess = $farm && (
                 $farm->created_by === $user->id ||
-                $farm->assigned_to === $user->id ||
-                $farm->assignedAdmins->contains('id', $user->id)
+                $farm->assigned_to === $user->id
             );
 
             if (!$hasAccess) {

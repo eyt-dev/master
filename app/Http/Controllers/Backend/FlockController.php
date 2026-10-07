@@ -23,10 +23,7 @@ class FlockController extends Controller
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                     $query->whereHas('farm', function ($subQuery) {
                         $subQuery->where('created_by', auth()->id())
-                                 ->orWhere('assigned_to', auth()->id())
-                                 ->orWhereHas('assignedAdmins', function ($q) {
-                                     $q->where('admin_id', auth()->id());
-                                 });
+                                 ->orWhere('assigned_to', auth()->id());
                     })
                     ->orWhere('created_by', auth()->id());
                 })
@@ -201,9 +198,6 @@ class FlockController extends Controller
             $farm = Farm::where(function ($q) use ($user) {
                 $q->where('created_by', $user->id)
                   ->orWhere('assigned_to', $user->id)
-                  ->orWhereHas('assignedAdmins', function ($q) use ($user) {
-                      $q->where('admin_id', $user->id);
-                  });
             })->find($farmId);
 
             if (!$farm) {
@@ -346,8 +340,7 @@ class FlockController extends Controller
             $farm = $flock->farm;
             $hasAccess = $farm && (
                 $farm->created_by === $user->id ||
-                $farm->assigned_to === $user->id ||
-                $farm->assignedAdmins->contains('id', $user->id)
+                $farm->assigned_to === $user->id
             );
 
             if (!$hasAccess) {
@@ -360,9 +353,6 @@ class FlockController extends Controller
         } else {
             $farms = Farm::where('created_by', $user->id)
                          ->orWhere('assigned_to', $user->id)
-                         ->orWhereHas('assignedAdmins', function ($q) use ($user) {
-                             $q->where('admin_id', $user->id);
-                         })
                          ->get();
         }
 
@@ -391,8 +381,7 @@ class FlockController extends Controller
             $farm = $flock->farm;
             $hasAccess = $farm && (
                 $farm->created_by === $user->id ||
-                $farm->assigned_to === $user->id ||
-                $farm->assignedAdmins->contains('id', $user->id)
+                $farm->assigned_to === $user->id
             );
 
             if (!$hasAccess) {
@@ -474,8 +463,7 @@ class FlockController extends Controller
             $farm = $flock->farm;
             $hasAccess = $farm && (
                 $farm->created_by === $user->id ||
-                $farm->assigned_to === $user->id ||
-                $farm->assignedAdmins->contains('id', $user->id)
+                $farm->assigned_to === $user->id
             );
 
             if (!$hasAccess) {

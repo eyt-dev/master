@@ -24,10 +24,7 @@ class ChickenSalesController extends Controller
                 ->when($user->role !== 'SuperAdmin', function ($query) use ($user) {
                     $query->whereHas('flock.farm', function ($subQuery) use ($user) {
                         $subQuery->where('created_by', $user->id)
-                                 ->orWhere('assigned_to', $user->id)
-                                 ->orWhereHas('assignedAdmins', function ($q) use ($user) {
-                                     $q->where('admin_id', $user->id);
-                                 });
+                                 ->orWhere('assigned_to', $user->id);
                     })
                     ->orWhere('ended_by', $user->id);
                 })
@@ -131,8 +128,7 @@ class ChickenSalesController extends Controller
 
             $hasAccess = $flock->farm && (
                 $flock->farm->created_by === $user->id ||
-                $flock->farm->assigned_to === $user->id ||
-                $flock->farm->assignedAdmins->contains('id', $user->id)
+                $flock->farm->assigned_to === $user->id
             );
 
             if (!$hasAccess) {
@@ -160,8 +156,7 @@ class ChickenSalesController extends Controller
 
             $hasAccess = $flock->farm && (
                 $flock->farm->created_by === $user->id ||
-                $flock->farm->assigned_to === $user->id ||
-                $flock->farm->assignedAdmins->contains('id', $user->id)
+                $flock->farm->assigned_to === $user->id
             );
 
             if (!$hasAccess) {
@@ -284,8 +279,7 @@ class ChickenSalesController extends Controller
             $farm = $flockEnd->flock->farm;
             $hasAccess = $farm && (
                 $farm->created_by === $user->id ||
-                $farm->assigned_to === $user->id ||
-                $farm->assignedAdmins->contains('id', $user->id)
+                $farm->assigned_to === $user->id
             );
 
             if (!$hasAccess) {
@@ -298,9 +292,6 @@ class ChickenSalesController extends Controller
         } else {
             $farms = Farm::where('created_by', $user->id)
                          ->orWhere('assigned_to', $user->id)
-                         ->orWhereHas('assignedAdmins', function ($q) use ($user) {
-                             $q->where('admin_id', $user->id);
-                         })
                          ->get();
         }
 
@@ -330,8 +321,7 @@ class ChickenSalesController extends Controller
             $farm = $flockEnd->flock->farm;
             $hasAccess = $farm && (
                 $farm->created_by === $user->id ||
-                $farm->assigned_to === $user->id ||
-                $farm->assignedAdmins->contains('id', $user->id)
+                $farm->assigned_to === $user->id
             );
 
             if (!$hasAccess) {
@@ -451,8 +441,7 @@ class ChickenSalesController extends Controller
             $farm = $flockEnd->flock->farm;
             $hasAccess = $farm && (
                 $farm->created_by === $user->id ||
-                $farm->assigned_to === $user->id ||
-                $farm->assignedAdmins->contains('id', $user->id)
+                $farm->assigned_to === $user->id
             );
 
             if (!$hasAccess) {

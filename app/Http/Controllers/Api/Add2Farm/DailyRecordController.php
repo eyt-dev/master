@@ -109,10 +109,7 @@ class DailyRecordController extends BaseController
                   ->orWhereHas('farm', function ($subQ) use ($user) {
                       $subQ->where('created_by', $user->id)
                            ->orWhere('assigned_to', $user->id)
-                           ->orWhereHas('assignedAdmins', function ($adminQ) use ($user) {
-                               $adminQ->where('admin_id', $user->id);
-                           });
-                  });
+                                             });
             })
             ->when($request->flock_id, function ($q) use ($request) {
                 return $q->where('flock_id', $request->flock_id);
@@ -179,10 +176,7 @@ class DailyRecordController extends BaseController
                   ->orWhereHas('farm', function ($subQ) use ($user) {
                       $subQ->where('created_by', $user->id)
                            ->orWhere('assigned_to', $user->id)
-                           ->orWhereHas('assignedAdmins', function ($adminQ) use ($user) {
-                               $adminQ->where('admin_id', $user->id);
-                           });
-                  });
+                                             });
             })
             ->when($request->flock_id, function ($q) use ($request) {
                 return $q->where('flock_id', $request->flock_id);
@@ -254,10 +248,7 @@ class DailyRecordController extends BaseController
                   ->orWhereHas('farm', function ($subQ) use ($user) {
                       $subQ->where('created_by', $user->id)
                            ->orWhere('assigned_to', $user->id)
-                           ->orWhereHas('assignedAdmins', function ($adminQ) use ($user) {
-                               $adminQ->where('admin_id', $user->id);
-                           });
-                  });
+                                             });
             })
             ->when($request->flock_id, function ($q) use ($request) {
                 return $q->where('flock_id', $request->flock_id);
@@ -409,10 +400,7 @@ class DailyRecordController extends BaseController
                   ->orWhereHas('farm', function ($subQ) use ($user) {
                       $subQ->where('created_by', $user->id)
                            ->orWhere('assigned_to', $user->id)
-                           ->orWhereHas('assignedAdmins', function ($adminQ) use ($user) {
-                               $adminQ->where('admin_id', $user->id);
-                           });
-                  });
+                                             });
             })
             ->with('farm', 'flock', 'flock.flockEnds', 'hangar', 'creator')
             ->find($id);
@@ -430,10 +418,7 @@ class DailyRecordController extends BaseController
                   ->orWhereHas('farm', function ($subQ) use ($user) {
                       $subQ->where('created_by', $user->id)
                            ->orWhere('assigned_to', $user->id)
-                           ->orWhereHas('assignedAdmins', function ($adminQ) use ($user) {
-                               $adminQ->where('admin_id', $user->id);
-                           });
-                  });
+                                             });
             })
             ->where('record_date', $record->record_date)
             ->where('flock_id', $record->flock_id)
@@ -533,8 +518,7 @@ class DailyRecordController extends BaseController
             $farm = $flock->farm;
             $hasAccess = $farm && (
                 $farm->created_by === $user->id ||
-                $farm->assigned_to === $user->id ||
-                $farm->assignedAdmins->contains('id', $user->id)
+                $farm->assigned_to === $user->id
             );
 
             if (!$hasAccess) {
@@ -758,8 +742,7 @@ class DailyRecordController extends BaseController
             $hasAccess = ($record->created_by === $user->id) || (
                 $record->farm && (
                     $record->farm->created_by === $user->id ||
-                    $record->farm->assigned_to === $user->id ||
-                    $record->farm->assignedAdmins->contains('id', $user->id)
+                    $record->farm->assigned_to === $user->id
                 )
             );
 
@@ -969,8 +952,7 @@ class DailyRecordController extends BaseController
             $hasAccess = ($record->created_by === $user->id) || (
                 $record->farm && (
                     $record->farm->created_by === $user->id ||
-                    $record->farm->assigned_to === $user->id ||
-                    $record->farm->assignedAdmins->contains('id', $user->id)
+                    $record->farm->assigned_to === $user->id
                 )
             );
 

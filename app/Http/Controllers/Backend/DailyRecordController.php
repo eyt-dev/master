@@ -28,10 +28,7 @@ class DailyRecordController extends Controller
                 ->when(auth()->user()->role !== 'SuperAdmin', function ($query) {
                     $query->whereHas('farm', function ($subQuery) {
                         $subQuery->where('created_by', auth()->id())
-                                 ->orWhere('assigned_to', auth()->id())
-                                 ->orWhereHas('assignedAdmins', function ($q) {
-                                     $q->where('admin_id', auth()->id());
-                                 });
+                                 ->orWhere('assigned_to', auth()->id());
                     })
                     ->orWhere('created_by', auth()->id());
                 })
@@ -277,8 +274,7 @@ class DailyRecordController extends Controller
         if (auth()->user()->role !== 'SuperAdmin') {
             $hasAccess = $flock->farm && (
                 $flock->farm->created_by === auth()->id() ||
-                $flock->farm->assigned_to === auth()->id() ||
-                $flock->farm->assignedAdmins->contains('id', auth()->id())
+                $flock->farm->assigned_to === auth()->id()
             );
 
             if (!$hasAccess) {
@@ -458,8 +454,7 @@ class DailyRecordController extends Controller
             $hasAccess = ($dailyRecord->created_by === $user->id) || (
                 $dailyRecord->farm && (
                     $dailyRecord->farm->created_by === $user->id ||
-                    $dailyRecord->farm->assigned_to === $user->id ||
-                    $dailyRecord->farm->assignedAdmins->contains('id', $user->id)
+                    $dailyRecord->farm->assigned_to === $user->id
                 )
             );
 
@@ -513,8 +508,7 @@ class DailyRecordController extends Controller
             $hasAccess = ($dailyRecord->created_by === $user->id) || (
                 $dailyRecord->farm && (
                     $dailyRecord->farm->created_by === $user->id ||
-                    $dailyRecord->farm->assigned_to === $user->id ||
-                    $dailyRecord->farm->assignedAdmins->contains('id', $user->id)
+                    $dailyRecord->farm->assigned_to === $user->id
                 )
             );
 
@@ -668,8 +662,7 @@ class DailyRecordController extends Controller
             $hasAccess = ($dailyRecord->created_by === $user->id) || (
                 $dailyRecord->farm && (
                     $dailyRecord->farm->created_by === $user->id ||
-                    $dailyRecord->farm->assigned_to === $user->id ||
-                    $dailyRecord->farm->assignedAdmins->contains('id', $user->id)
+                    $dailyRecord->farm->assigned_to === $user->id
                 )
             );
 

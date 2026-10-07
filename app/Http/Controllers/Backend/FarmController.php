@@ -118,16 +118,11 @@ class FarmController extends Controller
 
         $farm = Farm::create($createData);
 
-        // Assign to single admin
-        if ($request->filled('assigned_to')) {
-            $farm->assignedAdmins()->attach($request->assigned_to);
-        }
-
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Farm created successfully.',
-                'farm' => $farm->load('assignedAdmin', 'assignedAdmins', 'creator')
+                'farm' => $farm->load('assignedAdmin', 'creator')
             ]);
         }
 
@@ -186,18 +181,11 @@ class FarmController extends Controller
 
         $farm->update($updateData);
 
-        // Assign to single admin
-        if ($request->filled('assigned_to')) {
-            $farm->assignedAdmins()->sync([$request->assigned_to]);
-        } else {
-            $farm->assignedAdmins()->detach();
-        }
-
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Farm updated successfully.',
-                'farm' => $farm->load('assignedAdmin', 'assignedAdmins', 'creator')
+                'farm' => $farm->load('assignedAdmin', 'creator')
             ]);
         }
 

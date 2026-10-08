@@ -125,7 +125,7 @@ class HangarController extends Controller
 
         $farms = Farm::when($user->role !== 'SuperAdmin', function ($query) use ($user) {
             $query->where('created_by', $user->id)
-                  ->orWhere('assigned_to', $user->id)
+                  ->orWhere('assigned_to', $user->id);
         })->get();
 
         return view('backend.hangar.create', compact('hangar', 'farms', 'siteSlug'));

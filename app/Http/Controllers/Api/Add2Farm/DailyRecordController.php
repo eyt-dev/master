@@ -105,12 +105,12 @@ class DailyRecordController extends BaseController
     {
         $user = auth()->user();
         $query = DailyRecord::where(function ($q) use ($user) {
-                $q->where('created_by', $user->id)
-                  ->orWhereHas('farm', function ($subQ) use ($user) {
-                      $subQ->where('created_by', $user->id)
-                           ->orWhere('assigned_to', $user->id)
-                                             });
-            })
+            $q->where('created_by', $user->id)
+              ->orWhereHas('farm', function ($subQ) use ($user) {
+                  $subQ->where('created_by', $user->id)
+                       ->orWhere('assigned_to', $user->id);
+              });
+        })
             ->when($request->flock_id, function ($q) use ($request) {
                 return $q->where('flock_id', $request->flock_id);
             })
@@ -172,12 +172,12 @@ class DailyRecordController extends BaseController
     {
         $user = auth()->user();
         $baseQuery = DailyRecord::where(function ($q) use ($user) {
-                $q->where('created_by', $user->id)
-                  ->orWhereHas('farm', function ($subQ) use ($user) {
-                      $subQ->where('created_by', $user->id)
-                           ->orWhere('assigned_to', $user->id)
-                                             });
-            })
+            $q->where('created_by', $user->id)
+              ->orWhereHas('farm', function ($subQ) use ($user) {
+                  $subQ->where('created_by', $user->id)
+                       ->orWhere('assigned_to', $user->id);
+              });
+        })
             ->when($request->flock_id, function ($q) use ($request) {
                 return $q->where('flock_id', $request->flock_id);
             })
@@ -244,12 +244,12 @@ class DailyRecordController extends BaseController
     {
         $user = auth()->user();
         $baseQuery = DailyRecord::where(function ($q) use ($user) {
-                $q->where('created_by', $user->id)
-                  ->orWhereHas('farm', function ($subQ) use ($user) {
-                      $subQ->where('created_by', $user->id)
-                           ->orWhere('assigned_to', $user->id)
-                                             });
-            })
+            $q->where('created_by', $user->id)
+              ->orWhereHas('farm', function ($subQ) use ($user) {
+                  $subQ->where('created_by', $user->id)
+                       ->orWhere('assigned_to', $user->id);
+              });
+        })
             ->when($request->flock_id, function ($q) use ($request) {
                 return $q->where('flock_id', $request->flock_id);
             })
@@ -396,12 +396,12 @@ class DailyRecordController extends BaseController
         $user = auth()->user();
 
         $record = DailyRecord::where(function ($q) use ($user) {
-                $q->where('created_by', $user->id)
-                  ->orWhereHas('farm', function ($subQ) use ($user) {
-                      $subQ->where('created_by', $user->id)
-                           ->orWhere('assigned_to', $user->id)
-                                             });
-            })
+            $q->where('created_by', $user->id)
+              ->orWhereHas('farm', function ($subQ) use ($user) {
+                  $subQ->where('created_by', $user->id)
+                       ->orWhere('assigned_to', $user->id);
+              });
+        })
             ->with('farm', 'flock', 'flock.flockEnds', 'hangar', 'creator')
             ->find($id);
 
@@ -414,12 +414,12 @@ class DailyRecordController extends BaseController
 
         // Fetch all records for this date, flock, and farm
         $allRecordsForDate = DailyRecord::where(function ($q) use ($user) {
-                $q->where('created_by', $user->id)
-                  ->orWhereHas('farm', function ($subQ) use ($user) {
-                      $subQ->where('created_by', $user->id)
-                           ->orWhere('assigned_to', $user->id)
-                                             });
-            })
+            $q->where('created_by', $user->id)
+              ->orWhereHas('farm', function ($subQ) use ($user) {
+                  $subQ->where('created_by', $user->id)
+                       ->orWhere('assigned_to', $user->id);
+              });
+        })
             ->where('record_date', $record->record_date)
             ->where('flock_id', $record->flock_id)
             ->with('farm', 'flock', 'flock.flockEnds', 'hangar', 'creator')

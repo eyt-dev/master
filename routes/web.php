@@ -179,6 +179,8 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('{feedmaterial}/edit', 'edit')->name('feedmaterial.edit')->middleware('permission:edit.feed_material');
                         Route::post('{feedmaterial}', 'update')->name('feedmaterial.update')->middleware('permission:edit.feed_material');
                         Route::get('destroy/{feedmaterial}', 'destroy')->name('feedmaterial.destroy')->middleware('permission:delete.feed_material');
+                        Route::get('breed-category-mapping/load', 'loadBreedCategoryMapping')->name('feedmaterial.breed-mapping-load');
+                        Route::post('breed-category-mapping/save', 'saveBreedCategoryMapping')->name('feedmaterial.breed-mapping-save');
                     });
                     Route::controller(MaterialTypeController::class)->prefix('material-type')->group(function () {
                         Route::get('/', 'index')->name('material-type.index');
@@ -243,6 +245,7 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('create', 'create')->name('material-stock.create')->middleware('permission:create.material_stock');
                         Route::post('store', 'store')->name('material-stock.store')->middleware('permission:create.material_stock');
                         Route::get('hangars-by-farm/{farm}', 'getHangarsByFarm')->name('material-stock.hangars-by-farm');
+                        Route::get('materials-by-farm/{farm}', 'getMaterialsByFarm')->name('material-stock.materials-by-farm');
                         Route::get('{material_stock}/edit', 'edit')->name('material-stock.edit')->middleware('permission:edit.material_stock');
                         Route::post('{material_stock}', 'update')->name('material-stock.update')->middleware('permission:edit.material_stock');
                         Route::get('destroy/{material_stock}', 'destroy')->name('material-stock.destroy')->middleware('permission:delete.material_stock');
@@ -525,6 +528,8 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::get('{feedmaterial}/edit', 'edit')->name('feedmaterial.edit')->middleware('permission:edit.feed_material');
                 Route::post('{feedmaterial}', 'update')->name('feedmaterial.update')->middleware('permission:edit.feed_material');
                 Route::get('destroy/{feedmaterial}', 'destroy')->name('feedmaterial.destroy')->middleware('permission:delete.feed_material');
+                Route::get('breed-category-mapping/load', 'loadBreedCategoryMapping')->name('feedmaterial.breed-mapping-load');
+                Route::post('breed-category-mapping/save', 'saveBreedCategoryMapping')->name('feedmaterial.breed-mapping-save');
             });
             Route::controller(MaterialTypeController::class)->prefix('material-type')->group(function () {
                 Route::get('/', 'index')->name('material-type.index');

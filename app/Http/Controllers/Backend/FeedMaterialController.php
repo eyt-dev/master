@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\MaterialName;
 use App\Models\MaterialType;
+use App\Models\BreedCategoryMaterialType;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
@@ -88,5 +89,70 @@ class FeedMaterialController extends Controller
     {
         MaterialName::findOrFail($id)->delete();
         return response()->json(['msg' => 'Feed Material deleted successfully.']);
+    }
+
+    public function loadBreedCategoryMapping(Request $request)
+    {
+        $breedCategories = ['Broiler', 'Layer'];
+        $materialTypes = MaterialType::orderBy('name')->get();
+
+        $data = [];
+        foreach ($breedCategories as $category) {
+            $mappedTypeIds = BreedCategoryMaterialType::where('breed_category', $category)
+                ->pluck('material_type_id')
+                ->toArray();
+
+            $data[] = [
+                'breed_category' => $category,
+                'material_types' => $materialTypes->map(function ($type) use ($mappedTypeIds) {
+                    return [
+                        'id' => $type->id,
+                        'name' => $type->name,
+                        'checked' => in_array($type->id, $mappedTypeIds),
+                    ];
+                }),
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
+    public function saveBreedCategoryMapping(Request $request)
+    {
+        $request->validate([
+            'mappings' => 'required|array',
+            'mappings.*.breed_category' => 'required|in:Broiler,Layer',
+            'mappings.*.material_type_ids' => 'required|array',
+            'mappings.*.material_type_ids.*' => 'integer|exists:material_types,id',
+        ]);
+
+        try {
+            foreach ($request->mappings as $mapping) {
+                $category = $mapping['breed_category'];
+                $typeIds = $mapping['material_type_ids'] ?? [];
+
+                BreedCategoryMaterialType::where('breed_category', $category)->delete();
+
+                foreach ($typeIds as $typeId) {
+                    BreedCategoryMaterialType::create([
+                        'breed_category' => $category,
+                        'material_type_id' => $typeId,
+                    ]);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Breed category material mappings saved successfully.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save mappings: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

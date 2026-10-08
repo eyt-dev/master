@@ -8,6 +8,7 @@ use App\Models\Admin;
 use App\Models\FeedSupplier;
 use App\Models\MaterialName;
 use App\Models\MaterialType;
+use App\Models\BreedCategoryMaterialType;
 use App\Models\Slaughter;
 use Illuminate\Http\Request;
 
@@ -296,9 +297,11 @@ class DropdownController extends BaseController
      *
      * Returns list of material names with their types.
      * Can be filtered by material type using query parameter.
+     * Can be filtered by farm breed category using farm_id parameter.
      *
      * @authenticated
      * @queryParam material_type string Optional filter by material type (e.g., pelleted_feed, mash_feed, feed_ingredient, premix)
+     * @queryParam farm_id integer Optional filter by farm. Uses farm's first flock breed to determine category.
      *
      * @response 200 {
      *   "success": true,
@@ -316,6 +319,50 @@ class DropdownController extends BaseController
     {
         $query = MaterialName::with('materialType')->select('id', 'name', 'material_type_id');
 
+        // Handle farm_id parameter for breed category filtering
+        if ($request->has('farm_id')) {
+            $farmId = $request->input('farm_id');
+            $farm = Farm::find($farmId);
+
+            if (!$farm) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Farm not found.',
+                ], 404);
+            }
+
+            // Get farm's breed category from first flock
+            $firstFlock = $farm->flocks()->oldest('created_at')->first();
+            $breedCategory = $firstFlock ? $this->extractBreedType($firstFlock->breed) : null;
+
+            // If farm has no flocks, return empty result
+            if (!$breedCategory) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Material names retrieved successfully.',
+                    'data' => [],
+                ], 200);
+            }
+
+            // Get mapped material types for this breed category
+            $mappedTypeIds = BreedCategoryMaterialType::where('breed_category', $breedCategory)
+                ->pluck('material_type_id')
+                ->toArray();
+
+            // If no mappings exist, return empty result
+            if (empty($mappedTypeIds)) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Material names retrieved successfully.',
+                    'data' => [],
+                ], 200);
+            }
+
+            // Filter materials based on mapped material types
+            $query->whereIn('material_type_id', $mappedTypeIds);
+        }
+
+        // Apply material_type filter after breed category filter
         if ($request->has('material_type')) {
             $materialType = $request->input('material_type');
             $materialTypeRecord = MaterialType::where('value', $materialType)->first();

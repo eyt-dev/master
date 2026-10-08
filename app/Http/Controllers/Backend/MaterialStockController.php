@@ -244,6 +244,65 @@ class MaterialStockController extends Controller
         return response()->json($hangars);
     }
 
+    public function getMaterialsByFarm($siteUrl, $farmId)
+    {
+        $user = auth()->user();
+        $farmId = (int) $farmId;
+
+        // Verify user has access to the farm
+        $farm = Farm::where(function ($q) use ($user) {
+            $q->where('created_by', $user->id)
+              ->orWhere('assigned_to', $user->id);
+        })->find($farmId);
+
+        if (!$farm && $user->role !== 'SuperAdmin') {
+            return response()->json([], 403);
+        }
+
+        // Get farm's breed category from first flock
+        $firstFlock = $farm->flocks()->oldest('created_at')->first();
+        $breedCategory = $firstFlock ? $this->extractBreedType($firstFlock->breed) : null;
+
+        // If farm has no flocks, return empty result
+        if (!$breedCategory) {
+            return response()->json([]);
+        }
+
+        // Filter materials based on breed category
+        $query = MaterialName::with('materialType')->select('id', 'name', 'material_type_id');
+
+        $query->where(function ($q) use ($breedCategory) {
+            // Feed Ingredients are always included (material_type_id = 3)
+            $q->where('material_type_id', 3);
+
+            if ($breedCategory === 'Broiler') {
+                // Broiler: include Pelleted Feed (id=1) and Broiler Premix
+                $q->orWhere('material_type_id', 1); // Pelleted Feed
+                $q->orWhere(function ($subQ) {
+                    $subQ->where('material_type_id', 4) // Premix
+                         ->whereRaw("LOWER(name) LIKE '%broiler%'");
+                });
+            } elseif ($breedCategory === 'Layer') {
+                // Layer: include Mash Feed (id=2) and Layer Premix
+                $q->orWhere('material_type_id', 2); // Mash Feed
+                $q->orWhere(function ($subQ) {
+                    $subQ->where('material_type_id', 4) // Premix
+                         ->whereRaw("LOWER(name) LIKE '%layer%'");
+                });
+            }
+        });
+
+        $materials = $query->orderBy('name')->get()->map(function ($material) {
+            return [
+                'id' => $material->id,
+                'name' => $material->name,
+                'type' => $material->materialType?->name ?? 'N/A',
+            ];
+        });
+
+        return response()->json($materials);
+    }
+
     public function store(Request $request, $siteUrl)
     {
         // Get material type to determine hangar allocation requirement
@@ -564,5 +623,27 @@ class MaterialStockController extends Controller
             ->sum('feed_kg') ?? 0;
 
         return max(0, $totalStock - $totalConsumed);
+    }
+
+    private function extractBreedType($breedString)
+    {
+        $breedType = 'Layer';
+
+        if (!empty($breedString)) {
+            // If breed contains comma, take first part (e.g., "Layer, Lohmann brown" → "Layer")
+            if (strpos($breedString, ',') !== false) {
+                $breedParts = explode(',', $breedString);
+                $breedType = trim($breedParts[0]);
+            } else {
+                // Check for specific breed names
+                if (stripos($breedString, 'cobb') !== false || stripos($breedString, 'ross') !== false) {
+                    $breedType = 'Broiler';
+                } elseif (stripos($breedString, 'lohmann') !== false || stripos($breedString, 'hy-line') !== false) {
+                    $breedType = 'Layer';
+                }
+            }
+        }
+
+        return $breedType;
     }
 }

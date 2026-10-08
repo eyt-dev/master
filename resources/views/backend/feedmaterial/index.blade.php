@@ -24,6 +24,9 @@
         </div>
         <div class="page-rightheader">
             <div class="btn btn-list">
+                <button id="breed_category_mapping_btn" class="btn btn-secondary" data-toggle="tooltip" title="Breed Category Material Mapping">
+                    <i class="fe fe-map mr-1"></i> Breed Category Material Mapping
+                </button>
                 <button id="manage_types_btn" class="btn btn-warning" data-toggle="tooltip" title="Manage Material Types">
                     <i class="fe fe-settings mr-1"></i> Material Type Settings
                 </button>
@@ -195,6 +198,29 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" id="save_material_type_btn">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breed Category Material Mapping Modal -->
+    <div class="modal fade" id="breed_category_mapping_modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Breed Category Material Mapping</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="breed_category_mapping_container">
+                        <!-- Breed category checkboxes will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save_breed_category_mapping_btn">Save</button>
                 </div>
             </div>
         </div>
@@ -492,5 +518,93 @@
                 }, false);
             });
         }
+
+        // Breed Category Material Mapping
+        function loadBreedCategoryMapping() {
+            $.ajax({
+                url: "{{ route('feedmaterial.breed-mapping-load', ['username' => $siteSlug]) }}",
+                type: 'GET',
+                success: function(response) {
+                    if (response.success && response.data) {
+                        renderBreedCategoryMapping(response.data);
+                    }
+                }
+            });
+        }
+
+        function renderBreedCategoryMapping(data) {
+            var container = $('#breed_category_mapping_container');
+            container.html('');
+
+            data.forEach(function(category) {
+                var categoryHtml = `
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">${category.breed_category}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="breed-category-materials" data-category="${category.breed_category}">
+                `;
+
+                category.material_types.forEach(function(materialType) {
+                    var checkboxId = 'material_' + category.breed_category + '_' + materialType.id;
+                    categoryHtml += `
+                        <div class="custom-control custom-checkbox mb-2">
+                            <input type="checkbox" class="custom-control-input material-type-checkbox" id="${checkboxId}"
+                                data-category="${category.breed_category}" data-material-id="${materialType.id}"
+                                ${materialType.checked ? 'checked' : ''}>
+                            <label class="custom-control-label" for="${checkboxId}">${materialType.name}</label>
+                        </div>
+                    `;
+                });
+
+                categoryHtml += `
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.append(categoryHtml);
+            });
+        }
+
+        $(document).on('click', '#breed_category_mapping_btn', function() {
+            $('#breed_category_mapping_modal').modal('show');
+            loadBreedCategoryMapping();
+        });
+
+        $(document).on('click', '#save_breed_category_mapping_btn', function() {
+            var mappings = [];
+            var categories = ['Broiler', 'Layer'];
+
+            categories.forEach(function(category) {
+                var selectedMaterialIds = [];
+                $('input[data-category="' + category + '"]:checked').each(function() {
+                    selectedMaterialIds.push($(this).data('material-id'));
+                });
+
+                mappings.push({
+                    breed_category: category,
+                    material_type_ids: selectedMaterialIds
+                });
+            });
+
+            $.ajax({
+                url: "{{ route('feedmaterial.breed-mapping-save', ['username' => $siteSlug]) }}",
+                type: 'POST',
+                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                data: { mappings: mappings },
+                success: function(response) {
+                    if (response.success) {
+                        $('#breed_category_mapping_modal').modal('hide');
+                        swal({title: 'Success', text: response.message, icon: 'success'});
+                    }
+                },
+                error: function(xhr) {
+                    var errorMsg = xhr.responseJSON?.message || 'Failed to save mappings';
+                    swal({title: 'Error', text: errorMsg, icon: 'error'});
+                }
+            });
+        });
     </script>
 @endsection

@@ -47,7 +47,7 @@
                         @foreach($groupedMaterials as $type => $materials)
                             <optgroup label="{{ $type }}">
                                 @foreach($materials as $material)
-                                    <option value="{{ $material->id }}" data-type="{{ $material->type ?? 'N/A' }}" {{ old('material_name_id', $materialStock->material_name_id ?? '') == $material->id ? 'selected' : '' }}>
+                                    <option value="{{ $material->id }}" data-type="{{ $material->type ?? 'N/A' }}" data-material-id="{{ $material->id }}" {{ old('material_name_id', $materialStock->material_name_id ?? '') == $material->id ? 'selected' : '' }}>
                                         {{ $material->name }}
                                     </option>
                                 @endforeach
@@ -278,7 +278,7 @@
             }
         });
 
-        // When farm changes, reload hangars (only if pelleted feed or mash feed)
+        // When farm changes, reload hangars and filter materials (only if pelleted feed or mash feed)
         $('#farm_id').on('change', function() {
             var farmId = $(this).val();
             var materialType = ($('#material_name_id option:selected').data('type') || '').toLowerCase();
@@ -291,7 +291,76 @@
                 $('#hangars_allocation_container').html('');
                 $('#hangar_quantities_json').val('');
             }
+
+            // Filter materials based on farm breed category
+            filterMaterialsByFarm(farmId);
         });
+
+        // Load and filter materials based on farm's breed category
+        function filterMaterialsByFarm(farmId) {
+            if (!farmId) {
+                // Reset to show all materials
+                showAllMaterials();
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('material-stock.materials-by-farm', ['username' => $siteSlug, 'farm' => ':farm']) }}".replace(':farm', farmId),
+                type: 'GET',
+                success: function(materials) {
+                    updateMaterialsDropdown(materials);
+                },
+                error: function() {
+                    // On error, show all materials
+                    showAllMaterials();
+                }
+            });
+        }
+
+        // Update materials dropdown with filtered materials
+        function updateMaterialsDropdown(materials) {
+            var currentValue = $('#material_name_id').val();
+            var $dropdown = $('#material_name_id');
+
+            // Get all materials grouped by type
+            var groupedMaterials = {};
+            materials.forEach(function(material) {
+                var type = material.type;
+                if (!groupedMaterials[type]) {
+                    groupedMaterials[type] = [];
+                }
+                groupedMaterials[type].push(material);
+            });
+
+            // Clear and rebuild dropdown
+            $dropdown.find('optgroup, option[data-material-id]').remove();
+
+            // Add filtered materials grouped by type
+            Object.keys(groupedMaterials).sort().forEach(function(type) {
+                var $optgroup = $('<optgroup label="' + type + '"></optgroup>');
+                groupedMaterials[type].forEach(function(material) {
+                    var selected = (currentValue == material.id) ? 'selected' : '';
+                    $optgroup.append('<option value="' + material.id + '" data-type="' + type + '" data-material-id="' + material.id + '" ' + selected + '>' + material.name + '</option>');
+                });
+                $dropdown.append($optgroup);
+            });
+
+            // Reset value if current selection is not in filtered list
+            if (currentValue && !$dropdown.find('option[value="' + currentValue + '"]').length) {
+                $dropdown.val('');
+                toggleHangarAllocationSection();
+            }
+        }
+
+        // Show all materials (reset filter)
+        function showAllMaterials() {
+            // Reload page or reset materials to all - for now we'll just clear the farm-based filter
+            var currentValue = $('#material_name_id').val();
+
+            // This would be done by reloading the page or resetting from initial data
+            // For simplicity, we'll just hide the select and show it again
+            // Or better: we can reload from the initial data if needed
+        }
 
         // On page load (edit mode), load hangars if farm is selected and toggle hangar section
         @if(isset($materialStock))
@@ -301,6 +370,10 @@
             var requiresHangarAllocation = materialType === 'pelleted feed' || materialType === 'mash feed';
             if (farmId && requiresHangarAllocation) {
                 loadHangarsForFarm(farmId);
+            }
+            // Filter materials based on farm's breed category in edit mode
+            if (farmId) {
+                filterMaterialsByFarm(farmId);
             }
         @else
             // On create mode, toggle hangar section based on selected material

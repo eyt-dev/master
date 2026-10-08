@@ -61,16 +61,26 @@ class DropdownController extends BaseController
             ], 401);
         }
 
-        $farms = Farm::where(function ($q) use ($user) {
-            $q->where('created_by', $user->id)
-              ->orWhere('assigned_to', $user->id);
-        })
-            ->select('id', 'name')
-            ->with(['flocks' => function ($query) {
-                $query->oldest('flocks.created_at')->select('id', 'farm_id', 'breed');
-            }])
-            ->orderBy('name')
-            ->get();
+        // If SUPER_ADMIN (type = 0), show all farms; otherwise show only assigned farms
+        if ((int)$user->type === Admin::SUPER_ADMIN) {
+            $farms = Farm::select('id', 'name')
+                ->with(['flocks' => function ($query) {
+                    $query->oldest('flocks.created_at')->select('id', 'farm_id', 'breed');
+                }])
+                ->orderBy('name')
+                ->get();
+        } else {
+            $farms = Farm::where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhere('assigned_to', $user->id);
+            })
+                ->select('id', 'name')
+                ->with(['flocks' => function ($query) {
+                    $query->oldest('flocks.created_at')->select('id', 'farm_id', 'breed');
+                }])
+                ->orderBy('name')
+                ->get();
+        }
 
         $data = $farms->map(function ($farm) {
             $firstFlock = $farm->flocks->first();

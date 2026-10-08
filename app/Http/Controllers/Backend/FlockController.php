@@ -189,16 +189,50 @@ class FlockController extends Controller
         return view('backend.flock.create', compact('farms', 'chicksSuppliers'));
     }
 
+    public function getFirstFlockBreedCategory($siteUrl, $farmId)
+    {
+        $user = auth()->user();
+
+        // Verify user has access to this farm
+        if ($user->role !== 'SuperAdmin') {
+            $farm = Farm::where('id', $farmId)
+                ->where(function ($query) use ($user) {
+                    $query->where('created_by', $user->id)
+                          ->orWhere('assigned_to', $user->id);
+                })
+                ->first();
+
+            if (!$farm) {
+                return response()->json(['category' => null]);
+            }
+        }
+
+        // Get the first flock for this farm (oldest by created_at)
+        $firstFlock = Flock::where('farm_id', $farmId)
+            ->oldest('created_at')
+            ->select('breed')
+            ->first();
+
+        if (!$firstFlock) {
+            return response()->json(['category' => null]);
+        }
+
+        $category = $this->extractBreedType($firstFlock->breed);
+        return response()->json(['category' => $category]);
+    }
+
     public function getHangarsByFarm($siteUrl, $farmId)
     {
         $user = auth()->user();
 
         // Verify user has access to this farm
         if ($user->role !== 'SuperAdmin') {
-            $farm = Farm::where(function ($q) use ($user) {
-                $q->where('created_by', $user->id)
-                  ->orWhere('assigned_to', $user->id)
-            })->find($farmId);
+            $farm = Farm::where('id', $farmId)
+                ->where(function ($query) use ($user) {
+                    $query->where('created_by', $user->id)
+                          ->orWhere('assigned_to', $user->id);
+                })
+                ->first();
 
             if (!$farm) {
                 return response()->json([]);
@@ -213,19 +247,29 @@ class FlockController extends Controller
         $flockId = request()->query('flock_id');
 
         // Get hangars that already have flocks allocated (excluding current flock if editing)
-        $allocatedHangarIds = FlockHangar::when($flockId, function ($query) use ($flockId) {
-            // When editing, exclude hangars allocated to the current flock
+        // Include the flock breed info for display
+        $allocatedHangars = FlockHangar::when($flockId, function ($query) use ($flockId) {
             return $query->where('flock_id', '!=', $flockId);
         })
-            ->pluck('hangar_id')->unique()->toArray();
+            ->with('flock:id,breed')
+            ->get()
+            ->keyBy('hangar_id');
 
-        // Add disabled flag to each hangar
-        $hangars = $hangars->map(function ($hangar) use ($allocatedHangarIds) {
+        // Add disabled flag and breed info to each hangar
+        $hangars = $hangars->map(function ($hangar) use ($allocatedHangars) {
+            $allocation = $allocatedHangars->get($hangar->id);
+            // Only consider a hangar allocated if both allocation and flock exist
+            $hasValidAllocation = $allocation && $allocation->flock;
+            $breed = $hasValidAllocation ? $this->extractBreedName($allocation->flock->breed) : null;
+            $allocatedQty = $hasValidAllocation ? $allocation->quantity : null;
+
             return [
                 'id' => $hangar->id,
                 'name' => $hangar->name,
-                'disabled' => in_array($hangar->id, $allocatedHangarIds),
-                'allocated' => in_array($hangar->id, $allocatedHangarIds),
+                'disabled' => $hasValidAllocation ? true : false,
+                'allocated' => $hasValidAllocation ? true : false,
+                'breed' => $breed,
+                'allocated_quantity' => $allocatedQty,
             ];
         });
 
@@ -267,10 +311,13 @@ class FlockController extends Controller
             'farm_id' => 'required|exists:farms,id',
             'chicks_supplier_id' => 'required|exists:chicks_suppliers,id',
             'breed' => 'required|string',
-            'start_date' => 'required|date',
+            'start_date' => 'required|date|before_or_equal:today',
             'total_quantity' => 'required|numeric|min:1',
             'hangar_quantities_json' => 'required|json',
         ]);
+
+        // Validate breed category matches farm's first flock
+        $this->validateBreedCategory($request->farm_id, $request->breed);
 
         // Check if a flock with the same farm, chicks_supplier, breed, and start_date already exists
         $existingFlock = Flock::where('farm_id', $request->farm_id)
@@ -368,7 +415,7 @@ class FlockController extends Controller
             'farm_id' => 'required|exists:farms,id',
             'chicks_supplier_id' => 'required|exists:chicks_suppliers,id',
             'breed' => 'required|string',
-            'start_date' => 'required|date',
+            'start_date' => 'required|date|before_or_equal:today',
             'total_quantity' => 'required|numeric|min:1',
             'hangar_quantities_json' => 'required|json',
         ]);
@@ -388,6 +435,9 @@ class FlockController extends Controller
                 return redirect()->back()->withErrors('You do not have permission to update this flock.');
             }
         }
+
+        // Validate breed category matches farm's first flock (skip if this is the first flock)
+        $this->validateBreedCategory($request->farm_id, $request->breed, $id);
 
         // Check if another flock with the same farm, chicks_supplier, breed, and start_date exists (exclude current flock)
         $existingFlock = Flock::where('farm_id', $request->farm_id)
@@ -539,5 +589,34 @@ class FlockController extends Controller
 
         // Format: "BreedName" only
         return trim($breedString);
+    }
+
+    private function validateBreedCategory($farmId, $selectedBreed, $editingFlockId = null)
+    {
+        // Get the first flock for this farm (ordered by creation date)
+        $firstFlock = Flock::where('farm_id', $farmId)
+            ->oldest('created_at')
+            ->select('id', 'breed')
+            ->first();
+
+        // If there's no existing flock, the selected breed establishes the farm's category (allowed)
+        if (!$firstFlock) {
+            return;
+        }
+
+        // If editing and this is the first flock, don't enforce category (it sets the category)
+        if ($editingFlockId && $firstFlock->id === $editingFlockId) {
+            return;
+        }
+
+        // Validate that the selected breed matches the first flock's category
+        $firstFlockCategory = $this->extractBreedType($firstFlock->breed);
+        $selectedCategory = $this->extractBreedType($selectedBreed);
+
+        if ($firstFlockCategory !== $selectedCategory) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'breed' => "The breed category must match the Farm's first flock category ({$firstFlockCategory}). Selected breed category: {$selectedCategory}."
+            ]);
+        }
     }
 }

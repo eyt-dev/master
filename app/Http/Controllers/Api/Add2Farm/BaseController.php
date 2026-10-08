@@ -89,6 +89,27 @@ class BaseController extends Controller
     }
 
     /**
+     * Extract breed name from breed string
+     * Supports formats:
+     * - "Broiler,Ross 308" → "Ross 308"
+     * - "Layer,Lohmann Brown" → "Lohmann Brown"
+     * - "Ross 308" → "Ross 308" (if no comma, return as is)
+     */
+    protected function extractBreedName($breedString)
+    {
+        if (empty($breedString)) {
+            return 'N/A';
+        }
+
+        if (strpos($breedString, ',') !== false) {
+            $breedParts = explode(',', $breedString);
+            return trim($breedParts[1] ?? 'N/A');
+        }
+
+        return trim($breedString);
+    }
+
+    /**
      * Calculate flock age based on start and optional end date
      * If no end_date: calculates from start_date to today
      * If end_date provided: calculates from start_date to end_date (flock duration)

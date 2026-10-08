@@ -203,7 +203,7 @@ class FlockController extends BaseController
     /**
      * Get hangars for a specific flock
      *
-     * Get all hangars allocated to a specific flock with their allocated quantities.
+     * Get all hangars allocated to a specific flock with their allocated quantities and breed.
      * Used for end flock form to select hangar and enter final quantity.
      *
      * @authenticated
@@ -216,12 +216,16 @@ class FlockController extends BaseController
      *     {
      *       "hangar_id": 12,
      *       "hangar_name": "Hangar 1",
-     *       "allocated_qty": 300
+     *       "allocated_qty": 300,
+     *       "breed": "Ross 308",
+     *       "status": "Active"
      *     },
      *     {
      *       "hangar_id": 13,
      *       "hangar_name": "Hangar 2",
-     *       "allocated_qty": 200
+     *       "allocated_qty": 200,
+     *       "breed": "Ross 308",
+     *       "status": "Active"
      *     }
      *   ]
      * }
@@ -252,11 +256,14 @@ class FlockController extends BaseController
             ], 404);
         }
 
-        $hangars = $flock->flockHangarAllocations->map(function ($allocation) {
+        $breedName = $this->extractBreedName($flock->breed);
+
+        $hangars = $flock->flockHangarAllocations->map(function ($allocation) use ($breedName) {
             return [
                 'hangar_id' => $allocation->hangar_id,
                 'hangar_name' => $allocation->hangar->name,
                 'allocated_qty' => $allocation->quantity,
+                'breed' => $breedName,
                 'status' => $allocation->hangar->status,
             ];
         })->values();
@@ -779,7 +786,7 @@ class FlockController extends BaseController
             'farm_id'               => 'required|integer|exists:farms,id',
             'chicks_supplier_id'    => 'required|integer|exists:chicks_suppliers,id',
             'breed'                 => 'required|string|max:255',
-            'start_date'            => 'required|date_format:d-m-Y',
+            'start_date'            => 'required|date_format:d-m-Y|before_or_equal:today',
             'total_quantity'        => 'required|integer|min:1',
             'hangar_allocations'    => 'required|array|min:1',
             'hangar_allocations.*.hangar_id' => 'required|integer|exists:hangars,id',
@@ -945,7 +952,7 @@ class FlockController extends BaseController
             'name'                  => 'required|string|max:255',
             'chicks_supplier_id'    => 'required|integer|exists:chicks_suppliers,id',
             'breed'                 => 'required|string|max:255',
-            'start_date'            => 'required|date_format:d-m-Y',
+            'start_date'            => 'required|date_format:d-m-Y|before_or_equal:today',
             'total_quantity'        => 'required|integer|min:1',
             'hangar_allocations'    => 'required|array|min:1',
             'hangar_allocations.*.hangar_id' => 'required|integer|exists:hangars,id',

@@ -83,18 +83,19 @@
                             $currentBreed = trim($breedParts[1]);
                         }
                     @endphp
-                    <optgroup label="Broiler">
-                        <option value="Ross 308" {{ $currentBreed == 'Ross 308' ? 'selected' : '' }}>Ross 308</option>
-                        <option value="Cobb 500" {{ $currentBreed == 'Cobb 500' ? 'selected' : '' }}>Cobb 500</option>
+                    <optgroup label="Broiler" class="breed-optgroup" data-category="Broiler">
+                        <option value="Ross 308" class="breed-option" data-category="Broiler" {{ $currentBreed == 'Ross 308' ? 'selected' : '' }}>Ross 308</option>
+                        <option value="Cobb 500" class="breed-option" data-category="Broiler" {{ $currentBreed == 'Cobb 500' ? 'selected' : '' }}>Cobb 500</option>
                     </optgroup>
-                    <optgroup label="Layer">
-                        <option value="Lohmann Brown" {{ $currentBreed == 'Lohmann Brown' ? 'selected' : '' }}>Lohmann Brown</option>
-                        <option value="Lohmann White" {{ $currentBreed == 'Lohmann White' ? 'selected' : '' }}>Lohmann White</option>
+                    <optgroup label="Layer" class="breed-optgroup" data-category="Layer">
+                        <option value="Lohmann Brown" class="breed-option" data-category="Layer" {{ $currentBreed == 'Lohmann Brown' ? 'selected' : '' }}>Lohmann Brown</option>
+                        <option value="Lohmann White" class="breed-option" data-category="Layer" {{ $currentBreed == 'Lohmann White' ? 'selected' : '' }}>Lohmann White</option>
                     </optgroup>
                 </select>
                 @error('breed')
                     <label id="breed-error" class="error" for="breed">{{ $message }}</label>
                 @enderror
+                <small id="breed-category-info" class="form-text text-muted" style="display: none;"></small>
             </div>
         </div>
 
@@ -102,8 +103,10 @@
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="start_date" class="form-label">Start Date <span class="text-red">*</span></label>
-                <input type="date" class="form-control" name="start_date" id="start_date" 
+                <input type="date" class="form-control" name="start_date" id="start_date"
+                    max="{{ date('Y-m-d') }}"
                     value="{{ old('start_date', isset($flock) ? $flock->start_date->format('Y-m-d') : '') }}" required="" />
+                <small class="form-text text-muted">Start date cannot be in the future</small>
                 @error('start_date')
                     <label id="start_date-error" class="error" for="start_date">{{ $message }}</label>
                 @enderror
@@ -186,6 +189,63 @@
             });
         }
 
+        // Filter breed dropdown based on farm's first flock category
+        function filterBreedDropdown(farmId) {
+            var breedSelect = $('#breed');
+            var breedCategoryInfo = $('#breed-category-info');
+
+            if (!farmId) {
+                // No farm selected - show all breeds
+                $('.breed-optgroup').show();
+                $('.breed-option').show();
+                breedCategoryInfo.hide();
+                breedSelect.val('');
+                return;
+            }
+
+            // Ensure farmId is an integer
+            farmId = parseInt(farmId);
+
+            var url = "{{ route('flock.breed-category-by-farm', ['username' => $siteSlug, 'farm' => ':farm']) }}".replace(':farm', farmId);
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(response) {
+                    var category = response.category;
+
+                    if (!category) {
+                        // Farm has no existing flocks - show all breeds
+                        $('.breed-optgroup').show();
+                        $('.breed-option').show();
+                        breedCategoryInfo.hide();
+                        breedSelect.val('');
+                    } else {
+                        // Farm has a first flock - filter to that category
+                        $('.breed-optgroup').each(function() {
+                            var optgroupCategory = $(this).data('category');
+                            if (optgroupCategory === category) {
+                                $(this).show();
+                                $(this).find('.breed-option').show();
+                            } else {
+                                $(this).hide();
+                                $(this).find('.breed-option').hide();
+                            }
+                        });
+
+                        breedCategoryInfo.text('This farm\'s first flock is ' + category + '. Only ' + category + ' breeds can be selected.').show();
+                        breedSelect.val('');
+                    }
+                },
+                error: function() {
+                    // On error, show all breeds
+                    $('.breed-optgroup').show();
+                    $('.breed-option').show();
+                    breedCategoryInfo.hide();
+                }
+            });
+        }
+
         // Initialize hangar rows as a list
         function initializeHangarRows(hangars) {
             var container = $('#hangars_allocation_container');
@@ -212,8 +272,12 @@
             hangars.forEach(function(hangar) {
                 var quantity = existingAllocations[hangar.id] || '';
                 var isDisabled = hangar.disabled || false;
+                var allocatedQty = hangar.allocated_quantity || '';
+                // For disabled hangars, show the existing allocation quantity; for enabled, show existing or empty
+                var displayQty = isDisabled ? (allocatedQty !== '' ? allocatedQty : '') : quantity;
                 var disabledClass = isDisabled ? 'opacity-50' : '';
                 var disabledBadge = isDisabled ? '<span class="badge badge-warning ml-2" title="This hangar already has an active flock">Already Allocated</span>' : '';
+                var breedDisplay = hangar.breed ? ' - ' + hangar.breed : '';
 
                 var html = `
                     <div class="d-flex align-items-center justify-content-between p-3 ${disabledClass}" style="border-bottom: 1px solid #dee2e6; ${isDisabled ? 'background-color: #f8f9fa;' : ''}">
@@ -222,12 +286,12 @@
                                 <i class="fe fe-home" style="font-size: 18px; color: ${isDisabled ? '#ccc' : '#007bff'};"></i>
                             </div>
                             <div>
-                                <p class="mb-0 font-weight-600" style="color: #212529;">${hangar.name}${disabledBadge}</p>
+                                <p class="mb-0 font-weight-600" style="color: #212529;">${hangar.name}${breedDisplay}${disabledBadge}</p>
                             </div>
                         </div>
                         <div class="ml-3" style="min-width: 150px;">
                             <input type="number" class="form-control hangar-quantity-input" name="hangar_qty[${hangar.id}]"
-                                placeholder="Qty" value="${quantity}" min="0" data-hangar-id="${hangar.id}"
+                                placeholder="Qty" value="${displayQty}" min="0" data-hangar-id="${hangar.id}"
                                 ${isDisabled ? 'disabled' : ''} />
                         </div>
                     </div>
@@ -269,10 +333,11 @@
         @endif
         */
 
-        // When farm changes, reload hangars
+        // When farm changes, reload hangars and filter breed dropdown
         $('#farm_id').on('change', function() {
             var farmId = $(this).val();
             loadHangarsForFarm(farmId);
+            filterBreedDropdown(farmId);
             // COMMENTED - NOT USING AUTO-GENERATION
             // updateFlockName(farmId);
         });
@@ -315,13 +380,20 @@
         }
         */
 
-        // On page load (edit mode), load hangars and show existing name
+        // On page load (edit mode), load hangars and filter breed dropdown
         @if(isset($flock))
             var farmId = $('#farm_id').val();
             if (farmId) {
                 loadHangarsForFarm(farmId);
+                filterBreedDropdown(farmId);
                 // COMMENTED - USER NOW PROVIDES FLOCK NAME
                 // $('#flock_name').val('{{ $flock->name }}');
+            }
+        @else
+            // On create mode, if a farm is pre-selected, filter breed dropdown
+            var farmId = $('#farm_id').val();
+            if (farmId) {
+                filterBreedDropdown(farmId);
             }
         @endif
 
@@ -331,6 +403,11 @@
             var hasError = false;
 
             $('.hangar-quantity-input').each(function() {
+                // Skip disabled fields (already allocated hangars - for reference only)
+                if ($(this).is(':disabled')) {
+                    return;
+                }
+
                 var hangarId = $(this).data('hangar-id');
                 var quantity = parseInt($(this).val()) || 0;
 

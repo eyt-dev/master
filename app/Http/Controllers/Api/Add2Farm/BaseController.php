@@ -151,7 +151,7 @@ class BaseController extends Controller
     protected function getHangarRemainingFeed($hangarId)
     {
         $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $hangarId)
-            ->byMaterialType('pelleted feed')
+            ->byMaterialType()
             ->sum('quantity') ?? 0;
 
         $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $hangarId)

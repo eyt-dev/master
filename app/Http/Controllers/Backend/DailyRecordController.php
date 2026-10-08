@@ -155,7 +155,7 @@ class DailyRecordController extends Controller
     private function getAvailableFeedFIFO($hangarId, $farmId)
     {
         $totalStock = MaterialStockHangar::where('hangar_id', $hangarId)
-            ->byMaterialType('pelleted feed')
+            ->byMaterialType()
             ->sum('quantity') ?? 0;
 
         $totalConsumed = DailyRecord::where('hangar_id', $hangarId)
@@ -298,7 +298,7 @@ class DailyRecordController extends Controller
 
         $hangarsData = $flockHangars->map(function($allocation) {
             $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $allocation->hangar_id)
-                ->byMaterialType('pelleted feed')
+                ->byMaterialType()
                 ->sum('quantity') ?? 0;
 
             $totalConsumed = DailyRecord::where('hangar_id', $allocation->hangar_id)

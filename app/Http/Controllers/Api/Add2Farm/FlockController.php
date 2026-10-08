@@ -1370,7 +1370,7 @@ class FlockController extends BaseController
         if (!empty($hangarIds)) {
             foreach ($hangarIds as $hangarId) {
                 $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $hangarId)
-                    ->byMaterialType('pelleted feed')
+                    ->byMaterialType()
                     ->sum('quantity') ?? 0;
 
                 $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $hangarId)

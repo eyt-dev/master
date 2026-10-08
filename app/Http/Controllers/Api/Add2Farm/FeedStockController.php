@@ -57,7 +57,7 @@ class FeedStockController extends BaseController
             ->get()
             ->map(function ($hangar) {
                 $remaining = MaterialStockHangar::where('hangar_id', $hangar->id)
-                    ->byMaterialType('pelleted feed')
+                    ->byMaterialType()
                     ->sum('remaining_quantity') ?? 0;
 
                 return [

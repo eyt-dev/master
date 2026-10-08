@@ -1126,7 +1126,7 @@ class DailyRecordController extends BaseController
         $remainingQty = 0;
         foreach ($farmHangars as $hangarId) {
             $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $hangarId)
-                ->byMaterialType('pelleted feed')
+                ->byMaterialType()
                 ->sum('quantity') ?? 0;
 
             $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $hangarId)
@@ -1179,7 +1179,7 @@ class DailyRecordController extends BaseController
         $remainingQty = 0;
         foreach ($farmHangars as $hangarId) {
             $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $hangarId)
-                ->byMaterialType('pelleted feed')
+                ->byMaterialType()
                 ->sum('quantity') ?? 0;
 
             $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $hangarId)
@@ -1244,7 +1244,7 @@ class DailyRecordController extends BaseController
 
             // Get remaining quantity for this hangar
             $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $firstHangarRecord->hangar_id)
-                ->byMaterialType('pelleted feed')
+                ->byMaterialType()
                 ->sum('quantity') ?? 0;
 
             $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $firstHangarRecord->hangar_id)
@@ -1338,7 +1338,7 @@ class DailyRecordController extends BaseController
         $totalRemainingQty = 0;
         foreach ($farmHangars as $hangarId) {
             $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $hangarId)
-                ->byMaterialType('pelleted feed')
+                ->byMaterialType()
                 ->sum('quantity') ?? 0;
 
             $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $hangarId)
@@ -1351,7 +1351,7 @@ class DailyRecordController extends BaseController
         $hangars = $records->map(function ($record) use ($isBroiler) {
             // Get remaining quantity for this specific hangar
             $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $record->hangar_id)
-                ->byMaterialType('pelleted feed')
+                ->byMaterialType()
                 ->sum('quantity') ?? 0;
 
             $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $record->hangar_id)
@@ -1447,7 +1447,7 @@ class DailyRecordController extends BaseController
             $totalMortality = $hangarRecords->sum('mortality');
 
             $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $firstHangarRecord->hangar_id)
-                ->byMaterialType('pelleted feed')
+                ->byMaterialType()
                 ->sum('quantity') ?? 0;
 
             $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $firstHangarRecord->hangar_id)
@@ -1536,7 +1536,7 @@ class DailyRecordController extends BaseController
             $totalMortality = $hangarRecords->sum('mortality');
 
             $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $firstHangarRecord->hangar_id)
-                ->byMaterialType('pelleted feed')
+                ->byMaterialType()
                 ->sum('quantity') ?? 0;
 
             $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $firstHangarRecord->hangar_id)
@@ -1621,7 +1621,7 @@ class DailyRecordController extends BaseController
     private function getAvailableFeedFIFO($hangarId, $farmId)
     {
         $totalStock = MaterialStockHangar::where('hangar_id', $hangarId)
-            ->byMaterialType('pelleted feed')
+            ->byMaterialType()
             ->sum('quantity') ?? 0;
 
         $totalConsumed = DailyRecord::where('hangar_id', $hangarId)

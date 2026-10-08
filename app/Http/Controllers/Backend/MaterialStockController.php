@@ -82,7 +82,7 @@ class MaterialStockController extends Controller
 
                     foreach ($hangarIds as $hangarId) {
                         $totalStock = MaterialStockHangar::where('hangar_id', $hangarId)
-                            ->byMaterialType('pelleted feed')
+                            ->byMaterialType()
                             ->sum('quantity') ?? 0;
 
                         $totalConsumed = DailyRecord::where('hangar_id', $hangarId)
@@ -608,7 +608,7 @@ class MaterialStockController extends Controller
     private function getHangarRemainingFeed($hangarId)
     {
         $totalStock = MaterialStockHangar::where('hangar_id', $hangarId)
-            ->byMaterialType('pelleted feed')
+            ->byMaterialType()
             ->sum('quantity') ?? 0;
 
         $totalConsumed = DailyRecord::where('hangar_id', $hangarId)

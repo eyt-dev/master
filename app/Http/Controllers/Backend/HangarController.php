@@ -49,7 +49,7 @@ class HangarController extends Controller
                 })
                 ->addColumn('remaining_feed', function($row) {
                     $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $row->id)
-                        ->byMaterialType('pelleted feed')
+                        ->byMaterialType()
                         ->sum('quantity') ?? 0;
 
                     $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $row->id)

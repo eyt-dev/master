@@ -760,7 +760,7 @@ class FarmController extends BaseController
 
         $hangars = $farm->hangars->map(function ($hangar) {
             $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $hangar->id)
-                ->byMaterialType('pelleted feed')
+                ->byMaterialType()
                 ->sum('quantity') ?? 0;
 
             $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $hangar->id)
@@ -783,7 +783,7 @@ class FarmController extends BaseController
         $totalRemainingFeed = 0;
         foreach ($farm->hangars as $hangar) {
             $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $hangar->id)
-                ->byMaterialType('pelleted feed')
+                ->byMaterialType()
                 ->sum('quantity') ?? 0;
 
             $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $hangar->id)

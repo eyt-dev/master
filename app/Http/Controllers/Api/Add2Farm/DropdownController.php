@@ -191,54 +191,67 @@ class DropdownController extends BaseController
     /**
      * Get chicken breeds for dropdown
      *
-     * Returns available chicken breeds organized by category (Broiler and Layer).
+     * Returns available chicken breeds, optionally filtered by category (Broiler or Layer).
+     * If category is provided, returns only breeds for that category as a flat array.
+     * If category is not provided, returns all breeds organized by category.
      * Used for flock creation form.
      *
      * @authenticated
+     * @queryParam category string Optional. Filter by category: Broiler or Layer
      *
      * @response 200 {
      *   "success": true,
      *   "message": "Breeds retrieved successfully.",
      *   "data": [
-     *     {
-     *       "category": "Broiler",
-     *       "breeds": [
-     *         "Ross 308",
-     *         "Cobb 500"
-     *       ]
-     *     },
-     *     {
-     *       "category": "Layer",
-     *       "breeds": [
-     *         "Lohmann Brown",
-     *         "Lohmann White"
-     *       ]
-     *     }
+     *     "Ross 308",
+     *     "Cobb 500"
      *   ]
+     * }
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Invalid category"
      * }
      * @response 401 {
      *   "success": false,
      *   "message": "Unauthenticated"
      * }
      */
-    public function breeds()
+    public function breeds(Request $request)
     {
-        $breeds = [
-            [
-                'category' => 'Broiler',
-                'breeds' => [
-                    'Ross 308',
-                    'Cobb 500',
-                ],
+        $allBreeds = [
+            'Broiler' => [
+                'Ross 308',
+                'Cobb 500',
             ],
-            [
-                'category' => 'Layer',
-                'breeds' => [
-                    'Lohmann Brown',
-                    'Lohmann White',
-                ],
+            'Layer' => [
+                'Lohmann Brown',
+                'Lohmann White',
             ],
         ];
+
+        $category = $request->input('category');
+
+        if ($category) {
+            if (!isset($allBreeds[$category])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid category',
+                ], 400);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $this->translationService->get('breeds_retrieved_successfully'),
+                'data' => $allBreeds[$category],
+            ], 200);
+        }
+
+        $breeds = array_map(function ($category, $items) {
+            return [
+                'category' => $category,
+                'breeds' => $items,
+            ];
+        }, array_keys($allBreeds), array_values($allBreeds));
 
         return response()->json([
             'success' => true,

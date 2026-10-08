@@ -503,7 +503,7 @@ class FeedStockController extends BaseController
             'name' => $record->name,
             'quantity' => $this->formatDecimal($record->quantity),
             'supplier_id' => $record->supplier_id,
-            'supplier_name' => $record->supplier->name,
+            'supplier_name' => $record->supplier?->name ?? 'N/A',
             'hangar_allocations' => $record->materialStockHangarAllocations->map(fn($a) => [
                 'hangar_id' => $a->hangar_id,
                 'hangar_name' => $a->hangar->name,

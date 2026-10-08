@@ -656,6 +656,7 @@ class FlockController extends BaseController
             $totalMortality = $hangarDailyRecords->sum('mortality');
             $mortalityRate = $allocation->quantity > 0 ? ($totalMortality / $allocation->quantity) * 100 : 0;
             $feedConsumed = round($hangarDailyRecords->sum('feed_kg'), 2);
+            $feedPerBird = $allocation->quantity > 0 ? round($feedConsumed / $allocation->quantity, 2) : 0;
             $avgWeight = $hangarDailyRecords->avg('chicks_weight');
 
             // Calculate live birds for this hangar
@@ -671,6 +672,7 @@ class FlockController extends BaseController
                 'live_birds'    => $liveBirds,
                 'mortality_rate' => round($mortalityRate, 2),
                 'feed_consumed' => $feedConsumed,
+                'feed_per_bird' => $feedPerBird,
                 'avg_weight'    => $avgWeight ? round($avgWeight, 2) : 0,
             ];
         })->toArray();
@@ -706,6 +708,7 @@ class FlockController extends BaseController
             'mortality' => $totalMortality,
             'mortality_rate' => round($mortalityRate, 2) . '%',
             'feed_consumed' => DecimalHelper::formatEuropean($totalFeedKg, 2) . ' kg',
+            'feed_per_bird' => $totalBird > 0 ? round($totalFeedKg / $totalBird, 2) : 0,
             'avg_weight' => $avgWeight ? round($avgWeight, 2) . ' kg' : 'N/A',
             'chart_data' => $chartData,
         ];
@@ -1283,6 +1286,7 @@ class FlockController extends BaseController
             $totalMortality = $hangarDailyRecords->sum('mortality');
             $mortalityRate = $allocation->quantity > 0 ? ($totalMortality / $allocation->quantity) * 100 : 0;
             $feedConsumed = round($hangarDailyRecords->sum('feed_kg'), 2);
+            $feedPerBird = $allocation->quantity > 0 ? round($feedConsumed / $allocation->quantity, 2) : 0;
             $avgWeight = $hangarDailyRecords->avg('chicks_weight');
 
             // Calculate live birds for this hangar
@@ -1298,6 +1302,7 @@ class FlockController extends BaseController
                 'live_birds'    => $liveBirds,
                 'mortality_rate' => round($mortalityRate, 2),
                 'feed_consumed' => $feedConsumed,
+                'feed_per_bird' => $feedPerBird,
                 'avg_weight'    => $avgWeight ? round($avgWeight, 2) : 0,
             ];
         })->toArray();

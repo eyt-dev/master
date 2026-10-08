@@ -13,6 +13,7 @@ use App\Models\Hangar;
 use App\Models\MaterialStockHangar;
 use App\Models\MaterialName;
 use App\Models\DailyRecord;
+use App\Models\BreedCategoryMaterialType;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -268,29 +269,20 @@ class MaterialStockController extends Controller
             return response()->json([]);
         }
 
-        // Filter materials based on breed category
+        // Get mapped material types for this breed category from the mapping table
+        $mappedTypeIds = BreedCategoryMaterialType::getMaterialTypeIdsForBreed($breedCategory);
+
+        // If no mappings exist, return empty result
+        if (empty($mappedTypeIds)) {
+            return response()->json([]);
+        }
+
+        // Filter materials based on mapped material types
         $query = MaterialName::with('materialType')->select('id', 'name', 'material_type_id');
 
-        $query->where(function ($q) use ($breedCategory) {
-            // Feed Ingredients are always included (material_type_id = 3)
-            $q->where('material_type_id', 3);
-
-            if ($breedCategory === 'Broiler') {
-                // Broiler: include Pelleted Feed (id=1) and Broiler Premix
-                $q->orWhere('material_type_id', 1); // Pelleted Feed
-                $q->orWhere(function ($subQ) {
-                    $subQ->where('material_type_id', 4) // Premix
-                         ->whereRaw("LOWER(name) LIKE '%broiler%'");
-                });
-            } elseif ($breedCategory === 'Layer') {
-                // Layer: include Mash Feed (id=2) and Layer Premix
-                $q->orWhere('material_type_id', 2); // Mash Feed
-                $q->orWhere(function ($subQ) {
-                    $subQ->where('material_type_id', 4) // Premix
-                         ->whereRaw("LOWER(name) LIKE '%layer%'");
-                });
-            }
-        });
+       
+        $query->whereIn('material_type_id', $mappedTypeIds);
+        
 
         $materials = $query->orderBy('name')->get()->map(function ($material) {
             return [

@@ -345,9 +345,7 @@ class DropdownController extends BaseController
             }
 
             // Get mapped material types for this breed category
-            $mappedTypeIds = BreedCategoryMaterialType::where('breed_category', $breedCategory)
-                ->pluck('material_type_id')
-                ->toArray();
+            $mappedTypeIds = BreedCategoryMaterialType::getMaterialTypeIdsForBreed($breedCategory);
 
             // If no mappings exist, return empty result
             if (empty($mappedTypeIds)) {

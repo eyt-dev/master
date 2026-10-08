@@ -279,7 +279,7 @@ class FlockController extends BaseController
      * Get farm hangars with allocation status
      *
      * Get all hangars for a farm with their allocation status in existing flocks.
-     * Shows which hangars are already allocated and their quantities.
+     * Shows which hangars are already allocated and their quantities along with breed name.
      *
      * @authenticated
      * @urlParam farm_id integer required The farm ID. Example: 1
@@ -294,18 +294,22 @@ class FlockController extends BaseController
      *       {
      *         "hangar_id": 1,
      *         "hangar_name": "Farm1-Hangar1",
+     *         "status": "Active",
      *         "is_allocated": true,
      *         "allocated_quantity": 10,
      *         "allocated_to_flock_id": 1,
-     *         "allocated_to_flock_name": "Flock1"
+     *         "allocated_to_flock_name": "Flock1",
+     *         "breed_name": "Cobb 500"
      *       },
      *       {
      *         "hangar_id": 2,
      *         "hangar_name": "Farm1-Hangar2",
+     *         "status": "Inactive",
      *         "is_allocated": false,
      *         "allocated_quantity": 0,
      *         "allocated_to_flock_id": null,
-     *         "allocated_to_flock_name": null
+     *         "allocated_to_flock_name": null,
+     *         "breed_name": null
      *       }
      *     ]
      *   }
@@ -341,6 +345,7 @@ class FlockController extends BaseController
 
         $data = $hangars->map(function ($hangar) use ($allocations) {
             $allocation = $allocations->get($hangar->id);
+            $breedName = $allocation ? $this->extractBreedName($allocation->flock->breed) : null;
 
             return [
                 'hangar_id' => $hangar->id,
@@ -350,6 +355,7 @@ class FlockController extends BaseController
                 'allocated_quantity' => $allocation?->quantity ?? 0,
                 'allocated_to_flock_id' => $allocation?->flock?->id ?? null,
                 'allocated_to_flock_name' => $allocation?->flock?->name ?? null,
+                'breed_name' => $breedName,
             ];
         });
 

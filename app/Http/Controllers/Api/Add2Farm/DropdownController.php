@@ -22,6 +22,7 @@ class DropdownController extends BaseController
      * Get farms for dropdown
      *
      * Fetch list of farms created by the logged-in user with id and name only for dropdown/select usage.
+     * Also includes the breed category from the farm's first flock.
      * - Type 2 (Farm Owner) sees: farms they created
      * - Type 3 (Supervisor) sees: farms where they are assigned
      *
@@ -33,11 +34,13 @@ class DropdownController extends BaseController
      *   "data": [
      *     {
      *       "id": 1,
-     *       "name": "Main Farm"
+     *       "name": "Main Farm",
+     *       "breed": "Broiler"
      *     },
      *     {
      *       "id": 2,
-     *       "name": "Secondary Farm"
+     *       "name": "Secondary Farm",
+     *       "breed": "Layer"
      *     }
      *   ]
      * }
@@ -62,13 +65,27 @@ class DropdownController extends BaseController
               ->orWhere('assigned_to', $user->id);
         })
             ->select('id', 'name')
+            ->with(['flocks' => function ($query) {
+                $query->oldest('flocks.created_at')->select('id', 'farm_id', 'breed');
+            }])
             ->orderBy('name')
             ->get();
+
+        $data = $farms->map(function ($farm) {
+            $firstFlock = $farm->flocks->first();
+            $breedCategory = $firstFlock ? $this->extractBreedType($firstFlock->breed) : null;
+
+            return [
+                'id' => $farm->id,
+                'name' => $farm->name,
+                'breed' => $breedCategory,
+            ];
+        });
 
         return response()->json([
             'success' => true,
             'message' => $this->translationService->get('farms_retrieved_successfully'),
-            'data' => $farms,
+            'data' => $data,
         ], 200);
     }
 

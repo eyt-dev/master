@@ -165,25 +165,25 @@ class FlockController extends BaseController
         if ($completionStatus !== 'all') {
             $data = $data->filter(function ($flock) use ($completionStatus) {
                 if ($completionStatus === 'completed') {
-                    return $flock['remaining_birds'] == 0;
+                    return $flock['alive_birds'] == 0;
                 } elseif ($completionStatus === 'active') {
-                    return $flock['remaining_birds'] > 0;
+                    return $flock['alive_birds'] > 0;
                 }
                 return true;
             })->values();
         }
 
         $totalFlocks = $data->count();
-        $totalRemainingBirds = $data->sum('remaining_birds');
+        $totalRemainingBirds = $data->sum('alive_birds');
 
         // Count completed flocks (flocks with remaining_birds = 0)
         $completedFlocks = $data->filter(function ($flock) {
-            return $flock['remaining_birds'] == 0;
+            return $flock['alive_birds'] == 0;
         })->count();
 
         // Calculate total birds in active flocks
         $totalBirdsActiveFlocks = $data->filter(function ($flock) {
-            return $flock['remaining_birds'] > 0;
+            return $flock['alive_birds'] > 0;
         })->sum('total_quantity');
 
         return response()->json([
@@ -402,10 +402,8 @@ class FlockController extends BaseController
      *         "chicks_supplier_name": "Al-Rowad Farm",
      *         "breed": "Broiler,Cobb 500",
      *         "start_date": "2026-05-18",
-     *         "total_quantity": 12500,
-     *         "remaining_birds": 12000,
-     *         "feed_consumed": 250.50,
-     *         "feed_remaining": 500.00,
+     *         "total_birds": 12500,
+     *         "alive_birds": 12000,
      *         "created_by": 1,
      *         "created_by_name": "Admin Name",
      *         "created_at": "2026-08-07T10:30:00Z",
@@ -501,25 +499,25 @@ class FlockController extends BaseController
         if ($completionStatus !== 'all') {
             $flocks->setCollection($flocks->getCollection()->filter(function ($flock) use ($completionStatus) {
                 if ($completionStatus === 'completed') {
-                    return $flock['remaining_birds'] == 0;
+                    return $flock['alive_birds'] == 0;
                 } elseif ($completionStatus === 'active') {
-                    return $flock['remaining_birds'] > 0;
+                    return $flock['alive_birds'] > 0;
                 }
                 return true;
             })->values());
         }
 
         $totalFlocks = $flocks->count();
-        $totalRemainingBirds = $flocks->sum('remaining_birds');
+        $totalRemainingBirds = $flocks->sum('alive_birds');
 
         // Count completed flocks (flocks with remaining_birds = 0)
         $completedFlocks = $flocks->filter(function ($flock) {
-            return $flock['remaining_birds'] == 0;
+            return $flock['alive_birds'] == 0;
         })->count();
 
         // Calculate total birds in active flocks
         $totalBirdsActiveFlocks = $flocks->filter(function ($flock) {
-            return $flock['remaining_birds'] > 0;
+            return $flock['alive_birds'] > 0;
         })->sum('total_quantity');
 
         return response()->json([
@@ -708,8 +706,8 @@ class FlockController extends BaseController
             'end_date' => $isEnded ? $latestFlockEnd->sale_date->format('Y-m-d') : null,
             'status' => $isEnded ? 'Completed' : 'Active',
             'age' => $age,
-            'total_quantity' => $flock->total_quantity,
-            'total_birds' => $totalBird,
+            'total_birds' => $flock->total_quantity,
+            'alive_birds' => $liveBirds,
             'hangar_allocations' => $hangarAllocations,
             'assignment' => $assignment,
             'created_by' => $flock->created_by,

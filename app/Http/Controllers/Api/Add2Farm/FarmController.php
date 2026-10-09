@@ -829,8 +829,8 @@ class FarmController extends BaseController
             'status'                => $hasFlocks ? 'Active' : 'Inactive',
             'hangars_count'         => $totalHangars,
             'area'                  => $totalArea,
-            'birds'                 => $totalBirds,
-            'total_remaining_feed'  => $this->formatDecimal($totalRemainingFeed),
+            'total_birds'           => $totalBirds,
+            'remaining_feed'        => $this->formatDecimal($totalRemainingFeed),
             'hangars'               => $hangars,
             'created_at'            => $farm->created_at,
         ];

@@ -669,15 +669,22 @@ class FlockController extends BaseController
             $liveBirds = $allocation->quantity - ($lastHarvestRecord?->total_birds_harvested ?? 0) - $totalMortality;
             $liveBirds = max(0, $liveBirds);
 
+            // Calculate feed remaining for this hangar
+            $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $allocation->hangar_id)
+                ->byMaterialType()
+                ->sum('quantity') ?? 0;
+            $feedRemaining = max(0, round($totalStock - $feedConsumed, 2));
+
             return [
                 'hangar_id'     => $allocation->hangar_id,
                 'hangar_name'   => $allocation->hangar?->name,
                 'quantity'      => $allocation->quantity,
                 'area_sqm'      => $allocation->hangar?->area_sqm,
                 'status'        => $allocation->hangar?->status,
-                'live_birds'    => $liveBirds,
+                'alive_birds'    => $liveBirds,
                 'mortality_rate' => round($mortalityRate, 2),
-                'feed_consumed' => $feedConsumed,
+                'feed' => $feedConsumed,
+                'remaining_feed' => $feedRemaining,
                 'feed_per_bird' => $feedPerBird,
                 'avg_weight'    => $avgWeight ? round($avgWeight, 2) : 0,
             ];
@@ -702,7 +709,7 @@ class FlockController extends BaseController
             'status' => $isEnded ? 'Completed' : 'Active',
             'age' => $age,
             'total_quantity' => $flock->total_quantity,
-            'total_bird' => $totalBird,
+            'total_birds' => $totalBird,
             'hangar_allocations' => $hangarAllocations,
             'assignment' => $assignment,
             'created_by' => $flock->created_by,
@@ -710,10 +717,9 @@ class FlockController extends BaseController
             'created_at' => $flock->created_at,
             'updated_at' => $flock->updated_at,
             'flock-condition' => $isBroiler ? ($isEnded ? 'broiler-ended' : 'broiler-active') : ($isEnded ? 'layer-ended' : 'layer-active'),
-            'live_birds' => $liveBirds,
+            'alive_birds' => $liveBirds,
             'mortality' => $totalMortality,
             'mortality_rate' => round($mortalityRate, 2) . '%',
-            'feed_consumed' => DecimalHelper::formatEuropean($totalFeedKg, 2) . ' kg',
             'feed_per_bird' => $totalBird > 0 ? round($totalFeedKg / $totalBird, 2) : 0,
             'avg_weight' => $avgWeight ? round($avgWeight, 2) . ' kg' : 'N/A',
             'chart_data' => $chartData,
@@ -1223,7 +1229,7 @@ class FlockController extends BaseController
                 $performanceTrend[] = [
                     'week' => 'Week ' . $week,
                     'avg_production' => round($avgProd, 2),
-                    'feed_intake' => round($weekFeed, 2),
+                    'feed' => round($weekFeed, 2),
                     'mortality' => round($mortalityPct, 2),
                 ];
             } else {
@@ -1299,15 +1305,22 @@ class FlockController extends BaseController
             $liveBirds = $allocation->quantity - ($lastHarvestRecord?->total_birds_harvested ?? 0) - $totalMortality;
             $liveBirds = max(0, $liveBirds);
 
+            // Calculate feed remaining for this hangar
+            $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $allocation->hangar_id)
+                ->byMaterialType()
+                ->sum('quantity') ?? 0;
+            $feedRemaining = max(0, round($totalStock - $feedConsumed, 2));
+
             return [
                 'hangar_id'     => $allocation->hangar_id,
                 'hangar_name'   => $allocation->hangar?->name,
                 'quantity'      => $allocation->quantity,
                 'area_sqm'      => $allocation->hangar?->area_sqm,
                 'status'        => $allocation->hangar?->status,
-                'live_birds'    => $liveBirds,
+                'alive_birds'    => $liveBirds,
                 'mortality_rate' => round($mortalityRate, 2),
-                'feed_consumed' => $feedConsumed,
+                'feed' => $feedConsumed,
+                'remaining_feed' => $feedRemaining,
                 'feed_per_bird' => $feedPerBird,
                 'avg_weight'    => $avgWeight ? round($avgWeight, 2) : 0,
             ];
@@ -1367,26 +1380,6 @@ class FlockController extends BaseController
             $fcr = $totalEggs > 0 ? round($totalFeedKg / $totalEggs, 2) : 0;
         }
 
-        // Get hangar IDs for this flock
-        $hangarIds = $flock->flockHangarAllocations->pluck('hangar_id')->toArray();
-
-        // Calculate total feed remaining from all hangars in this flock
-        // Remaining = Total Feed Stock - Total Daily Record Consumption
-        $feedRemaining = 0;
-        if (!empty($hangarIds)) {
-            foreach ($hangarIds as $hangarId) {
-                $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $hangarId)
-                    ->byMaterialType()
-                    ->sum('quantity') ?? 0;
-
-                $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $hangarId)
-                    ->sum('feed_kg') ?? 0;
-
-                $feedRemaining += max(0, $totalStock - $totalConsumed);
-            }
-            $feedRemaining = round($feedRemaining, 2);
-        }
-
         // Build base response
         $response = [
             'id'                    => $flock->id,
@@ -1405,8 +1398,6 @@ class FlockController extends BaseController
             'is_completed'          => $remainingBirds == 0,
             'mortality_rate'        => round($mortalityRate, 2) . '%',
             'fcr'                   => $fcr,
-            'feed_consumed'         => $feedConsumed,
-            'feed_remaining'        => $feedRemaining,
             'hangar_allocations'    => $hangarAllocations,
             'assignment'            => $assignment,
             'created_by'            => $flock->created_by,

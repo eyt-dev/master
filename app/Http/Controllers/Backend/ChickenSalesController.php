@@ -138,7 +138,9 @@ class ChickenSalesController extends Controller
 
         $hangars = Hangar::whereHas('flocks', function($query) use ($flockId) {
             $query->where('flock_id', $flockId);
-        })->get();
+        })->get()->each(function ($hangar) {
+            $hangar->name = $hangar->label;
+        });
         return response()->json($hangars);
     }
 

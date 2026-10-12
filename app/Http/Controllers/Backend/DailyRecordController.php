@@ -282,12 +282,9 @@ class DailyRecordController extends Controller
             }
         }
 
-        // Get hangars allocated to this flock via FlockHangar (only Active)
+        // Get hangars allocated to this flock via FlockHangar (inactive ones stay, labelled "-Inactive")
         $flockHangars = FlockHangar::where('flock_id', $flockId)
             ->with('hangar')
-            ->whereHas('hangar', function ($q) {
-                $q->where('status', 'Active');
-            })
             ->get();
 
         $mortalities = DailyRecord::where('flock_id', $flockId)
@@ -308,7 +305,7 @@ class DailyRecordController extends Controller
 
             return [
                 'id' => $allocation->hangar->id,
-                'name' => $allocation->hangar->name,
+                'name' => $allocation->hangar->label,
                 'quantity' => $allocation->quantity,
                 'remaining' => DecimalHelper::formatEuropean($remainingFeed, 2)
             ];
@@ -471,7 +468,7 @@ class DailyRecordController extends Controller
             ->map(function($allocation) {
                 return [
                     'id' => $allocation->hangar->id,
-                    'name' => $allocation->hangar->name,
+                    'name' => $allocation->hangar->label,
                     'quantity' => $allocation->quantity
                 ];
             });

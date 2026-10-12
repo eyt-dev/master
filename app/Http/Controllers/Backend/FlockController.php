@@ -81,22 +81,8 @@ class FlockController extends Controller
                         $farmDisplay .= ' (Assigned to: ' . $group['farm']->assignedAdmin->name . ')';
                     }
 
-                    // Calculate total remaining birds by getting the latest remaining_birds for each hangar
-                    $remainingBirds = 0;
-                    foreach ($flock->flockHangarAllocations as $allocation) {
-                        // Get the latest FlockEnd record for this hangar
-                        $lastHarvest = FlockEnd::where('flock_id', $flock->id)
-                            ->where('hangar_id', $allocation->hangar_id)
-                            ->latest()
-                            ->first();
-
-                        // If there's a harvest, use remaining_birds from that, otherwise use allocation quantity
-                        if ($lastHarvest) {
-                            $remainingBirds += $lastHarvest->remaining_birds;
-                        } else {
-                            $remainingBirds += $allocation->quantity;
-                        }
-                    }
+                    // Sale status (Active / Harvesting / Ended) and remaining birds from harvest records
+                    $saleStatus = $flock->saleStatus();
 
                     $rowData = [
                         'id' => $flock->id,
@@ -107,7 +93,8 @@ class FlockController extends Controller
                         'breed' => $flock->breed,
                         'start_date' => $flock->start_date,
                         'birds' => $flock->total_quantity,
-                        'remaining_birds' => $remainingBirds,
+                        'remaining_birds' => $saleStatus['remaining_birds'],
+                        'sale_status' => $saleStatus['status'],
                         'created_by' => $flock->creator->name ?? 'N/A',
                         'created_at' => $flock->created_at,
                     ];
@@ -145,6 +132,10 @@ class FlockController extends Controller
                             <strong>Remaining:</strong> ' . $remaining . '
                             </div>';
                 })
+                ->addColumn('sale_status', function($row) {
+                    $badgeClass = ['Active' => 'badge-secondary', 'Harvesting' => 'badge-warning', 'Ended' => 'badge-success'][$row['sale_status']];
+                    return '<span class="badge ' . $badgeClass . '">' . $row['sale_status'] . '</span>';
+                })
                 ->addColumn('created_by', function($row) {
                     return $row['created_by'];
                 })
@@ -165,7 +156,7 @@ class FlockController extends Controller
                          .'<a class="delete-flock btn btn-sm btn-danger" data-id="'.$row['id'].'" title="Delete"><i class="fa fa-trash"></i></a>';
                 })
                 ->addIndexColumn()
-                ->rawColumns(['action', 'breed', 'birds_summary'])
+                ->rawColumns(['action', 'breed', 'birds_summary', 'sale_status'])
                 ->make(true);
         }
 
@@ -207,6 +198,12 @@ class FlockController extends Controller
             }
         }
 
+        // When editing the only flock of the farm, it is free to switch to any breed category
+        $editingFlockId = request()->query('flock_id');
+        if ($editingFlockId && !Flock::where('farm_id', $farmId)->where('id', '!=', $editingFlockId)->exists()) {
+            return response()->json(['category' => null]);
+        }
+
         // Get the first flock for this farm (oldest by created_at)
         $firstFlock = Flock::where('farm_id', $farmId)
             ->oldest('created_at')
@@ -241,7 +238,7 @@ class FlockController extends Controller
 
         // Query hangars for the selected farm
         $hangars = Hangar::where('farm_id', $farmId)
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'status']);
 
         // Get flock ID from query parameter if editing
         $flockId = request()->query('flock_id');
@@ -265,7 +262,7 @@ class FlockController extends Controller
 
             return [
                 'id' => $hangar->id,
-                'name' => $hangar->name,
+                'name' => $hangar->label,
                 'disabled' => $hasValidAllocation ? true : false,
                 'allocated' => $hasValidAllocation ? true : false,
                 'breed' => $breed,
@@ -605,7 +602,7 @@ class FlockController extends Controller
         }
 
         // If editing and this is the first flock, don't enforce category (it sets the category)
-        if ($editingFlockId && $firstFlock->id === $editingFlockId) {
+        if ($editingFlockId && $firstFlock->id === (int) $editingFlockId) {
             return;
         }
 

@@ -68,4 +68,10 @@ class Hangar extends Model
     {
         return $this->attributes['status'] ?? 'Inactive';
     }
+
+    // Name shown in dropdowns; inactive hangars get a "-Inactive" suffix (e.g. Hangar 1-Inactive)
+    public function getLabelAttribute(): string
+    {
+        return $this->name . ($this->status === 'Inactive' ? '-Inactive' : '');
+    }
 }

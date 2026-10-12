@@ -671,7 +671,7 @@ class DailyRecordController extends BaseController
      *     "flock_id": 47,
      *     "flock_name": "Flock1",
      *     "flock_age": "Day 4",
-     *     "flock_status": "Completed",
+     *     "flock_status": "Ended",
      *     "feed_qty": 931.25,
      *     "eggs_tray_30": 25,
      *     "eggs_count": 750,
@@ -1030,10 +1030,11 @@ class DailyRecordController extends BaseController
         $flockAge = null;
         $flockStatus = null;
         if ($record->flock) {
-            $endDate = $record->flock->flockEnds()->latest('sale_date')->first()?->sale_date;
+            $saleStatus = $record->flock->saleStatus();
+            $endDate = $saleStatus['end_date'];
             $breedType = $this->extractBreedType($record->flock->breed);
             $flockAge = $this->calculateFlockAge($record->flock->start_date, $endDate, $breedType);
-            $flockStatus = $endDate ? 'Completed' : 'Active';
+            $flockStatus = $saleStatus['status'];
         }
 
         $data = [
@@ -1079,10 +1080,11 @@ class DailyRecordController extends BaseController
         $flockAge = null;
         $flockStatus = null;
         if ($flock) {
-            $endDate = $flock->flockEnds()->latest('sale_date')->first()?->sale_date;
+            $saleStatus = $flock->saleStatus();
+            $endDate = $saleStatus['end_date'];
             $breedType = $this->extractBreedType($flock->breed);
             $flockAge = $this->calculateFlockAge($flock->start_date, $endDate, $breedType);
-            $flockStatus = $endDate ? 'Completed' : 'Active';
+            $flockStatus = $saleStatus['status'];
         }
 
         return [
@@ -1115,10 +1117,11 @@ class DailyRecordController extends BaseController
         $flockAge = null;
         $flockStatus = null;
         if ($flock) {
-            $endDate = $flock->flockEnds()->latest('sale_date')->first()?->sale_date;
+            $saleStatus = $flock->saleStatus();
+            $endDate = $saleStatus['end_date'];
             $breedType = $this->extractBreedType($flock->breed);
             $flockAge = $this->calculateFlockAge($flock->start_date, $endDate, $breedType);
-            $flockStatus = $endDate ? 'Completed' : 'Active';
+            $flockStatus = $saleStatus['status'];
         }
 
         // Get remaining quantities for all hangars in this farm
@@ -1168,10 +1171,11 @@ class DailyRecordController extends BaseController
         $flockAge = null;
         $flockStatus = null;
         if ($flock) {
-            $endDate = $flock->flockEnds()->latest('sale_date')->first()?->sale_date;
+            $saleStatus = $flock->saleStatus();
+            $endDate = $saleStatus['end_date'];
             $breedType = $this->extractBreedType($flock->breed);
             $flockAge = $this->calculateFlockAge($flock->start_date, $endDate, $breedType);
-            $flockStatus = $endDate ? 'Completed' : 'Active';
+            $flockStatus = $saleStatus['status'];
         }
 
         // Get remaining quantities for all hangars in this farm
@@ -1227,9 +1231,10 @@ class DailyRecordController extends BaseController
         $flockAge = null;
         $flockStatus = null;
         if ($flock) {
-            $endDate = $flock->flockEnds()->latest('sale_date')->first()?->sale_date;
+            $saleStatus = $flock->saleStatus();
+            $endDate = $saleStatus['end_date'];
             $flockAge = $this->calculateFlockAge($flock->start_date, $endDate, $breedType);
-            $flockStatus = $endDate ? 'Completed' : 'Active';
+            $flockStatus = $saleStatus['status'];
         }
 
         // Group records by hangar and format hangar details
@@ -1324,9 +1329,10 @@ class DailyRecordController extends BaseController
         $flockAge = null;
         $flockStatus = null;
         if ($flock) {
-            $endDate = $flock->flockEnds()->latest('sale_date')->first()?->sale_date;
+            $saleStatus = $flock->saleStatus();
+            $endDate = $saleStatus['end_date'];
             $flockAge = $this->calculateFlockAge($flock->start_date, $endDate, $breedType);
-            $flockStatus = $endDate ? 'Completed' : 'Active';
+            $flockStatus = $saleStatus['status'];
         }
 
         // Calculate totals
@@ -1431,9 +1437,10 @@ class DailyRecordController extends BaseController
         $flockAge = null;
         $flockStatus = null;
         if ($flock) {
-            $endDate = $flock->flockEnds()->latest('sale_date')->first()?->sale_date;
+            $saleStatus = $flock->saleStatus();
+            $endDate = $saleStatus['end_date'];
             $flockAge = $this->calculateFlockAge($flock->start_date, $endDate, $breedType);
-            $flockStatus = $endDate ? 'Completed' : 'Active';
+            $flockStatus = $saleStatus['status'];
         }
 
         // Group records by hangar and format hangar details
@@ -1520,9 +1527,10 @@ class DailyRecordController extends BaseController
         $flockAge = null;
         $flockStatus = null;
         if ($flock) {
-            $endDate = $flock->flockEnds()->latest('sale_date')->first()?->sale_date;
+            $saleStatus = $flock->saleStatus();
+            $endDate = $saleStatus['end_date'];
             $flockAge = $this->calculateFlockAge($flock->start_date, $endDate, $breedType);
-            $flockStatus = $endDate ? 'Completed' : 'Active';
+            $flockStatus = $saleStatus['status'];
         }
 
         // Group records by hangar and format hangar details

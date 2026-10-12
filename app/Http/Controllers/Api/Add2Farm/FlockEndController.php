@@ -339,6 +339,8 @@ class FlockEndController extends BaseController
                 }
             }
 
+            $flock->syncHangarStatuses();
+
             DB::commit();
 
             $flockEnd->load('flock', 'hangar', 'slaughter', 'endedBy');
@@ -523,6 +525,8 @@ class FlockEndController extends BaseController
                 }
             }
 
+            $flock->syncHangarStatuses();
+
             DB::commit();
 
             $flockEnd->load('flock', 'hangar', 'slaughter', 'endedBy');
@@ -620,6 +624,8 @@ class FlockEndController extends BaseController
             DB::beginTransaction();
 
             $flockEnd->delete();
+
+            $flockEnd->flock->syncHangarStatuses();
 
             DB::commit();
 

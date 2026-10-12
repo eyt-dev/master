@@ -61,4 +61,55 @@ class Flock extends Model
     {
         return $this->hasMany(FlockEnd::class);
     }
+
+    /**
+     * Sale status derived from harvest records.
+     * Active: no harvest yet. Harvesting: harvest started, birds still remaining.
+     * Ended: all birds sold (remaining birds = 0). end_date is the last sale date.
+     */
+    public function saleStatus(): array
+    {
+        $remainingBirds = 0;
+        foreach ($this->flockHangarAllocations as $allocation) {
+            $lastHarvest = FlockEnd::where('flock_id', $this->id)
+                ->where('hangar_id', $allocation->hangar_id)
+                ->latest()
+                ->first();
+
+            $remainingBirds += $lastHarvest ? $lastHarvest->remaining_birds : $allocation->quantity;
+        }
+
+        if (!$this->flockEnds()->exists()) {
+            $status = 'Active';
+            $endDate = null;
+        } elseif ($remainingBirds == 0) {
+            $status = 'Ended';
+            $endDate = $this->flockEnds()->latest('sale_date')->first()?->sale_date;
+        } else {
+            $status = 'Harvesting';
+            $endDate = null;
+        }
+
+        return [
+            'status' => $status,
+            'end_date' => $endDate,
+            'remaining_birds' => $remainingBirds,
+        ];
+    }
+
+    /**
+     * Each hangar is Inactive once all its allocated birds are sold; otherwise it stays Active.
+     */
+    public function syncHangarStatuses(): void
+    {
+        foreach ($this->flockHangarAllocations()->get() as $allocation) {
+            $harvested = FlockEnd::where('flock_id', $this->id)
+                ->where('hangar_id', $allocation->hangar_id)
+                ->sum('total_birds_harvested');
+
+            $status = $allocation->quantity - $harvested <= 0 ? 'Inactive' : 'Active';
+
+            Hangar::where('id', $allocation->hangar_id)->update(['status' => $status]);
+        }
+    }
 }

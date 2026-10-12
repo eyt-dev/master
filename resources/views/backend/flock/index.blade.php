@@ -59,6 +59,7 @@
                                     <th>Breed</th>
                                     <th>Start Date</th>
                                     <th>Birds Summary</th>
+                                    <th>Status</th>
                                     <th>Hangar 1</th>
                                     <th>Hangar 2</th>
                                     <th>Hangar 3</th>
@@ -134,7 +135,8 @@
             { data: 'chicks_supplier', name: 'chicks_supplier' },
             { data: 'breed', name: 'breed' },
             { data: 'start_date', name: 'start_date' },
-            { data: 'birds_summary', name: 'birds_summary', orderable: false, searchable: false }
+            { data: 'birds_summary', name: 'birds_summary', orderable: false, searchable: false },
+            { data: 'sale_status', name: 'sale_status', orderable: false, searchable: false }
         ];
 
         // Add exactly 10 fixed hangar columns (hangar1 through hangar10)

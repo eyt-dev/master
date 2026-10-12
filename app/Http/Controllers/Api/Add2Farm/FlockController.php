@@ -261,7 +261,7 @@ class FlockController extends BaseController
         $hangars = $flock->flockHangarAllocations->map(function ($allocation) use ($breedName) {
             return [
                 'hangar_id' => $allocation->hangar_id,
-                'hangar_name' => $allocation->hangar->name,
+                'hangar_name' => $allocation->hangar->label,
                 'allocated_qty' => $allocation->quantity,
                 'breed' => $breedName,
                 'status' => $allocation->hangar->status,
@@ -349,7 +349,7 @@ class FlockController extends BaseController
 
             return [
                 'hangar_id' => $hangar->id,
-                'hangar_name' => $hangar->name,
+                'hangar_name' => $hangar->label,
                 'status' => $hangar->status,
                 'is_allocated' => $allocation ? true : false,
                 'allocated_quantity' => $allocation?->quantity ?? 0,
@@ -596,11 +596,13 @@ class FlockController extends BaseController
         }
 
         $totalBird = $flock->flockHangarAllocations->sum('quantity');
-        $latestFlockEnd = $flock->flockEnds()->latest('sale_date')->first();
+        $saleStatus = $flock->saleStatus();
+        $endDate = $saleStatus['end_date'];
+        $isHarvested = $saleStatus['status'] !== 'Active';
 
         // Determine flock type first
         $breedType = $this->extractBreedType($flock->breed);
-        $age = $this->calculateFlockAge($flock->start_date, $latestFlockEnd?->sale_date, $breedType);
+        $age = $this->calculateFlockAge($flock->start_date, $endDate, $breedType);
 
         // Fetch daily records for this flock
         $dailyRecords = DailyRecord::where('flock_id', $flock->id)->orderBy('record_date', 'asc')->get();
@@ -621,24 +623,23 @@ class FlockController extends BaseController
         // Calculate average production (eggs per bird as percentage)
         $avgProduction = $totalBird > 0 && $recordCount > 0 ? ($totalEggs / ($totalBird * $recordCount)) * 100 : 0;
 
-        // Determine flock status based on end date
+        // Determine flock type from breed
         $isLayer = $breedType === 'Layer';
         $isBroiler = !$isLayer;
-        $isEnded = (bool) $latestFlockEnd?->sale_date;
 
         // Calculate FCR (Feed Conversion Ratio) - varies by flock type
         $fcr = 0;
         if ($isLayer) {
             // For layers: FCR = feed_kg per egg
             $fcr = $totalEggs > 0 ? round($totalFeedKg / $totalEggs, 2) : 0;
-        } elseif ($isBroiler && $isEnded) {
-            // For broilers at harvest: FCR = feed_kg per kg of weight
-            $totalWeight = $latestFlockEnd->total_weight ?? 0;
+        } elseif ($isBroiler && $isHarvested) {
+            // For broilers at harvest: FCR = feed_kg per kg of weight (weight harvested so far)
+            $totalWeight = (float) $flock->flockEnds()->sum('total_weight');
             $fcr = $totalWeight > 0 ? round($totalFeedKg / $totalWeight, 2) : 0;
         }
 
-        // Calculate live birds: total - harvested - mortality from daily records
-        $liveBirds = $totalBird - $totalHarvested - $totalMortality;
+        // Calculate live birds: total allocated - harvested
+        $liveBirds = $totalBird - $totalHarvested;
 
         // Generate chart data
         $chartData = $this->generateChartData($dailyRecords, $flock, $totalBird, $isLayer);
@@ -650,11 +651,10 @@ class FlockController extends BaseController
                 ->where('hangar_id', $allocation->hangar_id)
                 ->get();
 
-            // Get the latest flock end record for this hangar
-            $lastHarvestRecord = FlockEnd::where('flock_id', $flock->id)
+            // Total birds harvested so far from this hangar
+            $hangarHarvested = FlockEnd::where('flock_id', $flock->id)
                 ->where('hangar_id', $allocation->hangar_id)
-                ->latest()
-                ->first();
+                ->sum('total_birds_harvested');
 
             // Calculate metrics
             $totalMortality = $hangarDailyRecords->sum('mortality');
@@ -664,7 +664,7 @@ class FlockController extends BaseController
             $avgWeight = $hangarDailyRecords->avg('chicks_weight');
 
             // Calculate live birds for this hangar
-            $liveBirds = $allocation->quantity - ($lastHarvestRecord?->total_birds_harvested ?? 0) - $totalMortality;
+            $liveBirds = $allocation->quantity - $hangarHarvested;
             $liveBirds = max(0, $liveBirds);
 
             // Calculate feed remaining for this hangar
@@ -703,8 +703,8 @@ class FlockController extends BaseController
             'breed' => $flock->breed,
             'flock_type' => $breedType,
             'start_date' => $flock->start_date->format('Y-m-d'),
-            'end_date' => $isEnded ? $latestFlockEnd->sale_date->format('Y-m-d') : null,
-            'status' => $isEnded ? 'Completed' : 'Active',
+            'end_date' => $endDate?->format('Y-m-d'),
+            'status' => $saleStatus['status'],
             'age' => $age,
             'total_birds' => $flock->total_quantity,
             'alive_birds' => $liveBirds,
@@ -714,8 +714,7 @@ class FlockController extends BaseController
             'created_by_name' => $flock->creator?->name,
             'created_at' => $flock->created_at,
             'updated_at' => $flock->updated_at,
-            'flock-condition' => $isBroiler ? ($isEnded ? 'broiler-ended' : 'broiler-active') : ($isEnded ? 'layer-ended' : 'layer-active'),
-            'alive_birds' => $liveBirds,
+            'flock-condition' => ($isBroiler ? 'broiler-' : 'layer-') . ['Active' => 'active', 'Harvesting' => 'harvesting', 'Ended' => 'ended'][$saleStatus['status']],
             'mortality' => $totalMortality,
             'mortality_rate' => round($mortalityRate, 2) . '%',
             'feed_per_bird' => $totalBird > 0 ? round($totalFeedKg / $totalBird, 2) : 0,
@@ -725,14 +724,14 @@ class FlockController extends BaseController
 
         // Add type-specific metrics
         if ($isBroiler) {
-            if ($isEnded) {
+            if ($isHarvested) {
                 $data['fcr'] = $fcr;
             }
         } else {
             // Layer flock
             $data['total_eggs'] = $totalEggs;
             $data['avg_production'] = round($avgProduction, 2) . '%';
-            if ($isEnded) {
+            if ($isHarvested) {
                 $data['fcr'] = $fcr;
             } else {
                 $data['production_rate'] = round($avgProduction, 2);
@@ -1286,11 +1285,10 @@ class FlockController extends BaseController
                 ->where('hangar_id', $allocation->hangar_id)
                 ->get();
 
-            // Get the latest flock end record for this hangar
-            $lastHarvestRecord = FlockEnd::where('flock_id', $flock->id)
+            // Total birds harvested so far from this hangar
+            $hangarHarvested = FlockEnd::where('flock_id', $flock->id)
                 ->where('hangar_id', $allocation->hangar_id)
-                ->latest()
-                ->first();
+                ->sum('total_birds_harvested');
 
             // Calculate metrics
             $totalMortality = $hangarDailyRecords->sum('mortality');
@@ -1300,7 +1298,7 @@ class FlockController extends BaseController
             $avgWeight = $hangarDailyRecords->avg('chicks_weight');
 
             // Calculate live birds for this hangar
-            $liveBirds = $allocation->quantity - ($lastHarvestRecord?->total_birds_harvested ?? 0) - $totalMortality;
+            $liveBirds = $allocation->quantity - $hangarHarvested;
             $liveBirds = max(0, $liveBirds);
 
             // Calculate feed remaining for this hangar
@@ -1324,10 +1322,11 @@ class FlockController extends BaseController
             ];
         })->toArray();
 
-        // Determine end_date and status - get latest harvest record
-        $endDate = $flock->flockEnds()->latest('sale_date')->first()?->sale_date;
-        $isEnded = (bool) $endDate;
-        $status = $isEnded ? 'Completed' : 'Active';
+        // Sale status (Active / Harvesting / Ended) and end date from harvest records
+        $saleStatus = $flock->saleStatus();
+        $endDate = $saleStatus['end_date'];
+        $status = $saleStatus['status'];
+        $isHarvested = $status !== 'Active';
 
         // Determine flock type (Broiler or Layer)
         $breedType = $this->extractBreedType($flock->breed);
@@ -1340,20 +1339,8 @@ class FlockController extends BaseController
         // Get total bird allocation
         $totalBird = $flock->flockHangarAllocations->sum('quantity');
 
-        // Calculate total remaining birds by getting the latest remaining_birds for each hangar
-        $remainingBirds = 0;
-        foreach ($flock->flockHangarAllocations as $allocation) {
-            $lastHarvest = FlockEnd::where('flock_id', $flock->id)
-                ->where('hangar_id', $allocation->hangar_id)
-                ->latest()
-                ->first();
-
-            if ($lastHarvest) {
-                $remainingBirds += $lastHarvest->remaining_birds;
-            } else {
-                $remainingBirds += $allocation->quantity;
-            }
-        }
+        // Remaining birds across all hangars
+        $remainingBirds = $saleStatus['remaining_birds'];
 
         // Fetch daily records for feed calculations and metrics
         $dailyRecords = DailyRecord::where('flock_id', $flock->id)->get();
@@ -1366,12 +1353,10 @@ class FlockController extends BaseController
         $mortalityRate = $totalBird > 0 ? ($totalMortality / $totalBird) * 100 : 0;
 
         // Calculate FCR based on flock type and status
-        $latestFlockEnd = $flock->flockEnds()->latest('sale_date')->first();
-        $isEnded = (bool) $latestFlockEnd?->sale_date;
         $fcr = 0;
-        if ($isBroiler && $isEnded) {
-            // For broilers at harvest: FCR = feed_kg per kg of weight
-            $totalWeight = $latestFlockEnd->total_weight ?? 0;
+        if ($isBroiler && $isHarvested) {
+            // For broilers at harvest: FCR = feed_kg per kg of weight (weight harvested so far)
+            $totalWeight = (float) $flock->flockEnds()->sum('total_weight');
             $fcr = $totalWeight > 0 ? round($totalFeedKg / $totalWeight, 2) : 0;
         } elseif (!$isBroiler) {
             // For layers: FCR = feed_kg per egg
@@ -1393,7 +1378,7 @@ class FlockController extends BaseController
             'age'                   => $age,
             'total_birds'           => $flock->total_quantity,
             'alive_birds'           => $remainingBirds,
-            'is_completed'          => $remainingBirds == 0,
+            'is_completed'          => $status === 'Ended',
             'mortality_rate'        => round($mortalityRate, 2) . '%',
             'fcr'                   => $fcr,
             'hangar_allocations'    => $hangarAllocations,
@@ -1404,29 +1389,23 @@ class FlockController extends BaseController
             'updated_at'            => $flock->updated_at,
         ];
 
-        // Add flock-condition flag
-        if ($isBroiler) {
-            $response['flock-condition'] = $isEnded ? 'broiler-ended' : 'broiler-active';
-        } else {
-            $response['flock-condition'] = $isEnded ? 'layer-ended' : 'layer-active';
-        }
+        // Add flock-condition flag (harvesting uses the "harvesting" state, completed keeps "ended")
+        $conditionState = ['Active' => 'active', 'Harvesting' => 'harvesting', 'Ended' => 'ended'][$status];
+        $response['flock-condition'] = ($isBroiler ? 'broiler-' : 'layer-') . $conditionState;
 
         // Calculate metrics based on flock type and status
         if ($isBroiler) {
-            if ($isEnded) {
-                // Broiler ended: send avg FCR %
-                $totalFeedKg = $dailyRecords->sum('feed_kg');
-                $totalEggs = $dailyRecords->sum('eggs_count');
-                $avgFcr = $totalEggs > 0 ? round($totalFeedKg / $totalEggs, 2) : 0;
-                $response['avg_fcr'] = $avgFcr;
+            if ($isHarvested) {
+                // Broiler harvesting/ended: send FCR (feed kg per kg of harvested weight)
+                $response['avg_fcr'] = $fcr;
             } else {
                 // Broiler active: send avg weight
                 $avgWeight = $dailyRecords->avg('chicks_weight');
                 $response['avg_weight'] = $avgWeight ? round($avgWeight, 2) : 0;
             }
         } else {
-            if ($isEnded) {
-                // Layer ended: send total eggs
+            if ($isHarvested) {
+                // Layer harvesting/ended: send total eggs
                 $totalEggs = $dailyRecords->sum('eggs_count');
                 $response['total_eggs'] = $totalEggs;
             } else {

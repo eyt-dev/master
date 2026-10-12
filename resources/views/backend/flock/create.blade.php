@@ -190,7 +190,7 @@
         }
 
         // Filter breed dropdown based on farm's first flock category
-        function filterBreedDropdown(farmId) {
+        function filterBreedDropdown(farmId, isInitialLoad) {
             var breedSelect = $('#breed');
             var breedCategoryInfo = $('#breed-category-info');
 
@@ -207,6 +207,9 @@
             farmId = parseInt(farmId);
 
             var url = "{{ route('flock.breed-category-by-farm', ['username' => $siteSlug, 'farm' => ':farm']) }}".replace(':farm', farmId);
+            @if(isset($flock) && $flock->id)
+                url += '?flock_id={{ $flock->id }}';
+            @endif
 
             $.ajax({
                 url: url,
@@ -215,11 +218,13 @@
                     var category = response.category;
 
                     if (!category) {
-                        // Farm has no existing flocks - show all breeds
+                        // Farm has no other flocks - show all breeds
                         $('.breed-optgroup').show();
                         $('.breed-option').show();
                         breedCategoryInfo.hide();
-                        breedSelect.val('');
+                        if (!isInitialLoad) {
+                            breedSelect.val('');
+                        }
                     } else {
                         // Farm has a first flock - filter to that category
                         $('.breed-optgroup').each(function() {
@@ -234,7 +239,9 @@
                         });
 
                         breedCategoryInfo.text('This farm\'s first flock is ' + category + '. Only ' + category + ' breeds can be selected.').show();
-                        breedSelect.val('');
+                        if (!isInitialLoad) {
+                            breedSelect.val('');
+                        }
                     }
                 },
                 error: function() {
@@ -385,7 +392,7 @@
             var farmId = $('#farm_id').val();
             if (farmId) {
                 loadHangarsForFarm(farmId);
-                filterBreedDropdown(farmId);
+                filterBreedDropdown(farmId, true);
                 // COMMENTED - USER NOW PROVIDES FLOCK NAME
                 // $('#flock_name').val('{{ $flock->name }}');
             }

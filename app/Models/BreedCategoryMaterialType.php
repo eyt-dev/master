@@ -9,6 +9,8 @@ class BreedCategoryMaterialType extends Model
 {
     use HasFactory;
 
+    public const CATEGORIES = ['Broiler', 'Layer', 'ADD2MIX'];
+
     protected $table = 'breed_category_material_type';
 
     protected $fillable = [

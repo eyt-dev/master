@@ -93,7 +93,7 @@ class FeedMaterialController extends Controller
 
     public function loadBreedCategoryMapping(Request $request)
     {
-        $breedCategories = ['Broiler', 'Layer'];
+        $breedCategories = BreedCategoryMaterialType::CATEGORIES;
         $materialTypes = MaterialType::orderBy('name')->get();
 
         $data = [];
@@ -124,7 +124,7 @@ class FeedMaterialController extends Controller
     {
         $request->validate([
             'mappings' => 'required|array',
-            'mappings.*.breed_category' => 'required|in:Broiler,Layer',
+            'mappings.*.breed_category' => 'required|in:' . implode(',', BreedCategoryMaterialType::CATEGORIES),
             'mappings.*.material_type_ids' => 'required|array',
             'mappings.*.material_type_ids.*' => 'integer|exists:material_types,id',
         ]);

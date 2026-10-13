@@ -543,13 +543,13 @@
                             <h5 class="mb-0">${category.breed_category}</h5>
                         </div>
                         <div class="card-body">
-                            <div class="breed-category-materials" data-category="${category.breed_category}">
+                            <div class="breed-category-materials d-flex flex-wrap" data-category="${category.breed_category}">
                 `;
 
                 category.material_types.forEach(function(materialType) {
                     var checkboxId = 'material_' + category.breed_category + '_' + materialType.id;
                     categoryHtml += `
-                        <div class="custom-control custom-checkbox mb-2">
+                        <div class="custom-control custom-checkbox mr-4 mb-2">
                             <input type="checkbox" class="custom-control-input material-type-checkbox" id="${checkboxId}"
                                 data-category="${category.breed_category}" data-material-id="${materialType.id}"
                                 ${materialType.checked ? 'checked' : ''}>
@@ -575,7 +575,7 @@
 
         $(document).on('click', '#save_breed_category_mapping_btn', function() {
             var mappings = [];
-            var categories = ['Broiler', 'Layer'];
+            var categories = ['Broiler', 'Layer', 'ADD2MIX'];
 
             categories.forEach(function(category) {
                 var selectedMaterialIds = [];

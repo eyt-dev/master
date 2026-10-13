@@ -91,6 +91,8 @@
                         <option value="Lohmann Brown" class="breed-option" data-category="Layer" {{ $currentBreed == 'Lohmann Brown' ? 'selected' : '' }}>Lohmann Brown</option>
                         <option value="Lohmann White" class="breed-option" data-category="Layer" {{ $currentBreed == 'Lohmann White' ? 'selected' : '' }}>Lohmann White</option>
                     </optgroup>
+                    <optgroup label="ADD2MIX" class="breed-optgroup" data-category="ADD2MIX">
+                    </optgroup>
                 </select>
                 @error('breed')
                     <label id="breed-error" class="error" for="breed">{{ $message }}</label>

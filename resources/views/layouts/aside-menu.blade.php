@@ -66,6 +66,9 @@
 				@can('view.permission')
 				<li><a href="{{route('permission.index', ['username' => $siteSlug])}}" class="slide-item">Permissions</a></li>
 				@endcan
+				@if(auth()->user()->hasRole('SuperAdmin'))
+				<li><a href="{{route('role-change.index', ['username' => $siteSlug])}}" class="slide-item">Role Changes</a></li>
+				@endif
 			</ul>
 		</li>
 		@endcan

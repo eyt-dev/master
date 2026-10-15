@@ -9,6 +9,7 @@ use App\Http\Controllers\Backend\ProfileController;
 use App\Http\Controllers\Backend\AdminController;
 use App\Http\Controllers\Backend\RoleController;
 use App\Http\Controllers\Backend\PermissionController;
+use App\Http\Controllers\Backend\RoleChangeController;
 use App\Http\Controllers\Backend\ModuleController;
 use App\Http\Controllers\Backend\GameController;
 use App\Http\Controllers\Backend\WheelController;
@@ -132,6 +133,9 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::delete('{permission}', 'destroy')->name('permission.destroy'); //->middleware('permission:delete.permission');
                         Route::post('permission/delete', 'deleteSinglePermission')->name('permission.delete'); //->middleware('permission:delete.permission');
                         Route::post('module/store', 'moduleStore')->name('permission.module');
+                    });
+                    Route::controller(RoleChangeController::class)->prefix('role-change')->middleware('role:SuperAdmin')->group(function () {
+                        Route::get('/', 'index')->name('role-change.index');
                     });
                     Route::controller(ModuleController::class)->prefix('module')->group(function () {
                         Route::get('create', 'create')->name('module.create');

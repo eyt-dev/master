@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Add2Farm;
 
 use App\Models\Admin;
+use App\Models\RoleChange;
 use App\Models\UpgradeRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -61,10 +62,10 @@ class RoleController extends BaseController
                 return $this->submitFarmAdminUpgradeRequest($user);
 
             case Admin::PRIVATE_VENDOR:
-                return $this->changeRole($user, Admin::PUBLIC_VENDOR, 'PublicVendor');
+                return $this->changeRole($user, Admin::PUBLIC_VENDOR, 'PublicVendor', RoleChange::ACTION_UPGRADE);
 
             case self::FARMER_TYPE:
-                return $this->changeRole($user, Admin::PRIVATE_VENDOR, 'PrivateVendor');
+                return $this->changeRole($user, Admin::PRIVATE_VENDOR, 'PrivateVendor', RoleChange::ACTION_UPGRADE);
 
             default:
                 return $this->notAllowed();
@@ -96,7 +97,7 @@ class RoleController extends BaseController
             return $this->notAllowed();
         }
 
-        return $this->changeRole($user, self::FARMER_TYPE, 'User', 'role_downgraded_successfully');
+        return $this->changeRole($user, self::FARMER_TYPE, 'User', RoleChange::ACTION_DOWNGRADE, 'role_downgraded_successfully');
     }
 
     /**
@@ -216,6 +217,17 @@ class RoleController extends BaseController
 
             $adminRole = Role::where('name', 'Admin')->firstOrFail();
 
+            RoleChange::create([
+                'admin_id'           => $farmOwner->id,
+                'action'             => RoleChange::ACTION_APPROVE_UPGRADE,
+                'from_type'          => Admin::PUBLIC_VENDOR,
+                'to_type'            => Admin::ADMIN,
+                'from_role'          => $farmOwner->roles()->first()?->name,
+                'to_role'            => 'Admin',
+                'upgrade_request_id' => $pendingRequest->id,
+                'changed_by'         => $request->user()->id,
+            ]);
+
             $farmOwner->update(['type' => Admin::ADMIN]);
             $farmOwner->syncRoles([$adminRole->id]);
 
@@ -298,11 +310,21 @@ class RoleController extends BaseController
     /**
      * Change the user's type and sync the matching Spatie role.
      */
-    private function changeRole(Admin $user, int $newType, string $roleName, string $messageKey = 'role_upgraded_successfully')
+    private function changeRole(Admin $user, int $newType, string $roleName, string $action, string $messageKey = 'role_upgraded_successfully')
     {
         try {
-            DB::transaction(function () use ($user, $newType, $roleName) {
+            DB::transaction(function () use ($user, $newType, $roleName, $action) {
                 $role = Role::where('name', $roleName)->firstOrFail();
+
+                RoleChange::create([
+                    'admin_id'   => $user->id,
+                    'action'     => $action,
+                    'from_type'  => $user->type,
+                    'to_type'    => $newType,
+                    'from_role'  => $user->roles()->first()?->name,
+                    'to_role'    => $roleName,
+                    'changed_by' => $user->id,
+                ]);
 
                 $user->update(['type' => $newType]);
                 $user->syncRoles([$role->id]);

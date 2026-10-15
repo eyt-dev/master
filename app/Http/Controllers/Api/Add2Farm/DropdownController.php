@@ -202,13 +202,13 @@ class DropdownController extends BaseController
     /**
      * Get chicken breeds for dropdown
      *
-     * Returns available chicken breeds, optionally filtered by category (Broiler, Layer or ADD2MIX).
+     * Returns available chicken breeds, optionally filtered by category (Broiler or Layer).
      * If category is provided, returns only breeds for that category as a flat array.
      * If category is not provided, returns all breeds organized by category.
      * Used for flock creation form.
      *
      * @authenticated
-     * @queryParam category string Optional. Filter by category: Broiler, Layer or ADD2MIX
+     * @queryParam category string Optional. Filter by category: Broiler or Layer
      *
      * @response 200 {
      *   "success": true,
@@ -238,7 +238,6 @@ class DropdownController extends BaseController
                 'Lohmann Brown',
                 'Lohmann White',
             ],
-            'ADD2MIX' => [],
         ];
 
         $category = $request->input('category');

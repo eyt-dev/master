@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\FormController;
 use App\Http\Controllers\Api\CompoPriceController;
 use App\Http\Controllers\Api\Add2Farm\AuthController as Add2FarmAuthController;
 use App\Http\Controllers\Api\Add2Farm\ProfileController as Add2FarmProfileController;
+use App\Http\Controllers\Api\Add2Farm\RoleController as Add2FarmRoleController;
 use App\Http\Controllers\Api\Add2Farm\SupervisorController as Add2FarmSupervisorController;
 use App\Http\Controllers\Api\Add2Farm\FarmerController as Add2FarmFarmerController;
 use App\Http\Controllers\Api\Add2Farm\FarmController as Add2FarmFarmController;
@@ -127,6 +128,22 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
         Route::put('change-password', [Add2FarmProfileController::class, 'changePassword']);
         Route::get('settings', [Add2FarmProfileController::class, 'getSettings']);
         Route::put('settings', [Add2FarmProfileController::class, 'updateSettings']);
+    });
+
+    // Role upgrade/downgrade - Type 2 (Farm Owner), Type 3 (Supervisor), Type 4 (Farmer)
+    Route::prefix('role')->middleware(['auth:sanctum', 'check.admin.type:2,3,4'])->group(function () {
+        Route::post('upgrade', [Add2FarmRoleController::class, 'upgrade']);
+    });
+
+    // Downgrade - Type 3 (Supervisor) only
+    Route::prefix('role')->middleware(['auth:sanctum', 'check.admin.type:3'])->group(function () {
+        Route::post('downgrade', [Add2FarmRoleController::class, 'downgrade']);
+    });
+
+    // Upgrade request approval - Type 1 (Farm Admin) only
+    Route::prefix('role')->middleware(['auth:sanctum', 'check.admin.type:0,1'])->group(function () {
+        Route::get('upgrade-requests', [Add2FarmRoleController::class, 'upgradeRequests']);
+        Route::post('upgrade-requests/{upgradeRequest}/approve', [Add2FarmRoleController::class, 'approveUpgradeRequest']);
     });
 
     // Supervisors (Type 3) - Only Type 1 (Farm Admin) can access

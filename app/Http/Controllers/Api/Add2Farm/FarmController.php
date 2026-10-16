@@ -45,6 +45,7 @@ class FarmController extends BaseController
      *         "name": "Main Farm",
      *         "location": "Village A",
      *         "type": "Layer",
+     *         "breed": "Broiler",
      *         "number_of_hangars": 5,
      *         "assigned_to": 1,
      *         "assigned_admin_name": "John Supervisor",
@@ -812,6 +813,10 @@ class FarmController extends BaseController
         // Calculate total birds from all flocks
         $totalBirds = $farm->flocks()->sum('total_quantity') ?? 0;
 
+        // Breed category (Broiler/Layer) from the farm's first flock, same as the farms dropdown
+        $firstFlockBreed = $farm->flocks()->oldest('created_at')->value('breed');
+        $breedCategory = $firstFlockBreed ? $this->extractBreedType($firstFlockBreed) : null;
+
         return [
             'id'                    => $farm->id,
             'name'                  => $farm->name,
@@ -819,6 +824,7 @@ class FarmController extends BaseController
             'latitude'              => $farm->latitude,
             'longitude'             => $farm->longitude,
             'type'                  => $farm->type,
+            'breed'                 => $breedCategory,
             'mobile_number'         => $farm->getFullPhoneNumber(),
             'number_of_hangars'     => $farm->number_of_hangars,
             'assigned_to'           => $farm->assigned_to,

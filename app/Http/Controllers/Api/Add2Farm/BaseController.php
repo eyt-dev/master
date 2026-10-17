@@ -50,6 +50,29 @@ class BaseController extends Controller
     }
 
     /**
+     * Mortality response fields: mortality_value (bird count) and mortality_rate (percentage)
+     * Rate is based on the hangar's allocated birds when $hangarId is given,
+     * otherwise on all birds allocated to the flock.
+     * Example: 5 of 500 birds → mortality_value: 5, mortality_rate: "1,00%"
+     */
+    protected function mortalityFields($mortality, $flock, $hangarId = null): array
+    {
+        $allocations = $flock ? $flock->flockHangarAllocations : collect();
+
+        if ($hangarId !== null) {
+            $allocations = $allocations->where('hangar_id', $hangarId);
+        }
+
+        $birds = (int) $allocations->sum('quantity');
+        $rate = $birds > 0 ? ($mortality / $birds) * 100 : 0;
+
+        return [
+            'mortality_value' => (int) $mortality,
+            'mortality_rate'  => $this->formatDecimal(round($rate, 2)) . '%',
+        ];
+    }
+
+    /**
      * Parse decimal from request (handles comma or period)
      * Example: "1,5" → 1.5 | "1.5" → 1.5
      */

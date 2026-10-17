@@ -1053,7 +1053,7 @@ class DailyRecordController extends BaseController
             'eggs_count'      => (int) $record->eggs_count,
             'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
             'chicks_weight'   => $this->formatDecimal($record->chicks_weight),
-            'mortality'       => (int) $record->mortality,
+            ...$this->mortalityFields($record->mortality, $record->flock, $record->hangar_id),
             'assignment'      => $assignment,
             'created_by'      => $record->created_by,
             'created_by_name' => $record->creator?->name,
@@ -1101,7 +1101,7 @@ class DailyRecordController extends BaseController
             'eggs_count'      => (int) $record->eggs_count,
             'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
             'chicks_weight'   => $this->formatDecimal($record->chicks_weight),
-            'mortality'       => (int) $record->mortality,
+            ...$this->mortalityFields($record->mortality, $flock),
         ];
     }
 
@@ -1155,7 +1155,7 @@ class DailyRecordController extends BaseController
             'eggs_count'      => (int) $record->eggs_count,
             'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
             'chicks_weight'   => $this->formatDecimal($record->chicks_weight),
-            'mortality'       => (int) $record->mortality,
+            ...$this->mortalityFields($record->mortality, $flock),
         ];
     }
 
@@ -1209,7 +1209,7 @@ class DailyRecordController extends BaseController
             'eggs_count'      => (int) $record->eggs_count,
             'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
             'chicks_weight'   => $this->formatDecimal($record->chicks_weight),
-            'mortality'       => (int) $record->mortality,
+            ...$this->mortalityFields($record->mortality, $flock),
         ];
     }
 
@@ -1264,7 +1264,7 @@ class DailyRecordController extends BaseController
                 'status' => $firstHangarRecord->hangar?->status,
                 'feed' => $this->formatDecimal($totalFeed),
                 'remaining_qty' => $this->formatQuantity($remainingQty),
-                'mortality' => (int) $totalMortality,
+                ...$this->mortalityFields($totalMortality, $firstHangarRecord->flock, $firstHangarRecord->hangar_id),
             ];
 
             // Add breed-specific fields
@@ -1306,7 +1306,7 @@ class DailyRecordController extends BaseController
             'eggs_count'      => (int) $totalEggs,
             'eggs_weight'     => $this->formatDecimal($totalEggsWeight),
             'chicks_weight'   => $this->formatDecimal($totalChicksWeight),
-            'mortality'       => (int) $totalMortality,
+            ...$this->mortalityFields($totalMortality, $flock),
             'hangars'         => $hangars,
         ];
     }
@@ -1372,7 +1372,7 @@ class DailyRecordController extends BaseController
                 'status' => $record->hangar?->status,
                 'feed' => $this->formatDecimal($record->feed_kg),
                 'remaining_qty' => $this->formatQuantity($remainingQty),
-                'mortality' => (int) $record->mortality,
+                ...$this->mortalityFields($record->mortality, $record->flock, $record->hangar_id),
             ];
 
             // Add breed-specific fields
@@ -1405,7 +1405,7 @@ class DailyRecordController extends BaseController
             'breed' => $flock->breed,
             'feed' => $this->formatDecimal($totalFeed),
             'total_remaining_qty' => $this->formatQuantity($totalRemainingQty),
-            'total_mortality' => (int) $totalMortality,
+            ...$this->mortalityFields($totalMortality, $flock),
             'recorded_by' => $firstRecord->creator?->name,
             'created_at' => $firstRecord->created_at,
             'hangars' => $hangars,
@@ -1469,7 +1469,7 @@ class DailyRecordController extends BaseController
                 'status' => $firstHangarRecord->hangar?->status,
                 'feed' => $this->formatDecimal($totalFeed),
                 'remaining_qty' => $this->formatQuantity($remainingQty),
-                'mortality' => (int) $totalMortality,
+                ...$this->mortalityFields($totalMortality, $firstHangarRecord->flock, $firstHangarRecord->hangar_id),
             ];
 
             if ($isBroiler) {
@@ -1506,7 +1506,7 @@ class DailyRecordController extends BaseController
             'eggs_count'      => (int) $totalEggs,
             'eggs_weight'     => $this->formatDecimal($totalEggsWeight),
             'chicks_weight'   => $this->formatDecimal($totalChicksWeight),
-            'mortality'       => (int) $totalMortality,
+            ...$this->mortalityFields($totalMortality, $flock),
             'hangars'         => $hangars,
         ];
     }
@@ -1559,7 +1559,7 @@ class DailyRecordController extends BaseController
                 'status' => $firstHangarRecord->hangar?->status,
                 'feed' => $this->formatDecimal($totalFeed),
                 'remaining_qty' => $this->formatQuantity($remainingQty),
-                'mortality' => (int) $totalMortality,
+                ...$this->mortalityFields($totalMortality, $firstHangarRecord->flock, $firstHangarRecord->hangar_id),
             ];
 
             if ($isBroiler) {
@@ -1596,7 +1596,7 @@ class DailyRecordController extends BaseController
             'eggs_count'      => (int) $totalEggs,
             'eggs_weight'     => $this->formatDecimal($totalEggsWeight),
             'chicks_weight'   => $this->formatDecimal($totalChicksWeight),
-            'mortality'       => (int) $totalMortality,
+            ...$this->mortalityFields($totalMortality, $flock),
             'hangars'         => $hangars,
         ];
     }

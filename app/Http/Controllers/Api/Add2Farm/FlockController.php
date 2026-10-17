@@ -617,9 +617,6 @@ class FlockController extends BaseController
         // Calculate total harvested birds from all FlockEnd records
         $totalHarvested = FlockEnd::where('flock_id', $flock->id)->sum('total_birds_harvested');
 
-        // Calculate mortality rate (only from daily records, not from unaccounted birds in harvest)
-        $mortalityRate = $totalBird > 0 ? ($totalMortality / $totalBird) * 100 : 0;
-
         // Calculate average production (eggs per bird as percentage)
         $avgProduction = $totalBird > 0 && $recordCount > 0 ? ($totalEggs / ($totalBird * $recordCount)) * 100 : 0;
 
@@ -658,7 +655,6 @@ class FlockController extends BaseController
 
             // Calculate metrics
             $totalMortality = $hangarDailyRecords->sum('mortality');
-            $mortalityRate = $allocation->quantity > 0 ? ($totalMortality / $allocation->quantity) * 100 : 0;
             $feedConsumed = round($hangarDailyRecords->sum('feed_kg'), 2);
             $feedPerBird = $allocation->quantity > 0 ? round($feedConsumed / $allocation->quantity, 2) : 0;
             $avgWeight = $hangarDailyRecords->avg('chicks_weight');
@@ -680,7 +676,7 @@ class FlockController extends BaseController
                 'area_sqm'      => $allocation->hangar?->area_sqm,
                 'status'        => $allocation->hangar?->status,
                 'alive_birds'    => $liveBirds,
-                'mortality_rate' => round($mortalityRate, 2),
+                ...$this->mortalityFields($totalMortality, $flock, $allocation->hangar_id),
                 'feed' => $feedConsumed,
                 'remaining_feed' => $feedRemaining,
                 'feed_per_bird' => $feedPerBird,
@@ -715,8 +711,7 @@ class FlockController extends BaseController
             'created_at' => $flock->created_at,
             'updated_at' => $flock->updated_at,
             'flock-condition' => ($isBroiler ? 'broiler-' : 'layer-') . ['Active' => 'active', 'Harvesting' => 'harvesting', 'Ended' => 'ended'][$saleStatus['status']],
-            'mortality' => $totalMortality,
-            'mortality_rate' => round($mortalityRate, 2) . '%',
+            ...$this->mortalityFields($totalMortality, $flock),
             'feed_per_bird' => $totalBird > 0 ? round($totalFeedKg / $totalBird, 2) : 0,
             'avg_weight' => $avgWeight ? round($avgWeight, 2) . ' kg' : 'N/A',
             'chart_data' => $chartData,
@@ -1227,7 +1222,8 @@ class FlockController extends BaseController
                     'week' => 'Week ' . $week,
                     'avg_production' => round($avgProd, 2),
                     'feed' => round($weekFeed, 2),
-                    'mortality' => round($mortalityPct, 2),
+                    'mortality_value' => (int) $weekMortality,
+                    'mortality_rate' => round($mortalityPct, 2),
                 ];
             } else {
                 // BROILER - Avg Weight, FCR, Mortality
@@ -1246,13 +1242,15 @@ class FlockController extends BaseController
                     'week' => 'Week ' . $week,
                     'avg_weight' => round($weekWeight, 2),
                     'fcr' => $fcr,
-                    'mortality' => round($mortalityPct, 2),
+                    'mortality_value' => (int) $weekMortality,
+                    'mortality_rate' => round($mortalityPct, 2),
                 ];
             }
 
             $mortalityTrend[] = [
                 'week' => 'Week ' . $week,
-                'mortality' => round($mortalityPct, 2),
+                'mortality_value' => (int) $weekMortality,
+                'mortality_rate' => round($mortalityPct, 2),
             ];
         }
 
@@ -1292,7 +1290,6 @@ class FlockController extends BaseController
 
             // Calculate metrics
             $totalMortality = $hangarDailyRecords->sum('mortality');
-            $mortalityRate = $allocation->quantity > 0 ? ($totalMortality / $allocation->quantity) * 100 : 0;
             $feedConsumed = round($hangarDailyRecords->sum('feed_kg'), 2);
             $feedPerBird = $allocation->quantity > 0 ? round($feedConsumed / $allocation->quantity, 2) : 0;
             $avgWeight = $hangarDailyRecords->avg('chicks_weight');
@@ -1314,7 +1311,7 @@ class FlockController extends BaseController
                 'area_sqm'      => $allocation->hangar?->area_sqm,
                 'status'        => $allocation->hangar?->status,
                 'alive_birds'    => $liveBirds,
-                'mortality_rate' => round($mortalityRate, 2),
+                ...$this->mortalityFields($totalMortality, $flock, $allocation->hangar_id),
                 'feed' => $feedConsumed,
                 'remaining_feed' => $feedRemaining,
                 'feed_per_bird' => $feedPerBird,
@@ -1349,9 +1346,6 @@ class FlockController extends BaseController
         $totalFeedKg = $dailyRecords->sum('feed_kg');
         $totalEggs = $dailyRecords->sum('eggs_count');
 
-        // Calculate mortality rate
-        $mortalityRate = $totalBird > 0 ? ($totalMortality / $totalBird) * 100 : 0;
-
         // Calculate FCR based on flock type and status
         $fcr = 0;
         if ($isBroiler && $isHarvested) {
@@ -1379,7 +1373,7 @@ class FlockController extends BaseController
             'total_birds'           => $flock->total_quantity,
             'alive_birds'           => $remainingBirds,
             'is_completed'          => $status === 'Ended',
-            'mortality_rate'        => round($mortalityRate, 2) . '%',
+            ...$this->mortalityFields($totalMortality, $flock),
             'fcr'                   => $fcr,
             'hangar_allocations'    => $hangarAllocations,
             'assignment'            => $assignment,

@@ -1150,7 +1150,7 @@ class DailyRecordController extends BaseController
             'flock_age'       => $flockAge,
             'flock_status'    => $flockStatus,
             'feed'        => $this->formatDecimal($record->feed_kg),
-            'remaining_qty'   => $this->formatDecimal($remainingQty),
+            'remaining_qty'   => $this->formatQuantity($remainingQty),
             'eggs_tray_30'    => (int) $record->eggs_tray_30,
             'eggs_count'      => (int) $record->eggs_count,
             'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
@@ -1204,7 +1204,7 @@ class DailyRecordController extends BaseController
             'flock_age'       => $flockAge,
             'flock_status'    => $flockStatus,
             'feed'        => $this->formatDecimal($record->feed_kg),
-            'remaining_qty'   => $this->formatDecimal($remainingQty),
+            'remaining_qty'   => $this->formatQuantity($remainingQty),
             'eggs_tray_30'    => (int) $record->eggs_tray_30,
             'eggs_count'      => (int) $record->eggs_count,
             'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
@@ -1263,7 +1263,7 @@ class DailyRecordController extends BaseController
                 'hangar_name' => $firstHangarRecord->hangar?->name,
                 'status' => $firstHangarRecord->hangar?->status,
                 'feed' => $this->formatDecimal($totalFeed),
-                'remaining_qty' => $this->formatDecimal($remainingQty),
+                'remaining_qty' => $this->formatQuantity($remainingQty),
                 'mortality' => (int) $totalMortality,
             ];
 
@@ -1371,7 +1371,7 @@ class DailyRecordController extends BaseController
                 'hangar_name' => $record->hangar?->name,
                 'status' => $record->hangar?->status,
                 'feed' => $this->formatDecimal($record->feed_kg),
-                'remaining_qty' => $this->formatDecimal($remainingQty),
+                'remaining_qty' => $this->formatQuantity($remainingQty),
                 'mortality' => (int) $record->mortality,
             ];
 
@@ -1404,7 +1404,7 @@ class DailyRecordController extends BaseController
             'flock_status' => $flockStatus,
             'breed' => $flock->breed,
             'feed' => $this->formatDecimal($totalFeed),
-            'total_remaining_qty' => $this->formatDecimal($totalRemainingQty),
+            'total_remaining_qty' => $this->formatQuantity($totalRemainingQty),
             'total_mortality' => (int) $totalMortality,
             'recorded_by' => $firstRecord->creator?->name,
             'created_at' => $firstRecord->created_at,
@@ -1468,7 +1468,7 @@ class DailyRecordController extends BaseController
                 'hangar_name' => $firstHangarRecord->hangar?->name,
                 'status' => $firstHangarRecord->hangar?->status,
                 'feed' => $this->formatDecimal($totalFeed),
-                'remaining_qty' => $this->formatDecimal($remainingQty),
+                'remaining_qty' => $this->formatQuantity($remainingQty),
                 'mortality' => (int) $totalMortality,
             ];
 
@@ -1558,7 +1558,7 @@ class DailyRecordController extends BaseController
                 'hangar_name' => $firstHangarRecord->hangar?->name,
                 'status' => $firstHangarRecord->hangar?->status,
                 'feed' => $this->formatDecimal($totalFeed),
-                'remaining_qty' => $this->formatDecimal($remainingQty),
+                'remaining_qty' => $this->formatQuantity($remainingQty),
                 'mortality' => (int) $totalMortality,
             ];
 

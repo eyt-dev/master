@@ -34,7 +34,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Blade::directive('formatQuantity', function ($expression) {
-            return "<?php echo \App\Helpers\DecimalHelper::formatEuropean($expression, 2); ?>";
+            return "<?php echo \App\Helpers\DecimalHelper::formatQuantityEuropean($expression, 2); ?>";
         });
 
         Blade::directive('money', function ($expression) {

@@ -112,4 +112,34 @@ class DecimalHelper
     {
         return self::formatEuropean($value, $decimals);
     }
+
+    /**
+     * Format quantity for API response (comma decimal, trailing ",00" removed)
+     * Examples: 1250 → "1250" | 1250.5 → "1250,50" | 1250.25 → "1250,25"
+     */
+    public static function formatQuantity($value, $decimals = 2)
+    {
+        return self::stripZeroDecimals(self::formatForApi($value, $decimals));
+    }
+
+    /**
+     * Format quantity for display (European format, trailing ",00" removed)
+     * Examples: 1250 → "1.250" | 1250.5 → "1.250,50" | 1250.25 → "1.250,25"
+     */
+    public static function formatQuantityEuropean($value, $decimals = 2)
+    {
+        return self::stripZeroDecimals(self::formatEuropean($value, $decimals));
+    }
+
+    /**
+     * Remove a trailing decimal part made only of zeros (",00", ",0")
+     */
+    private static function stripZeroDecimals($formatted)
+    {
+        if ($formatted === null) {
+            return null;
+        }
+
+        return preg_replace('/,0+$/', '', $formatted);
+    }
 }

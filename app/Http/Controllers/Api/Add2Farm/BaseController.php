@@ -41,6 +41,15 @@ class BaseController extends Controller
     }
 
     /**
+     * Convert quantity to comma format for API response, without trailing ",00"
+     * Example: 1250 → "1250" | 1250.50 → "1250,50"
+     */
+    protected function formatQuantity($value, $decimals = 2)
+    {
+        return DecimalHelper::formatQuantity($value, $decimals);
+    }
+
+    /**
      * Parse decimal from request (handles comma or period)
      * Example: "1,5" → 1.5 | "1.5" → 1.5
      */

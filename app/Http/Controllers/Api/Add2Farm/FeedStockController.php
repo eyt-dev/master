@@ -33,7 +33,7 @@ class FeedStockController extends BaseController
      *     {
      *       "hangar_id": 1,
      *       "hangar_name": "Hangar A",
-     *       "remaining_quantity": "250,00"
+     *       "remaining_quantity": "250"
      *     }
      *   ]
      * }
@@ -64,7 +64,7 @@ class FeedStockController extends BaseController
                     'hangar_id' => $hangar->id,
                     'hangar_name' => $hangar->name,
                     'status' => $hangar->status,
-                    'remaining_quantity' => $this->formatDecimal($remaining),
+                    'remaining_quantity' => $this->formatQuantity($remaining),
                 ];
             });
 
@@ -172,9 +172,9 @@ class FeedStockController extends BaseController
      * @bodyParam farm_id integer required Farm ID. Example: 1
      * @bodyParam material_name_id integer required Material Name ID from material_names table. Example: 1
      * @bodyParam material_type string required Material type (pelleted_feed, mash_feed, feed_ingredient, premix). Example: pelleted_feed
-     * @bodyParam quantity integer required Total quantity (use comma for decimal: 5000,50). Example: 5000,00
+     * @bodyParam quantity integer required Total quantity (use comma for decimal: 5000,50). Example: 5000
      * @bodyParam supplier_id integer required Supplier ID. Example: 1
-     * @bodyParam hangar_allocations array required for pelleted_feed/mash_feed Array of hangar allocations with quantity only (remaining calculated by backend). Example: [{"hangar_id": 1, "quantity": "1250,00"}]
+     * @bodyParam hangar_allocations array required for pelleted_feed/mash_feed Array of hangar allocations with quantity only (remaining calculated by backend). Example: [{"hangar_id": 1, "quantity": "1250"}]
      *
      * @response 201 {
      *   "success": true,
@@ -187,8 +187,8 @@ class FeedStockController extends BaseController
      *       {
      *         "hangar_id": 1,
      *         "hangar_name": "Hangar A",
-     *         "quantity": "1250,00",
-     *         "remaining_quantity": "1250,00"
+     *         "quantity": "1250",
+     *         "remaining_quantity": "1250"
      *       }
      *     ]
      *   }
@@ -325,7 +325,7 @@ class FeedStockController extends BaseController
      * @bodyParam stock_date date required Stock date (format: d-m-Y). Example: 28-08-2026
      * @bodyParam material_name_id integer required Material Name ID from material_names table. Example: 1
      * @bodyParam material_type string required Material type (pelleted_feed, mash_feed, feed_ingredient, premix). Example: pelleted_feed
-     * @bodyParam quantity integer required Total quantity (use comma for decimal: 5000,50). Example: 5000,00
+     * @bodyParam quantity integer required Total quantity (use comma for decimal: 5000,50). Example: 5000
      * @bodyParam supplier_id integer required Supplier ID. Example: 1
      * @bodyParam hangar_allocations array required for pelleted_feed/mash_feed Array of hangar allocations with quantity only (remaining recalculated by backend).
      *
@@ -501,15 +501,15 @@ class FeedStockController extends BaseController
             'material_name' => $record->materialName?->name ?? $record->name,
             'material_type' => $record->materialName?->type,
             'name' => $record->name,
-            'quantity' => $this->formatDecimal($record->quantity),
+            'quantity' => $this->formatQuantity($record->quantity),
             'supplier_id' => $record->supplier_id,
             'supplier_name' => $record->supplier?->name ?? 'N/A',
             'hangar_allocations' => $record->materialStockHangarAllocations->map(fn($a) => [
                 'hangar_id' => $a->hangar_id,
                 'hangar_name' => $a->hangar->name,
                 'status' => $a->hangar->status,
-                'quantity' => $this->formatDecimal($a->quantity),
-                'remaining_quantity' => $this->formatDecimal($this->getHangarRemainingFeed($a->hangar_id)),
+                'quantity' => $this->formatQuantity($a->quantity),
+                'remaining_quantity' => $this->formatQuantity($this->getHangarRemainingFeed($a->hangar_id)),
             ]),
             'created_by' => $record->created_by,
             'created_by_name' => $record->creator->name,

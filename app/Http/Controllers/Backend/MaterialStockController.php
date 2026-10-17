@@ -91,8 +91,8 @@ class MaterialStockController extends Controller
                         $totalRemaining += max(0, $totalStock - $totalConsumed);
                     }
 
-                    return 'Total: ' . DecimalHelper::formatEuropean($row->quantity, 2) . ' kg<br>' .
-                           'Remaining: ' . DecimalHelper::formatEuropean($totalRemaining, 2) . ' kg';
+                    return 'Total: ' . DecimalHelper::formatQuantityEuropean($row->quantity, 2) . ' kg<br>' .
+                           'Remaining: ' . DecimalHelper::formatQuantityEuropean($totalRemaining, 2) . ' kg';
                 })
                 ->addColumn('assignment_status', function($row) {
                     $user = auth()->user();
@@ -107,7 +107,7 @@ class MaterialStockController extends Controller
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[0]) && $allocations[0]->hangar) {
                         $remaining = $this->getHangarRemainingFeed($allocations[0]->hangar_id);
-                        return $allocations[0]->hangar->name . '<br>Qty: ' . $allocations[0]->quantity . '<br>Remaining: ' . DecimalHelper::formatEuropean($remaining, 2);
+                        return $allocations[0]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[0]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
                 })
@@ -115,7 +115,7 @@ class MaterialStockController extends Controller
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[1]) && $allocations[1]->hangar) {
                         $remaining = $this->getHangarRemainingFeed($allocations[1]->hangar_id);
-                        return $allocations[1]->hangar->name . '<br>Qty: ' . $allocations[1]->quantity . '<br>Remaining: ' . DecimalHelper::formatEuropean($remaining, 2);
+                        return $allocations[1]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[1]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
                 })
@@ -123,7 +123,7 @@ class MaterialStockController extends Controller
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[2]) && $allocations[2]->hangar) {
                         $remaining = $this->getHangarRemainingFeed($allocations[2]->hangar_id);
-                        return $allocations[2]->hangar->name . '<br>Qty: ' . $allocations[2]->quantity . '<br>Remaining: ' . DecimalHelper::formatEuropean($remaining, 2);
+                        return $allocations[2]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[2]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
                 })
@@ -131,7 +131,7 @@ class MaterialStockController extends Controller
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[3]) && $allocations[3]->hangar) {
                         $remaining = $this->getHangarRemainingFeed($allocations[3]->hangar_id);
-                        return $allocations[3]->hangar->name . '<br>Qty: ' . $allocations[3]->quantity . '<br>Remaining: ' . DecimalHelper::formatEuropean($remaining, 2);
+                        return $allocations[3]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[3]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
                 })
@@ -139,7 +139,7 @@ class MaterialStockController extends Controller
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[4]) && $allocations[4]->hangar) {
                         $remaining = $this->getHangarRemainingFeed($allocations[4]->hangar_id);
-                        return $allocations[4]->hangar->name . '<br>Qty: ' . $allocations[4]->quantity . '<br>Remaining: ' . DecimalHelper::formatEuropean($remaining, 2);
+                        return $allocations[4]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[4]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
                 })
@@ -147,7 +147,7 @@ class MaterialStockController extends Controller
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[5]) && $allocations[5]->hangar) {
                         $remaining = $this->getHangarRemainingFeed($allocations[5]->hangar_id);
-                        return $allocations[5]->hangar->name . '<br>Qty: ' . $allocations[5]->quantity . '<br>Remaining: ' . DecimalHelper::formatEuropean($remaining, 2);
+                        return $allocations[5]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[5]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
                 })
@@ -155,7 +155,7 @@ class MaterialStockController extends Controller
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[6]) && $allocations[6]->hangar) {
                         $remaining = $this->getHangarRemainingFeed($allocations[6]->hangar_id);
-                        return $allocations[6]->hangar->name . '<br>Qty: ' . $allocations[6]->quantity . '<br>Remaining: ' . DecimalHelper::formatEuropean($remaining, 2);
+                        return $allocations[6]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[6]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
                 })
@@ -163,7 +163,7 @@ class MaterialStockController extends Controller
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[7]) && $allocations[7]->hangar) {
                         $remaining = $this->getHangarRemainingFeed($allocations[7]->hangar_id);
-                        return $allocations[7]->hangar->name . '<br>Qty: ' . $allocations[7]->quantity . '<br>Remaining: ' . DecimalHelper::formatEuropean($remaining, 2);
+                        return $allocations[7]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[7]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
                 })
@@ -171,7 +171,7 @@ class MaterialStockController extends Controller
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[8]) && $allocations[8]->hangar) {
                         $remaining = $this->getHangarRemainingFeed($allocations[8]->hangar_id);
-                        return $allocations[8]->hangar->name . '<br>Qty: ' . $allocations[8]->quantity . '<br>Remaining: ' . DecimalHelper::formatEuropean($remaining, 2);
+                        return $allocations[8]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[8]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
                 })
@@ -179,7 +179,7 @@ class MaterialStockController extends Controller
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[9]) && $allocations[9]->hangar) {
                         $remaining = $this->getHangarRemainingFeed($allocations[9]->hangar_id);
-                        return $allocations[9]->hangar->name . '<br>Qty: ' . $allocations[9]->quantity . '<br>Remaining: ' . DecimalHelper::formatEuropean($remaining, 2);
+                        return $allocations[9]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[9]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
                 })
@@ -238,7 +238,7 @@ class MaterialStockController extends Controller
             return [
                 'id' => $hangar->id,
                 'name' => $hangar->name,
-                'remaining' => DecimalHelper::formatEuropean($remaining, 2)
+                'remaining' => DecimalHelper::formatQuantityEuropean($remaining, 2)
             ];
         });
 

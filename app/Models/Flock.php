@@ -69,14 +69,17 @@ class Flock extends Model
      */
     public function saleStatus(): array
     {
+        // Sum harvests per hangar so the result does not depend on the stored remaining_birds
+        // of the latest row, which goes stale when an earlier harvest record is edited.
+        $harvestedByHangar = FlockEnd::where('flock_id', $this->id)
+            ->selectRaw('hangar_id, SUM(total_birds_harvested) as harvested')
+            ->groupBy('hangar_id')
+            ->pluck('harvested', 'hangar_id');
+
         $remainingBirds = 0;
         foreach ($this->flockHangarAllocations as $allocation) {
-            $lastHarvest = FlockEnd::where('flock_id', $this->id)
-                ->where('hangar_id', $allocation->hangar_id)
-                ->latest()
-                ->first();
-
-            $remainingBirds += $lastHarvest ? $lastHarvest->remaining_birds : $allocation->quantity;
+            $harvested = (int) ($harvestedByHangar[$allocation->hangar_id] ?? 0);
+            $remainingBirds += max(0, $allocation->quantity - $harvested);
         }
 
         if (!$this->flockEnds()->exists()) {

@@ -120,9 +120,13 @@ class HomeController extends Controller
         }
 
         if ($user->can('view.user')) {
-            $userCount = Admin::where('type', 'user')
-                ->when(!$isSuperAdmin, function ($q) use ($user) {
-                    $q->where('created_by', $user->id);
+            // Same scope as AdminController::users() so the dashboard count matches the module list
+            $userCount = Admin::where('type', 4)
+                ->when($user->type != Admin::SUPER_ADMIN, function ($q) use ($user) {
+                    $q->where(function ($subQ) use ($user) {
+                        $subQ->where('created_by', $user->id)
+                             ->orWhere('parent_id', $user->id);
+                    });
                 })
                 ->count();
             $modules['customer']['items'][] = [

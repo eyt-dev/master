@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Add2Farm;
 use App\Http\Controllers\Controller;
 use App\Models\MaterialStock;
 use App\Models\MaterialStockHangar;
+use App\Models\MaterialType;
 use App\Models\Hangar;
 use App\Models\Farm;
 use Illuminate\Http\Request;
@@ -171,7 +172,7 @@ class FeedStockController extends BaseController
      * @bodyParam stock_date date required Stock date (format: d-m-Y). Example: 28-08-2026
      * @bodyParam farm_id integer required Farm ID. Example: 1
      * @bodyParam material_name_id integer required Material Name ID from material_names table. Example: 1
-     * @bodyParam material_type string required Material type (pelleted_feed, mash_feed, feed_ingredient, premix). Example: pelleted_feed
+     * @bodyParam material_type string required Material type value or name as returned by the material names API (e.g. pelleted_feed or "Pelleted Feed"). Example: pelleted_feed
      * @bodyParam quantity integer required Total quantity (use comma for decimal: 5000,50). Example: 5000
      * @bodyParam supplier_id integer required Supplier ID. Example: 1
      * @bodyParam hangar_allocations array required for pelleted_feed/mash_feed Array of hangar allocations with quantity only (remaining calculated by backend). Example: [{"hangar_id": 1, "quantity": "1250"}]
@@ -212,13 +213,17 @@ class FeedStockController extends BaseController
             }
         }
 
+        // Accept material type value (broiler_feed) or display name (Broiler Feed) as returned by material names API
+        $materialTypeRecord = $this->resolveMaterialType($data['material_type'] ?? '');
+        $data['material_type'] = $materialTypeRecord?->value ?? strtolower($data['material_type'] ?? '');
+
         // Get dynamic material types from database
-        $materialTypes = \App\Models\MaterialType::pluck('value')->toArray();
+        $materialTypes = MaterialType::pluck('value')->toArray();
         $materialTypesString = implode(',', $materialTypes);
 
         // Check if hangar allocation is required based on material_type
-        $materialType = strtolower($data['material_type'] ?? '');
-        $hangarAllocationRequired = \App\Models\MaterialType::where('value', $materialType)->value('hangar_allocation') ?? false;
+        $materialType = $data['material_type'];
+        $hangarAllocationRequired = MaterialType::where('value', $materialType)->value('hangar_allocation') ?? false;
 
         $rules = [
             'stock_date' => 'required|date_format:d-m-Y',
@@ -255,9 +260,8 @@ class FeedStockController extends BaseController
                 return response()->json(['success' => false, 'message' => 'Material name not found.'], 422);
             }
 
-            $materialNameType = strtolower(str_replace(' ', '_', $materialName->type));
-            if ($materialNameType !== $materialType) {
-                return response()->json(['success' => false, 'message' => "Material type mismatch. Expected {$materialNameType}, got {$materialType}."], 422);
+            if ($materialName->material_type_id !== $materialTypeRecord?->id) {
+                return response()->json(['success' => false, 'message' => "Material type mismatch. Expected {$materialName->type}, got {$materialType}."], 422);
             }
 
             // Validate hangar allocations only if they are provided
@@ -324,7 +328,7 @@ class FeedStockController extends BaseController
      * @urlParam id integer required The material stock ID. Example: 1
      * @bodyParam stock_date date required Stock date (format: d-m-Y). Example: 28-08-2026
      * @bodyParam material_name_id integer required Material Name ID from material_names table. Example: 1
-     * @bodyParam material_type string required Material type (pelleted_feed, mash_feed, feed_ingredient, premix). Example: pelleted_feed
+     * @bodyParam material_type string required Material type value or name as returned by the material names API (e.g. pelleted_feed or "Pelleted Feed"). Example: pelleted_feed
      * @bodyParam quantity integer required Total quantity (use comma for decimal: 5000,50). Example: 5000
      * @bodyParam supplier_id integer required Supplier ID. Example: 1
      * @bodyParam hangar_allocations array required for pelleted_feed/mash_feed Array of hangar allocations with quantity only (remaining recalculated by backend).
@@ -359,13 +363,17 @@ class FeedStockController extends BaseController
             }
         }
 
+        // Accept material type value (broiler_feed) or display name (Broiler Feed) as returned by material names API
+        $materialTypeRecord = $this->resolveMaterialType($data['material_type'] ?? '');
+        $data['material_type'] = $materialTypeRecord?->value ?? strtolower($data['material_type'] ?? '');
+
         // Get dynamic material types from database
-        $materialTypes = \App\Models\MaterialType::pluck('value')->toArray();
+        $materialTypes = MaterialType::pluck('value')->toArray();
         $materialTypesString = implode(',', $materialTypes);
 
         // Check if hangar allocation is required based on material_type
-        $materialType = strtolower($data['material_type'] ?? '');
-        $hangarAllocationRequired = \App\Models\MaterialType::where('value', $materialType)->value('hangar_allocation') ?? false;
+        $materialType = $data['material_type'];
+        $hangarAllocationRequired = MaterialType::where('value', $materialType)->value('hangar_allocation') ?? false;
 
         $rules = [
             'stock_date' => 'required|date_format:d-m-Y',
@@ -393,9 +401,8 @@ class FeedStockController extends BaseController
                 return response()->json(['success' => false, 'message' => 'Material name not found.'], 422);
             }
 
-            $materialNameType = strtolower(str_replace(' ', '_', $materialName->type));
-            if ($materialNameType !== $materialType) {
-                return response()->json(['success' => false, 'message' => "Material type mismatch. Expected {$materialNameType}, got {$materialType}."], 422);
+            if ($materialName->material_type_id !== $materialTypeRecord?->id) {
+                return response()->json(['success' => false, 'message' => "Material type mismatch. Expected {$materialName->type}, got {$materialType}."], 422);
             }
 
             // Validate hangar allocations only if they are provided
@@ -488,6 +495,24 @@ class FeedStockController extends BaseController
             \Log::error('Material stock deletion error: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Failed to delete material stock.'], 500);
         }
+    }
+
+    /**
+     * Resolve a material type from its value (broiler_feed) or its name (Broiler Feed)
+     */
+    private function resolveMaterialType(string $input): ?MaterialType
+    {
+        $input = trim($input);
+
+        if ($input === '') {
+            return null;
+        }
+
+        $normalized = strtolower(str_replace(' ', '_', $input));
+
+        return MaterialType::whereIn('value', [$input, $normalized])
+            ->orWhereRaw('LOWER(name) = ?', [strtolower($input)])
+            ->first();
     }
 
     private function formatRecord($record)

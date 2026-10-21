@@ -8,6 +8,7 @@ use App\Models\MaterialStockHangar;
 use App\Models\MaterialType;
 use App\Models\Hangar;
 use App\Models\Farm;
+use App\Models\Flock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -252,6 +253,11 @@ class FeedStockController extends BaseController
 
             if (!$farm) {
                 return response()->json(['success' => false, 'message' => 'Farm not found or access denied.'], 403);
+            }
+
+            // Feedstock can only be added once the farm has a flock
+            if (!Flock::where('farm_id', $data['farm_id'])->exists()) {
+                return response()->json(['success' => false, 'message' => 'Cannot add feedstock. Create a flock for this farm first.'], 422);
             }
 
             // Validate material_type matches material_name type

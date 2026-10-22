@@ -594,7 +594,8 @@ class DailyRecordController extends Controller
         try {
             DB::beginTransaction();
 
-            $recordDate = Carbon::createFromFormat('Y-m-d', $request->record_date);
+            // '!' resets the time to midnight so the date matches the stored DATE value
+            $recordDate = Carbon::createFromFormat('!Y-m-d', $request->record_date);
 
             // Get all OLD hangars affected before any deletions (for recalculation)
             $oldHangarsAffected = DailyRecord::where('flock_id', $request->flock_id)

@@ -562,6 +562,19 @@ class DailyRecordController extends BaseController
             ], 422);
         }
 
+        // Only one daily record set per farm per date
+        $existsForFarmAndDate = DailyRecord::where('farm_id', $flock->farm_id)
+            ->where('record_date', \Carbon\Carbon::createFromFormat('!d-m-Y', $request->record_date))
+            ->exists();
+
+        if ($existsForFarmAndDate) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A daily record already exists for this farm on this date.',
+                'errors'  => ['record_date' => ['A daily record already exists for this farm on this date.']],
+            ], 422);
+        }
+
         // Validate feed stock availability (FIFO - First In First Out)
         foreach ($request->hangars as $hangarData) {
             $feedKg = (float)$hangarData['feed_kg'];
@@ -589,7 +602,7 @@ class DailyRecordController extends BaseController
         try {
             DB::beginTransaction();
 
-            $recordDate = \Carbon\Carbon::createFromFormat('d-m-Y', $request->record_date);
+            $recordDate = \Carbon\Carbon::createFromFormat('!d-m-Y', $request->record_date);
             $records = [];
 
             foreach ($request->hangars as $hangarData) {
@@ -830,8 +843,8 @@ class DailyRecordController extends BaseController
         try {
             DB::beginTransaction();
 
-            // Convert date format from dd-mm-yyyy to yyyy-mm-dd
-            $recordDate = \Carbon\Carbon::createFromFormat('d-m-Y', $request->record_date);
+            // Convert date format from dd-mm-yyyy to yyyy-mm-dd ('!' resets the time to midnight)
+            $recordDate = \Carbon\Carbon::createFromFormat('!d-m-Y', $request->record_date);
 
             // Get the farm_id from the flock
             $flock = Flock::findOrFail($request->flock_id);
@@ -846,11 +859,10 @@ class DailyRecordController extends BaseController
                 ->merge(collect($request->hangars)->pluck('hangar_id')->unique())
                 ->unique();
 
-            // Delete all existing records for this date, flock, and farm
+            // Delete all existing records for this date, flock, and farm (including the one being updated)
             DailyRecord::where('record_date', $oldDate)
                 ->where('farm_id', $flock->farm_id)
                 ->where('flock_id', $request->flock_id)
-                ->where('id', '!=', $id)
                 ->delete();
 
             $records = [];

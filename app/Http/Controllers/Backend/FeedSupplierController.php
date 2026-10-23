@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\DecimalHelper;
 use Illuminate\Http\Request;
 use App\Models\FeedSupplier;
 use App\Models\Country;
@@ -95,6 +96,11 @@ class FeedSupplierController extends Controller
 
     public function update(Request $request, $siteUrl, $id)
     {
+        $request->merge([
+            'latitude' => DecimalHelper::parseEuropean($request->latitude),
+            'longitude' => DecimalHelper::parseEuropean($request->longitude),
+        ]);
+
         $request->validate([
             'name' => 'required',
             'location' => 'required',

@@ -304,6 +304,8 @@ class MaterialStockController extends Controller
         // Hangar allocation required for pelleted_feed and mash_feed only
         $hangarAllocationRequired = in_array($materialType, ['pelleted_feed', 'mash_feed']);
 
+        $request->merge(['quantity' => DecimalHelper::parseEuropean($request->quantity)]);
+
         $rules = [
             'farm_id' => 'required|exists:farms,id',
             'supplier_id' => 'required|exists:feed_suppliers,id',
@@ -444,6 +446,8 @@ class MaterialStockController extends Controller
         $materialType = $materialName ? strtolower(str_replace(' ', '_', $materialName->type)) : '';
         // Hangar allocation required for pelleted_feed and mash_feed only
         $hangarAllocationRequired = in_array($materialType, ['pelleted_feed', 'mash_feed']);
+
+        $request->merge(['quantity' => DecimalHelper::parseEuropean($request->quantity)]);
 
         $rules = [
             'farm_id' => 'required|exists:farms,id',

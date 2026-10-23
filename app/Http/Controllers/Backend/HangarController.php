@@ -82,6 +82,8 @@ class HangarController extends Controller
 
     public function store(Request $request, $siteUrl)
     {
+        $request->merge($this->parseNumbers($request));
+
         $request->validate([
             'farm_id' => 'required',
             'name' => 'required|string',
@@ -147,6 +149,8 @@ class HangarController extends Controller
             }
         }
 
+        $request->merge($this->parseNumbers($request));
+
         $request->validate([
             'farm_id' => 'required',
             'name' => 'required|string',
@@ -165,6 +169,18 @@ class HangarController extends Controller
 
         Session::flash('successMsg', 'Hangar updated successfully.');
         return redirect()->route('hangar.index', ['username' => request()->segment(1)]);
+    }
+
+    /**
+     * Read the European-format inputs: area and hen counts are whole numbers ("10.000" = 10000)
+     */
+    private function parseNumbers(Request $request)
+    {
+        return [
+            'area_sqm' => DecimalHelper::parseEuropeanInteger($request->area_sqm),
+            'layer_hens' => DecimalHelper::parseEuropeanInteger($request->layer_hens),
+            'broiler_hens' => DecimalHelper::parseEuropeanInteger($request->broiler_hens),
+        ];
     }
 
     public function destroy($siteUrl, Hangar $hangar)

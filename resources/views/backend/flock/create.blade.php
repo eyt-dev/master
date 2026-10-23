@@ -119,8 +119,8 @@
         <div class="col-sm-12 col-md-12">
             <div class="form-group">
                 <label for="total_quantity" class="form-label">Total Quantity <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="total_quantity" id="total_quantity" placeholder="Total Quantity" 
-                    value="{{ old('total_quantity', $flock->total_quantity ?? '') }}" required="" min="1" />
+                <input type="text" inputmode="numeric" class="form-control" name="total_quantity" id="total_quantity" placeholder="Total Quantity" 
+                    value="{{ old('total_quantity', isset($flock) ? \App\Helpers\DecimalHelper::formatInteger($flock->total_quantity) : '') }}" required="" />
                 @error('total_quantity')
                     <label id="total_quantity-error" class="error" for="total_quantity">{{ $message }}</label>
                 @enderror
@@ -297,8 +297,8 @@
                             </div>
                         </div>
                         <div class="ml-3" style="min-width: 150px;">
-                            <input type="number" class="form-control hangar-quantity-input" name="hangar_qty[${hangar.id}]"
-                                placeholder="Qty" value="${displayQty}" min="0" data-hangar-id="${hangar.id}"
+                            <input type="text" inputmode="numeric" class="form-control hangar-quantity-input" name="hangar_qty[${hangar.id}]"
+                                placeholder="Qty" value="${formatIntegerEU(displayQty)}" data-hangar-id="${hangar.id}"
                                 ${isDisabled ? 'disabled' : ''} />
                         </div>
                     </div>
@@ -321,7 +321,7 @@
         function calculateTotalQuantity() {
             var total = 0;
             $('.hangar-quantity-input').each(function() {
-                var qty = parseInt($(this).val()) || 0;
+                var qty = parseEuropeanNumber($(this).val()) || 0;
                 total += qty;
             });
             // Show suggestion to user but don't override their input
@@ -416,7 +416,7 @@
                 }
 
                 var hangarId = $(this).data('hangar-id');
-                var quantity = parseInt($(this).val()) || 0;
+                var quantity = parseEuropeanNumber($(this).val()) || 0;
 
                 if (quantity > 0) {
                     selectedHangars.push({ hangar_id: hangarId, quantity: quantity });
@@ -435,7 +435,7 @@
             }
 
             // Validate total_quantity is entered
-            var totalQty = parseInt($('#total_quantity').val());
+            var totalQty = parseEuropeanNumber($('#total_quantity').val());
             if (!totalQty || totalQty < 1) {
                 e.preventDefault();
                 swal({

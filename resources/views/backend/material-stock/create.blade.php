@@ -115,8 +115,8 @@
         <div class="col-sm-12 col-md-12">
             <div class="form-group">
                 <label for="quantity" class="form-label">Total Quantity <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="quantity" id="quantity" placeholder="Total Quantity" 
-                    value="{{ old('quantity', $materialStock->quantity ?? '') }}" required="" min="1" />
+                <input type="text" inputmode="decimal" class="form-control" name="quantity" id="quantity" placeholder="Total Quantity"
+                    value="{{ old('quantity', isset($materialStock) ? \App\Helpers\DecimalHelper::formatQuantityEuropean($materialStock->quantity, 2) : '') }}" required="" />
                 @error('quantity')
                     <label id="quantity-error" class="error" for="quantity">{{ $message }}</label>
                 @enderror
@@ -228,8 +228,8 @@
                         </div>
                         <div class="ml-3" style="min-width: 150px;">
                             <label style="font-size: 12px; color: #666;">Allocation Qty</label>
-                            <input type="number" class="form-control hangar-quantity-input" name="hangar_qty[${hangar.id}]"
-                                placeholder="0" value="${quantity}" min="0" step="0.01" data-hangar-id="${hangar.id}" />
+                            <input type="text" inputmode="decimal" class="form-control hangar-quantity-input" name="hangar_qty[${hangar.id}]"
+                                placeholder="0" value="${formatDecimalEU(quantity)}" data-hangar-id="${hangar.id}" />
                         </div>
                     </div>
                 `;
@@ -392,7 +392,7 @@
             if (requiresHangarAllocation) {
                 $('.hangar-quantity-input').each(function() {
                     var hangarId = $(this).data('hangar-id');
-                    var quantity = parseFloat($(this).val()) || 0;
+                    var quantity = parseEuropeanNumber($(this).val()) || 0;
 
                     if (quantity > 0) {
                         totalQty += quantity;
@@ -408,14 +408,14 @@
                     return false;
                 }
 
-                var qty = parseFloat($('#quantity').val());
+                var qty = parseEuropeanNumber($('#quantity').val());
                 if (!qty || qty < 1) {
                     swal({title: 'Validation Error', text: 'Please enter a valid total quantity.', icon: 'warning', button: 'OK'});
                     return false;
                 }
 
                 if (Math.abs(totalQty - qty) > 0.01) {
-                    swal({title: 'Validation Error', text: 'Total of hangar quantities (' + totalQty.toFixed(2) + ') must equal total quantity (' + qty.toFixed(2) + ').', icon: 'warning', button: 'OK'});
+                    swal({title: 'Validation Error', text: 'Total of hangar quantities (' + formatDecimalEU(totalQty, 2) + ') must equal total quantity (' + formatDecimalEU(qty, 2) + ').', icon: 'warning', button: 'OK'});
                     return false;
                 }
 

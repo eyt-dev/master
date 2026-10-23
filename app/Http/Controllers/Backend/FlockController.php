@@ -11,6 +11,7 @@ use App\Models\Hangar;
 use App\Models\FlockHangar;
 use App\Models\FlockEnd;
 use App\Models\Admin;
+use App\Helpers\DecimalHelper;
 use App\Helpers\FlockNamingHelper;
 use Illuminate\Support\Facades\Session;
 
@@ -125,8 +126,8 @@ class FlockController extends Controller
                     return date('Y-m-d', strtotime($row['start_date']));
                 })
                 ->addColumn('birds_summary', function($row) {
-                    $total = $row['birds'] ?? 0;
-                    $remaining = $row['remaining_birds'] ?? 0;
+                    $total = DecimalHelper::formatInteger($row['birds'] ?? 0);
+                    $remaining = DecimalHelper::formatInteger($row['remaining_birds'] ?? 0);
                     return '<div style="font-size: 0.9rem; line-height: 1.6;">
                             <strong>Total:</strong> ' . $total . '<br>
                             <strong>Remaining:</strong> ' . $remaining . '
@@ -146,7 +147,7 @@ class FlockController extends Controller
             // Add fixed 10 hangar columns
             for ($i = 1; $i <= 10; $i++) {
                 $datatableBuilder->addColumn('hangar' . $i, function($row) use ($i) {
-                    return $row['hangar' . $i];
+                    return DecimalHelper::formatInteger($row['hangar' . $i]);
                 });
             }
 
@@ -301,15 +302,39 @@ class FlockController extends Controller
         return response()->json(['sequence' => $sequence]);
     }
 
+    /**
+     * Hangar allocations arrive as JSON. Each quantity is a number of birds, so it must be a whole number above zero.
+     * Returns the list with integer quantities, or null when a quantity is invalid.
+     */
+    private function parseHangarQuantities($allocations)
+    {
+        if (!is_array($allocations)) {
+            return null;
+        }
+
+        foreach ($allocations as &$allocation) {
+            $allocation['quantity'] = DecimalHelper::parseEuropeanInteger($allocation['quantity'] ?? null);
+
+            if (!is_int($allocation['quantity']) || $allocation['quantity'] < 1) {
+                return null;
+            }
+        }
+        unset($allocation);
+
+        return $allocations;
+    }
+
     public function store(Request $request, $siteUrl)
     {
+        $request->merge(['total_quantity' => DecimalHelper::parseEuropeanInteger($request->total_quantity)]);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'farm_id' => 'required|exists:farms,id',
             'chicks_supplier_id' => 'required|exists:chicks_suppliers,id',
             'breed' => 'required|string',
             'start_date' => 'required|date|before_or_equal:today',
-            'total_quantity' => 'required|numeric|min:1',
+            'total_quantity' => 'required|integer|min:1',
             'hangar_quantities_json' => 'required|json',
         ]);
 
@@ -331,6 +356,11 @@ class FlockController extends Controller
 
         if (empty($hangarQuantities)) {
             return back()->withErrors(['hangar_quantities_json' => 'Please select at least one hangar with quantity.']);
+        }
+
+        $hangarQuantities = $this->parseHangarQuantities($hangarQuantities);
+        if ($hangarQuantities === null) {
+            return back()->withErrors(['hangar_quantities_json' => 'Hangar quantities must be whole numbers greater than zero.']);
         }
 
         // Check for duplicate hangars in the submission
@@ -407,13 +437,15 @@ class FlockController extends Controller
 
     public function update(Request $request, $siteUrl, $id)
     {
+        $request->merge(['total_quantity' => DecimalHelper::parseEuropeanInteger($request->total_quantity)]);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'farm_id' => 'required|exists:farms,id',
             'chicks_supplier_id' => 'required|exists:chicks_suppliers,id',
             'breed' => 'required|string',
             'start_date' => 'required|date|before_or_equal:today',
-            'total_quantity' => 'required|numeric|min:1',
+            'total_quantity' => 'required|integer|min:1',
             'hangar_quantities_json' => 'required|json',
         ]);
 
@@ -452,6 +484,11 @@ class FlockController extends Controller
 
         if (empty($hangarQuantities)) {
             return back()->withErrors(['hangar_quantities_json' => 'Please select at least one hangar with quantity.']);
+        }
+
+        $hangarQuantities = $this->parseHangarQuantities($hangarQuantities);
+        if ($hangarQuantities === null) {
+            return back()->withErrors(['hangar_quantities_json' => 'Hangar quantities must be whole numbers greater than zero.']);
         }
 
         // Check for duplicate hangars in the submission

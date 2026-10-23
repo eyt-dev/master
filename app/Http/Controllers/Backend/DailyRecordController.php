@@ -223,14 +223,14 @@ class DailyRecordController extends Controller
         $eggsWeight = DecimalHelper::formatEuropean((float) $hangar['eggs_weight'], 2);
         $chicksWeightG = DecimalHelper::formatEuropean((float) $hangar['chicks_weight'] * 1000, 0);
 
-        $html = 'Qty: ' . $hangar['allocated_quantity'] . '<br>' .
+        $html = 'Qty: ' . DecimalHelper::formatInteger($hangar['allocated_quantity']) . '<br>' .
                 'Feed: ' . $feedKg . ' kg<br>' .
-                'Mortality: ' . $hangar['mortality'];
+                'Mortality: ' . DecimalHelper::formatInteger($hangar['mortality']);
 
         // Show breed-specific fields
         if ($breedType === 'Layer') {
-            $html .= '<br>Eggs(T): ' . $hangar['eggs_tray_30'] .
-                     '<br>Eggs(C): ' . $hangar['eggs_count'] .
+            $html .= '<br>Eggs(T): ' . DecimalHelper::formatInteger($hangar['eggs_tray_30']) .
+                     '<br>Eggs(C): ' . DecimalHelper::formatInteger($hangar['eggs_count']) .
                      '<br>Eggs Weight: ' . $eggsWeight . ' kg';
         } else {
             $html .= '<br>Chicks Weight: ' . $chicksWeightG . ' g';
@@ -242,6 +242,47 @@ class DailyRecordController extends Controller
         }
 
         return $html;
+    }
+
+    /**
+     * Read the hangar rows posted by the form. Decimals may use a comma ("1.000,50"),
+     * eggs and mortality must be whole numbers ("10.000" = 10000).
+     * Returns null when a value cannot be read as the right kind of number.
+     */
+    private function normalizeHangarRecords($records)
+    {
+        if (!is_array($records)) {
+            return null;
+        }
+
+        foreach ($records as &$record) {
+            if (!is_array($record)) {
+                return null;
+            }
+
+            foreach (['feed_kg', 'eggs_weight', 'chicks_weight'] as $field) {
+                if (isset($record[$field])) {
+                    $record[$field] = DecimalHelper::parseEuropean($record[$field]);
+
+                    if ($record[$field] !== null && !is_numeric($record[$field])) {
+                        return null;
+                    }
+                }
+            }
+
+            foreach (['eggs_tray_30', 'eggs_count', 'mortality'] as $field) {
+                if (isset($record[$field])) {
+                    $record[$field] = DecimalHelper::parseEuropeanInteger($record[$field]);
+
+                    if ($record[$field] !== null && !is_int($record[$field])) {
+                        return null;
+                    }
+                }
+            }
+        }
+        unset($record);
+
+        return $records;
     }
 
     public function create()
@@ -342,7 +383,15 @@ class DailyRecordController extends Controller
 
         $flock = Flock::findOrFail($request->flock_id);
         $breedType = $this->extractBreedType($flock->breed);
-        $hangarRecords = json_decode($request->hangar_records, true);
+        $hangarRecords = $this->normalizeHangarRecords(json_decode($request->hangar_records, true) ?? []);
+
+        if ($hangarRecords === null) {
+            $error = ['hangar_records' => 'Feed, weights and eggs must be numbers, and eggs and mortality must be whole numbers.'];
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'errors' => $error], 422);
+            }
+            return back()->withErrors($error);
+        }
 
         if (empty($hangarRecords)) {
             $error = ['hangar_records' => 'Please add at least one hangar record.'];
@@ -390,7 +439,7 @@ class DailyRecordController extends Controller
 
             if ($feedKg > $currentRemaining) {
                 $remainingMsg = $currentRemaining > 0
-                    ? "only {$currentRemaining} kg available"
+                    ? 'only ' . DecimalHelper::formatEuropean($currentRemaining, 2) . ' kg available'
                     : "out of stock";
                 $error = ['hangar_records' => "Insufficient feed in {$hangarName} - {$remainingMsg}"];
                 if ($request->expectsJson()) {
@@ -528,7 +577,15 @@ class DailyRecordController extends Controller
 
         $flock = Flock::findOrFail($request->flock_id);
         $breedType = $this->extractBreedType($flock->breed);
-        $hangarRecords = json_decode($request->hangar_records, true);
+        $hangarRecords = $this->normalizeHangarRecords(json_decode($request->hangar_records, true) ?? []);
+
+        if ($hangarRecords === null) {
+            $error = ['hangar_records' => 'Feed, weights and eggs must be numbers, and eggs and mortality must be whole numbers.'];
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'errors' => $error], 422);
+            }
+            return back()->withErrors($error);
+        }
 
         if (empty($hangarRecords)) {
             $error = ['hangar_records' => 'Please add at least one hangar record.'];
@@ -585,7 +642,7 @@ class DailyRecordController extends Controller
 
             if ($feedKg > $availableStock) {
                 $remainingMsg = $availableStock > 0
-                    ? "only {$availableStock} kg available"
+                    ? 'only ' . DecimalHelper::formatEuropean($availableStock, 2) . ' kg available'
                     : "out of stock";
                 return back()->withErrors(['hangar_records' => "Insufficient feed in {$hangarName} - {$remainingMsg}"]);
             }

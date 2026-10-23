@@ -78,6 +78,43 @@ function normalizeMoneyEU(value) {
 }
 
 /**
+ * Read a number typed in European format, same rules as DecimalHelper::parseEuropean (PHP)
+ * Input:  "1.000,50" → 1000.5 | "10.000" → 10000 | "1,5" → 1.5 | "12.9716" → 12.9716
+ * Returns NaN when empty or unreadable
+ */
+function parseEuropeanNumber(value) {
+    var str = (value === null || value === undefined ? '' : String(value)).trim().replace(/\s/g, '');
+
+    if (/^-?(\d{1,3}(\.\d{3})+|\d+)(,\d+)?$/.test(str)) {
+        return parseFloat(str.replace(/\./g, '').replace(',', '.'));
+    }
+    if (/^-?\d+(\.\d+)?$/.test(str)) {
+        return parseFloat(str);
+    }
+    return NaN;
+}
+
+/**
+ * Display a whole number with European thousands separator
+ * Input:  10000 or "10000"  →  Output: "10.000"
+ */
+function formatIntegerEU(value) {
+    var num = Number(value);
+    if (value === null || value === undefined || value === '' || isNaN(num)) return value;
+    return num.toLocaleString('de-DE', { maximumFractionDigits: 0 });
+}
+
+/**
+ * Display a decimal number with European separators, up to 2 decimals
+ * Input:  1250.5 → "1.250,5" (minDecimals 0) | 1250 with minDecimals 2 → "1.250,00"
+ */
+function formatDecimalEU(value, minDecimals) {
+    var num = Number(value);
+    if (value === null || value === undefined || value === '' || isNaN(num)) return value;
+    return num.toLocaleString('de-DE', { minimumFractionDigits: minDecimals || 0, maximumFractionDigits: 2 });
+}
+
+/**
  * Bind live formatting to all inputs with class .amount-input
  * Call once after DOM ready (and after dynamic rows are added).
  */

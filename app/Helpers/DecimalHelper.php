@@ -105,6 +105,79 @@ class DecimalHelper
     }
 
     /**
+     * Parse a number typed in European format (dot = thousands, comma = decimal)
+     * A dot is a thousands separator only when it groups three digits ("10.000"),
+     * so plain decimals ("1.5") and coordinates ("12.9716") keep their meaning.
+     * Input: "1.000,50" → 1000.5 | "10.000" → 10000 | "1,5" → 1.5 | "12.9716" → 12.9716
+     * Numbers pass through as float; unreadable input is returned unchanged so validation rejects it
+     */
+    public static function parseEuropean($value)
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return (float) $value;
+        }
+
+        $cleaned = str_replace(' ', '', trim((string) $value));
+
+        if (preg_match('/^-?(\d{1,3}(\.\d{3})+|\d+)(,\d+)?$/', $cleaned)) {
+            return (float) str_replace(['.', ','], ['', '.'], $cleaned);
+        }
+
+        if (preg_match('/^-?\d+(\.\d+)?$/', $cleaned)) {
+            return (float) $cleaned;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Parse a whole number typed in European format ("10.000" → 10000)
+     * Returns an int when the value is whole; anything else is returned as-is so the 'integer' rule rejects it
+     */
+    public static function parseEuropeanInteger($value)
+    {
+        $number = self::parseEuropean($value);
+
+        if (is_float($number) && floor($number) == $number) {
+            return (int) $number;
+        }
+
+        return $number;
+    }
+
+    /**
+     * Format a whole number with European thousands separator
+     * Examples: 10000 → "10.000" | 1250 → "1.250" | 'N/A' → 'N/A'
+     */
+    public static function formatInteger($value)
+    {
+        if ($value === null || $value === '' || !is_numeric($value)) {
+            return $value;
+        }
+
+        return number_format((float) $value, 0, ',', '.');
+    }
+
+    /**
+     * Format a coordinate with comma decimal and no trailing zeros
+     * Examples: 12.97160000 → "12,9716" | 77.5 → "77,5" | 0 → "0"
+     */
+    public static function formatCoordinate($value)
+    {
+        if ($value === null || $value === '' || !is_numeric($value)) {
+            return $value;
+        }
+
+        $formatted = rtrim(rtrim(number_format((float) $value, 8, '.', ''), '0'), '.');
+
+        return str_replace('.', ',', $formatted);
+    }
+
+    /**
      * Format number as European style for display purposes
      * Alias for formatEuropean for semantic clarity
      */

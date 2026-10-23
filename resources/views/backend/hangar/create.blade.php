@@ -42,8 +42,8 @@
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="area_sqm" class="form-label">Area (SQM) <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="area_sqm" id="area_sqm" placeholder="Area in Square Meters"
-                    value="{{ old('area_sqm', $hangar->area_sqm ?? '') }}" required="" step="1" min="0" />
+                <input type="text" inputmode="numeric" class="form-control" name="area_sqm" id="area_sqm" placeholder="Area in Square Meters"
+                    value="{{ old('area_sqm', isset($hangar) ? \App\Helpers\DecimalHelper::formatInteger($hangar->area_sqm) : '') }}" required="" />
                 @error('area_sqm')
                     <label id="area_sqm-error" class="error" for="area_sqm">{{ $message }}</label>
                 @enderror
@@ -56,8 +56,8 @@
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="layer_hens" class="form-label">Layer Hens <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="layer_hens" id="layer_hens" placeholder="Number of Layer Hens"
-                    value="{{ old('layer_hens', $hangar->layer_hens ?? '') }}" required="" />
+                <input type="text" inputmode="numeric" class="form-control" name="layer_hens" id="layer_hens" placeholder="Number of Layer Hens"
+                    value="{{ old('layer_hens', isset($hangar) ? \App\Helpers\DecimalHelper::formatInteger($hangar->layer_hens) : '') }}" required="" />
                 @error('layer_hens')
                     <label id="layer_hens-error" class="error" for="layer_hens">{{ $message }}</label>
                 @enderror
@@ -68,8 +68,8 @@
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="broiler_hens" class="form-label">Broiler Hens <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="broiler_hens" id="broiler_hens" placeholder="Number of Broiler Hens"
-                    value="{{ old('broiler_hens', $hangar->broiler_hens ?? '') }}" required="" />
+                <input type="text" inputmode="numeric" class="form-control" name="broiler_hens" id="broiler_hens" placeholder="Number of Broiler Hens"
+                    value="{{ old('broiler_hens', isset($hangar) ? \App\Helpers\DecimalHelper::formatInteger($hangar->broiler_hens) : '') }}" required="" />
                 @error('broiler_hens')
                     <label id="broiler_hens-error" class="error" for="broiler_hens">{{ $message }}</label>
                 @enderror

@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\DecimalHelper;
 use Illuminate\Http\Request;
 use App\Models\Farm;
 use App\Models\Admin;
@@ -75,12 +76,14 @@ class FarmController extends Controller
 
     public function store(Request $request, $siteUrl)
     {
+        $request->merge($this->parseNumbers($request));
+
         $validated = $request->validate([
             'name' => 'required|unique:farms,name',
             'location' => 'required',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
-            'number_of_hangars' => 'required|numeric|min:1',
+            'number_of_hangars' => 'required|integer|min:1',
             'assigned_to' => 'nullable|integer|exists:admins,id',
             'type' => 'required',
             'phone_code' => 'nullable|string|max:10',
@@ -155,12 +158,14 @@ class FarmController extends Controller
     {
         $farm = Farm::findOrFail($id);
 
+        $request->merge($this->parseNumbers($request));
+
         $validated = $request->validate([
             'name' => 'required|unique:farms,name,' . $farm->id,
             'location' => 'required',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
-            'number_of_hangars' => 'required|numeric|min:1',
+            'number_of_hangars' => 'required|integer|min:1',
             'assigned_to' => 'nullable|integer|exists:admins,id',
             'type' => 'required',
             'phone_code' => 'nullable|string|max:10',
@@ -191,6 +196,18 @@ class FarmController extends Controller
 
         Session::flash('successMsg', 'Farm updated successfully.');
         return redirect()->route('farm.index', ['username' => request()->segment(1)]);
+    }
+
+    /**
+     * Read the European-format inputs: latitude/longitude may use a comma, hangar count is a whole number
+     */
+    private function parseNumbers(Request $request)
+    {
+        return [
+            'latitude' => DecimalHelper::parseEuropean($request->latitude),
+            'longitude' => DecimalHelper::parseEuropean($request->longitude),
+            'number_of_hangars' => DecimalHelper::parseEuropeanInteger($request->number_of_hangars),
+        ];
     }
 
     public function destroy($siteUrl, $id)

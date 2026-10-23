@@ -22,8 +22,8 @@
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="number_of_hangars" class="form-label">Number of Hangars <span class="text-red">*</span></label>
-                <input type="number" class="form-control" name="number_of_hangars" id="number_of_hangars" placeholder="Number of Hangars" 
-                    value="{{ old('number_of_hangars', $farm->number_of_hangars ?? '') }}" required="" min="1" />
+                <input type="text" inputmode="numeric" class="form-control" name="number_of_hangars" id="number_of_hangars" placeholder="Number of Hangars"
+                    value="{{ old('number_of_hangars', isset($farm) ? \App\Helpers\DecimalHelper::formatInteger($farm->number_of_hangars) : '') }}" required="" />
                 @error('number_of_hangars')
                     <label id="number_of_hangars-error" class="error" for="number_of_hangars">{{ $message }}</label>
                 @enderror
@@ -81,8 +81,8 @@
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="latitude" class="form-label">Latitude</label>
-                <input type="number" class="form-control" name="latitude" id="latitude" placeholder="Latitude (-90 to 90)"
-                    value="{{ old('latitude', $farm->latitude ?? '') }}" step="0.00000001" min="-90" max="90" />
+                <input type="text" inputmode="decimal" class="form-control" name="latitude" id="latitude" placeholder="Latitude (-90 to 90)"
+                    value="{{ old('latitude', isset($farm) ? \App\Helpers\DecimalHelper::formatCoordinate($farm->latitude) : '') }}" />
                 @error('latitude')
                     <label id="latitude-error" class="error" for="latitude">{{ $message }}</label>
                 @enderror
@@ -93,8 +93,8 @@
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="longitude" class="form-label">Longitude</label>
-                <input type="number" class="form-control" name="longitude" id="longitude" placeholder="Longitude (-180 to 180)"
-                    value="{{ old('longitude', $farm->longitude ?? '') }}" step="0.00000001" min="-180" max="180" />
+                <input type="text" inputmode="decimal" class="form-control" name="longitude" id="longitude" placeholder="Longitude (-180 to 180)"
+                    value="{{ old('longitude', isset($farm) ? \App\Helpers\DecimalHelper::formatCoordinate($farm->longitude) : '') }}" />
                 @error('longitude')
                     <label id="longitude-error" class="error" for="longitude">{{ $message }}</label>
                 @enderror

@@ -167,9 +167,9 @@
                             var feedValue = existingData.feed_kg ? parseFloat(existingData.feed_kg).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
                             var eggsWeightValue = existingData.eggs_weight ? parseFloat(existingData.eggs_weight).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
                             var chicksWeightValue = existingData.chicks_weight ? parseFloat(existingData.chicks_weight).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
-                            var eggsTraySValue = existingData.eggs_tray_30 || '';
-                            var eggsCountValue = existingData.eggs_count || '';
-                            var mortalityValue = existingData.mortality || '';
+                            var eggsTraySValue = formatIntegerEU(existingData.eggs_tray_30 || '');
+                            var eggsCountValue = formatIntegerEU(existingData.eggs_count || '');
+                            var mortalityValue = formatIntegerEU(existingData.mortality || '');
 
                             // Build HTML based on breed type
                             var html = `
@@ -177,7 +177,7 @@
                                     <div class="row">
                                         <div class="col-md-12 mb-3">
                                             <h6 class="mb-0" style="color: #007bff;">
-                                                <i class="fe fe-home mr-2"></i>${hangar.name} (Allocated Birds: ${hangar.quantity}, Remaining Feed: ${hangar.remaining} kg)
+                                                <i class="fe fe-home mr-2"></i>${hangar.name} (Allocated Birds: ${formatIntegerEU(hangar.quantity)}, Remaining Feed: ${hangar.remaining} kg)
                                             </h6>
                                         </div>
                                     </div>
@@ -192,8 +192,8 @@
                                         <div class="col-md-3">
                                             <div class="form-group mb-0">
                                                 <label class="form-label mb-1" style="font-size: 0.85rem;">Mortality <span class="text-red">*</span></label>
-                                                <input type="number" class="form-control mortality-input" name="hangar_mortality[${hangar.id}]"
-                                                    value="${mortalityValue}" placeholder="0" min="0" data-hangar-id="${hangar.id}" required />
+                                                <input type="text" inputmode="numeric" class="form-control mortality-input" name="hangar_mortality[${hangar.id}]"
+                                                    value="${mortalityValue}" placeholder="0" data-hangar-id="${hangar.id}" required />
                                             </div>
                                         </div>
                                         ${breedType === 'Broiler' ? `
@@ -208,15 +208,15 @@
                                             <div class="col-md-3">
                                                 <div class="form-group mb-0">
                                                     <label class="form-label mb-1" style="font-size: 0.85rem;">Eggs (Tray 30)</label>
-                                                    <input type="number" class="form-control eggs-tray-input" name="hangar_eggs_tray[${hangar.id}]"
-                                                        value="${eggsTraySValue}" placeholder="0" min="0" data-hangar-id="${hangar.id}" />
+                                                    <input type="text" inputmode="numeric" class="form-control eggs-tray-input" name="hangar_eggs_tray[${hangar.id}]"
+                                                        value="${eggsTraySValue}" placeholder="0" data-hangar-id="${hangar.id}" />
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
                                                 <div class="form-group mb-0">
                                                     <label class="form-label mb-1" style="font-size: 0.85rem;">Eggs (Count)</label>
-                                                    <input type="number" class="form-control eggs-count-input" name="hangar_eggs_count[${hangar.id}]"
-                                                        value="${eggsCountValue}" placeholder="0" min="0" data-hangar-id="${hangar.id}" />
+                                                    <input type="text" inputmode="numeric" class="form-control eggs-count-input" name="hangar_eggs_count[${hangar.id}]"
+                                                        value="${eggsCountValue}" placeholder="0" data-hangar-id="${hangar.id}" />
                                                 </div>
                                             </div>
                                         `}
@@ -266,15 +266,12 @@
 
             container.find('.hangar-record-row').each(function() {
                 var hangarId = $(this).data('hangar-id');
-                var feedValue = ($(this).find('.feed-input').val() || '').replace(',', '.');
-                var feedKg = parseFloat(feedValue) || 0;
-                var eggsTray = parseInt($(this).find('.eggs-tray-input').val()) || 0;
-                var eggsCount = parseInt($(this).find('.eggs-count-input').val()) || 0;
-                var eggsWeightValue = ($(this).find('.eggs-weight-input').val() || '').replace(',', '.');
-                var eggsWeight = parseFloat(eggsWeightValue) || 0;
-                var chicksWeightValue = ($(this).find('.chicks-weight-input').val() || '').replace(',', '.');
-                var chicksWeight = parseFloat(chicksWeightValue) || 0;
-                var mortality = parseInt($(this).find('.mortality-input').val()) || 0;
+                var feedKg = parseEuropeanNumber($(this).find('.feed-input').val()) || 0;
+                var eggsTray = parseEuropeanNumber($(this).find('.eggs-tray-input').val()) || 0;
+                var eggsCount = parseEuropeanNumber($(this).find('.eggs-count-input').val()) || 0;
+                var eggsWeight = parseEuropeanNumber($(this).find('.eggs-weight-input').val()) || 0;
+                var chicksWeight = parseEuropeanNumber($(this).find('.chicks-weight-input').val()) || 0;
+                var mortality = parseEuropeanNumber($(this).find('.mortality-input').val()) || 0;
                 var notes = $(this).find('.notes-input').val() || '';
 
                 hangarRecords.push({

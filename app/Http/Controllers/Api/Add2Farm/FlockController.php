@@ -614,9 +614,6 @@ class FlockController extends BaseController
         $avgWeight = $dailyRecords->avg('chicks_weight');
         $recordCount = $dailyRecords->count();
 
-        // Calculate total harvested birds from all FlockEnd records
-        $totalHarvested = FlockEnd::where('flock_id', $flock->id)->sum('total_birds_harvested');
-
         // Calculate average production (eggs per bird as percentage)
         $avgProduction = $totalBird > 0 && $recordCount > 0 ? ($totalEggs / ($totalBird * $recordCount)) * 100 : 0;
 
@@ -635,23 +632,20 @@ class FlockController extends BaseController
             $fcr = $totalWeight > 0 ? round($totalFeedKg / $totalWeight, 2) : 0;
         }
 
-        // Calculate live birds: total allocated - harvested
-        $liveBirds = $totalBird - $totalHarvested;
+        // Calculate live birds: total allocated - mortality - harvested
+        $liveBirds = $saleStatus['remaining_birds'];
 
         // Generate chart data
         $chartData = $this->generateChartData($dailyRecords, $flock, $totalBird, $isLayer);
 
         // Format hangar allocations with details
-        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock) {
+        $liveBirdsByHangar = $flock->liveBirdsByHangar();
+
+        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock, $liveBirdsByHangar) {
             // Get daily records for this hangar
             $hangarDailyRecords = DailyRecord::where('flock_id', $flock->id)
                 ->where('hangar_id', $allocation->hangar_id)
                 ->get();
-
-            // Total birds harvested so far from this hangar
-            $hangarHarvested = FlockEnd::where('flock_id', $flock->id)
-                ->where('hangar_id', $allocation->hangar_id)
-                ->sum('total_birds_harvested');
 
             // Calculate metrics
             $totalMortality = $hangarDailyRecords->sum('mortality');
@@ -659,9 +653,8 @@ class FlockController extends BaseController
             $feedPerBird = $allocation->quantity > 0 ? round($feedConsumed / $allocation->quantity, 2) : 0;
             $avgWeight = $hangarDailyRecords->avg('chicks_weight');
 
-            // Calculate live birds for this hangar
-            $liveBirds = $allocation->quantity - $hangarHarvested;
-            $liveBirds = max(0, $liveBirds);
+            // Live birds for this hangar: allocated - mortality - harvested
+            $liveBirds = $liveBirdsByHangar[$allocation->hangar_id] ?? 0;
 
             // Calculate feed remaining for this hangar
             $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $allocation->hangar_id)
@@ -1277,16 +1270,13 @@ class FlockController extends BaseController
         $assignment = (auth()->check() && $flock->created_by === auth()->id()) ? 1 : 0;
 
         // Format hangar allocations with details
-        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock) {
+        $liveBirdsByHangar = $flock->liveBirdsByHangar();
+
+        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock, $liveBirdsByHangar) {
             // Get daily records for this hangar
             $hangarDailyRecords = DailyRecord::where('flock_id', $flock->id)
                 ->where('hangar_id', $allocation->hangar_id)
                 ->get();
-
-            // Total birds harvested so far from this hangar
-            $hangarHarvested = FlockEnd::where('flock_id', $flock->id)
-                ->where('hangar_id', $allocation->hangar_id)
-                ->sum('total_birds_harvested');
 
             // Calculate metrics
             $totalMortality = $hangarDailyRecords->sum('mortality');
@@ -1294,9 +1284,8 @@ class FlockController extends BaseController
             $feedPerBird = $allocation->quantity > 0 ? round($feedConsumed / $allocation->quantity, 2) : 0;
             $avgWeight = $hangarDailyRecords->avg('chicks_weight');
 
-            // Calculate live birds for this hangar
-            $liveBirds = $allocation->quantity - $hangarHarvested;
-            $liveBirds = max(0, $liveBirds);
+            // Live birds for this hangar: allocated - mortality - harvested
+            $liveBirds = $liveBirdsByHangar[$allocation->hangar_id] ?? 0;
 
             // Calculate feed remaining for this hangar
             $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $allocation->hangar_id)

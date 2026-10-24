@@ -63,31 +63,49 @@ class Flock extends Model
     }
 
     /**
-     * Sale status derived from harvest records.
-     * Active: no harvest yet. Harvesting: harvest started, birds still remaining.
-     * Ended: all birds sold (remaining birds = 0). end_date is the last sale date.
+     * Live birds per hangar: allocated - mortality (daily records) - harvested (flock ends).
+     * Pass $exceptFlockEndId when editing a harvest so its own birds are not counted as sold.
      */
-    public function saleStatus(): array
+    public function liveBirdsByHangar(?int $exceptFlockEndId = null): array
     {
-        // Sum harvests per hangar so the result does not depend on the stored remaining_birds
+        // Sum per hangar so the result does not depend on the stored remaining_birds
         // of the latest row, which goes stale when an earlier harvest record is edited.
         $harvestedByHangar = FlockEnd::where('flock_id', $this->id)
+            ->when($exceptFlockEndId, fn ($q) => $q->where('id', '!=', $exceptFlockEndId))
             ->selectRaw('hangar_id, SUM(total_birds_harvested) as harvested')
             ->groupBy('hangar_id')
             ->pluck('harvested', 'hangar_id');
 
-        $remainingBirds = 0;
+        $mortalityByHangar = DailyRecord::where('flock_id', $this->id)
+            ->selectRaw('hangar_id, SUM(mortality) as mortality')
+            ->groupBy('hangar_id')
+            ->pluck('mortality', 'hangar_id');
+
+        $liveBirds = [];
         foreach ($this->flockHangarAllocations as $allocation) {
             $harvested = (int) ($harvestedByHangar[$allocation->hangar_id] ?? 0);
-            $remainingBirds += max(0, $allocation->quantity - $harvested);
+            $mortality = (int) ($mortalityByHangar[$allocation->hangar_id] ?? 0);
+            $liveBirds[$allocation->hangar_id] = max(0, $allocation->quantity - $mortality - $harvested);
         }
 
-        if (!$this->flockEnds()->exists()) {
-            $status = 'Active';
-            $endDate = null;
-        } elseif ($remainingBirds == 0) {
+        return $liveBirds;
+    }
+
+    /**
+     * Sale status derived from harvest records and mortality.
+     * Active: no harvest yet. Harvesting: harvest started, birds still alive and unsold.
+     * Ended: no live birds left (all sold or dead). end_date is the last sale date.
+     */
+    public function saleStatus(): array
+    {
+        $remainingBirds = array_sum($this->liveBirdsByHangar());
+
+        if ($remainingBirds == 0 && $this->flockHangarAllocations->sum('quantity') > 0) {
             $status = 'Ended';
             $endDate = $this->flockEnds()->latest('sale_date')->first()?->sale_date;
+        } elseif (!$this->flockEnds()->exists()) {
+            $status = 'Active';
+            $endDate = null;
         } else {
             $status = 'Harvesting';
             $endDate = null;

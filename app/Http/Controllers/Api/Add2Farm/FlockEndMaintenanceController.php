@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Add2Farm;
 
+use App\Models\DailyRecord;
 use App\Models\FlockEnd;
 use Illuminate\Support\Facades\DB;
 
@@ -18,7 +19,7 @@ class FlockEndMaintenanceController extends BaseController
      * Recalculate remaining_birds for all flock_end records
      *
      * Recalculates remaining_birds for all flock_end records based on:
-     * remaining_birds = (hangar_allocated - total_harvested_from_hangar_so_far)
+     * remaining_birds = (hangar_allocated - mortality_from_hangar - total_harvested_from_hangar_so_far)
      *
      * IMPORTANT: This should be removed after running once!
      *
@@ -53,8 +54,11 @@ class FlockEndMaintenanceController extends BaseController
                         ->where('hangar_id', $record->hangar_id)
                         ->where('created_at', '<', $record->created_at)
                         ->sum('total_birds_harvested');
+                    $mortality = DailyRecord::where('flock_id', $record->flock_id)
+                        ->where('hangar_id', $record->hangar_id)
+                        ->sum('mortality');
 
-                    $availableBirds = $hangarAllocated - $previousHarvests;
+                    $availableBirds = $hangarAllocated - $mortality - $previousHarvests;
                     $remainingBirds = $availableBirds - $record->total_birds_harvested;
 
                     $record->update([

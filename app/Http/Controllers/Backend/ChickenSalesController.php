@@ -208,12 +208,8 @@ class ChickenSalesController extends Controller
                 return redirect()->back()->withErrors('Hangar is not allocated to this flock.');
             }
 
-            $hangarAllocated = $hangarAllocation->quantity;
-            $previousHarvests = FlockEnd::where('flock_id', $flock->id)
-                ->where('hangar_id', $request->hangar_id)
-                ->sum('total_birds_harvested');
-
-            $availableBirds = $hangarAllocated - $previousHarvests;
+            // Only live birds (not dead or already sold) can be harvested
+            $availableBirds = $flock->liveBirdsByHangar()[$request->hangar_id] ?? 0;
             $totalBirdsHarvested = $request->cages_count * $request->birds_per_cage;
 
             if ($totalBirdsHarvested > $availableBirds) {
@@ -359,13 +355,8 @@ class ChickenSalesController extends Controller
                 return redirect()->back()->withErrors('Hangar is not allocated to this flock.');
             }
 
-            $hangarAllocated = $hangarAllocation->quantity;
-            $previousHarvests = FlockEnd::where('flock_id', $flock->id)
-                ->where('hangar_id', $request->hangar_id)
-                ->where('id', '!=', $id)
-                ->sum('total_birds_harvested');
-
-            $availableBirds = $hangarAllocated - $previousHarvests;
+            // Only live birds (not dead or already sold by other harvests) can be harvested
+            $availableBirds = $flock->liveBirdsByHangar($id)[$request->hangar_id] ?? 0;
             $totalBirdsHarvested = $request->cages_count * $request->birds_per_cage;
 
             if ($totalBirdsHarvested > $availableBirds) {

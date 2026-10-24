@@ -281,12 +281,8 @@ class FlockEndController extends BaseController
                 ], 422);
             }
 
-            $hangarAllocated = $hangarAllocation->quantity;
-            $previousHarvests = FlockEnd::where('flock_id', $flock->id)
-                ->where('hangar_id', $request->hangar_id)
-                ->sum('total_birds_harvested');
-
-            $availableBirds = $hangarAllocated - $previousHarvests;
+            // Only live birds (not dead or already sold) can be harvested
+            $availableBirds = $flock->liveBirdsByHangar()[$request->hangar_id] ?? 0;
             $totalBirdsHarvested = $request->cages_count * $request->birds_per_cage;
 
             if ($totalBirdsHarvested > $availableBirds) {
@@ -458,13 +454,8 @@ class FlockEndController extends BaseController
                 ], 422);
             }
 
-            $hangarAllocated = $hangarAllocation->quantity;
-            $previousHarvests = FlockEnd::where('flock_id', $flock->id)
-                ->where('hangar_id', $flockEnd->hangar_id)
-                ->where('id', '!=', $id)
-                ->sum('total_birds_harvested');
-
-            $availableBirds = $hangarAllocated - $previousHarvests;
+            // Only live birds (not dead or already sold by other harvests) can be harvested
+            $availableBirds = $flock->liveBirdsByHangar($flockEnd->id)[$flockEnd->hangar_id] ?? 0;
             $totalBirdsHarvested = $request->cages_count * $request->birds_per_cage;
 
             if ($totalBirdsHarvested > $availableBirds) {

@@ -65,8 +65,9 @@ class Flock extends Model
     /**
      * Live birds per hangar: allocated - mortality (daily records) - harvested (flock ends).
      * Pass $exceptFlockEndId when editing a harvest so its own birds are not counted as sold.
+     * Pass $exceptRecordDate when replacing a day's daily records so that day's mortality is not counted.
      */
-    public function liveBirdsByHangar(?int $exceptFlockEndId = null): array
+    public function liveBirdsByHangar(?int $exceptFlockEndId = null, ?string $exceptRecordDate = null): array
     {
         // Sum per hangar so the result does not depend on the stored remaining_birds
         // of the latest row, which goes stale when an earlier harvest record is edited.
@@ -77,6 +78,7 @@ class Flock extends Model
             ->pluck('harvested', 'hangar_id');
 
         $mortalityByHangar = DailyRecord::where('flock_id', $this->id)
+            ->when($exceptRecordDate, fn ($q) => $q->where('record_date', '!=', $exceptRecordDate))
             ->selectRaw('hangar_id, SUM(mortality) as mortality')
             ->groupBy('hangar_id')
             ->pluck('mortality', 'hangar_id');

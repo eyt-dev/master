@@ -285,6 +285,14 @@ class FlockEndController extends BaseController
             $availableBirds = $flock->liveBirdsByHangar()[$request->hangar_id] ?? 0;
             $totalBirdsHarvested = $request->cages_count * $request->birds_per_cage;
 
+            if ($availableBirds <= 0) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => "Out of stock. No live birds available in this hangar.",
+                ], 422);
+            }
+
             if ($totalBirdsHarvested > $availableBirds) {
                 DB::rollBack();
                 return response()->json([
@@ -457,6 +465,14 @@ class FlockEndController extends BaseController
             // Only live birds (not dead or already sold by other harvests) can be harvested
             $availableBirds = $flock->liveBirdsByHangar($flockEnd->id)[$flockEnd->hangar_id] ?? 0;
             $totalBirdsHarvested = $request->cages_count * $request->birds_per_cage;
+
+            if ($availableBirds <= 0) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => "Out of stock. No live birds available in this hangar.",
+                ], 422);
+            }
 
             if ($totalBirdsHarvested > $availableBirds) {
                 DB::rollBack();

@@ -401,6 +401,8 @@ class DailyRecordController extends Controller
             return back()->withErrors($error);
         }
 
+        $liveBirdsByHangar = $flock->liveBirdsByHangar();
+
         // Validate based on breed type before transaction
         foreach ($hangarRecords as $record) {
             if (!isset($record['feed_kg']) || $record['feed_kg'] === '' || $record['feed_kg'] === null) {
@@ -426,6 +428,18 @@ class DailyRecordController extends Controller
                     }
                     return back()->withErrors($error);
                 }
+            }
+
+            // Validate live birds (out of stock when no birds are alive)
+            $liveBirds = $liveBirdsByHangar[$record['hangar_id']] ?? 0;
+            if ($liveBirds <= 0 || (int)$record['mortality'] > $liveBirds) {
+                $hangarName = Hangar::find($record['hangar_id'])?->name ?? 'Hangar #' . $record['hangar_id'];
+                $birdsMsg = $liveBirds > 0 ? 'only ' . DecimalHelper::formatInteger($liveBirds) . ' birds alive' : 'out of stock';
+                $error = ['hangar_records' => "Insufficient birds in {$hangarName} - {$birdsMsg}"];
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'errors' => $error], 422);
+                }
+                return back()->withErrors($error);
             }
 
             // Validate feed stock availability (FIFO - First In First Out)
@@ -608,6 +622,9 @@ class DailyRecordController extends Controller
             ->get()
             ->keyBy('hangar_id');
 
+        // Live birds exclude this date's records, since they are replaced by this update
+        $liveBirdsByHangar = $flock->liveBirdsByHangar(null, $dailyRecord->record_date->toDateString());
+
         // Validate based on breed type before transaction
         foreach ($hangarRecords as $record) {
             if (!isset($record['feed_kg']) || $record['feed_kg'] === '' || $record['feed_kg'] === null) {
@@ -621,6 +638,14 @@ class DailyRecordController extends Controller
                 if (!isset($record['eggs_weight']) || $record['eggs_weight'] === '' || $record['eggs_weight'] === null) {
                     return back()->withErrors(['hangar_records' => 'Eggs Weight is required for Layer breeds.']);
                 }
+            }
+
+            // Validate live birds (out of stock when no birds are alive)
+            $liveBirds = $liveBirdsByHangar[$record['hangar_id']] ?? 0;
+            if ($liveBirds <= 0 || (int)$record['mortality'] > $liveBirds) {
+                $hangarName = Hangar::find($record['hangar_id'])?->name ?? 'Hangar #' . $record['hangar_id'];
+                $birdsMsg = $liveBirds > 0 ? 'only ' . DecimalHelper::formatInteger($liveBirds) . ' birds alive' : 'out of stock';
+                return back()->withErrors(['hangar_records' => "Insufficient birds in {$hangarName} - {$birdsMsg}"]);
             }
 
             // Validate feed stock availability (FIFO - First In First Out, accounting for deleted records)

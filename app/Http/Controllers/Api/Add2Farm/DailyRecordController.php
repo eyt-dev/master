@@ -575,6 +575,24 @@ class DailyRecordController extends BaseController
             ], 422);
         }
 
+        // Validate live birds per hangar (out of stock when no birds are alive)
+        $liveBirdsByHangar = $flock->liveBirdsByHangar();
+        foreach ($request->hangars as $hangarData) {
+            $hangarId = $hangarData['hangar_id'];
+            $liveBirds = $liveBirdsByHangar[$hangarId] ?? 0;
+
+            if ($liveBirds <= 0 || (int)$hangarData['mortality'] > $liveBirds) {
+                $hangarName = \App\Models\Hangar::find($hangarId)?->name ?? 'Hangar #' . $hangarId;
+                $birdsMsg = $liveBirds > 0 ? "only {$liveBirds} birds alive" : "out of stock";
+
+                return response()->json([
+                    'success' => false,
+                    'message' => "Insufficient birds in {$hangarName} - {$birdsMsg}",
+                    'errors' => ['hangars' => ["Insufficient birds in {$hangarName} - {$birdsMsg}"]],
+                ], 422);
+            }
+        }
+
         // Validate feed stock availability (FIFO - First In First Out)
         foreach ($request->hangars as $hangarData) {
             $feedKg = (float)$hangarData['feed_kg'];
@@ -808,6 +826,24 @@ class DailyRecordController extends BaseController
             ->where('id', '!=', $id)
             ->get()
             ->groupBy('hangar_id');
+
+        // Validate live birds per hangar; this date's existing records are replaced, so their mortality is not counted
+        $liveBirdsByHangar = $flock->liveBirdsByHangar(null, $record->record_date->toDateString());
+        foreach ($request->hangars as $hangarData) {
+            $hangarId = $hangarData['hangar_id'];
+            $liveBirds = $liveBirdsByHangar[$hangarId] ?? 0;
+
+            if ($liveBirds <= 0 || (int)$hangarData['mortality'] > $liveBirds) {
+                $hangarName = \App\Models\Hangar::find($hangarId)?->name ?? 'Hangar #' . $hangarId;
+                $birdsMsg = $liveBirds > 0 ? "only {$liveBirds} birds alive" : "out of stock";
+
+                return response()->json([
+                    'success' => false,
+                    'message' => "Insufficient birds in {$hangarName} - {$birdsMsg}",
+                    'errors' => ['hangars' => ["Insufficient birds in {$hangarName} - {$birdsMsg}"]],
+                ], 422);
+            }
+        }
 
         // Validate feed stock availability (FIFO - First In First Out, accounting for deleted records)
         foreach ($request->hangars as $hangarData) {

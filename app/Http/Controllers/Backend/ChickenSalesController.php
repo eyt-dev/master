@@ -212,6 +212,10 @@ class ChickenSalesController extends Controller
             $availableBirds = $flock->liveBirdsByHangar()[$request->hangar_id] ?? 0;
             $totalBirdsHarvested = $request->cages_count * $request->birds_per_cage;
 
+            if ($availableBirds <= 0) {
+                return redirect()->back()->withErrors('Out of stock. No live birds available in this hangar.');
+            }
+
             if ($totalBirdsHarvested > $availableBirds) {
                 return redirect()->back()->withErrors("Cannot harvest {$totalBirdsHarvested} birds. Only {$availableBirds} birds available.");
             }
@@ -358,6 +362,10 @@ class ChickenSalesController extends Controller
             // Only live birds (not dead or already sold by other harvests) can be harvested
             $availableBirds = $flock->liveBirdsByHangar($id)[$request->hangar_id] ?? 0;
             $totalBirdsHarvested = $request->cages_count * $request->birds_per_cage;
+
+            if ($availableBirds <= 0) {
+                return redirect()->back()->withErrors('Out of stock. No live birds available in this hangar.');
+            }
 
             if ($totalBirdsHarvested > $availableBirds) {
                 return redirect()->back()->withErrors("Cannot harvest {$totalBirdsHarvested} birds. Only {$availableBirds} birds available.");

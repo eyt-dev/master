@@ -94,6 +94,37 @@ class Flock extends Model
     }
 
     /**
+     * Latest chicks weight per hangar: the most recent daily record with a weight (by date, then entry order).
+     * A weight of 0 means the hangar was not weighed that day, so those rows are skipped.
+     */
+    public function latestChicksWeightByHangar(): array
+    {
+        $weights = [];
+
+        $records = DailyRecord::where('flock_id', $this->id)
+            ->where('chicks_weight', '>', 0)
+            ->orderBy('record_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get(['hangar_id', 'chicks_weight']);
+
+        foreach ($records as $record) {
+            $weights[$record->hangar_id] ??= (float) $record->chicks_weight;
+        }
+
+        return $weights;
+    }
+
+    /**
+     * Flock average weight: sum of each hangar's latest weight divided by the number of weighed hangars.
+     */
+    public function averageLatestChicksWeight(): ?float
+    {
+        $weights = $this->latestChicksWeightByHangar();
+
+        return $weights ? array_sum($weights) / count($weights) : null;
+    }
+
+    /**
      * Sale status derived from harvest records and mortality.
      * Active: no harvest yet. Harvesting: harvest started, birds still alive and unsold.
      * Ended: no live birds left (all sold or dead). end_date is the last sale date.

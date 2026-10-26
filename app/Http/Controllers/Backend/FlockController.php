@@ -303,6 +303,21 @@ class FlockController extends Controller
     }
 
     /**
+     * The hangar quantities must add up to the flock's total quantity.
+     * Returns the error message when they differ, or null when they match.
+     */
+    private function hangarTotalMismatch($totalQuantity, $hangarQuantities)
+    {
+        $allocated = array_sum(array_column($hangarQuantities, 'quantity'));
+
+        if ($allocated === (int) $totalQuantity) {
+            return null;
+        }
+
+        return 'The hangar quantities add up to ' . DecimalHelper::formatInteger($allocated) . ', but the total quantity is ' . DecimalHelper::formatInteger($totalQuantity) . '. They must be equal.';
+    }
+
+    /**
      * Hangar allocations arrive as JSON. Each quantity is a number of birds, so it must be a whole number above zero.
      * Returns the list with integer quantities, or null when a quantity is invalid.
      */
@@ -367,6 +382,10 @@ class FlockController extends Controller
         $hangarIds = array_column($hangarQuantities, 'hangar_id');
         if (count($hangarIds) !== count(array_unique($hangarIds))) {
             return back()->withErrors(['hangar_quantities_json' => 'Duplicate hangars are not allowed. Each hangar can only be selected once.']);
+        }
+
+        if ($message = $this->hangarTotalMismatch($request->total_quantity, $hangarQuantities)) {
+            return back()->withErrors(['hangar_quantities_json' => $message]);
         }
 
         // Validate that hangars aren't already allocated to other flocks in the same farm
@@ -495,6 +514,10 @@ class FlockController extends Controller
         $hangarIds = array_column($hangarQuantities, 'hangar_id');
         if (count($hangarIds) !== count(array_unique($hangarIds))) {
             return back()->withErrors(['hangar_quantities_json' => 'Duplicate hangars are not allowed. Each hangar can only be selected once.']);
+        }
+
+        if ($message = $this->hangarTotalMismatch($request->total_quantity, $hangarQuantities)) {
+            return back()->withErrors(['hangar_quantities_json' => $message]);
         }
 
         // Validate that hangars aren't already allocated to other flocks in the same farm

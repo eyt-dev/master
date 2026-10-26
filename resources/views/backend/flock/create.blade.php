@@ -253,6 +253,16 @@
             });
         }
 
+        // Read a whole number of birds: dots are thousands separators, a comma or decimal is rejected (NaN)
+        function parseWholeNumber(value) {
+            var str = String(value || '').trim().replace(/\s/g, '');
+
+            if (/^\d{1,3}(\.\d{3})+$|^\d+$/.test(str)) {
+                return parseInt(str.replace(/\./g, ''), 10);
+            }
+            return NaN;
+        }
+
         // Initialize hangar rows as a list
         function initializeHangarRows(hangars) {
             var container = $('#hangars_allocation_container');
@@ -408,6 +418,7 @@
         $('#flock_form').on('submit', function(e) {
             var selectedHangars = [];
             var hasError = false;
+            var invalidHangar = false;
 
             $('.hangar-quantity-input').each(function() {
                 // Skip disabled fields (already allocated hangars - for reference only)
@@ -415,13 +426,32 @@
                     return;
                 }
 
-                var hangarId = $(this).data('hangar-id');
-                var quantity = parseEuropeanNumber($(this).val()) || 0;
-
-                if (quantity > 0) {
-                    selectedHangars.push({ hangar_id: hangarId, quantity: quantity });
+                var raw = $(this).val().trim();
+                if (raw === '') {
+                    return;
                 }
+
+                var hangarId = $(this).data('hangar-id');
+                var quantity = parseWholeNumber(raw);
+
+                if (isNaN(quantity) || quantity < 1) {
+                    invalidHangar = true;
+                    return false;
+                }
+
+                selectedHangars.push({ hangar_id: hangarId, quantity: quantity });
             });
+
+            if (invalidHangar) {
+                e.preventDefault();
+                swal({
+                    title: 'Validation Error',
+                    text: 'Hangar quantities must be whole numbers greater than zero (use dots for thousands, e.g. 10.000).',
+                    icon: 'warning',
+                    button: 'OK'
+                });
+                return false;
+            }
 
             if (selectedHangars.length === 0) {
                 e.preventDefault();
@@ -435,12 +465,27 @@
             }
 
             // Validate total_quantity is entered
-            var totalQty = parseEuropeanNumber($('#total_quantity').val());
-            if (!totalQty || totalQty < 1) {
+            var totalQty = parseWholeNumber($('#total_quantity').val());
+            if (isNaN(totalQty) || totalQty < 1) {
                 e.preventDefault();
                 swal({
                     title: 'Validation Error',
                     text: 'Please enter a valid total quantity.',
+                    icon: 'warning',
+                    button: 'OK'
+                });
+                return false;
+            }
+
+            // Hangar quantities must add up to the total quantity
+            var allocatedQty = selectedHangars.reduce(function(sum, hangar) {
+                return sum + hangar.quantity;
+            }, 0);
+            if (allocatedQty !== totalQty) {
+                e.preventDefault();
+                swal({
+                    title: 'Validation Error',
+                    text: 'The hangar quantities add up to ' + formatIntegerEU(allocatedQty) + ', but the total quantity is ' + formatIntegerEU(totalQty) + '. They must be equal.',
                     icon: 'warning',
                     button: 'OK'
                 });

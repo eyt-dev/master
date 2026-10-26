@@ -140,6 +140,11 @@ class DecimalHelper
      */
     public static function parseEuropeanInteger($value)
     {
+        // A comma is the decimal separator, so "10,000" is a decimal, not ten thousand
+        if (is_string($value) && str_contains($value, ',')) {
+            return $value;
+        }
+
         $number = self::parseEuropean($value);
 
         if (is_float($number) && floor($number) == $number) {

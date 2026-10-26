@@ -125,6 +125,45 @@ class Flock extends Model
     }
 
     /**
+     * Feed kg of the latest daily record before today per hangar (by date, then entry order).
+     * Days without a record are skipped, so the most recent earlier record is used.
+     */
+    public function previousFeedKgByHangar(): array
+    {
+        $feeds = [];
+
+        $records = DailyRecord::where('flock_id', $this->id)
+            ->where('record_date', '<', today()->toDateString())
+            ->orderBy('record_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get(['hangar_id', 'feed_kg']);
+
+        foreach ($records as $record) {
+            $feeds[$record->hangar_id] ??= (float) $record->feed_kg;
+        }
+
+        return $feeds;
+    }
+
+    /**
+     * Feed per bird in grams per hangar: previous feed kg × 1000 ÷ the hangar's live birds today.
+     */
+    public function feedPerBirdByHangar(): array
+    {
+        $liveBirds = $this->liveBirdsByHangar();
+        $previousFeed = $this->previousFeedKgByHangar();
+
+        $result = [];
+        foreach ($this->flockHangarAllocations as $allocation) {
+            $hangarId = $allocation->hangar_id;
+            $birds = $liveBirds[$hangarId] ?? 0;
+            $result[$hangarId] = $birds > 0 ? round(($previousFeed[$hangarId] ?? 0) * 1000 / $birds, 2) : 0;
+        }
+
+        return $result;
+    }
+
+    /**
      * Sale status derived from harvest records and mortality.
      * Active: no harvest yet. Harvesting: harvest started, birds still alive and unsold.
      * Ended: no live birds left (all sold or dead). end_date is the last sale date.

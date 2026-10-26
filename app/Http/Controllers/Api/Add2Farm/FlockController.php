@@ -641,8 +641,9 @@ class FlockController extends BaseController
         // Format hangar allocations with details
         $liveBirdsByHangar = $flock->liveBirdsByHangar();
         $latestWeightByHangar = $flock->latestChicksWeightByHangar();
+        $feedPerBirdByHangar = $flock->feedPerBirdByHangar();
 
-        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock, $liveBirdsByHangar, $latestWeightByHangar) {
+        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock, $liveBirdsByHangar, $latestWeightByHangar, $feedPerBirdByHangar) {
             // Get daily records for this hangar
             $hangarDailyRecords = DailyRecord::where('flock_id', $flock->id)
                 ->where('hangar_id', $allocation->hangar_id)
@@ -651,7 +652,6 @@ class FlockController extends BaseController
             // Calculate metrics
             $totalMortality = $hangarDailyRecords->sum('mortality');
             $feedConsumed = round($hangarDailyRecords->sum('feed_kg'), 2);
-            $feedPerBird = $allocation->quantity > 0 ? round($feedConsumed / $allocation->quantity, 2) : 0;
             $avgWeight = $latestWeightByHangar[$allocation->hangar_id] ?? null;
 
             // Live birds for this hangar: allocated - mortality - harvested
@@ -673,7 +673,7 @@ class FlockController extends BaseController
                 ...$this->mortalityFields($totalMortality, $flock, $allocation->hangar_id),
                 'feed' => $feedConsumed,
                 'remaining_feed' => $feedRemaining,
-                'feed_per_bird' => $feedPerBird,
+                'feed_per_bird' => $feedPerBirdByHangar[$allocation->hangar_id] ?? 0,
                 'avg_weight'    => $avgWeight ? round($avgWeight, 2) : 0,
             ];
         })->toArray();
@@ -706,7 +706,7 @@ class FlockController extends BaseController
             'updated_at' => $flock->updated_at,
             'flock-condition' => ($isBroiler ? 'broiler-' : 'layer-') . ['Active' => 'active', 'Harvesting' => 'harvesting', 'Ended' => 'ended'][$saleStatus['status']],
             ...$this->mortalityFields($totalMortality, $flock),
-            'feed_per_bird' => $totalBird > 0 ? round($totalFeedKg / $totalBird, 2) : 0,
+            'feed_per_bird' => $feedPerBirdByHangar ? round(array_sum($feedPerBirdByHangar) / count($feedPerBirdByHangar), 2) : 0,
             'avg_weight' => $avgWeight ? round($avgWeight, 2) . ' g' : 'N/A',
             'chart_data' => $chartData,
         ];
@@ -1273,8 +1273,9 @@ class FlockController extends BaseController
         // Format hangar allocations with details
         $liveBirdsByHangar = $flock->liveBirdsByHangar();
         $latestWeightByHangar = $flock->latestChicksWeightByHangar();
+        $feedPerBirdByHangar = $flock->feedPerBirdByHangar();
 
-        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock, $liveBirdsByHangar, $latestWeightByHangar) {
+        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock, $liveBirdsByHangar, $latestWeightByHangar, $feedPerBirdByHangar) {
             // Get daily records for this hangar
             $hangarDailyRecords = DailyRecord::where('flock_id', $flock->id)
                 ->where('hangar_id', $allocation->hangar_id)
@@ -1283,7 +1284,6 @@ class FlockController extends BaseController
             // Calculate metrics
             $totalMortality = $hangarDailyRecords->sum('mortality');
             $feedConsumed = round($hangarDailyRecords->sum('feed_kg'), 2);
-            $feedPerBird = $allocation->quantity > 0 ? round($feedConsumed / $allocation->quantity, 2) : 0;
             $avgWeight = $latestWeightByHangar[$allocation->hangar_id] ?? null;
 
             // Live birds for this hangar: allocated - mortality - harvested
@@ -1305,7 +1305,7 @@ class FlockController extends BaseController
                 ...$this->mortalityFields($totalMortality, $flock, $allocation->hangar_id),
                 'feed' => $feedConsumed,
                 'remaining_feed' => $feedRemaining,
-                'feed_per_bird' => $feedPerBird,
+                'feed_per_bird' => $feedPerBirdByHangar[$allocation->hangar_id] ?? 0,
                 'avg_weight'    => $avgWeight ? round($avgWeight, 2) : 0,
             ];
         })->toArray();
@@ -1366,6 +1366,7 @@ class FlockController extends BaseController
             'is_completed'          => $status === 'Ended',
             ...$this->mortalityFields($totalMortality, $flock),
             'fcr'                   => $fcr,
+            'feed_per_bird'         => $feedPerBirdByHangar ? round(array_sum($feedPerBirdByHangar) / count($feedPerBirdByHangar), 2) : 0,
             'hangar_allocations'    => $hangarAllocations,
             'assignment'            => $assignment,
             'created_by'            => $flock->created_by,

@@ -164,6 +164,31 @@ class Flock extends Model
     }
 
     /**
+     * FCR per hangar as percentages:
+     * act_fcr = chicks weight today ÷ feed per bird of the day before × 100.
+     * trend_fcr = feed per bird of the day before ÷ chicks weight today × 100.
+     */
+    public function fcrByHangar(): array
+    {
+        $feedPerBird = $this->feedPerBirdByHangar();
+        $weights = $this->latestChicksWeightByHangar();
+
+        $result = [];
+        foreach ($this->flockHangarAllocations as $allocation) {
+            $hangarId = $allocation->hangar_id;
+            $birds = $feedPerBird[$hangarId] ?? 0;
+            $weight = $weights[$hangarId] ?? 0;
+
+            $result[$hangarId] = [
+                'act_fcr' => $birds > 0 && $weight > 0 ? round($weight / $birds * 100, 2) : 0,
+                'trend_fcr' => $birds > 0 && $weight > 0 ? round($birds / $weight * 100, 2) : 0,
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
      * Sale status derived from harvest records and mortality.
      * Active: no harvest yet. Harvesting: harvest started, birds still alive and unsold.
      * Ended: no live birds left (all sold or dead). end_date is the last sale date.

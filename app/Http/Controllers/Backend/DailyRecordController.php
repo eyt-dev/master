@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Helpers\FlockHelper;
+use App\Helpers\FeedStockHelper;
 use App\Helpers\DecimalHelper;
 use App\Models\DailyRecord;
 use App\Models\Hangar;
@@ -154,14 +155,7 @@ class DailyRecordController extends Controller
 
     private function getAvailableFeedFIFO($hangarId, $farmId)
     {
-        $totalStock = MaterialStockHangar::where('hangar_id', $hangarId)
-            ->byMaterialType()
-            ->sum('quantity') ?? 0;
-
-        $totalConsumed = DailyRecord::where('hangar_id', $hangarId)
-            ->sum('feed_kg') ?? 0;
-
-        return max(0, $totalStock - $totalConsumed);
+        return FeedStockHelper::hangarRemaining($hangarId);
     }
 
     private function extractBreedType($breedString)
@@ -221,7 +215,7 @@ class DailyRecordController extends Controller
         $breedType = $row['breed_type'] ?? 'Layer';
         $feedKg = DecimalHelper::formatEuropean((float) $hangar['feed_kg'], 2);
         $eggsWeight = DecimalHelper::formatEuropean((float) $hangar['eggs_weight'], 2);
-        $chicksWeightG = DecimalHelper::formatEuropean((float) $hangar['chicks_weight'] * 1000, 0);
+        $chicksWeightG = DecimalHelper::formatEuropean((float) $hangar['chicks_weight'], 0);
 
         $html = 'Qty: ' . DecimalHelper::formatInteger($hangar['allocated_quantity']) . '<br>' .
                 'Feed: ' . $feedKg . ' kg<br>' .
@@ -478,7 +472,7 @@ class DailyRecordController extends Controller
                     'eggs_tray_30' => (int)($record['eggs_tray_30'] ?? 0),
                     'eggs_count' => (int)($record['eggs_count'] ?? 0),
                     'eggs_weight' => (float)($record['eggs_weight'] ?? 0),
-                    'chicks_weight' => (float)($record['chicks_weight'] ?? 0) / 1000,
+                    'chicks_weight' => (float)($record['chicks_weight'] ?? 0),
                     'mortality' => (int)($record['mortality'] ?? 0),
                     'notes' => $record['notes'] ?? null,
                     'created_by' => auth()->id()
@@ -704,7 +698,7 @@ class DailyRecordController extends Controller
                     'eggs_tray_30' => (int)($record['eggs_tray_30'] ?? 0),
                     'eggs_count' => (int)($record['eggs_count'] ?? 0),
                     'eggs_weight' => (float)($record['eggs_weight'] ?? 0),
-                    'chicks_weight' => (float)($record['chicks_weight'] ?? 0) / 1000,
+                    'chicks_weight' => (float)($record['chicks_weight'] ?? 0),
                     'mortality' => (int)($record['mortality'] ?? 0),
                     'notes' => $record['notes'] ?? null,
                     'created_by' => auth()->id()

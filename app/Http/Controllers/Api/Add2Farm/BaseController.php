@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Add2Farm;
 use App\Http\Controllers\Controller;
 use App\Services\Add2Farm\TranslationService;
 use App\Helpers\DecimalHelper;
+use App\Helpers\FeedStockHelper;
 
 class BaseController extends Controller
 {
@@ -176,20 +177,11 @@ class BaseController extends Controller
     }
 
     /**
-     * Calculate remaining feed for a hangar
-     * Remaining = Total Feed Stock - Total Daily Record Consumption
-     * Simple calculation at hangar level (not per feed entry)
+     * Calculate remaining feed for a hangar (sum of all its feed stock, minus what daily records have used)
      */
     protected function getHangarRemainingFeed($hangarId)
     {
-        $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $hangarId)
-            ->byMaterialType()
-            ->sum('quantity') ?? 0;
-
-        $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $hangarId)
-            ->sum('feed_kg') ?? 0;
-
-        return max(0, $totalStock - $totalConsumed);
+        return FeedStockHelper::hangarRemaining($hangarId);
     }
 
     /**

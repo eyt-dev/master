@@ -707,7 +707,7 @@ class FlockController extends BaseController
             'flock-condition' => ($isBroiler ? 'broiler-' : 'layer-') . ['Active' => 'active', 'Harvesting' => 'harvesting', 'Ended' => 'ended'][$saleStatus['status']],
             ...$this->mortalityFields($totalMortality, $flock),
             'feed_per_bird' => $totalBird > 0 ? round($totalFeedKg / $totalBird, 2) : 0,
-            'avg_weight' => $avgWeight ? round($avgWeight, 2) . ' kg' : 'N/A',
+            'avg_weight' => $avgWeight ? round($avgWeight, 2) . ' g' : 'N/A',
             'chart_data' => $chartData,
         ];
 

@@ -7,6 +7,7 @@ use App\Models\DailyRecord;
 use App\Models\Flock;
 use App\Models\Farm;
 use App\Models\MaterialStockHangar;
+use App\Helpers\FeedStockHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -447,7 +448,7 @@ class DailyRecordController extends BaseController
      * @bodyParam hangars[].eggs_tray_30 integer optional Number of egg trays (30 count, for layer flocks)
      * @bodyParam hangars[].eggs_count integer optional Egg count (for layer flocks)
      * @bodyParam hangars[].eggs_weight number optional Eggs weight in kg (for layer flocks)
-     * @bodyParam hangars[].chicks_weight number optional Chicks weight in kg (for broiler flocks)
+     * @bodyParam hangars[].chicks_weight number optional Chicks weight in grams (for broiler flocks)
      * @bodyParam hangars[].notes string optional Notes for this hangar record
      *
      * @response 201 {
@@ -687,7 +688,7 @@ class DailyRecordController extends BaseController
      * @bodyParam hangars[].eggs_tray_30 integer optional Number of egg trays (30 count, for layer flocks)
      * @bodyParam hangars[].eggs_count integer optional Egg count (for layer flocks)
      * @bodyParam hangars[].eggs_weight number optional Eggs weight in kg (for layer flocks)
-     * @bodyParam hangars[].chicks_weight number optional Chicks weight in kg (for broiler flocks)
+     * @bodyParam hangars[].chicks_weight number optional Chicks weight in grams (for broiler flocks)
      * @bodyParam hangars[].notes string optional Notes for this hangar record
      *
      * @response 200 {
@@ -1676,14 +1677,7 @@ class DailyRecordController extends BaseController
 
     private function getAvailableFeedFIFO($hangarId, $farmId)
     {
-        $totalStock = MaterialStockHangar::where('hangar_id', $hangarId)
-            ->byMaterialType()
-            ->sum('quantity') ?? 0;
-
-        $totalConsumed = DailyRecord::where('hangar_id', $hangarId)
-            ->sum('feed_kg') ?? 0;
-
-        return max(0, $totalStock - $totalConsumed);
+        return FeedStockHelper::hangarRemaining($hangarId);
     }
     
 

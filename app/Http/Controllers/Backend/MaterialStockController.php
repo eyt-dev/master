@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Helpers\DecimalHelper;
+use App\Helpers\FeedStockHelper;
 use Illuminate\Http\Request;
 use App\Models\MaterialStock;
 use App\Models\Farm;
@@ -76,19 +77,11 @@ class MaterialStockController extends Controller
                     return date('Y-m-d', strtotime($row->created_at));
                 })
                 ->addColumn('quantity', function($row) {
-                    // Get hangars for this feed stock entry and calculate total remaining
-                    $hangarIds = $row->materialStockHangarAllocations->pluck('hangar_id')->toArray();
+                    // Remaining of this feed stock entry across its hangar allocations
                     $totalRemaining = 0;
 
-                    foreach ($hangarIds as $hangarId) {
-                        $totalStock = MaterialStockHangar::where('hangar_id', $hangarId)
-                            ->byMaterialType()
-                            ->sum('quantity') ?? 0;
-
-                        $totalConsumed = DailyRecord::where('hangar_id', $hangarId)
-                            ->sum('feed_kg') ?? 0;
-
-                        $totalRemaining += max(0, $totalStock - $totalConsumed);
+                    foreach ($row->materialStockHangarAllocations as $allocation) {
+                        $totalRemaining += $this->getAllocationRemainingFeed($allocation);
                     }
 
                     return 'Total: ' . DecimalHelper::formatQuantityEuropean($row->quantity, 2) . ' kg<br>' .
@@ -106,7 +99,7 @@ class MaterialStockController extends Controller
                 ->addColumn('hangar1', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[0]) && $allocations[0]->hangar) {
-                        $remaining = $this->getHangarRemainingFeed($allocations[0]->hangar_id);
+                        $remaining = $this->getAllocationRemainingFeed($allocations[0]);
                         return $allocations[0]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[0]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
@@ -114,7 +107,7 @@ class MaterialStockController extends Controller
                 ->addColumn('hangar2', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[1]) && $allocations[1]->hangar) {
-                        $remaining = $this->getHangarRemainingFeed($allocations[1]->hangar_id);
+                        $remaining = $this->getAllocationRemainingFeed($allocations[1]);
                         return $allocations[1]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[1]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
@@ -122,7 +115,7 @@ class MaterialStockController extends Controller
                 ->addColumn('hangar3', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[2]) && $allocations[2]->hangar) {
-                        $remaining = $this->getHangarRemainingFeed($allocations[2]->hangar_id);
+                        $remaining = $this->getAllocationRemainingFeed($allocations[2]);
                         return $allocations[2]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[2]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
@@ -130,7 +123,7 @@ class MaterialStockController extends Controller
                 ->addColumn('hangar4', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[3]) && $allocations[3]->hangar) {
-                        $remaining = $this->getHangarRemainingFeed($allocations[3]->hangar_id);
+                        $remaining = $this->getAllocationRemainingFeed($allocations[3]);
                         return $allocations[3]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[3]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
@@ -138,7 +131,7 @@ class MaterialStockController extends Controller
                 ->addColumn('hangar5', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[4]) && $allocations[4]->hangar) {
-                        $remaining = $this->getHangarRemainingFeed($allocations[4]->hangar_id);
+                        $remaining = $this->getAllocationRemainingFeed($allocations[4]);
                         return $allocations[4]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[4]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
@@ -146,7 +139,7 @@ class MaterialStockController extends Controller
                 ->addColumn('hangar6', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[5]) && $allocations[5]->hangar) {
-                        $remaining = $this->getHangarRemainingFeed($allocations[5]->hangar_id);
+                        $remaining = $this->getAllocationRemainingFeed($allocations[5]);
                         return $allocations[5]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[5]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
@@ -154,7 +147,7 @@ class MaterialStockController extends Controller
                 ->addColumn('hangar7', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[6]) && $allocations[6]->hangar) {
-                        $remaining = $this->getHangarRemainingFeed($allocations[6]->hangar_id);
+                        $remaining = $this->getAllocationRemainingFeed($allocations[6]);
                         return $allocations[6]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[6]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
@@ -162,7 +155,7 @@ class MaterialStockController extends Controller
                 ->addColumn('hangar8', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[7]) && $allocations[7]->hangar) {
-                        $remaining = $this->getHangarRemainingFeed($allocations[7]->hangar_id);
+                        $remaining = $this->getAllocationRemainingFeed($allocations[7]);
                         return $allocations[7]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[7]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
@@ -170,7 +163,7 @@ class MaterialStockController extends Controller
                 ->addColumn('hangar9', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[8]) && $allocations[8]->hangar) {
-                        $remaining = $this->getHangarRemainingFeed($allocations[8]->hangar_id);
+                        $remaining = $this->getAllocationRemainingFeed($allocations[8]);
                         return $allocations[8]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[8]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
@@ -178,7 +171,7 @@ class MaterialStockController extends Controller
                 ->addColumn('hangar10', function($row) {
                     $allocations = $row->materialStockHangarAllocations;
                     if (isset($allocations[9]) && $allocations[9]->hangar) {
-                        $remaining = $this->getHangarRemainingFeed($allocations[9]->hangar_id);
+                        $remaining = $this->getAllocationRemainingFeed($allocations[9]);
                         return $allocations[9]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[9]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
                     }
                     return 'N/A';
@@ -289,6 +282,7 @@ class MaterialStockController extends Controller
                 'id' => $material->id,
                 'name' => $material->name,
                 'type' => $material->materialType?->name ?? 'N/A',
+                'hangar_allocation' => (bool) $material->materialType?->hangar_allocation,
             ];
         });
 
@@ -300,9 +294,8 @@ class MaterialStockController extends Controller
         // Get material type to determine hangar allocation requirement
         $materialName = MaterialName::find($request->material_name_id);
 
-        $materialType = $materialName ? strtolower(str_replace(' ', '_', $materialName->type)) : '';
-        // Hangar allocation required for pelleted_feed and mash_feed only
-        $hangarAllocationRequired = in_array($materialType, ['pelleted_feed', 'mash_feed']);
+        // Hangar allocation is required when the material type is flagged for it
+        $hangarAllocationRequired = (bool) $materialName?->materialType?->hangar_allocation;
 
         $request->merge(['quantity' => DecimalHelper::parseEuropean($request->quantity)]);
 
@@ -443,9 +436,7 @@ class MaterialStockController extends Controller
 
         // Get material type to determine hangar allocation requirement
         $materialName = MaterialName::find($request->material_name_id);
-        $materialType = $materialName ? strtolower(str_replace(' ', '_', $materialName->type)) : '';
-        // Hangar allocation required for pelleted_feed and mash_feed only
-        $hangarAllocationRequired = in_array($materialType, ['pelleted_feed', 'mash_feed']);
+        $hangarAllocationRequired = (bool) $materialName?->materialType?->hangar_allocation;
 
         $request->merge(['quantity' => DecimalHelper::parseEuropean($request->quantity)]);
 
@@ -611,14 +602,12 @@ class MaterialStockController extends Controller
 
     private function getHangarRemainingFeed($hangarId)
     {
-        $totalStock = MaterialStockHangar::where('hangar_id', $hangarId)
-            ->byMaterialType()
-            ->sum('quantity') ?? 0;
+        return FeedStockHelper::hangarRemaining($hangarId);
+    }
 
-        $totalConsumed = DailyRecord::where('hangar_id', $hangarId)
-            ->sum('feed_kg') ?? 0;
-
-        return max(0, $totalStock - $totalConsumed);
+    private function getAllocationRemainingFeed(MaterialStockHangar $allocation)
+    {
+        return FeedStockHelper::remainingByAllocation($allocation->hangar_id)[$allocation->id] ?? 0;
     }
 
     private function extractBreedType($breedString)

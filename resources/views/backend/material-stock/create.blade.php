@@ -31,40 +31,6 @@
             </div>
         </div>
 
-        <!-- Material Name Dropdown -->
-        <div class="col-sm-6 col-md-6">
-            <div class="form-group">
-                <label for="material_name_id" class="form-label">Material Name <span class="text-red">*</span></label>
-                <select class="form-control" name="material_name_id" id="material_name_id" required="">
-                    <option value="">Select Material Name</option>
-                    @if(isset($materialNames) && $materialNames->count() > 0)
-                        @php
-                            // Group materials by type
-                            $groupedMaterials = $materialNames->groupBy(function($item) {
-                                return $item->type ?? 'Other';
-                            })->sortKeys();
-                        @endphp
-                        @foreach($groupedMaterials as $type => $materials)
-                            <optgroup label="{{ $type }}">
-                                @foreach($materials as $material)
-                                    <option value="{{ $material->id }}" data-type="{{ $material->type ?? 'N/A' }}" data-material-id="{{ $material->id }}" {{ old('material_name_id', $materialStock->material_name_id ?? '') == $material->id ? 'selected' : '' }}>
-                                        {{ $material->name }}
-                                    </option>
-                                @endforeach
-                            </optgroup>
-                        @endforeach
-                    @else
-                        <option disabled>No materials available. Please create a material name first.</option>
-                    @endif
-                </select>
-                @error('material_name_id')
-                    <label id="material_name_id-error" class="error" for="material_name_id">{{ $message }}</label>
-                @enderror
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
         <!-- Farm Dropdown -->
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
@@ -83,6 +49,40 @@
                 </select>
                 @error('farm_id')
                     <label id="farm_id-error" class="error" for="farm_id">{{ $message }}</label>
+                @enderror
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Material Name Dropdown -->
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label for="material_name_id" class="form-label">Material Name <span class="text-red">*</span></label>
+                <select class="form-control" name="material_name_id" id="material_name_id" required="">
+                    <option value="">Select Material Name</option>
+                    @if(isset($materialNames) && $materialNames->count() > 0)
+                        @php
+                            // Group materials by type
+                            $groupedMaterials = $materialNames->groupBy(function($item) {
+                                return $item->type ?? 'Other';
+                            })->sortKeys();
+                        @endphp
+                        @foreach($groupedMaterials as $type => $materials)
+                            <optgroup label="{{ $type }}">
+                                @foreach($materials as $material)
+                                    <option value="{{ $material->id }}" data-type="{{ $material->type ?? 'N/A' }}" data-hangar-allocation="{{ $material->materialType?->hangar_allocation ? 1 : 0 }}" data-material-id="{{ $material->id }}" {{ old('material_name_id', $materialStock->material_name_id ?? '') == $material->id ? 'selected' : '' }}>
+                                        {{ $material->name }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    @else
+                        <option disabled>No materials available. Please create a material name first.</option>
+                    @endif
+                </select>
+                @error('material_name_id')
+                    <label id="material_name_id-error" class="error" for="material_name_id">{{ $message }}</label>
                 @enderror
             </div>
         </div>
@@ -115,7 +115,7 @@
         <div class="col-sm-12 col-md-12">
             <div class="form-group">
                 <label for="quantity" class="form-label">Total Quantity <span class="text-red">*</span></label>
-                <input type="text" inputmode="decimal" class="form-control" name="quantity" id="quantity" placeholder="Total Quantity"
+                <input type="text" inputmode="decimal" class="form-control amount-input" name="quantity" id="quantity" placeholder="Total Quantity"
                     value="{{ old('quantity', isset($materialStock) ? \App\Helpers\DecimalHelper::formatQuantityEuropean($materialStock->quantity, 2) : '') }}" required="" />
                 @error('quantity')
                     <label id="quantity-error" class="error" for="quantity">{{ $message }}</label>
@@ -154,15 +154,22 @@
 <script>
     $(document).ready(function() {
         var allHangars = [];
-        
+
+        // Live European formatting for quantity fields (typing 20000 shows 20.000)
+        bindAmountInputs();
+
+        // Hangar allocation is required when the selected material's type is flagged for it
+        function isHangarAllocationRequired() {
+            return $('#material_name_id option:selected').data('hangar-allocation') == 1;
+        }
+
         // Load all hangars for the selected farm
         function loadHangarsForFarm(farmId) {
             var container = $('#hangars_allocation_container');
             var noHangarsMsg = $('#no_hangars_message');
 
-            // Check if material type requires hangar allocation (pelleted feed or mash feed)
-            var materialType = ($('#material_name_id option:selected').data('type') || '').toLowerCase();
-            var requiresHangarAllocation = materialType === 'pelleted feed' || materialType === 'mash feed';
+            // Check if material type requires hangar allocation
+            var requiresHangarAllocation = isHangarAllocationRequired();
 
             if (!requiresHangarAllocation) {
                 container.hide();
@@ -228,7 +235,7 @@
                         </div>
                         <div class="ml-3" style="min-width: 150px;">
                             <label style="font-size: 12px; color: #666;">Allocation Qty</label>
-                            <input type="text" inputmode="decimal" class="form-control hangar-quantity-input" name="hangar_qty[${hangar.id}]"
+                            <input type="text" inputmode="decimal" class="form-control amount-input hangar-quantity-input" name="hangar_qty[${hangar.id}]"
                                 placeholder="0" value="${formatDecimalEU(quantity)}" data-hangar-id="${hangar.id}" />
                         </div>
                     </div>
@@ -247,15 +254,10 @@
 
         // Toggle hangar allocation section based on material type
         function toggleHangarAllocationSection() {
-            var materialId = $('#material_name_id').val();
-            var selectedOption = $('#material_name_id option:selected');
-            var materialType = (selectedOption.data('type') || '').toLowerCase();
-
-            // Show hangar allocation for pelleted feed and mash feed
-            var requiresHangarAllocation = materialType === 'pelleted feed' || materialType === 'mash feed';
+            var requiresHangarAllocation = isHangarAllocationRequired();
 
             if (requiresHangarAllocation) {
-                // Show hangar allocation for pelleted feed and mash feed
+                // Show hangar allocation for materials flagged for it
                 $('#hangar_allocation_section').slideDown(300);
                 $('#hangar_required_asterisk').show();
             } else {
@@ -278,16 +280,14 @@
             }
         });
 
-        // When farm changes, reload hangars and filter materials (only if pelleted feed or mash feed)
+        // When farm changes, reload hangars and filter materials
         $('#farm_id').on('change', function() {
             var farmId = $(this).val();
-            var materialType = ($('#material_name_id option:selected').data('type') || '').toLowerCase();
-            var requiresHangarAllocation = materialType === 'pelleted feed' || materialType === 'mash feed';
 
-            if (requiresHangarAllocation) {
+            if (isHangarAllocationRequired()) {
                 loadHangarsForFarm(farmId);
             } else {
-                // Clear hangars if not pelleted feed or mash feed
+                // Clear hangars if the material does not need hangar allocation
                 $('#hangars_allocation_container').html('');
                 $('#hangar_quantities_json').val('');
             }
@@ -299,8 +299,7 @@
         // Load and filter materials based on farm's breed category
         function filterMaterialsByFarm(farmId) {
             if (!farmId) {
-                // Reset to show all materials
-                showAllMaterials();
+                clearMaterials();
                 return;
             }
 
@@ -311,8 +310,7 @@
                     updateMaterialsDropdown(materials);
                 },
                 error: function() {
-                    // On error, show all materials
-                    showAllMaterials();
+                    clearMaterials();
                 }
             });
         }
@@ -334,13 +332,14 @@
 
             // Clear and rebuild dropdown
             $dropdown.find('optgroup, option[data-material-id]').remove();
+            $dropdown.find('option[value=""]').text('Select Material Name');
 
             // Add filtered materials grouped by type
             Object.keys(groupedMaterials).sort().forEach(function(type) {
                 var $optgroup = $('<optgroup label="' + type + '"></optgroup>');
                 groupedMaterials[type].forEach(function(material) {
                     var selected = (currentValue == material.id) ? 'selected' : '';
-                    $optgroup.append('<option value="' + material.id + '" data-type="' + type + '" data-material-id="' + material.id + '" ' + selected + '>' + material.name + '</option>');
+                    $optgroup.append('<option value="' + material.id + '" data-type="' + type + '" data-hangar-allocation="' + (material.hangar_allocation ? 1 : 0) + '" data-material-id="' + material.id + '" ' + selected + '>' + material.name + '</option>');
                 });
                 $dropdown.append($optgroup);
             });
@@ -352,40 +351,46 @@
             }
         }
 
-        // Show all materials (reset filter)
-        function showAllMaterials() {
-            // Reload page or reset materials to all - for now we'll just clear the farm-based filter
-            var currentValue = $('#material_name_id').val();
-
-            // This would be done by reloading the page or resetting from initial data
-            // For simplicity, we'll just hide the select and show it again
-            // Or better: we can reload from the initial data if needed
+        // No farm selected: remove all materials and ask for a farm first
+        function clearMaterials() {
+            var $dropdown = $('#material_name_id');
+            $dropdown.find('optgroup, option[data-material-id]').remove();
+            $dropdown.find('option[value=""]').text('Select farm first');
+            $dropdown.val('');
+            $('#hangars_allocation_container').html('');
+            $('#hangar_quantities_json').val('');
+            toggleHangarAllocationSection();
         }
 
         // On page load (edit mode), load hangars if farm is selected and toggle hangar section
         @if(isset($materialStock))
             toggleHangarAllocationSection();
             var farmId = $('#farm_id').val();
-            var materialType = ($('#material_name_id option:selected').data('type') || '').toLowerCase();
-            var requiresHangarAllocation = materialType === 'pelleted feed' || materialType === 'mash feed';
+            var requiresHangarAllocation = isHangarAllocationRequired();
             if (farmId && requiresHangarAllocation) {
                 loadHangarsForFarm(farmId);
             }
             // Filter materials based on farm's breed category in edit mode
             if (farmId) {
                 filterMaterialsByFarm(farmId);
+            } else {
+                clearMaterials();
             }
         @else
-            // On create mode, toggle hangar section based on selected material
+            // On create mode, materials are listed only once a farm is selected
             toggleHangarAllocationSection();
+            if ($('#farm_id').val()) {
+                filterMaterialsByFarm($('#farm_id').val());
+            } else {
+                clearMaterials();
+            }
         @endif
 
         // Form submission via AJAX
         $('#material_stock_form').on('submit', function(e) {
             e.preventDefault();
 
-            var materialType = ($('#material_name_id option:selected').data('type') || '').toLowerCase();
-            var requiresHangarAllocation = materialType === 'pelleted feed' || materialType === 'mash feed';
+            var requiresHangarAllocation = isHangarAllocationRequired();
             var selectedHangars = [];
             var totalQty = 0;
 

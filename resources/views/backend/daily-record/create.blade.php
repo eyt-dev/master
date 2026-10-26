@@ -166,7 +166,7 @@
                             // Format decimal values with comma as separator
                             var feedValue = existingData.feed_kg ? parseFloat(existingData.feed_kg).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
                             var eggsWeightValue = existingData.eggs_weight ? parseFloat(existingData.eggs_weight).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
-                            var chicksWeightValue = existingData.chicks_weight ? parseFloat(existingData.chicks_weight).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
+                            var chicksWeightValue = existingData.chicks_weight ? parseFloat(existingData.chicks_weight).toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) : '';
                             var eggsTraySValue = formatIntegerEU(existingData.eggs_tray_30 || '');
                             var eggsCountValue = formatIntegerEU(existingData.eggs_count || '');
                             var mortalityValue = formatIntegerEU(existingData.mortality || '');

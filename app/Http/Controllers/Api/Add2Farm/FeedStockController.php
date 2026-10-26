@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Add2Farm;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\FeedStockHelper;
 use App\Models\MaterialStock;
 use App\Models\MaterialStockHangar;
 use App\Models\MaterialType;
@@ -58,15 +59,11 @@ class FeedStockController extends BaseController
         $hangars = Hangar::where('farm_id', $farm_id)
             ->get()
             ->map(function ($hangar) {
-                $remaining = MaterialStockHangar::where('hangar_id', $hangar->id)
-                    ->byMaterialType()
-                    ->sum('remaining_quantity') ?? 0;
-
                 return [
                     'hangar_id' => $hangar->id,
                     'hangar_name' => $hangar->name,
                     'status' => $hangar->status,
-                    'remaining_quantity' => $this->formatQuantity($remaining),
+                    'remaining_quantity' => $this->formatQuantity(FeedStockHelper::hangarRemaining($hangar->id)),
                 ];
             });
 
@@ -540,7 +537,7 @@ class FeedStockController extends BaseController
                 'hangar_name' => $a->hangar->name,
                 'status' => $a->hangar->status,
                 'quantity' => $this->formatQuantity($a->quantity),
-                'remaining_quantity' => $this->formatQuantity($this->getHangarRemainingFeed($a->hangar_id)),
+                'remaining_quantity' => $this->formatQuantity(FeedStockHelper::remainingByAllocation($a->hangar_id)[$a->id] ?? 0),
             ]),
             'created_by' => $record->created_by,
             'created_by_name' => $record->creator->name,

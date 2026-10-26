@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Helpers\DecimalHelper;
+use App\Helpers\FeedStockHelper;
 use Illuminate\Http\Request;
 use App\Models\Hangar;
 use App\Models\Farm;
@@ -48,15 +49,7 @@ class HangarController extends Controller
                     return date('Y-m-d', strtotime($row->created_at));
                 })
                 ->addColumn('remaining_feed', function($row) {
-                    $totalStock = \App\Models\MaterialStockHangar::where('hangar_id', $row->id)
-                        ->byMaterialType()
-                        ->sum('quantity') ?? 0;
-
-                    $totalConsumed = \App\Models\DailyRecord::where('hangar_id', $row->id)
-                        ->sum('feed_kg') ?? 0;
-
-                    $remaining = max(0, $totalStock - $totalConsumed);
-                    return DecimalHelper::formatEuropean($remaining, 2) . ' kg';
+                    return DecimalHelper::formatEuropean(FeedStockHelper::hangarRemaining($row->id), 2) . ' kg';
                 })
                 ->addColumn('action', function($row) {
                     return '<a class="edit-hangar btn btn-sm btn-success" data-path="'.route('hangar.edit', ['username' => request()->segment(1),  'hangar' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'

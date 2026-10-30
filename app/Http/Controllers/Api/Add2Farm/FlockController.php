@@ -672,12 +672,12 @@ class FlockController extends BaseController
                 'status'        => $allocation->hangar?->status,
                 'alive_birds'    => $liveBirds,
                 ...$this->mortalityFields($totalMortality, $flock, $allocation->hangar_id),
-                'feed' => $feedConsumed,
-                'remaining_feed' => $feedRemaining,
-                'feed_per_bird' => $feedPerBirdByHangar[$allocation->hangar_id] ?? 0,
+                'feed' => $this->formatDecimal($feedConsumed),
+                'remaining_feed' => $this->formatDecimal($feedRemaining),
+                'feed_per_bird' => $this->formatDecimal($feedPerBirdByHangar[$allocation->hangar_id] ?? 0),
                 'avg_weight'    => $avgWeight ? $this->formatDecimal($avgWeight) : 0,
-                'act_fcr'       => $fcrByHangar[$allocation->hangar_id]['act_fcr'] ?? 0,
-                'trend_fcr'     => $fcrByHangar[$allocation->hangar_id]['trend_fcr'] ?? 0,
+                'act_fcr'       => $this->formatDecimal($fcrByHangar[$allocation->hangar_id]['act_fcr'] ?? 0),
+                'trend_fcr'     => $this->formatDecimal($fcrByHangar[$allocation->hangar_id]['trend_fcr'] ?? 0),
             ];
         })->toArray();
 
@@ -709,9 +709,9 @@ class FlockController extends BaseController
             'updated_at' => $flock->updated_at,
             'flock-condition' => ($isBroiler ? 'broiler-' : 'layer-') . ['Active' => 'active', 'Harvesting' => 'harvesting', 'Ended' => 'ended'][$saleStatus['status']],
             ...$this->mortalityFields($totalMortality, $flock),
-            'feed_per_bird' => $feedPerBirdByHangar ? round(array_sum($feedPerBirdByHangar) / count($feedPerBirdByHangar), 2) : 0,
-            'act_fcr' => $fcrByHangar ? round(array_sum(array_column($fcrByHangar, 'act_fcr')) / count($fcrByHangar), 2) : 0,
-            'trend_fcr' => $fcrByHangar ? round(array_sum(array_column($fcrByHangar, 'trend_fcr')) / count($fcrByHangar), 2) : 0,
+            'feed_per_bird' => $feedPerBirdByHangar ? $this->formatDecimal(array_sum($feedPerBirdByHangar) / count($feedPerBirdByHangar)) : 0,
+            'act_fcr' => $fcrByHangar ? $this->formatDecimal(array_sum(array_column($fcrByHangar, 'act_fcr')) / count($fcrByHangar)) : 0,
+            'trend_fcr' => $fcrByHangar ? $this->formatDecimal(array_sum(array_column($fcrByHangar, 'trend_fcr')) / count($fcrByHangar)) : 0,
             'avg_weight' => $avgWeight ? $this->formatDecimal($avgWeight) . ' g' : 'N/A',
             'chart_data' => $chartData,
         ];
@@ -719,16 +719,16 @@ class FlockController extends BaseController
         // Add type-specific metrics
         if ($isBroiler) {
             if ($isHarvested) {
-                $data['fcr'] = $fcr;
+                $data['fcr'] = $this->formatDecimal($fcr);
             }
         } else {
             // Layer flock
             $data['total_eggs'] = $totalEggs;
-            $data['avg_production'] = round($avgProduction, 2) . '%';
+            $data['avg_production'] = $this->formatDecimal($avgProduction) . '%';
             if ($isHarvested) {
-                $data['fcr'] = $fcr;
+                $data['fcr'] = $this->formatDecimal($fcr);
             } else {
-                $data['production_rate'] = round($avgProduction, 2);
+                $data['production_rate'] = $this->formatDecimal($avgProduction);
             }
         }
 
@@ -1219,10 +1219,10 @@ class FlockController extends BaseController
 
                 $performanceTrend[] = [
                     'week' => 'Week ' . $week,
-                    'avg_production' => round($avgProd, 2),
-                    'feed' => round($weekFeed, 2),
+                    'avg_production' => $this->formatDecimal($avgProd),
+                    'feed' => $this->formatDecimal($weekFeed),
                     'mortality_value' => (int) $weekMortality,
-                    'mortality_rate' => round($mortalityPct, 2),
+                    'mortality_rate' => $this->formatDecimal($mortalityPct) . '%',
                 ];
             } else {
                 // BROILER - Avg Weight, FCR, Mortality
@@ -1240,16 +1240,16 @@ class FlockController extends BaseController
                 $performanceTrend[] = [
                     'week' => 'Week ' . $week,
                     'avg_weight' => $this->formatDecimal($weekWeight),
-                    'fcr' => $fcr,
+                    'fcr' => $this->formatDecimal($fcr),
                     'mortality_value' => (int) $weekMortality,
-                    'mortality_rate' => round($mortalityPct, 2),
+                    'mortality_rate' => $this->formatDecimal($mortalityPct) . '%',
                 ];
             }
 
             $mortalityTrend[] = [
                 'week' => 'Week ' . $week,
                 'mortality_value' => (int) $weekMortality,
-                'mortality_rate' => round($mortalityPct, 2),
+                'mortality_rate' => $this->formatDecimal($mortalityPct) . '%',
             ];
         }
 
@@ -1309,12 +1309,12 @@ class FlockController extends BaseController
                 'status'        => $allocation->hangar?->status,
                 'alive_birds'    => $liveBirds,
                 ...$this->mortalityFields($totalMortality, $flock, $allocation->hangar_id),
-                'feed' => $feedConsumed,
-                'remaining_feed' => $feedRemaining,
-                'feed_per_bird' => $feedPerBirdByHangar[$allocation->hangar_id] ?? 0,
+                'feed' => $this->formatDecimal($feedConsumed),
+                'remaining_feed' => $this->formatDecimal($feedRemaining),
+                'feed_per_bird' => $this->formatDecimal($feedPerBirdByHangar[$allocation->hangar_id] ?? 0),
                 'avg_weight'    => $avgWeight ? $this->formatDecimal($avgWeight) : 0,
-                'act_fcr'       => $fcrByHangar[$allocation->hangar_id]['act_fcr'] ?? 0,
-                'trend_fcr'     => $fcrByHangar[$allocation->hangar_id]['trend_fcr'] ?? 0,
+                'act_fcr'       => $this->formatDecimal($fcrByHangar[$allocation->hangar_id]['act_fcr'] ?? 0),
+                'trend_fcr'     => $this->formatDecimal($fcrByHangar[$allocation->hangar_id]['trend_fcr'] ?? 0),
             ];
         })->toArray();
 
@@ -1373,10 +1373,10 @@ class FlockController extends BaseController
             'alive_birds'           => $remainingBirds,
             'is_completed'          => $status === 'Ended',
             ...$this->mortalityFields($totalMortality, $flock),
-            'fcr'                   => $fcr,
-            'feed_per_bird'         => $feedPerBirdByHangar ? round(array_sum($feedPerBirdByHangar) / count($feedPerBirdByHangar), 2) : 0,
-            'act_fcr'               => $fcrByHangar ? round(array_sum(array_column($fcrByHangar, 'act_fcr')) / count($fcrByHangar), 2) : 0,
-            'trend_fcr'             => $fcrByHangar ? round(array_sum(array_column($fcrByHangar, 'trend_fcr')) / count($fcrByHangar), 2) : 0,
+            'fcr'                   => $this->formatDecimal($fcr),
+            'feed_per_bird'         => $feedPerBirdByHangar ? $this->formatDecimal(array_sum($feedPerBirdByHangar) / count($feedPerBirdByHangar)) : 0,
+            'act_fcr'               => $fcrByHangar ? $this->formatDecimal(array_sum(array_column($fcrByHangar, 'act_fcr')) / count($fcrByHangar)) : 0,
+            'trend_fcr'             => $fcrByHangar ? $this->formatDecimal(array_sum(array_column($fcrByHangar, 'trend_fcr')) / count($fcrByHangar)) : 0,
             'hangar_allocations'    => $hangarAllocations,
             'assignment'            => $assignment,
             'created_by'            => $flock->created_by,
@@ -1393,7 +1393,7 @@ class FlockController extends BaseController
         if ($isBroiler) {
             if ($isHarvested) {
                 // Broiler harvesting/ended: send FCR (feed kg per kg of harvested weight)
-                $response['avg_fcr'] = $fcr;
+                $response['avg_fcr'] = $this->formatDecimal($fcr);
             } else {
                 // Broiler active: send avg weight
                 $avgWeight = $flock->averageLatestChicksWeight();
@@ -1407,7 +1407,7 @@ class FlockController extends BaseController
                 // Layer active: send production rate %
                 $recordCount = $dailyRecords->count();
                 $avgProduction = $totalBird > 0 && $recordCount > 0 ? ($totalEggs / ($totalBird * $recordCount)) * 100 : 0;
-                $response['production_rate'] = round($avgProduction, 2);
+                $response['production_rate'] = $this->formatDecimal($avgProduction);
             }
         }
 

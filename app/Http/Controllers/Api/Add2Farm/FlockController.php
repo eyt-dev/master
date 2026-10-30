@@ -1400,13 +1400,11 @@ class FlockController extends BaseController
                 $response['avg_weight'] = $avgWeight ? round($avgWeight, 2) : 0;
             }
         } else {
-            if ($isHarvested) {
-                // Layer harvesting/ended: send total eggs
-                $totalEggs = $dailyRecords->sum('eggs_count');
-                $response['total_eggs'] = $totalEggs;
-            } else {
+            // Layer: send total eggs for both active and harvested/ended flocks
+            $response['total_eggs'] = $totalEggs;
+
+            if (!$isHarvested) {
                 // Layer active: send production rate %
-                $totalEggs = $dailyRecords->sum('eggs_count');
                 $recordCount = $dailyRecords->count();
                 $avgProduction = $totalBird > 0 && $recordCount > 0 ? ($totalEggs / ($totalBird * $recordCount)) * 100 : 0;
                 $response['production_rate'] = round($avgProduction, 2);

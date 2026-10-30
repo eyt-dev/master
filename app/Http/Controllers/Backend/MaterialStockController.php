@@ -48,6 +48,11 @@ class MaterialStockController extends Controller
             }
 
             $data = $query->orderBy('created_at', 'desc')->get();
+
+            // Farm hangars in creation order, so column N always means the farm's Nth hangar
+            $farmHangars = Hangar::whereIn('farm_id', $data->pluck('farm_id')->unique())
+                ->orderBy('id')->get()->groupBy('farm_id');
+
             return datatables()->of($data)
                 ->addColumn('stock_date', function($row) {
                     return date('Y-m-d', strtotime($row->stock_date));
@@ -96,85 +101,35 @@ class MaterialStockController extends Controller
                     }
                     return 'N/A';
                 })
-                ->addColumn('hangar1', function($row) {
-                    $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[0]) && $allocations[0]->hangar) {
-                        $remaining = $this->getAllocationRemainingFeed($allocations[0]);
-                        return $allocations[0]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[0]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
-                    }
-                    return 'N/A';
+                ->addColumn('hangar1', function($row) use ($farmHangars) {
+                    return $this->hangarCell($row, 1, $farmHangars);
                 })
-                ->addColumn('hangar2', function($row) {
-                    $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[1]) && $allocations[1]->hangar) {
-                        $remaining = $this->getAllocationRemainingFeed($allocations[1]);
-                        return $allocations[1]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[1]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
-                    }
-                    return 'N/A';
+                ->addColumn('hangar2', function($row) use ($farmHangars) {
+                    return $this->hangarCell($row, 2, $farmHangars);
                 })
-                ->addColumn('hangar3', function($row) {
-                    $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[2]) && $allocations[2]->hangar) {
-                        $remaining = $this->getAllocationRemainingFeed($allocations[2]);
-                        return $allocations[2]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[2]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
-                    }
-                    return 'N/A';
+                ->addColumn('hangar3', function($row) use ($farmHangars) {
+                    return $this->hangarCell($row, 3, $farmHangars);
                 })
-                ->addColumn('hangar4', function($row) {
-                    $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[3]) && $allocations[3]->hangar) {
-                        $remaining = $this->getAllocationRemainingFeed($allocations[3]);
-                        return $allocations[3]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[3]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
-                    }
-                    return 'N/A';
+                ->addColumn('hangar4', function($row) use ($farmHangars) {
+                    return $this->hangarCell($row, 4, $farmHangars);
                 })
-                ->addColumn('hangar5', function($row) {
-                    $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[4]) && $allocations[4]->hangar) {
-                        $remaining = $this->getAllocationRemainingFeed($allocations[4]);
-                        return $allocations[4]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[4]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
-                    }
-                    return 'N/A';
+                ->addColumn('hangar5', function($row) use ($farmHangars) {
+                    return $this->hangarCell($row, 5, $farmHangars);
                 })
-                ->addColumn('hangar6', function($row) {
-                    $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[5]) && $allocations[5]->hangar) {
-                        $remaining = $this->getAllocationRemainingFeed($allocations[5]);
-                        return $allocations[5]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[5]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
-                    }
-                    return 'N/A';
+                ->addColumn('hangar6', function($row) use ($farmHangars) {
+                    return $this->hangarCell($row, 6, $farmHangars);
                 })
-                ->addColumn('hangar7', function($row) {
-                    $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[6]) && $allocations[6]->hangar) {
-                        $remaining = $this->getAllocationRemainingFeed($allocations[6]);
-                        return $allocations[6]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[6]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
-                    }
-                    return 'N/A';
+                ->addColumn('hangar7', function($row) use ($farmHangars) {
+                    return $this->hangarCell($row, 7, $farmHangars);
                 })
-                ->addColumn('hangar8', function($row) {
-                    $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[7]) && $allocations[7]->hangar) {
-                        $remaining = $this->getAllocationRemainingFeed($allocations[7]);
-                        return $allocations[7]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[7]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
-                    }
-                    return 'N/A';
+                ->addColumn('hangar8', function($row) use ($farmHangars) {
+                    return $this->hangarCell($row, 8, $farmHangars);
                 })
-                ->addColumn('hangar9', function($row) {
-                    $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[8]) && $allocations[8]->hangar) {
-                        $remaining = $this->getAllocationRemainingFeed($allocations[8]);
-                        return $allocations[8]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[8]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
-                    }
-                    return 'N/A';
+                ->addColumn('hangar9', function($row) use ($farmHangars) {
+                    return $this->hangarCell($row, 9, $farmHangars);
                 })
-                ->addColumn('hangar10', function($row) {
-                    $allocations = $row->materialStockHangarAllocations;
-                    if (isset($allocations[9]) && $allocations[9]->hangar) {
-                        $remaining = $this->getAllocationRemainingFeed($allocations[9]);
-                        return $allocations[9]->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocations[9]->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
-                    }
-                    return 'N/A';
+                ->addColumn('hangar10', function($row) use ($farmHangars) {
+                    return $this->hangarCell($row, 10, $farmHangars);
                 })
                 ->addColumn('action', function($row) {
                     return '<a class="edit-material-stock btn btn-sm btn-success mr-1" data-id="'.$row->id.'" data-path="'.route('material-stock.edit', ['username' => request()->segment(1), 'material_stock' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'
@@ -608,6 +563,20 @@ class MaterialStockController extends Controller
     private function getAllocationRemainingFeed(MaterialStockHangar $allocation)
     {
         return FeedStockHelper::remainingByAllocation($allocation->hangar_id)[$allocation->id] ?? 0;
+    }
+
+    // Renders the allocation for the farm's Nth hangar, so each hangar stays in its own column
+    private function hangarCell($row, int $position, $farmHangars)
+    {
+        $hangar = ($farmHangars[$row->farm_id] ?? collect())->values()->get($position - 1);
+        $allocation = $hangar ? $row->materialStockHangarAllocations->firstWhere('hangar_id', $hangar->id) : null;
+
+        if (!$allocation || !$allocation->hangar) {
+            return 'N/A';
+        }
+
+        $remaining = $this->getAllocationRemainingFeed($allocation);
+        return $allocation->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocation->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
     }
 
     private function extractBreedType($breedString)

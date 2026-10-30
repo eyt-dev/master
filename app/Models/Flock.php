@@ -166,7 +166,7 @@ class Flock extends Model
     /**
      * FCR per hangar as percentages:
      * act_fcr = chicks weight today ÷ feed per bird of the day before × 100.
-     * trend_fcr = feed per bird of the day before ÷ chicks weight today × 100.
+     * trend_fcr = feed per bird of the day before ÷ chicks weight today.
      */
     public function fcrByHangar(): array
     {
@@ -181,7 +181,7 @@ class Flock extends Model
 
             $result[$hangarId] = [
                 'act_fcr' => $birds > 0 && $weight > 0 ? round($weight / $birds * 100, 2) : 0,
-                'trend_fcr' => $birds > 0 && $weight > 0 ? round($birds / $weight * 100, 2) : 0,
+                'trend_fcr' => $birds > 0 && $weight > 0 ? round($birds / $weight, 2) : 0,
             ];
         }
 

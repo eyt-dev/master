@@ -675,7 +675,7 @@ class FlockController extends BaseController
                 'feed' => $feedConsumed,
                 'remaining_feed' => $feedRemaining,
                 'feed_per_bird' => $feedPerBirdByHangar[$allocation->hangar_id] ?? 0,
-                'avg_weight'    => $avgWeight ? round($avgWeight, 2) : 0,
+                'avg_weight'    => $avgWeight ? $this->formatDecimal($avgWeight) : 0,
                 'act_fcr'       => $fcrByHangar[$allocation->hangar_id]['act_fcr'] ?? 0,
                 'trend_fcr'     => $fcrByHangar[$allocation->hangar_id]['trend_fcr'] ?? 0,
             ];
@@ -712,7 +712,7 @@ class FlockController extends BaseController
             'feed_per_bird' => $feedPerBirdByHangar ? round(array_sum($feedPerBirdByHangar) / count($feedPerBirdByHangar), 2) : 0,
             'act_fcr' => $fcrByHangar ? round(array_sum(array_column($fcrByHangar, 'act_fcr')) / count($fcrByHangar), 2) : 0,
             'trend_fcr' => $fcrByHangar ? round(array_sum(array_column($fcrByHangar, 'trend_fcr')) / count($fcrByHangar), 2) : 0,
-            'avg_weight' => $avgWeight ? round($avgWeight, 2) . ' g' : 'N/A',
+            'avg_weight' => $avgWeight ? $this->formatDecimal($avgWeight) . ' g' : 'N/A',
             'chart_data' => $chartData,
         ];
 
@@ -1239,7 +1239,7 @@ class FlockController extends BaseController
 
                 $performanceTrend[] = [
                     'week' => 'Week ' . $week,
-                    'avg_weight' => round($weekWeight, 2),
+                    'avg_weight' => $this->formatDecimal($weekWeight),
                     'fcr' => $fcr,
                     'mortality_value' => (int) $weekMortality,
                     'mortality_rate' => round($mortalityPct, 2),
@@ -1312,7 +1312,7 @@ class FlockController extends BaseController
                 'feed' => $feedConsumed,
                 'remaining_feed' => $feedRemaining,
                 'feed_per_bird' => $feedPerBirdByHangar[$allocation->hangar_id] ?? 0,
-                'avg_weight'    => $avgWeight ? round($avgWeight, 2) : 0,
+                'avg_weight'    => $avgWeight ? $this->formatDecimal($avgWeight) : 0,
                 'act_fcr'       => $fcrByHangar[$allocation->hangar_id]['act_fcr'] ?? 0,
                 'trend_fcr'     => $fcrByHangar[$allocation->hangar_id]['trend_fcr'] ?? 0,
             ];
@@ -1397,7 +1397,7 @@ class FlockController extends BaseController
             } else {
                 // Broiler active: send avg weight
                 $avgWeight = $flock->averageLatestChicksWeight();
-                $response['avg_weight'] = $avgWeight ? round($avgWeight, 2) : 0;
+                $response['avg_weight'] = $avgWeight ? $this->formatDecimal($avgWeight) : 0;
             }
         } else {
             // Layer: send total eggs for both active and harvested/ended flocks

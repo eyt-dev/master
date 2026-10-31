@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Add2Farm;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\DecimalHelper;
 use App\Helpers\FeedStockHelper;
 use App\Models\MaterialStock;
 use App\Models\MaterialStockHangar;
@@ -63,7 +64,7 @@ class FeedStockController extends BaseController
                     'hangar_id' => $hangar->id,
                     'hangar_name' => $hangar->name,
                     'status' => $hangar->status,
-                    'remaining_quantity' => $this->formatQuantity(FeedStockHelper::hangarRemaining($hangar->id)),
+                    'remaining_quantity' => DecimalHelper::formatInteger(FeedStockHelper::hangarRemaining($hangar->id)),
                 ];
             });
 
@@ -529,15 +530,15 @@ class FeedStockController extends BaseController
             'material_name' => $record->materialName?->name ?? $record->name,
             'material_type' => $record->materialName?->type,
             'name' => $record->name,
-            'quantity' => $this->formatQuantity($record->quantity),
+            'quantity' => DecimalHelper::formatInteger($record->quantity),
             'supplier_id' => $record->supplier_id,
             'supplier_name' => $record->supplier?->name ?? 'N/A',
             'hangar_allocations' => $record->materialStockHangarAllocations->map(fn($a) => [
                 'hangar_id' => $a->hangar_id,
                 'hangar_name' => $a->hangar->name,
                 'status' => $a->hangar->status,
-                'quantity' => $this->formatQuantity($a->quantity),
-                'remaining_quantity' => $this->formatQuantity(FeedStockHelper::remainingByAllocation($a->hangar_id)[$a->id] ?? 0),
+                'quantity' => DecimalHelper::formatInteger($a->quantity),
+                'remaining_quantity' => DecimalHelper::formatInteger(FeedStockHelper::remainingByAllocation($a->hangar_id)[$a->id] ?? 0),
             ]),
             'created_by' => $record->created_by,
             'created_by_name' => $record->creator->name,

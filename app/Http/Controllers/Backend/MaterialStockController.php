@@ -89,8 +89,8 @@ class MaterialStockController extends Controller
                         $totalRemaining += $this->getAllocationRemainingFeed($allocation);
                     }
 
-                    return 'Total: ' . DecimalHelper::formatQuantityEuropean($row->quantity, 2) . ' kg<br>' .
-                           'Remaining: ' . DecimalHelper::formatQuantityEuropean($totalRemaining, 2) . ' kg';
+                    return 'Total: ' . DecimalHelper::formatInteger($row->quantity) . ' kg<br>' .
+                           'Remaining: ' . DecimalHelper::formatInteger($totalRemaining) . ' kg';
                 })
                 ->addColumn('assignment_status', function($row) {
                     $user = auth()->user();
@@ -186,7 +186,7 @@ class MaterialStockController extends Controller
             return [
                 'id' => $hangar->id,
                 'name' => $hangar->name,
-                'remaining' => DecimalHelper::formatQuantityEuropean($remaining, 2)
+                'remaining' => DecimalHelper::formatInteger($remaining)
             ];
         });
 
@@ -576,7 +576,7 @@ class MaterialStockController extends Controller
         }
 
         $remaining = $this->getAllocationRemainingFeed($allocation);
-        return $allocation->hangar->name . '<br>Qty: ' . DecimalHelper::formatQuantityEuropean($allocation->quantity, 2) . '<br>Remaining: ' . DecimalHelper::formatQuantityEuropean($remaining, 2);
+        return $allocation->hangar->name . '<br>Qty: ' . DecimalHelper::formatInteger($allocation->quantity) . '<br>Remaining: ' . DecimalHelper::formatInteger($remaining);
     }
 
     private function extractBreedType($breedString)

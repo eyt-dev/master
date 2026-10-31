@@ -49,7 +49,7 @@ class HangarController extends Controller
                     return date('Y-m-d', strtotime($row->created_at));
                 })
                 ->addColumn('remaining_feed', function($row) {
-                    return DecimalHelper::formatEuropean(FeedStockHelper::hangarRemaining($row->id), 2) . ' kg';
+                    return DecimalHelper::formatInteger(FeedStockHelper::hangarRemaining($row->id)) . ' kg';
                 })
                 ->addColumn('action', function($row) {
                     return '<a class="edit-hangar btn btn-sm btn-success" data-path="'.route('hangar.edit', ['username' => request()->segment(1),  'hangar' => $row->id]).'" title="Edit"><i class="fa fa-edit"></i></a>'

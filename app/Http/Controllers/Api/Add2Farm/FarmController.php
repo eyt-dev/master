@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Add2Farm;
 
+use App\Helpers\DecimalHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Farm;
 use App\Models\Admin;
@@ -776,7 +777,7 @@ class FarmController extends BaseController
                 'layer_hens'    => $hangar->layer_hens,
                 'broiler_hens'  => $hangar->broiler_hens,
                 'status'        => $hangar->status,
-                'remaining_feed' => $this->formatDecimal($remaining),
+                'remaining_feed' => DecimalHelper::formatInteger($remaining),
             ];
         })->toArray();
 
@@ -836,7 +837,7 @@ class FarmController extends BaseController
             'hangars_count'         => $totalHangars,
             'area'                  => $totalArea,
             'total_birds'           => $totalBirds,
-            'remaining_feed'        => $this->formatDecimal($totalRemainingFeed),
+            'remaining_feed'        => DecimalHelper::formatInteger($totalRemainingFeed),
             'hangars'               => $hangars,
             'created_at'            => $farm->created_at,
         ];

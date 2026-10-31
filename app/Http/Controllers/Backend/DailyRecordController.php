@@ -213,8 +213,8 @@ class DailyRecordController extends Controller
         }
 
         $breedType = $row['breed_type'] ?? 'Layer';
-        $feedKg = DecimalHelper::formatEuropean((float) $hangar['feed_kg'], 2);
-        $eggsWeight = DecimalHelper::formatEuropean((float) $hangar['eggs_weight'], 2);
+        $feedKg = DecimalHelper::formatInteger($hangar['feed_kg']);
+        $eggsWeight = DecimalHelper::formatInteger($hangar['eggs_weight']);
         $chicksWeightG = DecimalHelper::formatEuropean((float) $hangar['chicks_weight'], 0);
 
         $html = 'Qty: ' . DecimalHelper::formatInteger($hangar['allocated_quantity']) . '<br>' .
@@ -342,7 +342,7 @@ class DailyRecordController extends Controller
                 'id' => $allocation->hangar->id,
                 'name' => $allocation->hangar->label,
                 'quantity' => $allocation->quantity,
-                'remaining' => DecimalHelper::formatEuropean($remainingFeed, 2)
+                'remaining' => DecimalHelper::formatInteger($remainingFeed)
             ];
         });
 
@@ -447,7 +447,7 @@ class DailyRecordController extends Controller
 
             if ($feedKg > $currentRemaining) {
                 $remainingMsg = $currentRemaining > 0
-                    ? 'only ' . DecimalHelper::formatEuropean($currentRemaining, 2) . ' kg available'
+                    ? 'only ' . DecimalHelper::formatInteger($currentRemaining) . ' kg available'
                     : "out of stock";
                 $error = ['hangar_records' => "Insufficient feed in {$hangarName} - {$remainingMsg}"];
                 if ($request->expectsJson()) {
@@ -661,7 +661,7 @@ class DailyRecordController extends Controller
 
             if ($feedKg > $availableStock) {
                 $remainingMsg = $availableStock > 0
-                    ? 'only ' . DecimalHelper::formatEuropean($availableStock, 2) . ' kg available'
+                    ? 'only ' . DecimalHelper::formatInteger($availableStock) . ' kg available'
                     : "out of stock";
                 return back()->withErrors(['hangar_records' => "Insufficient feed in {$hangarName} - {$remainingMsg}"]);
             }

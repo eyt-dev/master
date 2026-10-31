@@ -7,6 +7,7 @@ use App\Models\DailyRecord;
 use App\Models\Flock;
 use App\Models\Farm;
 use App\Models\MaterialStockHangar;
+use App\Helpers\DecimalHelper;
 use App\Helpers\FeedStockHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -1097,11 +1098,11 @@ class DailyRecordController extends BaseController
             'flock_status'    => $flockStatus,
             'hangar_id'       => $record->hangar_id,
             'hangar_name'     => $record->hangar?->name,
-            'feed_kg'         => $this->formatDecimal($record->feed_kg),
+            'feed_kg'         => DecimalHelper::formatInteger($record->feed_kg),
             'eggs_tray_30'    => (int) $record->eggs_tray_30,
             'eggs_count'      => (int) $record->eggs_count,
-            'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
-            'chicks_weight'   => $this->formatDecimal($record->chicks_weight),
+            'eggs_weight'     => DecimalHelper::formatInteger($record->eggs_weight),
+            'chicks_weight'   => DecimalHelper::formatInteger($record->chicks_weight),
             ...$this->mortalityFields($record->mortality, $record->flock, $record->hangar_id),
             'assignment'      => $assignment,
             'created_by'      => $record->created_by,
@@ -1145,11 +1146,11 @@ class DailyRecordController extends BaseController
             'flock_name'      => $flock?->name,
             'flock_age'       => $flockAge,
             'flock_status'    => $flockStatus,
-            'feed_kg'         => $this->formatDecimal($record->feed_kg),
+            'feed_kg'         => DecimalHelper::formatInteger($record->feed_kg),
             'eggs_tray_30'    => (int) $record->eggs_tray_30,
             'eggs_count'      => (int) $record->eggs_count,
-            'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
-            'chicks_weight'   => $this->formatDecimal($record->chicks_weight),
+            'eggs_weight'     => DecimalHelper::formatInteger($record->eggs_weight),
+            'chicks_weight'   => DecimalHelper::formatInteger($record->chicks_weight),
             ...$this->mortalityFields($record->mortality, $flock),
         ];
     }
@@ -1198,12 +1199,12 @@ class DailyRecordController extends BaseController
             'flock_name'      => $flock?->name,
             'flock_age'       => $flockAge,
             'flock_status'    => $flockStatus,
-            'feed'        => $this->formatDecimal($record->feed_kg),
-            'remaining_qty'   => $this->formatQuantity($remainingQty),
+            'feed'        => DecimalHelper::formatInteger($record->feed_kg),
+            'remaining_qty'   => DecimalHelper::formatInteger($remainingQty),
             'eggs_tray_30'    => (int) $record->eggs_tray_30,
             'eggs_count'      => (int) $record->eggs_count,
-            'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
-            'chicks_weight'   => $this->formatDecimal($record->chicks_weight),
+            'eggs_weight'     => DecimalHelper::formatInteger($record->eggs_weight),
+            'chicks_weight'   => DecimalHelper::formatInteger($record->chicks_weight),
             ...$this->mortalityFields($record->mortality, $flock),
         ];
     }
@@ -1252,12 +1253,12 @@ class DailyRecordController extends BaseController
             'flock_name'      => $flock?->name,
             'flock_age'       => $flockAge,
             'flock_status'    => $flockStatus,
-            'feed'        => $this->formatDecimal($record->feed_kg),
-            'remaining_qty'   => $this->formatQuantity($remainingQty),
+            'feed'        => DecimalHelper::formatInteger($record->feed_kg),
+            'remaining_qty'   => DecimalHelper::formatInteger($remainingQty),
             'eggs_tray_30'    => (int) $record->eggs_tray_30,
             'eggs_count'      => (int) $record->eggs_count,
-            'eggs_weight'     => $this->formatDecimal($record->eggs_weight),
-            'chicks_weight'   => $this->formatDecimal($record->chicks_weight),
+            'eggs_weight'     => DecimalHelper::formatInteger($record->eggs_weight),
+            'chicks_weight'   => DecimalHelper::formatInteger($record->chicks_weight),
             ...$this->mortalityFields($record->mortality, $flock),
         ];
     }
@@ -1311,18 +1312,18 @@ class DailyRecordController extends BaseController
                 'hangar_id' => $firstHangarRecord->hangar_id,
                 'hangar_name' => $firstHangarRecord->hangar?->name,
                 'status' => $firstHangarRecord->hangar?->status,
-                'feed' => $this->formatDecimal($totalFeed),
-                'remaining_qty' => $this->formatQuantity($remainingQty),
+                'feed' => DecimalHelper::formatInteger($totalFeed),
+                'remaining_qty' => DecimalHelper::formatInteger($remainingQty),
                 ...$this->mortalityFields($totalMortality, $firstHangarRecord->flock, $firstHangarRecord->hangar_id),
             ];
 
             // Add breed-specific fields
             if ($isBroiler) {
-                $hangarData['chicks_weight'] = $this->formatDecimal($totalChicksWeight);
+                $hangarData['chicks_weight'] = DecimalHelper::formatInteger($totalChicksWeight);
             } else {
                 $hangarData['eggs_tray_30'] = (int) $totalEggsTray;
                 $hangarData['eggs_count'] = (int) $totalEggs;
-                $hangarData['eggs_weight'] = $this->formatDecimal($totalEggsWeight);
+                $hangarData['eggs_weight'] = DecimalHelper::formatInteger($totalEggsWeight);
             }
 
             // Add notes if present
@@ -1350,11 +1351,11 @@ class DailyRecordController extends BaseController
             'flock_name'      => $flock?->name,
             'flock_age'       => $flockAge,
             'flock_status'    => $flockStatus,
-            'feed'        => $this->formatDecimal($totalFeed),
+            'feed'        => DecimalHelper::formatInteger($totalFeed),
             'eggs_tray_30'    => (int) $totalEggsTray,
             'eggs_count'      => (int) $totalEggs,
-            'eggs_weight'     => $this->formatDecimal($totalEggsWeight),
-            'chicks_weight'   => $this->formatDecimal($totalChicksWeight),
+            'eggs_weight'     => DecimalHelper::formatInteger($totalEggsWeight),
+            'chicks_weight'   => DecimalHelper::formatInteger($totalChicksWeight),
             ...$this->mortalityFields($totalMortality, $flock),
             'hangars'         => $hangars,
         ];
@@ -1419,18 +1420,18 @@ class DailyRecordController extends BaseController
                 'hangar_id' => $record->hangar_id,
                 'hangar_name' => $record->hangar?->name,
                 'status' => $record->hangar?->status,
-                'feed' => $this->formatDecimal($record->feed_kg),
-                'remaining_qty' => $this->formatQuantity($remainingQty),
+                'feed' => DecimalHelper::formatInteger($record->feed_kg),
+                'remaining_qty' => DecimalHelper::formatInteger($remainingQty),
                 ...$this->mortalityFields($record->mortality, $record->flock, $record->hangar_id),
             ];
 
             // Add breed-specific fields
             if ($isBroiler) {
-                $hangarData['chicks_weight'] = $this->formatDecimal($record->chicks_weight);
+                $hangarData['chicks_weight'] = DecimalHelper::formatInteger($record->chicks_weight);
             } else {
                 $hangarData['eggs_tray_30'] = (int) $record->eggs_tray_30;
                 $hangarData['eggs_count'] = (int) $record->eggs_count;
-                $hangarData['eggs_weight'] = $this->formatDecimal($record->eggs_weight);
+                $hangarData['eggs_weight'] = DecimalHelper::formatInteger($record->eggs_weight);
             }
 
             // Add notes if present
@@ -1452,8 +1453,8 @@ class DailyRecordController extends BaseController
             'flock_age' => $flockAge,
             'flock_status' => $flockStatus,
             'breed' => $flock->breed,
-            'feed' => $this->formatDecimal($totalFeed),
-            'total_remaining_qty' => $this->formatQuantity($totalRemainingQty),
+            'feed' => DecimalHelper::formatInteger($totalFeed),
+            'total_remaining_qty' => DecimalHelper::formatInteger($totalRemainingQty),
             ...$this->mortalityFields($totalMortality, $flock),
             'recorded_by' => $firstRecord->creator?->name,
             'created_at' => $firstRecord->created_at,
@@ -1516,17 +1517,17 @@ class DailyRecordController extends BaseController
                 'hangar_id' => $firstHangarRecord->hangar_id,
                 'hangar_name' => $firstHangarRecord->hangar?->name,
                 'status' => $firstHangarRecord->hangar?->status,
-                'feed' => $this->formatDecimal($totalFeed),
-                'remaining_qty' => $this->formatQuantity($remainingQty),
+                'feed' => DecimalHelper::formatInteger($totalFeed),
+                'remaining_qty' => DecimalHelper::formatInteger($remainingQty),
                 ...$this->mortalityFields($totalMortality, $firstHangarRecord->flock, $firstHangarRecord->hangar_id),
             ];
 
             if ($isBroiler) {
-                $hangarData['chicks_weight'] = $this->formatDecimal($totalChicksWeight);
+                $hangarData['chicks_weight'] = DecimalHelper::formatInteger($totalChicksWeight);
             } else {
                 $hangarData['eggs_tray_30'] = (int) $totalEggsTray;
                 $hangarData['eggs_count'] = (int) $totalEggs;
-                $hangarData['eggs_weight'] = $this->formatDecimal($totalEggsWeight);
+                $hangarData['eggs_weight'] = DecimalHelper::formatInteger($totalEggsWeight);
             }
 
             return $hangarData;
@@ -1550,11 +1551,11 @@ class DailyRecordController extends BaseController
             'flock_name'      => $flock?->name,
             'flock_age'       => $flockAge,
             'flock_status'    => $flockStatus,
-            'feed'        => $this->formatDecimal($totalFeed),
+            'feed'        => DecimalHelper::formatInteger($totalFeed),
             'eggs_tray_30'    => (int) $totalEggsTray,
             'eggs_count'      => (int) $totalEggs,
-            'eggs_weight'     => $this->formatDecimal($totalEggsWeight),
-            'chicks_weight'   => $this->formatDecimal($totalChicksWeight),
+            'eggs_weight'     => DecimalHelper::formatInteger($totalEggsWeight),
+            'chicks_weight'   => DecimalHelper::formatInteger($totalChicksWeight),
             ...$this->mortalityFields($totalMortality, $flock),
             'hangars'         => $hangars,
         ];
@@ -1606,17 +1607,17 @@ class DailyRecordController extends BaseController
                 'hangar_id' => $firstHangarRecord->hangar_id,
                 'hangar_name' => $firstHangarRecord->hangar?->name,
                 'status' => $firstHangarRecord->hangar?->status,
-                'feed' => $this->formatDecimal($totalFeed),
-                'remaining_qty' => $this->formatQuantity($remainingQty),
+                'feed' => DecimalHelper::formatInteger($totalFeed),
+                'remaining_qty' => DecimalHelper::formatInteger($remainingQty),
                 ...$this->mortalityFields($totalMortality, $firstHangarRecord->flock, $firstHangarRecord->hangar_id),
             ];
 
             if ($isBroiler) {
-                $hangarData['chicks_weight'] = $this->formatDecimal($totalChicksWeight);
+                $hangarData['chicks_weight'] = DecimalHelper::formatInteger($totalChicksWeight);
             } else {
                 $hangarData['eggs_tray_30'] = (int) $totalEggsTray;
                 $hangarData['eggs_count'] = (int) $totalEggs;
-                $hangarData['eggs_weight'] = $this->formatDecimal($totalEggsWeight);
+                $hangarData['eggs_weight'] = DecimalHelper::formatInteger($totalEggsWeight);
             }
 
             return $hangarData;
@@ -1640,11 +1641,11 @@ class DailyRecordController extends BaseController
             'flock_name'      => $flock?->name,
             'flock_age'       => $flockAge,
             'flock_status'    => $flockStatus,
-            'feed'        => $this->formatDecimal($totalFeed),
+            'feed'        => DecimalHelper::formatInteger($totalFeed),
             'eggs_tray_30'    => (int) $totalEggsTray,
             'eggs_count'      => (int) $totalEggs,
-            'eggs_weight'     => $this->formatDecimal($totalEggsWeight),
-            'chicks_weight'   => $this->formatDecimal($totalChicksWeight),
+            'eggs_weight'     => DecimalHelper::formatInteger($totalEggsWeight),
+            'chicks_weight'   => DecimalHelper::formatInteger($totalChicksWeight),
             ...$this->mortalityFields($totalMortality, $flock),
             'hangars'         => $hangars,
         ];

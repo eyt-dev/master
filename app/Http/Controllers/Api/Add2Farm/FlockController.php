@@ -1263,7 +1263,7 @@ class FlockController extends BaseController
         ];
     }
 
-    private function formatFlock(Flock $flock): array
+    public function formatFlock(Flock $flock): array
     {
         // Load flockHangarAllocations if not already loaded
         if (!$flock->relationLoaded('flockHangarAllocations')) {

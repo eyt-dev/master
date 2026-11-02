@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\Add2Farm\FarmerController as Add2FarmFarmerControll
 use App\Http\Controllers\Api\Add2Farm\FarmController as Add2FarmFarmController;
 use App\Http\Controllers\Api\Add2Farm\FlockController as Add2FarmFlockController;
 use App\Http\Controllers\Api\Add2Farm\FlockEndController as Add2FarmFlockEndController;
+use App\Http\Controllers\Api\Add2Farm\SaleController as Add2FarmSaleController;
 use App\Http\Controllers\Api\Add2Farm\DailyRecordController as Add2FarmDailyRecordController;
 use App\Http\Controllers\Api\Add2Farm\DropdownController as Add2FarmDropdownController;
 use App\Http\Controllers\Api\Add2Farm\CountryController as Add2FarmCountryController;
@@ -199,6 +200,11 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
         Route::put('flock-ends/{id}', [Add2FarmFlockEndController::class, 'update']);
         Route::delete('flock-ends/{id}', [Add2FarmFlockEndController::class, 'destroy']);
         Route::get('flock-ends/last-net-weights/{flock_id}/{hangar_id}', [Add2FarmFlockEndController::class, 'getLastNetWeights']);
+    });
+
+    // Slaughter sales (last 12 months) - same access as flock harvest records
+    Route::middleware(['auth:sanctum', 'check.admin.type:0,1,2,3'])->group(function () {
+        Route::get('sales', [Add2FarmSaleController::class, 'index']);
     });
 
     // Daily Records - Type 3 (Supervisor) and Type 4 (Farmer)

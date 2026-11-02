@@ -171,7 +171,6 @@ class ChickenSalesController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(4)
             ->pluck('net_weight')
-            ->reverse()
             ->values()
             ->toArray();
 

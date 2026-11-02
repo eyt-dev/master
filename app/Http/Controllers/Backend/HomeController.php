@@ -379,7 +379,7 @@ class HomeController extends Controller
                 })
                 ->count();
             $modules['farm']['items'][] = [
-                'name' => 'Ending Flock',
+                'name' => 'Chicken Sale',
                 'count' => $flockEndCount,
                 'route' => 'chicken-sale.index',
                 'icon' => 'fe-shopping-bag'

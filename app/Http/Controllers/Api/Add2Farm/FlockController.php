@@ -643,8 +643,9 @@ class FlockController extends BaseController
         $latestWeightByHangar = $flock->latestChicksWeightByHangar();
         $feedPerBirdByHangar = $flock->feedPerBirdByHangar();
         $fcrByHangar = $flock->fcrByHangar();
+        $flockFeedConsumed = 0;
 
-        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock, $liveBirdsByHangar, $latestWeightByHangar, $feedPerBirdByHangar, $fcrByHangar) {
+        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock, $liveBirdsByHangar, $latestWeightByHangar, $feedPerBirdByHangar, $fcrByHangar, &$flockFeedConsumed) {
             // Get daily records for this hangar
             $hangarDailyRecords = DailyRecord::where('flock_id', $flock->id)
                 ->where('hangar_id', $allocation->hangar_id)
@@ -653,6 +654,7 @@ class FlockController extends BaseController
             // Calculate metrics
             $totalMortality = $hangarDailyRecords->sum('mortality');
             $feedConsumed = round($hangarDailyRecords->sum('feed_kg'), 2);
+            $flockFeedConsumed += $feedConsumed;
             $avgWeight = $latestWeightByHangar[$allocation->hangar_id] ?? null;
 
             // Live birds for this hangar: allocated - mortality - harvested
@@ -701,7 +703,7 @@ class FlockController extends BaseController
             'age' => $age,
             'total_birds' => $flock->total_quantity,
             'alive_birds' => $liveBirds,
-            'hangar_allocations' => $hangarAllocations,
+            'feed' => DecimalHelper::formatInteger($flockFeedConsumed),
             'assignment' => $assignment,
             'created_by' => $flock->created_by,
             'created_by_name' => $flock->creator?->name,
@@ -714,6 +716,7 @@ class FlockController extends BaseController
             'trend_fcr' => $fcrByHangar ? DecimalHelper::formatInteger(array_sum(array_column($fcrByHangar, 'trend_fcr')) / count($fcrByHangar)) : 0,
             'avg_weight' => $avgWeight ? DecimalHelper::formatEuropean(round($avgWeight), 0) : 'N/A',
             'chart_data' => $chartData,
+            'hangar_allocations' => $hangarAllocations,
         ];
 
         // Add type-specific metrics

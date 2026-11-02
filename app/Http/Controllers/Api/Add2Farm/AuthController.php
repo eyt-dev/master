@@ -377,10 +377,7 @@ class AuthController extends Controller
                 $admin->update(['status' => 'Active']);
             }
 
-            // Revoke previous tokens
-            $admin->tokens()->delete();
-
-            // Generate new token
+            // Generate a new token for this device (existing tokens on other devices stay valid)
             $token = $admin->createToken('add2farm-token')->plainTextToken;
 
             DB::commit();

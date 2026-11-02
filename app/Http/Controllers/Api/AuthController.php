@@ -127,9 +127,6 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // Revoke previous tokens (optional: single-session behaviour)
-        $admin->tokens()->delete();
-
         $token = $admin->createToken('api-token')->plainTextToken;
 
         return response()->json([

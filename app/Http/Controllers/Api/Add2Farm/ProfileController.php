@@ -320,6 +320,9 @@ class ProfileController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Revoke other sessions, keep the current one active
+        $user->tokens()->where('id', '!=', $user->currentAccessToken()->id)->delete();
+
         return response()->json([
             'success' => true,
             'message' => $this->translationService->get('password_changed_successfully'),

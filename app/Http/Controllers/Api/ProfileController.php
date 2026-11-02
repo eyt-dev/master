@@ -84,6 +84,9 @@ class ProfileController extends Controller
 
         $admin->update(['password' => Hash::make($request->password)]);
 
+        // Revoke other sessions, keep the current one active
+        $admin->tokens()->where('id', '!=', $admin->currentAccessToken()->id)->delete();
+
         return response()->json([
             'success' => true,
             'message' => 'Password changed successfully.',

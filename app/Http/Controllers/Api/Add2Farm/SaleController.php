@@ -105,13 +105,7 @@ class SaleController extends BaseController
         $accessibleFarmIds = $this->getAccessibleFarmIds();
         $perPage = min(max((int) $request->query('per_page', 20), 1), 100);
 
-        $sales = FlockEnd::whereHas('flock', function ($q) use ($accessibleFarmIds) {
-                $q->whereIn('farm_id', $accessibleFarmIds)
-                  ->where(fn ($q) => $this->applyBroilerBreed($q));
-            })
-            ->whereDate('sale_date', '>=', today()->subMonths(12)->toDateString());
-
-        $totals = (clone $sales)
+        $totals = $this->salesQuery($accessibleFarmIds)
             ->selectRaw('COUNT(DISTINCT CONCAT_WS(\'|\', flock_id, COALESCE(slaughter_id, 0), sale_date)) as total_sales,
                 COALESCE(SUM(total_birds_harvested), 0) as total_birds,
                 COALESCE(SUM(net_weight), 0) as total_net_weight')
@@ -121,7 +115,7 @@ class SaleController extends BaseController
         $totalBirds = (int) $totals->total_birds;
         $totalNetWeight = (float) $totals->total_net_weight;
 
-        $data = (clone $sales)
+        $data = $this->salesQuery($accessibleFarmIds)
             ->with('flock.farm', 'hangar', 'slaughter')
             ->orderByDesc('sale_date')
             ->orderByDesc('id')
@@ -147,6 +141,19 @@ class SaleController extends BaseController
             'sale_flocks' => $saleFlocks,
             'data' => $data,
         ]);
+    }
+
+    /**
+     * Broiler harvests of the accessible farms in the last 12 months.
+     * Built fresh on each call so the totals query cannot change the data query.
+     */
+    private function salesQuery($farmIds)
+    {
+        return FlockEnd::whereHas('flock', function ($q) use ($farmIds) {
+                $q->whereIn('farm_id', $farmIds)
+                  ->where(fn ($q) => $this->applyBroilerBreed($q));
+            })
+            ->whereDate('sale_date', '>=', today()->subMonths(12)->toDateString());
     }
 
     /**

@@ -20,7 +20,7 @@ class SaleController extends BaseController
      * A sale is one slaughter on one date per flock: the flock total counts its slaughter + date rows,
      * so `total_sales` is the sum of those rows across flocks.
      *
-     * `sale_flocks` is the "New sale" picker: active Broiler flocks, in the same shape as the flocks list.
+     * `sale_flocks` lists only the Broiler flocks that have at least one sale in the last 12 months, in the same shape as the flocks list.
      *
      * @authenticated
      * @queryParam type string optional Only `birds` (Broiler flocks) is supported for now. Default: birds. Example: birds
@@ -122,12 +122,9 @@ class SaleController extends BaseController
             ->paginate($perPage)
             ->through(fn (FlockEnd $harvest) => $this->saleItem($harvest));
 
-        $saleFlocks = Flock::whereIn('farm_id', $accessibleFarmIds)
+        $saleFlocks = Flock::whereIn('id', $this->salesQuery($accessibleFarmIds)->select('flock_id'))
             ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnds')
             ->get()
-            ->filter(fn (Flock $flock) => $this->extractBreedType($flock->breed) === 'Broiler'
-                && $flock->start_date?->lte(today())
-                && $flock->saleStatus()['status'] !== 'Ended')
             ->map(fn (Flock $flock) => app(FlockController::class)->formatFlock($flock))
             ->values();
 

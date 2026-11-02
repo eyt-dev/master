@@ -674,10 +674,10 @@ class FlockController extends BaseController
                 'status'        => $allocation->hangar?->status,
                 'alive_birds'    => $liveBirds,
                 ...$this->mortalityFields($totalMortality, $flock, $allocation->hangar_id),
-                'feed' => DecimalHelper::formatInteger($feedConsumed),
-                'remaining_feed' => DecimalHelper::formatInteger($feedRemaining),
-                'feed_per_bird' => DecimalHelper::formatInteger($feedPerBirdByHangar[$allocation->hangar_id] ?? 0),
-                'avg_weight'    => $avgWeight ? DecimalHelper::formatEuropean(round($avgWeight), 0) : 0,
+                'feed' => DecimalHelper::formatInteger($feedConsumed) . ' kg',
+                'remaining_feed' => DecimalHelper::formatInteger($feedRemaining) . ' kg',
+                'feed_per_bird' => DecimalHelper::formatInteger($feedPerBirdByHangar[$allocation->hangar_id] ?? 0) . ' g',
+                'avg_weight'    => $avgWeight ? DecimalHelper::formatEuropean(round($avgWeight), 0) . ' g' : '0 g',
                 'act_fcr'       => $this->formatDecimal($fcrByHangar[$allocation->hangar_id]['act_fcr'] ?? 0) . '%',
                 'trend_fcr'     => DecimalHelper::formatInteger($fcrByHangar[$allocation->hangar_id]['trend_fcr'] ?? 0),
             ];
@@ -703,7 +703,7 @@ class FlockController extends BaseController
             'age' => $age,
             'total_birds' => $flock->total_quantity,
             'alive_birds' => $liveBirds,
-            'feed' => DecimalHelper::formatInteger($flockFeedConsumed),
+            'feed' => DecimalHelper::formatInteger($flockFeedConsumed) . ' kg',
             'assignment' => $assignment,
             'created_by' => $flock->created_by,
             'created_by_name' => $flock->creator?->name,
@@ -711,10 +711,10 @@ class FlockController extends BaseController
             'updated_at' => $flock->updated_at,
             'flock-condition' => ($isBroiler ? 'broiler-' : 'layer-') . ['Active' => 'active', 'Harvesting' => 'harvesting', 'Ended' => 'ended'][$saleStatus['status']],
             ...$this->mortalityFields($totalMortality, $flock),
-            'feed_per_bird' => $feedPerBirdByHangar ? DecimalHelper::formatInteger(array_sum($feedPerBirdByHangar) / count($feedPerBirdByHangar)) : 0,
+            'feed_per_bird' => $feedPerBirdByHangar ? DecimalHelper::formatInteger(array_sum($feedPerBirdByHangar) / count($feedPerBirdByHangar)) . ' g' : '0 g',
             'act_fcr' => $this->formatDecimal($fcrByHangar ? array_sum(array_column($fcrByHangar, 'act_fcr')) / count($fcrByHangar) : 0) . '%',
             'trend_fcr' => $fcrByHangar ? DecimalHelper::formatInteger(array_sum(array_column($fcrByHangar, 'trend_fcr')) / count($fcrByHangar)) : 0,
-            'avg_weight' => $avgWeight ? DecimalHelper::formatEuropean(round($avgWeight), 0) : 'N/A',
+            'avg_weight' => $avgWeight ? DecimalHelper::formatEuropean(round($avgWeight), 0) . ' g' : 'N/A',
             'chart_data' => $chartData,
             'hangar_allocations' => $hangarAllocations,
         ];
@@ -731,7 +731,7 @@ class FlockController extends BaseController
             if ($isHarvested) {
                 $data['fcr'] = DecimalHelper::formatInteger($fcr);
             } else {
-                $data['production_rate'] = $this->formatDecimal($avgProduction);
+                $data['production_rate'] = $this->formatDecimal($avgProduction) . '%';
             }
         }
 
@@ -1312,10 +1312,10 @@ class FlockController extends BaseController
                 'status'        => $allocation->hangar?->status,
                 'alive_birds'    => $liveBirds,
                 ...$this->mortalityFields($totalMortality, $flock, $allocation->hangar_id),
-                'feed' => DecimalHelper::formatInteger($feedConsumed),
-                'remaining_feed' => DecimalHelper::formatInteger($feedRemaining),
-                'feed_per_bird' => DecimalHelper::formatInteger($feedPerBirdByHangar[$allocation->hangar_id] ?? 0),
-                'avg_weight'    => $avgWeight ? DecimalHelper::formatEuropean(round($avgWeight), 0) : 0,
+                'feed' => DecimalHelper::formatInteger($feedConsumed) . ' kg',
+                'remaining_feed' => DecimalHelper::formatInteger($feedRemaining) . ' kg',
+                'feed_per_bird' => DecimalHelper::formatInteger($feedPerBirdByHangar[$allocation->hangar_id] ?? 0) . ' g',
+                'avg_weight'    => $avgWeight ? DecimalHelper::formatEuropean(round($avgWeight), 0) . ' g' : '0 g',
                 'act_fcr'       => $this->formatDecimal($fcrByHangar[$allocation->hangar_id]['act_fcr'] ?? 0) . '%',
                 'trend_fcr'     => DecimalHelper::formatInteger($fcrByHangar[$allocation->hangar_id]['trend_fcr'] ?? 0),
             ];
@@ -1377,7 +1377,7 @@ class FlockController extends BaseController
             'is_completed'          => $status === 'Ended',
             ...$this->mortalityFields($totalMortality, $flock),
             'fcr'                   => DecimalHelper::formatInteger($fcr),
-            'feed_per_bird'         => $feedPerBirdByHangar ? DecimalHelper::formatInteger(array_sum($feedPerBirdByHangar) / count($feedPerBirdByHangar)) : 0,
+            'feed_per_bird'         => $feedPerBirdByHangar ? DecimalHelper::formatInteger(array_sum($feedPerBirdByHangar) / count($feedPerBirdByHangar)) . ' g' : '0 g',
             'act_fcr'               => $this->formatDecimal($fcrByHangar ? array_sum(array_column($fcrByHangar, 'act_fcr')) / count($fcrByHangar) : 0) . '%',
             'trend_fcr'             => $fcrByHangar ? DecimalHelper::formatInteger(array_sum(array_column($fcrByHangar, 'trend_fcr')) / count($fcrByHangar)) : 0,
             'hangar_allocations'    => $hangarAllocations,
@@ -1400,7 +1400,7 @@ class FlockController extends BaseController
             } else {
                 // Broiler active: send avg weight
                 $avgWeight = $flock->averageLatestChicksWeight();
-                $response['avg_weight'] = $avgWeight ? DecimalHelper::formatEuropean(round($avgWeight), 0) : 0;
+                $response['avg_weight'] = $avgWeight ? DecimalHelper::formatEuropean(round($avgWeight), 0) . ' g' : '0 g';
             }
         } else {
             // Layer: send total eggs for both active and harvested/ended flocks
@@ -1410,7 +1410,7 @@ class FlockController extends BaseController
                 // Layer active: send production rate %
                 $recordCount = $dailyRecords->count();
                 $avgProduction = $totalBird > 0 && $recordCount > 0 ? ($totalEggs / ($totalBird * $recordCount)) * 100 : 0;
-                $response['production_rate'] = $this->formatDecimal($avgProduction);
+                $response['production_rate'] = $this->formatDecimal($avgProduction) . '%';
             }
         }
 

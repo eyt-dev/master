@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Add2Farm;
 
+use App\Helpers\DecimalHelper;
 use App\Models\Flock;
 use App\Models\FlockEnd;
 use Illuminate\Http\Request;
@@ -32,8 +33,8 @@ class SaleController extends BaseController
      *   "message": "Sales retrieved successfully",
      *   "total_sales": 26,
      *   "total_birds_sold": 41250,
-     *   "total_net_weight": 82340.5,
-     *   "avg_weight": 1.996,
+     *   "total_net_weight": "82.340,50 kg",
+     *   "avg_weight": "1.996 g",
      *   "sale_flocks": [
      *     {
      *       "id": 12,
@@ -43,10 +44,11 @@ class SaleController extends BaseController
      *       "breed": "Ross 308",
      *       "flock-condition": "broiler-harvesting",
      *       "status": "Harvesting",
+     *       "age": "35 days",
      *       "start_date": "2026-09-06",
-     *       "total_birds": 10000,
+     *       "total_quantity": 10000,
      *       "hangar_allocations": [
-     *         { "hangar_id": 1, "hangar_name": "Hangar 1", "quantity": 5000, "alive_birds": 4870 }
+     *         { "hangar_id": 1, "hangar_name": "Hangar 1", "quantity": 5000, "remaining_quantity": 4870 }
      *       ]
      *     }
      *   ],
@@ -68,10 +70,10 @@ class SaleController extends BaseController
      *         "cages_count": 120,
      *         "birds_per_cage": 10,
      *         "total_birds_harvested": 1200,
-     *         "cages_weight": 2.0,
-     *         "gross_weight": 2580.0,
-     *         "net_weight": 2340.0,
-     *         "avg_weight": 1.95,
+     *         "cages_weight": "2 kg",
+     *         "gross_weight": "2.580 kg",
+     *         "net_weight": "2.340 kg",
+     *         "avg_weight": "1.950 g",
      *         "notes": null,
      *         "created_at": "2026-10-09T10:15:00.000000Z"
      *       }
@@ -125,7 +127,7 @@ class SaleController extends BaseController
         $saleFlocks = Flock::whereIn('id', $this->salesQuery($accessibleFarmIds)->select('flock_id'))
             ->with('farm', 'chicksSupplier', 'creator', 'flockHangarAllocations.hangar', 'flockEnds')
             ->get()
-            ->map(fn (Flock $flock) => app(FlockController::class)->formatFlock($flock))
+            ->map(fn (Flock $flock) => $this->saleFlock(app(FlockController::class)->formatFlock($flock)))
             ->values();
 
         return response()->json([
@@ -133,8 +135,8 @@ class SaleController extends BaseController
             'message' => 'Sales retrieved successfully',
             'total_sales' => (int) $totals->total_sales,
             'total_birds_sold' => $totalBirds,
-            'total_net_weight' => round($totalNetWeight, 2),
-            'avg_weight' => $totalBirds > 0 ? round($totalNetWeight / $totalBirds, 3) : 0,
+            'total_net_weight' => DecimalHelper::formatQuantityEuropean($totalNetWeight) . ' kg',
+            'avg_weight' => $totalBirds > 0 ? DecimalHelper::formatEuropean($totalNetWeight / $totalBirds * 1000, 0) . ' g' : '0 g',
             'sale_flocks' => $saleFlocks,
             'data' => $data,
         ]);
@@ -169,6 +171,31 @@ class SaleController extends BaseController
     }
 
     /**
+     * Picker fields of a flock (taken from the flocks list object)
+     */
+    private function saleFlock(array $flock): array
+    {
+        return [
+            'id' => $flock['id'],
+            'name' => $flock['name'],
+            'farm_id' => $flock['farm_id'],
+            'farm_name' => $flock['farm_name'],
+            'breed' => $flock['breed'],
+            'flock-condition' => $flock['flock-condition'],
+            'status' => $flock['status'],
+            'age' => $flock['age'],
+            'start_date' => $flock['start_date'],
+            'total_quantity' => $flock['total_birds'],
+            'hangar_allocations' => collect($flock['hangar_allocations'])->map(fn (array $hangar) => [
+                'hangar_id' => $hangar['hangar_id'],
+                'hangar_name' => $hangar['hangar_name'],
+                'quantity' => $hangar['quantity'],
+                'remaining_quantity' => $hangar['alive_birds'],
+            ])->values()->all(),
+        ];
+    }
+
+    /**
      * One harvest record as a sale item
      */
     private function saleItem(FlockEnd $harvest): array
@@ -191,10 +218,10 @@ class SaleController extends BaseController
             'cages_count' => $harvest->cages_count,
             'birds_per_cage' => $harvest->birds_per_cage,
             'total_birds_harvested' => $birds,
-            'cages_weight' => (float) $harvest->cages_weight,
-            'gross_weight' => (float) $harvest->total_weight,
-            'net_weight' => $netWeight,
-            'avg_weight' => $birds > 0 ? round($netWeight / $birds, 2) : 0,
+            'cages_weight' => DecimalHelper::formatQuantityEuropean($harvest->cages_weight) . ' kg',
+            'gross_weight' => DecimalHelper::formatQuantityEuropean($harvest->total_weight) . ' kg',
+            'net_weight' => DecimalHelper::formatQuantityEuropean($netWeight) . ' kg',
+            'avg_weight' => $birds > 0 ? DecimalHelper::formatEuropean($netWeight / $birds * 1000, 0) . ' g' : '0 g',
             'notes' => $harvest->notes,
             'created_at' => $harvest->created_at,
         ];

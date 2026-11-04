@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SetupController;
+use App\Http\Controllers\Api\WhatsAppController;
 use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\ComponentController;
 use App\Http\Controllers\Api\FormulationController;
@@ -259,4 +260,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
 
         return response()->file($filePath);
     })->where('path', '.*')->name('api.files');
+
+    // TEMPORARY: WhatsApp Cloud API test endpoint (remove once verified)
+    Route::post('whatsapp/test', [WhatsAppController::class, 'sendHelloWorld'])->middleware('auth:sanctum');
 });

@@ -24,7 +24,7 @@ class SaleController extends BaseController
      * `sale_flocks` lists only the Broiler flocks that have at least one sale in the last 12 months, in the same shape as the flocks list.
      *
      * @authenticated
-     * @queryParam type string optional Only `birds` (Broiler flocks) is supported for now. Default: birds. Example: birds
+     * @queryParam type string optional Accepted for compatibility (e.g. `eggs`); the response is always the same bird sales data. Default: birds. Example: eggs
      * @queryParam page integer optional Page number. Default: 1. Example: 1
      * @queryParam per_page integer optional Sales per page (max 100). Default: 20. Example: 20
      *
@@ -83,10 +83,6 @@ class SaleController extends BaseController
      *     "total": 26
      *   }
      * }
-     * @response 422 {
-     *   "success": false,
-     *   "message": "Type must be birds"
-     * }
      */
     public function index(Request $request)
     {
@@ -95,13 +91,6 @@ class SaleController extends BaseController
                 'success' => false,
                 'message' => 'Unauthenticated. Please provide a valid authentication token.',
             ], 401);
-        }
-
-        if ($request->query('type', 'birds') !== 'birds') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Type must be birds',
-            ], 422);
         }
 
         $accessibleFarmIds = $this->getAccessibleFarmIds();

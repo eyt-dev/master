@@ -741,17 +741,6 @@ class AdminController extends Controller
         return response()->json(['success' => true, 'message' => 'Status updated successfully']);
     }
 
-    private function getProjectsForAdmin()
-    {
-        $query = Project::query()->orderBy('project_name');
-
-        if (auth()->user()?->type != Admin::SUPER_ADMIN) {
-            $query->where('created_by', auth()->id());
-        }
-
-        return $query->get();
-    }
-
     private function getAllProjects()
     {
         return Project::orderBy('project_name')->get();

@@ -26,7 +26,6 @@ use App\Http\Controllers\Backend\FlockController;
 use App\Http\Controllers\Backend\MaterialStockController;
 use App\Http\Controllers\Backend\DailyRecordController;
 use App\Http\Controllers\Backend\ChickenSalesController;
-use App\Http\Controllers\Backend\ProjectController;
 use App\Http\Controllers\Backend\TypeMappingController;
 use App\Http\Controllers\Backend\PageController;
 use App\Http\Controllers\Backend\SettingController;
@@ -275,14 +274,6 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('flocks-by-farm/{farm}', 'getFlocksByFarm')->name('chicken-sale.flocks-by-farm');
                         Route::get('hangars-by-flock/{flock}', 'getHangarsByFlock')->name('chicken-sale.hangars-by-flock');
                         Route::get('last-net-weights/{flock}/{hangar}', 'getLastNetWeights')->name('chicken-sale.last-net-weights');
-                    });
-                    Route::controller(ProjectController::class)->prefix('project')->group(function () {
-                        Route::get('/', 'index')->name('project.index')->middleware('permission:view.project');
-                        Route::get('create', 'create')->name('project.create')->middleware('permission:create.project');
-                        Route::post('store', 'store')->name('project.store')->middleware('permission:create.project');
-                        Route::get('{project}/edit', 'edit')->name('project.edit')->middleware('permission:edit.project');
-                        Route::post('{project}', 'update')->name('project.update')->middleware('permission:edit.project');
-                        Route::get('destroy/{project}', 'destroy')->name('project.destroy')->middleware('permission:delete.project');
                     });
                     Route::controller(TypeMappingController::class)->prefix('type-mapping')->group(function () {
                         Route::get('/', 'index')->name('type-mapping.index')->middleware('permission:view.type_mapping');

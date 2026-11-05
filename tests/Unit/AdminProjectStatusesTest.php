@@ -66,11 +66,9 @@ class AdminProjectStatusesTest extends TestCase
 
         $projectOne = Project::create([
             'project_name' => 'Project One',
-            'created_by' => $admin->id,
         ]);
         $projectTwo = Project::create([
             'project_name' => 'Project Two',
-            'created_by' => $admin->id,
         ]);
 
         $admin->syncProjectStatuses([

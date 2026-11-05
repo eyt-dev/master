@@ -11,13 +11,5 @@ class Project extends Model
 
     protected $fillable = [
         'project_name',
-        'description',
-        'url',
-        'created_by',
     ];
-
-    public function creator()
-    {
-        return $this->belongsTo(Admin::class, 'created_by');
-    }
 }

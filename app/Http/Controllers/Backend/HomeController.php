@@ -27,6 +27,7 @@ use App\Models\Slaughter;
 use App\Models\Slide;
 use App\Models\StoreView;
 use App\Models\Testimonial;
+use App\Models\TypeMapping;
 use App\Models\Unit;
 use App\Models\Wheel;
 use Illuminate\Http\Request;
@@ -78,7 +79,7 @@ class HomeController extends Controller
         ];
 
         if ($user->can('view.admin')) {
-            $adminCount = Admin::where('type', 'admin')
+            $adminCount = Admin::ofParentType(TypeMapping::PARENT_ADMIN)
                 ->when(!$isSuperAdmin, function ($q) use ($user) {
                     $q->where('created_by', $user->id);
                 })
@@ -92,7 +93,7 @@ class HomeController extends Controller
         }
 
         if ($user->can('view.public_vendor')) {
-            $publicVendorCount = Admin::where('type', 'public_vendor')
+            $publicVendorCount = Admin::ofParentType(TypeMapping::PARENT_PUBLIC_VENDOR)
                 ->when(!$isSuperAdmin, function ($q) use ($user) {
                     $q->where('created_by', $user->id);
                 })
@@ -106,7 +107,7 @@ class HomeController extends Controller
         }
 
         if ($user->can('view.private_vendor')) {
-            $privateVendorCount = Admin::where('type', 'private_vendor')
+            $privateVendorCount = Admin::ofParentType(TypeMapping::PARENT_PRIVATE_VENDOR)
                 ->when(!$isSuperAdmin, function ($q) use ($user) {
                     $q->where('created_by', $user->id);
                 })
@@ -121,8 +122,8 @@ class HomeController extends Controller
 
         if ($user->can('view.user')) {
             // Same scope as AdminController::users() so the dashboard count matches the module list
-            $userCount = Admin::where('type', 4)
-                ->when($user->type != Admin::SUPER_ADMIN, function ($q) use ($user) {
+            $userCount = Admin::ofParentType(TypeMapping::PARENT_USER)
+                ->when(!$user->isSuperAdmin(), function ($q) use ($user) {
                     $q->where(function ($subQ) use ($user) {
                         $subQ->where('created_by', $user->id)
                              ->orWhere('parent_id', $user->id);

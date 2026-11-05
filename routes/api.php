@@ -132,23 +132,23 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
     });
 
     // Role upgrade/downgrade - Type 2 (Farm Owner), Type 3 (Supervisor), Type 4 (Farmer)
-    Route::prefix('role')->middleware(['auth:sanctum', 'check.admin.type:2,3,4'])->group(function () {
+    Route::prefix('role')->middleware(['auth:sanctum', 'check.admin.type:Public Vendors,Private Vendors,Users'])->group(function () {
         Route::post('upgrade', [Add2FarmRoleController::class, 'upgrade']);
     });
 
     // Downgrade - Type 3 (Supervisor) only
-    Route::prefix('role')->middleware(['auth:sanctum', 'check.admin.type:3'])->group(function () {
+    Route::prefix('role')->middleware(['auth:sanctum', 'check.admin.type:Private Vendors'])->group(function () {
         Route::post('downgrade', [Add2FarmRoleController::class, 'downgrade']);
     });
 
     // Upgrade request approval - Type 1 (Farm Admin) only
-    Route::prefix('role')->middleware(['auth:sanctum', 'check.admin.type:0,1'])->group(function () {
+    Route::prefix('role')->middleware(['auth:sanctum', 'check.admin.type:0,Admin'])->group(function () {
         Route::get('upgrade-requests', [Add2FarmRoleController::class, 'upgradeRequests']);
         Route::post('upgrade-requests/{upgradeRequest}/approve', [Add2FarmRoleController::class, 'approveUpgradeRequest']);
     });
 
     // Supervisors (Type 3) - Only Type 1 (Farm Admin) can access
-    Route::middleware(['auth:sanctum', 'check.admin.type:0,1'])->group(function () {
+    Route::middleware(['auth:sanctum', 'check.admin.type:0,Admin'])->group(function () {
         Route::get('supervisors', [Add2FarmSupervisorController::class, 'index']);
         Route::post('supervisors', [Add2FarmSupervisorController::class, 'store']);
         Route::get('supervisors/{supervisor}', [Add2FarmSupervisorController::class, 'show']);
@@ -157,7 +157,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
     });
 
     // Farmers (Type 4) - Only Type 2 (Farm Owner) can access
-    Route::middleware(['auth:sanctum', 'check.admin.type:0,2'])->group(function () {
+    Route::middleware(['auth:sanctum', 'check.admin.type:0,Public Vendors'])->group(function () {
         Route::get('farmers', [Add2FarmFarmerController::class, 'index']);
         Route::post('farmers', [Add2FarmFarmerController::class, 'store']);
         Route::get('farmers/{farmer}', [Add2FarmFarmerController::class, 'show']);
@@ -171,7 +171,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
         Route::get('farm-types', [Add2FarmDropdownController::class, 'farmTypes']);
     });
 
-    Route::middleware(['auth:sanctum', 'check.admin.type:0,1,2'])->group(function () {
+    Route::middleware(['auth:sanctum', 'check.admin.type:0,Admin,Public Vendors'])->group(function () {
         Route::get('farms', [Add2FarmFarmController::class, 'index']);
         Route::post('farms', [Add2FarmFarmController::class, 'store']);
         Route::get('farms/{farm}', [Add2FarmFarmController::class, 'show']);
@@ -180,7 +180,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
     });
 
     // Flocks - Type 3 (Supervisor) only
-    Route::middleware(['auth:sanctum', 'check.admin.type:0,1,2,3'])->group(function () {
+    Route::middleware(['auth:sanctum', 'check.admin.type:0,Admin,Public Vendors,Private Vendors'])->group(function () {
         Route::get('flocks/available', [Add2FarmFlockController::class, 'available']);
         Route::get('farms/{farm_id}/hangars', [Add2FarmFlockController::class, 'farmHangars']);
         Route::get('flocks/{flock_id}/hangars', [Add2FarmFlockController::class, 'flockHangars']);
@@ -192,7 +192,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
     });
 
     // Flock Harvest/End Records - Type 3 (Supervisor) only
-    Route::middleware(['auth:sanctum', 'check.admin.type:0,1,2,3'])->group(function () {
+    Route::middleware(['auth:sanctum', 'check.admin.type:0,Admin,Public Vendors,Private Vendors'])->group(function () {
         Route::get('flock-ends', [Add2FarmFlockEndController::class, 'index']);
         Route::post('flock-ends', [Add2FarmFlockEndController::class, 'store']);
         Route::post('flock-ends/calculate-net-weight', [Add2FarmFlockEndController::class, 'calculateNetWeight']);
@@ -203,12 +203,12 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
     });
 
     // Slaughter sales (last 12 months) - same access as flock harvest records
-    Route::middleware(['auth:sanctum', 'check.admin.type:0,1,2,3'])->group(function () {
+    Route::middleware(['auth:sanctum', 'check.admin.type:0,Admin,Public Vendors,Private Vendors'])->group(function () {
         Route::get('sales', [Add2FarmSaleController::class, 'index']);
     });
 
     // Daily Records - Type 3 (Supervisor) and Type 4 (Farmer)
-    Route::middleware(['auth:sanctum', 'check.admin.type:0,1,2,3,4'])->group(function () {
+    Route::middleware(['auth:sanctum', 'check.admin.type:0,Admin,Public Vendors,Private Vendors,Users'])->group(function () {
         Route::get('daily-records', [Add2FarmDailyRecordController::class, 'index']);
         Route::post('daily-records', [Add2FarmDailyRecordController::class, 'store']);
         Route::get('daily-records/{daily_record}', [Add2FarmDailyRecordController::class, 'show']);
@@ -217,7 +217,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
     });
 
     // Feed Stocks (Material Stock) - Type 3 (Supervisor) and Type 4 (Farmer)
-    Route::middleware(['auth:sanctum', 'check.admin.type:0,1,2,3,4'])->group(function () {
+    Route::middleware(['auth:sanctum', 'check.admin.type:0,Admin,Public Vendors,Private Vendors,Users'])->group(function () {
         Route::get('feed-stocks', [Add2FarmFeedStockController::class, 'index']);
         Route::post('feed-stocks', [Add2FarmFeedStockController::class, 'store']);
         Route::get('feed-stocks/{id}', [Add2FarmFeedStockController::class, 'show']);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Add2Farm;
 
 use App\Http\Controllers\Controller;
+use App\Models\TypeMapping;
 use App\Services\Add2Farm\TranslationService;
 use App\Helpers\DecimalHelper;
 use App\Helpers\FeedStockHelper;
@@ -19,9 +20,9 @@ class BaseController extends Controller
     /**
      * Get type label based on type value
      */
-    protected function getTypeLabel(int $type): string
+    protected function getTypeLabel(?TypeMapping $typeMapping): string
     {
-        return $this->translationService->getTypeLabel($type);
+        return $this->translationService->getTypeLabel($typeMapping);
     }
 
     /**
@@ -189,7 +190,7 @@ class BaseController extends Controller
      */
     protected function isSuperAdmin(): bool
     {
-        return (int)auth()->user()->type === \App\Models\Admin::SUPER_ADMIN;
+        return auth()->user()->isSuperAdmin();
     }
 
     /**

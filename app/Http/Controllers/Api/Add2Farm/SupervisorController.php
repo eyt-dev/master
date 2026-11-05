@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Add2Farm;
 
 use App\Models\Admin;
 use App\Models\AdminProjectStatus;
+use App\Models\TypeMapping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -18,8 +19,6 @@ use App\Helpers\ProjectHelper;
  */
 class SupervisorController extends BaseController
 {
-    const ADMIN_TYPE = 3;
-
     /**
      * List all supervisors (Type 3)
      *
@@ -66,7 +65,7 @@ class SupervisorController extends BaseController
         }
 
         // If SUPER_ADMIN, show all supervisors; otherwise only supervisors created by current user
-        $supervisorQuery = Admin::where('type', self::ADMIN_TYPE);
+        $supervisorQuery = Admin::ofParentType(TypeMapping::PARENT_PRIVATE_VENDOR)->with('typeMapping');
         if (!$this->isSuperAdmin()) {
             $supervisorQuery->where('created_by', auth()->id());
         }
@@ -89,7 +88,7 @@ class SupervisorController extends BaseController
         }
 
         // Rebuild the query for paginated results
-        $supervisorsQuery = Admin::where('type', self::ADMIN_TYPE);
+        $supervisorsQuery = Admin::ofParentType(TypeMapping::PARENT_PRIVATE_VENDOR)->with('typeMapping');
         if (!$this->isSuperAdmin()) {
             $supervisorsQuery->where('created_by', auth()->id());
         }
@@ -181,7 +180,7 @@ class SupervisorController extends BaseController
         }
 
         // If SUPER_ADMIN, can view any supervisor; otherwise only supervisors created by current user
-        $adminQuery = Admin::where('type', self::ADMIN_TYPE);
+        $adminQuery = Admin::ofParentType(TypeMapping::PARENT_PRIVATE_VENDOR)->with('typeMapping');
         if (!$this->isSuperAdmin()) {
             $adminQuery->where('created_by', auth()->id());
         }
@@ -298,7 +297,7 @@ class SupervisorController extends BaseController
                 'mobile_number'  => $request->mobile_number,
                 'email'          => $request->email ?? null,
                 'password'       => Hash::make('Password123'),
-                'type'           => self::ADMIN_TYPE,
+                'type'           => TypeMapping::defaultIdForParent(TypeMapping::PARENT_PRIVATE_VENDOR),
                 'status'         => 'Active',
                 'notes'          => $request->notes ?? null,
                 'image'          => $imagePath,
@@ -423,7 +422,7 @@ class SupervisorController extends BaseController
             'filled_farm_id' => $request->filled('farm_id'),
         ]);
 
-        $admin = Admin::where('type', self::ADMIN_TYPE)
+        $admin = Admin::ofParentType(TypeMapping::PARENT_PRIVATE_VENDOR)
             ->where('created_by', auth()->id())
             ->find($id);
 
@@ -581,7 +580,7 @@ class SupervisorController extends BaseController
             ], 401);
         }
 
-        $admin = Admin::where('type', self::ADMIN_TYPE)
+        $admin = Admin::ofParentType(TypeMapping::PARENT_PRIVATE_VENDOR)
             ->where('created_by', auth()->id())
             ->find($id);
 
@@ -654,7 +653,7 @@ class SupervisorController extends BaseController
             'mobile_number' => $admin->getFullPhoneNumber(),
             'email'         => $admin->email,
             'type'          => $admin->type,
-            'type_label'    => $this->getTypeLabel($admin->type),
+            'type_label'    => $this->getTypeLabel($admin->typeMapping),
             'status'        => $displayStatus,
             'status_label'  => $this->getStatusLabel($displayStatus),
             'assignment'    => $admin->hasAssignment(),

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Add2Farm;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\AdminProjectStatus;
+use App\Models\TypeMapping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -18,8 +19,6 @@ use Spatie\Permission\Models\Role;
  */
 class FarmerController extends BaseController
 {
-    const ADMIN_TYPE = 4;
-
     /**
      * List all farmers (Type 4)
      *
@@ -66,7 +65,7 @@ class FarmerController extends BaseController
         }
 
         // If SUPER_ADMIN, show all farmers; otherwise only farmers created by current user
-        $farmerQuery = Admin::where('type', self::ADMIN_TYPE);
+        $farmerQuery = Admin::ofParentType(TypeMapping::PARENT_USER)->with('typeMapping');
         if (!$this->isSuperAdmin()) {
             $farmerQuery->where('created_by', auth()->id());
         }
@@ -89,7 +88,7 @@ class FarmerController extends BaseController
         }
 
         // Rebuild the query for paginated results
-        $farmersQuery = Admin::where('type', self::ADMIN_TYPE);
+        $farmersQuery = Admin::ofParentType(TypeMapping::PARENT_USER)->with('typeMapping');
         if (!$this->isSuperAdmin()) {
             $farmersQuery->where('created_by', auth()->id());
         }
@@ -181,7 +180,7 @@ class FarmerController extends BaseController
         }
 
         // If SUPER_ADMIN, can view any farmer; otherwise only farmers created by current user
-        $adminQuery = Admin::where('type', self::ADMIN_TYPE);
+        $adminQuery = Admin::ofParentType(TypeMapping::PARENT_USER)->with('typeMapping');
         if (!$this->isSuperAdmin()) {
             $adminQuery->where('created_by', auth()->id());
         }
@@ -283,7 +282,7 @@ class FarmerController extends BaseController
 
         // Type 2 (Farm Owner) can only assign 1 project per farmer
         $user = auth()->user();
-        if ($user->type == 2 && $request->filled('project_rows')) {
+        if ($user->hasParentType(TypeMapping::PARENT_PUBLIC_VENDOR) && $request->filled('project_rows')) {
             $projectRows = array_filter($request->project_rows, function ($row) {
                 return !empty($row['project_id']);
             });
@@ -320,7 +319,7 @@ class FarmerController extends BaseController
                 'mobile_number'  => $request->mobile_number,
                 'email'          => $request->email ?? null,
                 'password'       => Hash::make('Password123'),
-                'type'           => self::ADMIN_TYPE,
+                'type'           => TypeMapping::defaultIdForParent(TypeMapping::PARENT_USER),
                 'status'         => 'Active',
                 'notes'          => $request->notes ?? null,
                 'image'          => $imagePath,
@@ -453,7 +452,7 @@ class FarmerController extends BaseController
             ], 401);
         }
 
-        $admin = Admin::where('type', self::ADMIN_TYPE)
+        $admin = Admin::ofParentType(TypeMapping::PARENT_USER)
             ->where('created_by', auth()->id())
             ->find($id);
 
@@ -487,7 +486,7 @@ class FarmerController extends BaseController
 
         // Type 2 (Farm Owner) can only assign 1 project per farmer
         $user = auth()->user();
-        if ($user->type == 2 && $request->filled('project_rows')) {
+        if ($user->hasParentType(TypeMapping::PARENT_PUBLIC_VENDOR) && $request->filled('project_rows')) {
             $projectRows = array_filter($request->project_rows, function ($row) {
                 return !empty($row['project_id']);
             });
@@ -643,7 +642,7 @@ class FarmerController extends BaseController
             ], 401);
         }
 
-        $admin = Admin::where('type', self::ADMIN_TYPE)
+        $admin = Admin::ofParentType(TypeMapping::PARENT_USER)
             ->where('created_by', auth()->id())
             ->find($id);
 
@@ -719,7 +718,7 @@ class FarmerController extends BaseController
             'mobile_number' => $admin->getFullPhoneNumber(),
             'email'         => $admin->email,
             'type'          => $admin->type,
-            'type_label'    => $this->getTypeLabel($admin->type),
+            'type_label'    => $this->getTypeLabel($admin->typeMapping),
             'status'        => $displayStatus,
             'status_label'  => $this->getStatusLabel($displayStatus),
             'assignment'    => $admin->hasAssignment(),

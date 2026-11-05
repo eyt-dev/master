@@ -13,19 +13,7 @@
     <div class="page-header">
         <div class="page-leftheader">
             @php
-                $breadcrumbText = 'Admins'; // Default text
-
-                switch($type) {
-                    case 1:
-                        $breadcrumbText = 'Admins';
-                        break;
-                    case 2:
-                        $breadcrumbText = 'Public Vendors';
-                        break;
-                    case 3:
-                        $breadcrumbText = 'Private Vendors';
-                        break;
-                }
+                $breadcrumbText = $type === \App\Models\TypeMapping::PARENT_ADMIN ? 'Admins' : $type;
             @endphp
             <h4 class="page-title mb-0">{{ $breadcrumbText }}</h4>
             <ol class="breadcrumb">
@@ -39,9 +27,9 @@
         </div>
         <div class="page-rightheader">
             <div class="btn btn-list">
-                @if(auth()->user()->type == 0 && $type != 3 || auth()->user()->type == 1 && $type == 3)
-                    {{-- Super Admin (0) can create admins except Private Vendors (3) --}}
-                    {{-- Admin (1) can create only Private Vendors (3) --}}
+                @if(auth()->user()->isSuperAdmin() && $type != \App\Models\TypeMapping::PARENT_PRIVATE_VENDOR || auth()->user()->hasParentType(\App\Models\TypeMapping::PARENT_ADMIN) && $type == \App\Models\TypeMapping::PARENT_PRIVATE_VENDOR)
+                    {{-- Super Admin can create admins except Private Vendors --}}
+                    {{-- Admin can create only Private Vendors --}}
 
                     <a id="add_new" class="btn btn-info" data-type="{{ $type }}" data-toggle="tooltip" title="Add new">
                         <i class="fe fe-plus mr-1"></i> Add new 
@@ -77,7 +65,6 @@
                                     <th width="30px"></th>
                                     <th>Name</th>
                                     <th>Email</th>
-                                    <th>Username</th>
                                     <th>Mobile Number</th>
                                     <th>Type</th>
                                     <th>Created By</th>
@@ -127,7 +114,7 @@
     <script src="{{ URL::asset('assets/js/sweet-alert.js') }}"></script>
     <script src="{{URL::asset('assets/plugins/forn-wizard/js/jquery.validate.min.js')}}"></script>
     <script type="text/javascript">
-        var adminType = {{ $type }};
+        var adminType = @json($type);
         var routeName = '';
         var projects = {!! json_encode($projects) !!};
         var projectsMap = {};
@@ -141,19 +128,19 @@
         }
 
         switch(adminType) {
-            case 1:
+            case "Admin":
                 routeName = "{{ route('admins.index', ['username' => request()->get('username', $siteSlug)]) }}";
                 break;
-            case 2:
+            case "Public Vendors":
                 routeName = "{{ route('admins.publicVendor', ['username' => request()->get('username', $siteSlug)]) }}";
                 break;
-            case 3:
+            case "Private Vendors":
                 routeName = "{{ route('admins.privateVendor', ['username' => request()->get('username', $siteSlug)]) }}";
                 break;
         }
         $(document).on('click', '#add_new', function() {
             $.ajax({
-                url: "{{ route('admins.create', ['username' => request()->get('username', $siteSlug)]) }}/" + adminType,
+                url: "{{ route('admins.create', ['username' => request()->get('username', $siteSlug)]) }}/" + encodeURIComponent(adminType),
                 type: "GET",
                 success: function(response) {
                     console.log(response);                    
@@ -183,7 +170,6 @@
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
             { data: 'name', name: 'name' },
             { data: 'email', name: 'email' },
-            { data: 'username', name: 'username' },
             {
                 data: 'mobile_with_code',
                 name: 'mobile_with_code',
@@ -191,20 +177,18 @@
                 searchable: false
             },
             {
-                data: 'created_from',
-                name: 'created_from',
+                data: 'type_name',
+                name: 'type_name',
+                orderable: false,
+                searchable: false,
                 render: function(data) {
-                    const types = {
-                        1: 'Added from backend',
-                        2: 'Registered from web',
-                    };
-                    return types[data] || data;
+                    return data || 'N/A';
                 }
             },
             {
                 data: 'created_by_name',
                 name: 'created_by_name',
-                visible: adminType == 3,
+                visible: adminType == "Private Vendors",
                 orderable: false,
                 searchable: false
             }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use App\Models\Admin;
 use App\Models\Setting;
+use App\Models\TypeMapping;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
@@ -24,12 +25,25 @@ class RegisterController extends Controller
         $this->middleware('guest:admin');
     }
 
+    public function showRegistrationForm()
+    {
+        $countries = CountryRegion::orderBy('name')->get();
+        $userTypeIds = [
+            'admin' => TypeMapping::defaultIdForParent(TypeMapping::PARENT_ADMIN),
+            'public_vendor' => TypeMapping::defaultIdForParent(TypeMapping::PARENT_PUBLIC_VENDOR),
+            'private_vendor' => TypeMapping::defaultIdForParent(TypeMapping::PARENT_PRIVATE_VENDOR),
+        ];
+
+        return view('auth.register', compact('countries', 'userTypeIds'));
+    }
+
     protected function validator(array $data)
     {
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:admins'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'userType' => ['required', 'exists:type_mappings,id'],
         ]);
     }
 
@@ -39,28 +53,21 @@ class RegisterController extends Controller
         $host = request()->getHost();
         $setting = Setting::where('admin_domain', $host)->first();
         $parent = $setting->created_by;
-        
-        $type = $data['userType'];
-        if($host === config('domains.admin_subdomain')){
-            if($type == 1) {
-                $role = 'Admin';
-            } elseif($type==2) {
-                $role = 'PublicVendor';
-            }
 
+        $type = $data['userType'];
+        $parentType = TypeMapping::find($type)?->parent_type;
+        if($host === config('domains.admin_subdomain')){
             if($userName != 'register') {
                 $parent = Admin::where('username', $userName)->first()?->id;
             }
-        } else {
-            $role = 'PrivateVendor';
         }
-        
+
         $adminCreateData = [
             'name' => $data['name'],
             'email' => $data['email'],
             'username' => $data['username'],
             'password' => Hash::make($data['password']),
-            'type' => $type, 
+            'type' => $type,
             'parent_id' => $parent,
             'vat_country_code' => $data['vat_country_code'],
             'vat_number' => $data['vat_number'],
@@ -71,13 +78,11 @@ class RegisterController extends Controller
 
         // Assign the User role
         if($host === config('domains.admin_subdomain')){
-            if($type == 1) {
-                $role = 'Admin';
-            } elseif($type==2) {
-                $role = 'PublicVendor';
-            } else {
-                $role = 'PrivateVendor';
-            }
+            $role = match ($parentType) {
+                TypeMapping::PARENT_ADMIN => 'Admin',
+                TypeMapping::PARENT_PUBLIC_VENDOR => 'PublicVendor',
+                default => 'PrivateVendor',
+            };
         } else {
             $role = 'PrivateVendor';
         }

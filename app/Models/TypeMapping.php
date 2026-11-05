@@ -9,11 +9,16 @@ class TypeMapping extends Model
 {
     use HasFactory;
 
+    const PARENT_ADMIN = 'Admin';
+    const PARENT_PUBLIC_VENDOR = 'Public Vendors';
+    const PARENT_PRIVATE_VENDOR = 'Private Vendors';
+    const PARENT_USER = 'Users';
+
     const PARENT_TYPES = [
-        'Admin',
-        'Public Vendor',
-        'Private Vendor',
-        'User',
+        self::PARENT_ADMIN,
+        self::PARENT_PUBLIC_VENDOR,
+        self::PARENT_PRIVATE_VENDOR,
+        self::PARENT_USER,
     ];
 
     protected $fillable = [
@@ -32,5 +37,14 @@ class TypeMapping extends Model
     public function creator()
     {
         return $this->belongsTo(Admin::class, 'created_by');
+    }
+
+    /**
+     * ID of the first mapping that belongs to the given parent type.
+     * Used when an account is moved into a category (e.g. role upgrades).
+     */
+    public static function defaultIdForParent(string $parentType): ?int
+    {
+        return static::where('parent_type', $parentType)->orderBy('id')->value('id');
     }
 }

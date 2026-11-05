@@ -15,10 +15,8 @@ use Spatie\Permission\Traits\HasRoles;
 class Admin extends Authenticatable
 {
     use HasApiTokens, HasRoles, HasFactory, Notifiable;
+    // Reserved: Super Admin is not stored in type_mappings
     const SUPER_ADMIN = 0;
-    const ADMIN = 1;
-    const PUBLIC_VENDOR = 2;
-    const PRIVATE_VENDOR = 3;
 
     protected $guard_name = 'admin'; // 🔑 MUST MATCH GUARD
     /**
@@ -74,6 +72,34 @@ class Admin extends Authenticatable
     public function country()
     {
         return $this->belongsTo(Country::class, 'country_id');
+    }
+
+    // `type` holds the type_mappings.id (0 = Super Admin, reserved)
+    public function typeMapping()
+    {
+        return $this->belongsTo(TypeMapping::class, 'type');
+    }
+
+    public function scopeOfParentType($query, string|array $parentTypes)
+    {
+        return $query->whereHas('typeMapping', function ($q) use ($parentTypes) {
+            $q->whereIn('parent_type', (array) $parentTypes);
+        });
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return (int) $this->type === self::SUPER_ADMIN;
+    }
+
+    public function getParentTypeAttribute(): ?string
+    {
+        return $this->isSuperAdmin() ? null : $this->typeMapping?->parent_type;
+    }
+
+    public function hasParentType(string $parentType): bool
+    {
+        return $this->parent_type === $parentType;
     }
 
     public function projectStatuses()

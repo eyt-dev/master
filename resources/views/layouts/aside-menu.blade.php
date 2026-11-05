@@ -77,10 +77,6 @@
 		<li class="side-item side-item-category mt-4">
 			Customer
 		</li>
-		@php
-			$userType = auth()->user()->type;
-		@endphp
-
 		@can('view.admin')
 			<li class="slide">
 				<a class="side-menu__item" href="{{ route('admins.index', ['username' => $siteSlug]) }}">

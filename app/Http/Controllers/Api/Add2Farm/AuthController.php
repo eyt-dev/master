@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api\Add2Farm;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\AdminProjectStatus;
+use App\Models\TypeMapping;
 use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 use Laravel\Sanctum\PersonalAccessToken;
 use App\Services\Add2Farm\TranslationService;
@@ -38,7 +40,7 @@ class AuthController extends Controller
      * @bodyParam mobile_number string required User's mobile number. Example: 9033487938
      * @bodyParam password string required Password (min 8 characters). Example: password123
      * @bodyParam password_confirmation string required Password confirmation. Example: password123
-     * @bodyParam type integer required User type (1=Farm Admin, 2=Farm Owner). Example: 1
+     * @bodyParam type integer required type_mappings.id of the account type (parent type Admin or Public Vendors, e.g. 1=Farm Admin, 2=Farm Owner). Example: 1
      * @bodyParam name string optional User's full name. Example: John Doe
      * @bodyParam email string optional User's email address. Example: john@example.com
      *
@@ -59,7 +61,7 @@ class AuthController extends Controller
             'phone_code'    => 'nullable|string|max:5',
             'mobile_number' => 'required|string|max:20|unique:admins,mobile_number',
             'password'      => 'required|string|min:8|confirmed',
-            'type'          => 'required|integer|in:1,2',
+            'type'          => ['required', 'integer', Rule::exists('type_mappings', 'id')->whereIn('parent_type', [TypeMapping::PARENT_ADMIN, TypeMapping::PARENT_PUBLIC_VENDOR])],
             'name'          => 'nullable|string|max:255',
             'email'         => 'nullable|email|max:255|unique:admins,email',
         ]);
@@ -92,10 +94,11 @@ class AuthController extends Controller
                 'email'         => $request->email,
             ]);
 
-            // Assign role based on type (1=Admin, 2=PublicVendor)
-            $rolePrefix = match (intval($request->type)) {
-                1 => 'Admin',
-                2 => 'PublicVendor',
+            // Assign role based on the type mapping's parent category
+            $rolePrefix = match (TypeMapping::find($request->type)?->parent_type) {
+                TypeMapping::PARENT_ADMIN => 'Admin',
+                TypeMapping::PARENT_PRIVATE_VENDOR => 'PrivateVendor',
+                TypeMapping::PARENT_USER => 'User',
                 default => 'PublicVendor',
             };
             $role = Role::where('name', $rolePrefix)->first();
@@ -688,9 +691,9 @@ class AuthController extends Controller
     /**
      * Get type label based on type value
      */
-    private function getTypeLabel($type): string
+    private function getTypeLabel(?TypeMapping $typeMapping): string
     {
-        return $this->translationService->getTypeLabel($type);
+        return $this->translationService->getTypeLabel($typeMapping);
     }
 
     /**
@@ -703,7 +706,7 @@ class AuthController extends Controller
             'name'          => $admin->name,
             'mobile_number' => $admin->getFullPhoneNumber(),
             'type'          => $admin->type,
-            'type_label'    => $this->getTypeLabel($admin->type),
+            'type_label'    => $this->getTypeLabel($admin->typeMapping),
             'status'        => $admin->status,
             'status_label'  => $this->getStatusLabel($admin->status),
             'assignment'    => $admin->hasAssignment(),

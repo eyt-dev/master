@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 return new class extends Migration
 {
     private array $mappings = [
-        ['type' => 'Farm Admin',     'url' => 'http://add2care.de/farm-admin',     'parent_type' => 'Admins'],
+        ['type' => 'Farm Admin',     'url' => 'http://add2care.de/farm-admin',     'parent_type' => 'Admin'],
         ['type' => 'Farm Owner',     'url' => 'http://add2care.de/farm-owner',     'parent_type' => 'Public Vendors'],
         ['type' => 'Supervisor',     'url' => 'http://add2care.de/supervisor',     'parent_type' => 'Private Vendors'],
         ['type' => 'Farmer',         'url' => 'http://add2care.de/farmer',         'parent_type' => 'Users'],

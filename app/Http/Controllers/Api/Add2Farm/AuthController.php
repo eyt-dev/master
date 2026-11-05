@@ -61,7 +61,7 @@ class AuthController extends Controller
             'phone_code'    => 'nullable|string|max:5',
             'mobile_number' => 'required|string|max:20|unique:admins,mobile_number',
             'password'      => 'required|string|min:8|confirmed',
-            'type'          => ['required', 'integer', Rule::exists('type_mappings', 'id')->whereIn('parent_type', [TypeMapping::PARENT_ADMIN, TypeMapping::PARENT_PUBLIC_VENDOR])],
+            'type'          => ['required', 'integer', Rule::exists('type_mappings', 'id')],
             'name'          => 'nullable|string|max:255',
             'email'         => 'nullable|email|max:255|unique:admins,email',
         ]);

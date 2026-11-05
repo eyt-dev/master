@@ -138,7 +138,7 @@ class AdminController extends Controller
                     }
                 })
                 ->addColumn('url', function ($row) {
-                    $url = $row->url ?: ($row->typeMapping?->url ?? '');
+                    $url = $row->url ?? '';
                     return $url ? '<a href="' . e($url) . '" target="_blank" rel="noopener">' . e($url) . '</a>' : '';
                 })
                 ->addColumn('action', function ($row) use ($admin) {
@@ -648,7 +648,7 @@ class AdminController extends Controller
                     return $row->typeMapping?->type ?? 'N/A';
                 })
                 ->addColumn('url', function ($row) {
-                    $url = $row->url ?: ($row->typeMapping?->url ?? '');
+                    $url = $row->url ?? '';
                     return $url ? '<a href="' . e($url) . '" target="_blank" rel="noopener">' . e($url) . '</a>' : '';
                 })
                 ->addColumn('notes_preview', function($row) {

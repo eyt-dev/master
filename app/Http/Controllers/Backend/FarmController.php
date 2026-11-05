@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use App\Models\DailyRecord;
 use App\Models\Hangar;
+use App\Models\TypeMapping;
 
 class FarmController extends Controller
 {
@@ -59,13 +60,10 @@ class FarmController extends Controller
         $user = auth()->user();
 
         // Get supervisors based on logged-in user type
-        $supervisorType = match($user->type) {
-            2 => 4,  // type 2 users get type 4 supervisors
-            1 => 3,  // type 1 users get type 3 supervisors
-            default => 3,
-        };
+        // Public Vendors get Users as supervisors, everyone else gets Private Vendors
+        $supervisorParentType = $user->hasParentType(TypeMapping::PARENT_PUBLIC_VENDOR) ? TypeMapping::PARENT_USER : TypeMapping::PARENT_PRIVATE_VENDOR;
 
-        $admins = Admin::where('type', $supervisorType)->orderBy('name')->get();
+        $admins = Admin::ofParentType($supervisorParentType)->orderBy('name')->get();
         $countries = Country::select('id', 'name', 'dial_code')->orderBy('name')->get()
             ->map(function ($country) {
                 $country->dial_code_with_plus = '+' . $country->dial_code;
@@ -92,7 +90,7 @@ class FarmController extends Controller
 
         // Type 2 (Farm Owner) can create maximum 3 farms
         $user = auth()->user();
-        if ($user->type == 2) {
+        if ($user->hasParentType(TypeMapping::PARENT_PUBLIC_VENDOR)) {
             $farmCount = Farm::where('created_by', $user->id)->count();
             if ($farmCount >= 3) {
                 if ($request->expectsJson() || $request->ajax()) {
@@ -139,13 +137,10 @@ class FarmController extends Controller
         $user = auth()->user();
 
         // Get supervisors based on logged-in user type
-        $supervisorType = match($user->type) {
-            2 => 4,  // type 2 users get type 4 supervisors
-            1 => 3,  // type 1 users get type 3 supervisors
-            default => 3,
-        };
+        // Public Vendors get Users as supervisors, everyone else gets Private Vendors
+        $supervisorParentType = $user->hasParentType(TypeMapping::PARENT_PUBLIC_VENDOR) ? TypeMapping::PARENT_USER : TypeMapping::PARENT_PRIVATE_VENDOR;
 
-        $admins = Admin::where('type', $supervisorType)->orderBy('name')->get();
+        $admins = Admin::ofParentType($supervisorParentType)->orderBy('name')->get();
         $countries = Country::select('id', 'name', 'dial_code')->orderBy('name')->get()
             ->map(function ($country) {
                 $country->dial_code_with_plus = '+' . $country->dial_code;

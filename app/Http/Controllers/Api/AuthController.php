@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Helpers\ProjectHelper;
 use App\Models\Contact;
+use App\Models\TypeMapping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -39,7 +41,7 @@ class AuthController extends Controller
             'email'            => $request->email,
             'username'         => $request->username,
             'password'         => Hash::make($request->password),
-            'type'             => Admin::PRIVATE_VENDOR, // default type for self-registration
+            'type'             => TypeMapping::defaultIdForParent(TypeMapping::PARENT_PRIVATE_VENDOR), // default type for self-registration
             'status'           => 'Pending',
             'vat_country_code' => $request->vat_country_code,
             'vat_number'       => $request->vat_number,
@@ -103,10 +105,9 @@ class AuthController extends Controller
 
         // Apply type and project filters
         if ($admin) {
-            $isAllowed = $admin->type == 0 || $admin->projectStatuses()
-                ->whereHas('project', function ($query) {
-                    $query->where('url', 'LIKE', '%add2mix.eyt.app%');
-                })->exists();
+            $isAllowed = $admin->isSuperAdmin() || $admin->projectStatuses()
+                ->where('project_id', ProjectHelper::getAdd2MixProjectId())
+                ->exists();
 
             if (!$isAllowed) {
                 $admin = null;

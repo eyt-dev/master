@@ -2,6 +2,7 @@
 
 namespace App\Services\Add2Farm;
 
+use App\Models\TypeMapping;
 use Illuminate\Support\Facades\App;
 
 class TranslationService
@@ -41,17 +42,14 @@ class TranslationService
     }
 
     /**
-     * Get a translated type label
+     * Type label taken from the user's type mapping
      *
-     * @param int $type The user type
-     * @param string|null $locale The locale to use (optional)
+     * @param TypeMapping|null $typeMapping The user's type mapping
      * @return string
      */
-    public function getTypeLabel(int $type, ?string $locale = null): string
+    public function getTypeLabel(?TypeMapping $typeMapping): string
     {
-        $locale = $this->normalizeLocale($locale);
-
-        return trans("add2farm.user_types.{$type}", [], $locale) ?? "Unknown Type {$type}";
+        return $typeMapping?->type ?? 'Unknown Type';
     }
 
     /**

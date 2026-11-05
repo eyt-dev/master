@@ -26,7 +26,7 @@ use App\Http\Controllers\Backend\FlockController;
 use App\Http\Controllers\Backend\MaterialStockController;
 use App\Http\Controllers\Backend\DailyRecordController;
 use App\Http\Controllers\Backend\ChickenSalesController;
-use App\Http\Controllers\Backend\ProjectController;
+use App\Http\Controllers\Backend\TypeMappingController;
 use App\Http\Controllers\Backend\PageController;
 use App\Http\Controllers\Backend\SettingController;
 use App\Http\Controllers\Backend\SlideController;
@@ -275,13 +275,13 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('hangars-by-flock/{flock}', 'getHangarsByFlock')->name('chicken-sale.hangars-by-flock');
                         Route::get('last-net-weights/{flock}/{hangar}', 'getLastNetWeights')->name('chicken-sale.last-net-weights');
                     });
-                    Route::controller(ProjectController::class)->prefix('project')->group(function () {
-                        Route::get('/', 'index')->name('project.index')->middleware('permission:view.project');
-                        Route::get('create', 'create')->name('project.create')->middleware('permission:create.project');
-                        Route::post('store', 'store')->name('project.store')->middleware('permission:create.project');
-                        Route::get('{project}/edit', 'edit')->name('project.edit')->middleware('permission:edit.project');
-                        Route::post('{project}', 'update')->name('project.update')->middleware('permission:edit.project');
-                        Route::get('destroy/{project}', 'destroy')->name('project.destroy')->middleware('permission:delete.project');
+                    Route::controller(TypeMappingController::class)->prefix('type-mapping')->group(function () {
+                        Route::get('/', 'index')->name('type-mapping.index')->middleware('permission:view.type_mapping');
+                        Route::get('create', 'create')->name('type-mapping.create')->middleware('permission:create.type_mapping');
+                        Route::post('store', 'store')->name('type-mapping.store')->middleware('permission:create.type_mapping');
+                        Route::get('{type_mapping}/edit', 'edit')->name('type-mapping.edit')->middleware('permission:edit.type_mapping');
+                        Route::post('{type_mapping}', 'update')->name('type-mapping.update')->middleware('permission:edit.type_mapping');
+                        Route::get('destroy/{type_mapping}', 'destroy')->name('type-mapping.destroy')->middleware('permission:delete.type_mapping');
                     });
                     Route::controller(PageController::class)->prefix('page')->group(function () {
                         Route::get('/', 'index')->name('page.index')->middleware('permission:view.page');

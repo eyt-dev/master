@@ -26,6 +26,7 @@ use App\Models\DailyRecord;
 use App\Models\Contact;
 use App\Models\Project;
 use App\Models\AdminProjectStatus;
+use App\Models\TypeMapping;
 use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
@@ -38,30 +39,30 @@ class AdminController extends Controller
     public function index()
     {
         if (request()->ajax()) {
-            return $this->handleAdminList(1);
+            return $this->handleAdminList(TypeMapping::PARENT_ADMIN);
         }
         $projects = $this->getAllProjects();
-        $type = 1;
+        $type = TypeMapping::PARENT_ADMIN;
         return view('backend.admins.index', compact('type', 'projects'));
     }
 
     public function publicVendor()
     {
         if (request()->ajax()) {
-            return $this->handleAdminList(2);
+            return $this->handleAdminList(TypeMapping::PARENT_PUBLIC_VENDOR);
         }
         $projects = $this->getAllProjects();
-        $type = 2;
+        $type = TypeMapping::PARENT_PUBLIC_VENDOR;
         return view('backend.admins.index', compact('type', 'projects'));
     }
 
     public function privateVendor()
     {
         if (request()->ajax()) {
-            return $this->handleAdminList(3);
+            return $this->handleAdminList(TypeMapping::PARENT_PRIVATE_VENDOR);
         }
         $projects = $this->getAllProjects();
-        $type = 3;
+        $type = TypeMapping::PARENT_PRIVATE_VENDOR;
         return view('backend.admins.index', compact('type', 'projects'));
     }
 
@@ -69,21 +70,17 @@ class AdminController extends Controller
     {
         if (request()->ajax()) {
             $admin = auth()->user();
-            $query = Admin::query()->with(['creator', 'project', 'projectStatuses.project']);
-            if ($admin->type == 0) {
-                $query->where('type', $type);
+            $query = Admin::query()->with(['creator', 'project', 'projectStatuses.project', 'typeMapping']);
+            if ($admin->isSuperAdmin()) {
                 // Super Admin can see all type of admins
-                if ($type == 1 || $type == 2) {
-                    // $query->where('created_by', $admin->id);
-                }
-            } elseif ($admin->type == 1) {
-                // Admin can only see type 3 admins they created
-                if ($type == 3) {
-                    // $query->where('type', 3)
-                        $query->where(function ($q) use ($admin) {
-                            $q->where('created_by', $admin->id)
-                                ->orWhere('parent_id', $admin->id);
-                        });
+                $query->ofParentType($type);
+            } elseif ($admin->hasParentType(TypeMapping::PARENT_ADMIN)) {
+                // Admin can only see Private Vendors they created
+                if ($type == TypeMapping::PARENT_PRIVATE_VENDOR) {
+                    $query->where(function ($q) use ($admin) {
+                        $q->where('created_by', $admin->id)
+                            ->orWhere('parent_id', $admin->id);
+                    });
                 }
             } else {
                 abort(403, "Unauthorized access");
@@ -93,6 +90,9 @@ class AdminController extends Controller
             $allProjects = $this->getAllProjects();
 
             return datatables()->of($query->select('*'))
+                ->addColumn('type_name', function ($row) {
+                    return $row->typeMapping?->type ?? 'Super Admin';
+                })
                 ->addColumn('mobile_with_code', function ($row) {
                     $phoneCode = $row->phone_code ?? '';
                     $mobileNumber = $row->mobile_number ?? '';
@@ -138,19 +138,20 @@ class AdminController extends Controller
                     }
                 })
                 ->addColumn('url', function ($row) {
-                    return ($row->url ?? '');
+                    $url = $row->url ?? '';
+                    return $url ? '<a href="' . e($url) . '" target="_blank" rel="noopener">' . e($url) . '</a>' : '';
                 })
                 ->addColumn('action', function ($row) use ($admin) {
                     $btn = '';
 
-                    // Admin can edit & delete only Private Vendors they created  $admin->type == 1 && $row->type == 3 &&
-                    if (($row->created_by == $admin->id || $row->parent_id == $admin->id) || $admin->type == 0) {
+                    // Admin can edit & delete only Private Vendors they created
+                    if (($row->created_by == $admin->id || $row->parent_id == $admin->id) || $admin->isSuperAdmin()) {
                         $btn .= $this->getActionButtons($row);
                     }
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'created_by_name', 'project_statuses_json', 'mobile_with_code'])
+                ->rawColumns(['action', 'created_by_name', 'project_statuses_json', 'mobile_with_code', 'url'])
                 ->addIndexColumn()
                 ->with('projects', $allProjects)
                 ->make(true);
@@ -183,7 +184,16 @@ class AdminController extends Controller
     {
         $countries = Country::orderBy('name')->get();
         $projects = $this->getAllProjects();
-        return view('backend.admins.create', ['admin' => new Admin(), 'type' => $type, 'countries' => $countries, 'projects' => $projects]);
+        $parentType = in_array($type, TypeMapping::PARENT_TYPES, true) ? $type : TypeMapping::PARENT_ADMIN;
+        return view('backend.admins.create', ['admin' => new Admin(), 'parentType' => $parentType, 'typeOptions' => $this->typeOptionsFor($parentType), 'countries' => $countries, 'projects' => $projects, 'vatCountryId' => null]);
+    }
+
+    /**
+     * Type mappings (id + name) that belong to a parent category, for the Type select.
+     */
+    private function typeOptionsFor(string $parentType)
+    {
+        return TypeMapping::where('parent_type', $parentType)->orderBy('id')->get(['id', 'type']);
     }
 
     /**
@@ -194,33 +204,41 @@ class AdminController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required',
-            'username' => 'nullable|string',
-            'email' => 'nullable|email|unique:admins',
-            'password' => 'required|min:6',
-            'mobile_number' => 'required|string|max:20|unique:admins,mobile_number',
-            'vat_country_code' => 'required',
-            'vat_number' => 'required|max:50',
-            'phone_code' => 'nullable|string|max:10',
-            'notes' => 'nullable|string|max:1000',
-            'image' => 'nullable|image|mimes:jpeg,png,gif|max:2048',
-            'project_id' => 'nullable|exists:projects,id',
-            'project_rows' => 'nullable|array',
-            'project_rows.*.project_id' => 'nullable|exists:projects,id',
-            'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
-        ]);
+        try {
+            $request->validate([
+                'name' => 'required',
+                'email' => 'nullable|email|unique:admins',
+                'password' => 'required|min:6',
+                'mobile_number' => 'required|string|max:20|unique:admins,mobile_number',
+                'vat_country_code' => 'required',
+                'vat_number' => 'required|max:50',
+                'phone_code' => 'nullable|string|max:10',
+                'notes' => 'nullable|string|max:1000',
+                'image' => 'nullable|image|mimes:jpeg,png,gif|max:2048',
+                'project_id' => 'nullable|exists:projects,id',
+                'project_rows' => 'nullable|array',
+                'project_rows.*.project_id' => 'nullable|exists:projects,id',
+                'project_rows.*.status' => 'nullable|in:Active,Inactive,Pending',
+                'type' => 'required|exists:type_mappings,id',
+            ]);
+        } catch (ValidationException $e) {
+            if ($request->ajax()) {
+                return response()->json(['errors' => $e->errors()], 422);
+            }
+            throw $e;
+        }
 
         $this->validateProjectRows($request);
-        
-        // Get admin type from request or default to Admin (1)
-        $adminType = $request->type ?? 1;
-    
-        $prefix = match (intval($adminType)) {
-            1 => 'Admin',
-            2 => 'PublicVendor',
-            3 => 'PrivateVendor',
-            4 => 'User',
+
+        // $request->type is a type_mappings.id; its parent_type is the category
+        $adminType = $request->type;
+        $parentType = TypeMapping::findOrFail($adminType)->parent_type;
+
+        $prefix = match ($parentType) {
+            TypeMapping::PARENT_ADMIN => 'Admin',
+            TypeMapping::PARENT_PUBLIC_VENDOR => 'PublicVendor',
+            TypeMapping::PARENT_PRIVATE_VENDOR => 'PrivateVendor',
+            TypeMapping::PARENT_USER => 'User',
             default => 'Admin',
         };
 
@@ -232,7 +250,7 @@ class AdminController extends Controller
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
                 $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $uploadDir = $adminType == 4 ? 'uploads/farmers' : 'uploads/admins';
+                $uploadDir = $parentType == TypeMapping::PARENT_USER ? 'uploads/farmers' : 'uploads/admins';
                 Storage::disk('public')->makeDirectory($uploadDir, 0755, true);
                 $file->storeAs($uploadDir, $filename, 'public');
                 $imagePath = $uploadDir . '/' . $filename;
@@ -241,7 +259,7 @@ class AdminController extends Controller
             $addData = [
                 'name' => $request->name,
                 'email' => $request->email,
-                'username' => $request->username ?? 'farmer-' . uniqid(),
+                'username' => $request->username,
                 'password' => Hash::make($request->password),
                 'type' => $adminType,
                 'created_by' => auth()->user()->id,
@@ -250,7 +268,7 @@ class AdminController extends Controller
             ];
 
             // Add fields only for non-farmer types or when provided for farmers
-            if ($adminType != 4) {
+            if ($parentType != TypeMapping::PARENT_USER) {
                 $addData['vat_country_code'] = $request->vat_country_code;
                 $addData['vat_number'] = $request->vat_number;
             }
@@ -283,7 +301,7 @@ class AdminController extends Controller
             }
 
             // Only create settings for non-farmer types
-            if ($adminType != 4) {
+            if ($parentType != TypeMapping::PARENT_USER) {
                 $createData = [
                     'domain' => config('domains.main_domain') . "/" . $request->username,
                     'admin_domain' => config('domains.admin_subdomain') . "/" . $request->username,
@@ -323,12 +341,19 @@ class AdminController extends Controller
             Session::flash('successMsg', "$prefix inserted successfully.");
             
             // Determine redirect route based on admin type
-            $routeName = match ($adminType) {
-                2 => 'admins.publicVendor',
-                3 => 'admins.privateVendor',
-                4 => 'admins.users',
+            $routeName = match ($parentType) {
+                TypeMapping::PARENT_PUBLIC_VENDOR => 'admins.publicVendor',
+                TypeMapping::PARENT_PRIVATE_VENDOR => 'admins.privateVendor',
+                TypeMapping::PARENT_USER => 'admins.users',
                 default => 'admins.index',
             };
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'message' => "$prefix inserted successfully.",
+                    'redirect_url' => route($routeName, ['username' => request()->get('username', request()->segment(1))])
+                ]);
+            }
 
             return redirect()->route($routeName, ['username' => request()->get('username', request()->segment(1))]);
 
@@ -336,6 +361,10 @@ class AdminController extends Controller
             DB::rollBack();
             \Log::error('Admin creation error: ' . $e->getMessage());
             Session::flash('errorMsg', 'Failed to create ' . strtolower($prefix) . '.');
+
+            if ($request->ajax()) {
+                return response()->json(['message' => 'Failed to create ' . strtolower($prefix) . '.'], 500);
+            }
             return redirect()->back()->withInput();
         }
     }
@@ -357,7 +386,25 @@ class AdminController extends Controller
 
         $roles = Role::all();
         $projects = $this->getAllProjects();
-        return view('backend.admins.create', ['admin' => $admin, 'roles' => $roles, 'type' => $admin->type, 'countries' => $countries, 'projects' => $projects]);
+        $parentType = $admin->parent_type ?? TypeMapping::PARENT_ADMIN;
+        return view('backend.admins.create', ['admin' => $admin, 'roles' => $roles, 'parentType' => $parentType, 'typeOptions' => $this->typeOptionsFor($parentType), 'countries' => $countries, 'projects' => $projects, 'vatCountryId' => $this->resolveVatCountryId($admin->vat_country_code, $countries)]);
+    }
+
+    /**
+     * Resolve the stored VAT country to a countries.id for the select.
+     * Self-registration stores the 2-letter prefix (e.g. "IN") instead of the id.
+     */
+    private function resolveVatCountryId($vatCountry, $countries)
+    {
+        if (blank($vatCountry)) {
+            return null;
+        }
+
+        if (is_numeric($vatCountry) && $countries->contains('id', (int) $vatCountry)) {
+            return (int) $vatCountry;
+        }
+
+        return $countries->first(fn ($country) => strtoupper(substr($country->name, 0, 2)) === strtoupper($vatCountry))?->id;
     }
 
     /**
@@ -381,13 +428,13 @@ class AdminController extends Controller
         try {
             $validated = $request->validate([
                 'name' => 'required',
-                'username' => 'nullable|string',
                 'email' => 'nullable|email|unique:admins,email,' . $id,
-                'vat_country_code' => 'required',
-                'vat_number' => 'required|max:50',
+                'vat_country_code' => $admin->hasParentType(TypeMapping::PARENT_USER) ? 'nullable' : 'required',
+                'vat_number' => $admin->hasParentType(TypeMapping::PARENT_USER) ? 'nullable|max:50' : 'required|max:50',
                 'phone_code' => 'nullable|string|max:10',
                 'password' => 'nullable|min:6',
                 'mobile_number' => 'required|string|max:20|unique:admins,mobile_number,' . $id,
+                'type' => ['nullable', Rule::exists('type_mappings', 'id')->where('parent_type', $admin->parent_type)],
                 'notes' => 'nullable|string|max:1000',
                 'image' => 'nullable|image|mimes:jpeg,png,gif|max:2048',
                 'project_id' => 'nullable|exists:projects,id',
@@ -414,7 +461,7 @@ class AdminController extends Controller
             ];
 
             // Add fields for non-farmer types
-            if ($admin->type != 4) {
+            if (!$admin->hasParentType(TypeMapping::PARENT_USER)) {
                 $updateData['username'] = $request->username;
                 $updateData['vat_country_code'] = $request->vat_country_code;
                 $updateData['vat_number'] = $request->vat_number;
@@ -425,6 +472,11 @@ class AdminController extends Controller
             $updateData['mobile_number'] = $request->mobile_number;
             $updateData['notes'] = $request->notes ?? $admin->notes;
 
+            // Type can only move within the same parent category
+            if ($request->filled('type')) {
+                $updateData['type'] = $request->type;
+            }
+
             // Handle image upload
             if ($request->hasFile('image')) {
                 // Delete old image if exists
@@ -434,7 +486,7 @@ class AdminController extends Controller
 
                 $file = $request->file('image');
                 $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $uploadDir = $admin->type == 4 ? 'uploads/farmers' : 'uploads/admins';
+                $uploadDir = $admin->hasParentType(TypeMapping::PARENT_USER) ? 'uploads/farmers' : 'uploads/admins';
                 Storage::disk('public')->makeDirectory($uploadDir, 0755, true);
                 $file->storeAs($uploadDir, $filename, 'public');
                 $updateData['image'] = $uploadDir . '/' . $filename;
@@ -448,11 +500,10 @@ class AdminController extends Controller
             $admin->update($updateData);
 
             // Sync role based on admin type to ensure consistency
-            $rolePrefix = match (intval($admin->type)) {
-                1 => 'Admin',
-                2 => 'PublicVendor',
-                3 => 'PrivateVendor',
-                4 => 'Farmer',
+            $rolePrefix = match ($admin->parent_type) {
+                TypeMapping::PARENT_PUBLIC_VENDOR => 'PublicVendor',
+                TypeMapping::PARENT_PRIVATE_VENDOR => 'PrivateVendor',
+                TypeMapping::PARENT_USER => 'Farmer',
                 default => 'Admin',
             };
             $roleToAssign = Role::where('name', $rolePrefix)->first();
@@ -466,7 +517,7 @@ class AdminController extends Controller
             }
 
             // Sync contact information for non-farmer types
-            if ($admin->type != 4) {
+            if (!$admin->hasParentType(TypeMapping::PARENT_USER)) {
                 Contact::updateOrCreate(
                     ['email' => $request->email],
                     [
@@ -493,10 +544,10 @@ class AdminController extends Controller
         }
 
         // Determine redirect route based on admin type
-        $routeName = match ($admin->type) {
-            2 => 'admins.publicVendor',
-            3 => 'admins.privateVendor',
-            4 => 'admins.users',
+        $routeName = match ($admin->parent_type) {
+            TypeMapping::PARENT_PUBLIC_VENDOR => 'admins.publicVendor',
+            TypeMapping::PARENT_PRIVATE_VENDOR => 'admins.privateVendor',
+            TypeMapping::PARENT_USER => 'admins.users',
             default => 'admins.index',
         };
 
@@ -576,10 +627,10 @@ class AdminController extends Controller
     {
         if ($request->ajax()) {
             $admin = auth()->user();
-            $query = Admin::query()->where('type', 4)->with(['creator', 'projectStatuses.project', 'farms']);
+            $query = Admin::query()->ofParentType(TypeMapping::PARENT_USER)->with(['creator', 'projectStatuses.project', 'farms', 'typeMapping']);
 
             // Super Admin sees all farmers, others see only created farmers
-            if ($admin->type != Admin::SUPER_ADMIN) {
+            if (!$admin->isSuperAdmin()) {
                 $query->where(function ($q) use ($admin) {
                     $q->where('created_by', $admin->id)
                         ->orWhere('parent_id', $admin->id);
@@ -592,6 +643,13 @@ class AdminController extends Controller
             return datatables()->of($query->select('*'))
                 ->addColumn('mobile_number', function($row) {
                     return $row->mobile_number ?? 'N/A';
+                })
+                ->addColumn('type_name', function ($row) {
+                    return $row->typeMapping?->type ?? 'N/A';
+                })
+                ->addColumn('url', function ($row) {
+                    $url = $row->url ?? '';
+                    return $url ? '<a href="' . e($url) . '" target="_blank" rel="noopener">' . e($url) . '</a>' : '';
                 })
                 ->addColumn('notes_preview', function($row) {
                     $notes = $row->notes ?? '';
@@ -645,7 +703,7 @@ class AdminController extends Controller
                     $btn = '';
 
                     // Allow edit/delete if user created the farmer or is super admin
-                    if ($row->created_by == $admin->id || $admin->type == Admin::SUPER_ADMIN) {
+                    if ($row->created_by == $admin->id || $admin->isSuperAdmin()) {
                         $btn .= '<a class="edit-admin edit_form btn btn-icon btn-success mr-1 white"
                                     data-path="' . route('admins.edit', ['username' => request()->get('username', request()->segment(1)), 'admin' => $row->id]) . '"
                                     data-name="' . $row->name . '"
@@ -660,7 +718,7 @@ class AdminController extends Controller
 
                     return $btn;
                 })
-                ->rawColumns(['action', 'status', 'image_thumbnail', 'project_statuses_json', 'assigned_farms'])
+                ->rawColumns(['action', 'status', 'image_thumbnail', 'project_statuses_json', 'assigned_farms', 'url'])
                 ->addIndexColumn()
                 ->with('projects', $allProjects)
                 ->make(true);
@@ -707,7 +765,7 @@ class AdminController extends Controller
         // Skip strict project validation for type 1 (Admin) users
         // They can work without project assignments
         $admin = Auth::user();
-        return $admin && $admin->type === 1;
+        return $admin && $admin->hasParentType(TypeMapping::PARENT_ADMIN);
     }
 
     public function updateProjectStatus(Request $request, $siteUrl)
@@ -739,17 +797,6 @@ class AdminController extends Controller
         );
 
         return response()->json(['success' => true, 'message' => 'Status updated successfully']);
-    }
-
-    private function getProjectsForAdmin()
-    {
-        $query = Project::query()->orderBy('project_name');
-
-        if (auth()->user()?->type != Admin::SUPER_ADMIN) {
-            $query->where('created_by', auth()->id());
-        }
-
-        return $query->get();
     }
 
     private function getAllProjects()

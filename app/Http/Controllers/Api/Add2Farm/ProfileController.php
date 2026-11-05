@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Add2Farm;
 
 use App\Http\Controllers\Controller;
+use App\Models\TypeMapping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -334,9 +335,9 @@ class ProfileController extends Controller
     /**
      * Get type label based on type value
      */
-    private function getTypeLabel($type): string
+    private function getTypeLabel(?TypeMapping $typeMapping): string
     {
-        return $this->translationService->getTypeLabel($type);
+        return $this->translationService->getTypeLabel($typeMapping);
     }
 
     private function formatUser($user): array
@@ -350,7 +351,7 @@ class ProfileController extends Controller
             'mobile_number' => $user->mobile_number,
             'full_phone'    => $user->getFullPhoneNumber(),
             'type'          => $user->type,
-            'type_label'    => $this->getTypeLabel($user->type),
+            'type_label'    => $this->getTypeLabel($user->typeMapping),
             'status'        => $user->status,
             'status_label'  => $this->getStatusLabel($user->status),
             'assignment'    => $user->hasAssignment(),

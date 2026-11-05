@@ -13,8 +13,22 @@
     <div class="row">
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <input type="hidden" name="type" value="{{ $type ?? 1 }}">
-
+                <label for="type" class="form-label">Type <span class="text-red">*</span></label>
+                <select class="form-control" name="type" id="type" required="">
+                    @foreach($typeOptions as $typeOption)
+                        <option value="{{ $typeOption->id }}" {{ old('type', $admin->type) == $typeOption->id ? 'selected' : '' }}>{{ $typeOption->type }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
+                <label class="form-label">Parent Type</label>
+                <input type="text" class="form-control" value="{{ $parentType }}" readonly>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-6">
+            <div class="form-group">
                 <label for="name" class="form-label">Formal Name <span class="text-red">*</span></label>
                 <input type="text" class="form-control" name="name" id="name" placeholder="Formal Name" value="{{ old('name', $admin->name) }}" required="" />
                 @error('name')
@@ -24,8 +38,8 @@
         </div>
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="username" class="form-label">Username <span class="text-red">*</span></label>
-                <input type="text" class="form-control" name="username" id="username" placeholder="Username" value="{{ old('username', $admin->username) }}" required="" />
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" name="username" id="username" placeholder="Username" value="{{ old('username', $admin->username) }}" />
                 @error('username')
                     <label id="username-error" class="error" for="username">{{ $message }}</label>
                 @enderror
@@ -56,11 +70,11 @@
         </div>
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="vat_country_code" class="form-label">Country <span class="text-red">*</span></label>
-                <select class="form-control" name="vat_country_code" id="vat_country_code" required>
+                <label for="vat_country_code" class="form-label">Country @if($parentType !== \App\Models\TypeMapping::PARENT_USER)<span class="text-red">*</span>@endif</label>
+                <select class="form-control" name="vat_country_code" id="vat_country_code" {{ $parentType !== \App\Models\TypeMapping::PARENT_USER ? 'required' : '' }}>
                     <option value="">Select Country</option>
                     @foreach($countries as $country)
-                        <option value="{{ $country->id }}" data-dial-code="{{ $country->dial_code ?? '' }}" data-iso-code="{{ strtoupper(substr($country->name,0,2)) }}" {{ (old('vat_country_code')??$admin->vat_country_code) == $country->id ? 'selected' : '' }}>
+                        <option value="{{ $country->id }}" data-dial-code="{{ $country->dial_code ?? '' }}" data-iso-code="{{ strtoupper(substr($country->name,0,2)) }}" {{ (old('vat_country_code') ?? $vatCountryId) == $country->id ? 'selected' : '' }}>
                             {{ $country->name }}
                         </option>
                     @endforeach
@@ -78,8 +92,8 @@
         </div>
         <div class="col-sm-6 col-md-6">
             <div class="form-group">
-                <label for="vat_number" class="form-label">VAT Number <span class="text-red">*</span></label>
-                <input type="text" class="form-control" placeholder="VAT Number" name="vat_number" id="vat_number" value="{{ old('vat_number')??$admin->vat_number }}" required>
+                <label for="vat_number" class="form-label">VAT Number @if($parentType !== \App\Models\TypeMapping::PARENT_USER)<span class="text-red">*</span>@endif</label>
+                <input type="text" class="form-control" placeholder="VAT Number" name="vat_number" id="vat_number" value="{{ old('vat_number')??$admin->vat_number }}" {{ $parentType !== \App\Models\TypeMapping::PARENT_USER ? 'required' : '' }}>
                 @error('vat_number')
                     <label id="vat_number-error" class="error" for="vat_number">{{ $message }}</label>
                 @enderror
@@ -276,7 +290,7 @@
         const form = document.getElementById('admin_form');
         const container = document.getElementById('project-status-container');
         const countrySelect = document.getElementById('vat_country_code');
-        const adminType = parseInt($('input[name="type"]').val());
+        const parentType = @json($parentType);
 
         // Initialize phone code and VAT code on page load
         if (countrySelect && countrySelect.value) {
@@ -348,16 +362,10 @@
         };
 
         // Add admin-specific rules
-        if (adminType !== 4) {
-            validationRules.username = { required: true, maxlength: 255, noSpace: true };
+        if (parentType !== 'Users') {
             validationRules.vat_country_code = { required: true };
             validationRules.vat_number = { required: true, maxlength: 50 };
 
-            validationMessages.username = {
-                required: "The username field is required",
-                maxlength: "Username cannot exceed 255 characters",
-                noSpace: "Spaces are not allowed."
-            };
             validationMessages.vat_country_code = {
                 required: "Please select a country"
             };

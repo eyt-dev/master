@@ -6,6 +6,7 @@ use App\Models\Farm;
 use App\Models\ChicksSupplier;
 use App\Models\Admin;
 use App\Models\FeedSupplier;
+use App\Models\TypeMapping;
 use App\Models\MaterialName;
 use App\Models\MaterialType;
 use App\Models\BreedCategoryMaterialType;
@@ -62,7 +63,7 @@ class DropdownController extends BaseController
         }
 
         // If SUPER_ADMIN (type = 0), show all farms; otherwise show only assigned farms
-        if ((int)$user->type === Admin::SUPER_ADMIN) {
+        if ($user->isSuperAdmin()) {
             $farms = Farm::select('id', 'name')
                 ->with(['flocks' => function ($query) {
                     $query->oldest('flocks.created_at')->select('id', 'farm_id', 'breed');
@@ -180,13 +181,10 @@ class DropdownController extends BaseController
             ], 401);
         }
 
-        $supervisorType = match($user->type) {
-            Admin::PUBLIC_VENDOR => 4,
-            Admin::ADMIN => 3,
-            default => 3,
-        };
+        // Public Vendors get Users as supervisors, everyone else gets Private Vendors
+        $supervisorParentType = $user->hasParentType(TypeMapping::PARENT_PUBLIC_VENDOR) ? TypeMapping::PARENT_USER : TypeMapping::PARENT_PRIVATE_VENDOR;
 
-        $supervisors = Admin::where('type', $supervisorType)
+        $supervisors = Admin::ofParentType($supervisorParentType)
             ->where('created_by', $user->id)
             ->select('id', 'name')
             ->orderBy('name')

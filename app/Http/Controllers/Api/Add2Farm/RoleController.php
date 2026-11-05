@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Add2Farm;
 
 use App\Models\Admin;
 use App\Models\RoleChange;
+use App\Models\TypeMapping;
 use App\Models\UpgradeRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,8 +16,6 @@ use Spatie\Permission\Models\Role;
  */
 class RoleController extends BaseController
 {
-    const FARMER_TYPE = 4;
-
     /**
      * Upgrade own role
      *
@@ -57,19 +56,19 @@ class RoleController extends BaseController
     {
         $user = $request->user();
 
-        switch ((int) $user->type) {
-            case Admin::PUBLIC_VENDOR:
-                return $this->submitFarmAdminUpgradeRequest($user);
-
-            case Admin::PRIVATE_VENDOR:
-                return $this->changeRole($user, Admin::PUBLIC_VENDOR, 'PublicVendor', RoleChange::ACTION_UPGRADE);
-
-            case self::FARMER_TYPE:
-                return $this->changeRole($user, Admin::PRIVATE_VENDOR, 'PrivateVendor', RoleChange::ACTION_UPGRADE);
-
-            default:
-                return $this->notAllowed();
+        if ($user->hasParentType(TypeMapping::PARENT_PUBLIC_VENDOR)) {
+            return $this->submitFarmAdminUpgradeRequest($user);
         }
+
+        if ($user->hasParentType(TypeMapping::PARENT_PRIVATE_VENDOR)) {
+            return $this->changeRole($user, TypeMapping::defaultIdForParent(TypeMapping::PARENT_PUBLIC_VENDOR), 'PublicVendor', RoleChange::ACTION_UPGRADE);
+        }
+
+        if ($user->hasParentType(TypeMapping::PARENT_USER)) {
+            return $this->changeRole($user, TypeMapping::defaultIdForParent(TypeMapping::PARENT_PRIVATE_VENDOR), 'PrivateVendor', RoleChange::ACTION_UPGRADE);
+        }
+
+        return $this->notAllowed();
     }
 
     /**
@@ -93,11 +92,11 @@ class RoleController extends BaseController
     {
         $user = $request->user();
 
-        if ((int) $user->type !== Admin::PRIVATE_VENDOR) {
+        if (!$user->hasParentType(TypeMapping::PARENT_PRIVATE_VENDOR)) {
             return $this->notAllowed();
         }
 
-        return $this->changeRole($user, self::FARMER_TYPE, 'User', RoleChange::ACTION_DOWNGRADE, 'role_downgraded_successfully');
+        return $this->changeRole($user, TypeMapping::defaultIdForParent(TypeMapping::PARENT_USER), 'User', RoleChange::ACTION_DOWNGRADE, 'role_downgraded_successfully');
     }
 
     /**
@@ -140,7 +139,7 @@ class RoleController extends BaseController
      */
     public function upgradeRequests(Request $request)
     {
-        $requests = UpgradeRequest::with('admin')
+        $requests = UpgradeRequest::with('admin.typeMapping')
             ->where('status', UpgradeRequest::STATUS_PENDING)
             ->orderBy('created_at')
             ->paginate($request->per_page ?? 15);
@@ -156,7 +155,7 @@ class RoleController extends BaseController
                     'mobile_number' => $upgradeRequest->admin->getFullPhoneNumber(),
                     'email'         => $upgradeRequest->admin->email,
                     'type'          => $upgradeRequest->admin->type,
-                    'type_label'    => $this->getTypeLabel($upgradeRequest->admin->type),
+                    'type_label'    => $this->getTypeLabel($upgradeRequest->admin->typeMapping),
                 ],
             ];
         }));
@@ -207,7 +206,7 @@ class RoleController extends BaseController
             $farmOwner = Admin::whereKey($pendingRequest->admin_id)->lockForUpdate()->first();
 
             // Only a Farm Owner can be upgraded to Farm Admin
-            if (!$farmOwner || (int) $farmOwner->type !== Admin::PUBLIC_VENDOR) {
+            if (!$farmOwner || !$farmOwner->hasParentType(TypeMapping::PARENT_PUBLIC_VENDOR)) {
                 DB::rollBack();
                 return response()->json([
                     'success' => false,
@@ -216,19 +215,20 @@ class RoleController extends BaseController
             }
 
             $adminRole = Role::where('name', 'Admin')->firstOrFail();
+            $adminTypeId = TypeMapping::defaultIdForParent(TypeMapping::PARENT_ADMIN);
 
             RoleChange::create([
                 'admin_id'           => $farmOwner->id,
                 'action'             => RoleChange::ACTION_APPROVE_UPGRADE,
-                'from_type'          => Admin::PUBLIC_VENDOR,
-                'to_type'            => Admin::ADMIN,
+                'from_type'          => $farmOwner->type,
+                'to_type'            => $adminTypeId,
                 'from_role'          => $farmOwner->roles()->first()?->name,
                 'to_role'            => 'Admin',
                 'upgrade_request_id' => $pendingRequest->id,
                 'changed_by'         => $request->user()->id,
             ]);
 
-            $farmOwner->update(['type' => Admin::ADMIN]);
+            $farmOwner->update(['type' => $adminTypeId]);
             $farmOwner->syncRoles([$adminRole->id]);
 
             $pendingRequest->update([
@@ -334,7 +334,7 @@ class RoleController extends BaseController
                 'success'    => true,
                 'message'    => $this->translationService->get($messageKey),
                 'type'       => $newType,
-                'type_label' => $this->getTypeLabel($newType),
+                'type_label' => $this->getTypeLabel(TypeMapping::find($newType)),
             ]);
 
         } catch (\Exception $e) {

@@ -24,7 +24,7 @@
                                     <form method="POST" class="form-horizontal form-simple" action="{{ route('register', ['username' => request()->segment(1)]) }}" id="register">
                                         @csrf
                                         <input type="hidden" name="url" value="{{ url()->full() }}">
-                                        <input type="hidden" name="userType" value="{{ request()->segment(1)=='vendor' ? 2 : (request()->segment(1)=='register' ? 1 : 3) }}">
+                                        <input type="hidden" name="userType" value="{{ request()->segment(1)=='vendor' ? $userTypeIds['public_vendor'] : (request()->segment(1)=='register' ? $userTypeIds['admin'] : $userTypeIds['private_vendor']) }}">
                                         <div class="mb-2">
                                             <div class="input-group mb-1">
                                                 <div class="input-group-prepend">

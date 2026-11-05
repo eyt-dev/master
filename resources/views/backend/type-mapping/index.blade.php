@@ -12,11 +12,11 @@
 @section('page-header')
     <div class="page-header">
         <div class="page-leftheader">
-            <h4 class="page-title mb-0">Projects</h4>
+            <h4 class="page-title mb-0">Type Mapping</h4>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
                     <a href="#">
-                        <i class="fe fe-layout mr-2 fs-14"></i>Projects
+                        <i class="fe fe-layout mr-2 fs-14"></i>Type Mapping
                     </a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page"><a href="#">Listing</a></li>
@@ -25,7 +25,7 @@
         <div class="page-rightheader">
             <div class="btn btn-list">
                 <a id="add_new" class="btn btn-info" data-toggle="tooltip" title="Add new">
-                    <i class="fe fe-plus mr-1"></i> Add new 
+                    <i class="fe fe-plus mr-1"></i> Add new
                 </a>
             </div>
         </div>
@@ -36,7 +36,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Projects Data</div>
+                    <div class="card-title">Type Mapping Data</div>
                 </div>
                 @if ($errors->any())
                     <div class="alert alert-danger">
@@ -49,13 +49,14 @@
                 @endif
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered text-nowrap" id="project_table">
+                        <table class="table table-bordered text-nowrap" id="type_mapping_table">
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Project Name</th>
+                                    <th>Type</th>
                                     <th>URL</th>
-                                    <th>Created At</th>
+                                    <th>Parent Type</th>
+                                    <th>Project</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -67,11 +68,11 @@
         </div>
     </div>
 
-    <div class="modal fade bd-example-modal-lg" id="project_form_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal fade bd-example-modal-lg" id="type_mapping_form_modal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Add Project</h4>
+                    <h4 class="modal-title">Add Type Mapping</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"> <span aria-hidden="true">×</span> </button>
                 </div>
                 <div class="modal-body"></div>
@@ -87,49 +88,49 @@
     <script>
         $(document).on('click', '#add_new', function() {
             $.ajax({
-                url: "{{ route('project.create', ['username' => $siteSlug]) }}",
+                url: "{{ route('type-mapping.create', ['username' => $siteSlug]) }}",
                 type: "GET",
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Add Project");
-                    $("#project_form_modal").modal('show');
+                    $(".modal-title").html("Add Type Mapping");
+                    $("#type_mapping_form_modal").modal('show');
                     checkValidation();
                 }
             });
         });
-        
-        $(document).on('click', '.edit-project', function() {
-            var id = $(this).data('id');
+
+        $(document).on('click', '.edit-type-mapping', function() {
             $.ajax({
                 url: $(this).data('path'),
                 success: function(response) {
                     $(".modal-body").html(response);
-                    $(".modal-title").html("Update Project");
-                    $("#project_form_modal").modal('show');
+                    $(".modal-title").html("Update Type Mapping");
+                    $("#type_mapping_form_modal").modal('show');
                     checkValidation();
                 }
             });
         });
-        
-        var table = $('#project_table').DataTable({
+
+        var table = $('#type_mapping_table').DataTable({
             processing: true,
             serverSide: true,
             responsive: true,
-            ajax: "{{ route('project.index', ['username' => $siteSlug]) }}",
+            ajax: "{{ route('type-mapping.index', ['username' => $siteSlug]) }}",
             columns: [
                 { data: 'id', name: 'id' },
-                { data: 'project_name', name: 'project_name' },
+                { data: 'type', name: 'type' },
                 { data: 'url', name: 'url' },
-                { data: 'created_at', name: 'created_at' },
+                { data: 'parent_type', name: 'parent_type' },
+                { data: 'project', name: 'project', orderable: false, searchable: false },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ]
         });
-        
-        $(document).on('click', '.delete-project', function() {
+
+        $(document).on('click', '.delete-type-mapping', function() {
             var id = $(this).attr("data-id");
             swal({
                 title: "Are you sure?",
-                text: "Once deleted, you will not be able to recover this project!",
+                text: "Once deleted, you will not be able to recover this type mapping!",
                 icon: "warning",
                 buttons: true,
                 dangerMode: true,
@@ -141,7 +142,7 @@
                     $.ajax({
                         type: "get",
                         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-                        url: "{{ route('project.destroy', ['username' => $siteSlug, 'project' => ':id']) }}".replace(':id', id),
+                        url: "{{ route('type-mapping.destroy', ['username' => $siteSlug, 'type_mapping' => ':id']) }}".replace(':id', id),
                         success: function(response) {
                             swal({
                                 title: response.msg

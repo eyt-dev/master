@@ -27,7 +27,7 @@
         </div>
         <div class="page-rightheader">
             <div class="btn btn-list">
-                <a id="add_new" class="btn btn-info" data-type="4" data-toggle="tooltip" title="Add new">
+                <a id="add_new" class="btn btn-info" data-type="Users" data-toggle="tooltip" title="Add new">
                     <i class="fe fe-plus mr-1"></i> Add new
                 </a>
             </div>
@@ -59,6 +59,8 @@
                                     <th width="30px"></th>
                                     <th>Name</th>
                                     <th>Email</th>
+                                    <th>Type</th>
+                                    <th>URL</th>
                                     <th>Created By</th>
                                     <th>Assigned Farms</th>
                                     @foreach($projects as $project)
@@ -124,6 +126,8 @@
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
             { data: 'name', name: 'name' },
             { data: 'email', name: 'email' },
+            { data: 'type_name', name: 'type_name', orderable: false, searchable: false },
+            { data: 'url', name: 'url', orderable: false, searchable: false },
             {
                 data: 'created_by_name',
                 name: 'created_by_name',
@@ -268,7 +272,7 @@
         // Handle "Add new" button click
         $(document).on('click', '#add_new', function() {
             $.ajax({
-                url: "{{ route('admins.create', ['username' => request()->get('username', $siteSlug)]) }}/4",
+                url: "{{ route('admins.create', ['username' => request()->get('username', $siteSlug)]) }}/" + encodeURIComponent('Users'),
                 type: "GET",
                 success: function(response) {
                     console.log(response);

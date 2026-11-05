@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Admin;
+use App\Models\TypeMapping;
 use Spatie\Permission\Models\Role;
 use Hash;
 use Carbon\Carbon;
@@ -43,7 +44,7 @@ class CreateSuperAdminSeeder extends Seeder
             'username' => 'admin',
             'email' => 'admin@gmail.com',
             'password' => bcrypt('admin@123'),
-            'type' => Admin::ADMIN, // Usually 1
+            'type' => TypeMapping::defaultIdForParent(TypeMapping::PARENT_ADMIN), // Admin category (type_mappings.id)
             'email_verified_at' => null,
             'remember_token' => null,
             'created_by' => $superAdmin->id, // Use the actual superadmin ID

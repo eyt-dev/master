@@ -10,8 +10,9 @@ class CheckAdminType
     /**
      * Handle an incoming request.
      *
-     * Allow access only if user type matches allowed types.
-     * Usage: middleware('check.admin.type:1,2')
+     * Allow access only if the user's category matches an allowed entry.
+     * Entries are "0" (Super Admin) or a type_mappings parent_type.
+     * Usage: middleware('check.admin.type:0,Admin,Public Vendors')
      */
     public function handle(Request $request, Closure $next, ...$allowedTypes)
     {
@@ -24,10 +25,11 @@ class CheckAdminType
             ], 401);
         }
 
-        // Convert string types to integers for comparison
-        $allowedTypes = array_map('intval', $allowedTypes);
+        $allowed = $user->isSuperAdmin()
+            ? in_array((string) \App\Models\Admin::SUPER_ADMIN, $allowedTypes, true)
+            : in_array($user->parent_type, $allowedTypes, true);
 
-        if (!in_array($user->type, $allowedTypes)) {
+        if (!$allowed) {
             return response()->json([
                 'success' => false,
                 'message' => 'You do not have permission to access this resource.',

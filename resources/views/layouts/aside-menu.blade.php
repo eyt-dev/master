@@ -47,11 +47,11 @@
 			<span class="side-menu__label">My Contacts</span></a>
 		</li>
 		@endcan
-		@can('view.project')
+		@can('view.type_mapping')
 			<li class="slide">
-				<a class="side-menu__item"  href="{{route('project.index', ['username' => $siteSlug])}}">
-				<svg class="side-menu__icon" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M19 5v2h-4V5h4M9 5v6H5V5h4m10 8v6h-4v-6h4M9 17v2H5v-2h4M21 3h-8v6h8V3zM11 3H3v10h8V3zm10 8h-8v10h8V11zm-10 4H3v6h8v-6z"/></svg>
-				<span class="side-menu__label">Project</span></a>
+				<a class="side-menu__item"  href="{{route('type-mapping.index', ['username' => $siteSlug])}}">
+				<svg class="side-menu__icon" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z"/></svg>
+				<span class="side-menu__label">Type Mapping</span></a>
 			</li>
 		@endcan
 		@canany(['view.role', 'view.permission'])
@@ -77,10 +77,6 @@
 		<li class="side-item side-item-category mt-4">
 			Customer
 		</li>
-		@php
-			$userType = auth()->user()->type;
-		@endphp
-
 		@can('view.admin')
 			<li class="slide">
 				<a class="side-menu__item" href="{{ route('admins.index', ['username' => $siteSlug]) }}">

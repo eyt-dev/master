@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Farm;
 use App\Models\Admin;
 use App\Models\Hangar;
+use App\Models\TypeMapping;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -64,7 +65,7 @@ class FarmController extends BaseController
         $user = auth()->user();
 
         // If SUPER_ADMIN (type = 0), show all farms; otherwise show only assigned farms
-        if ((int)$user->type === Admin::SUPER_ADMIN) {
+        if ($user->isSuperAdmin()) {
             $userFarms = Farm::query();
         } else {
             // Type 2 (Farm Owner) sees farms they created
@@ -163,7 +164,7 @@ class FarmController extends BaseController
         $user = auth()->user();
 
         // If SUPER_ADMIN (type = 0), access all farms; otherwise check user's assigned farms
-        if ((int)$user->type === Admin::SUPER_ADMIN) {
+        if ($user->isSuperAdmin()) {
             $farm = Farm::with('assignedAdmin', 'creator', 'hangars')->find($id);
         } else {
             $farm = Farm::where(function ($q) use ($user) {
@@ -270,7 +271,7 @@ class FarmController extends BaseController
         $user = auth()->user();
 
         // Type 2 (Farm Owner) can create maximum 3 farms
-        if ($user->type == 2) {
+        if ($user->hasParentType(TypeMapping::PARENT_PUBLIC_VENDOR)) {
             $farmCount = Farm::where('created_by', $user->id)->count();
             if ($farmCount >= 3) {
                 return response()->json([
@@ -471,7 +472,7 @@ class FarmController extends BaseController
         $user = auth()->user();
 
         // If SUPER_ADMIN (type = 0), access all farms; otherwise check user's assigned farms
-        if ((int)$user->type === Admin::SUPER_ADMIN) {
+        if ($user->isSuperAdmin()) {
             $farm = Farm::find($id);
         } else {
             $farm = Farm::where(function ($q) use ($user) {
@@ -664,7 +665,7 @@ class FarmController extends BaseController
         $user = auth()->user();
 
         // If SUPER_ADMIN (type = 0), access all farms; otherwise check user's assigned farms
-        if ((int)$user->type === Admin::SUPER_ADMIN) {
+        if ($user->isSuperAdmin()) {
             $farm = Farm::find($id);
         } else {
             $farm = Farm::where(function ($q) use ($user) {

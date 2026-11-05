@@ -28,6 +28,16 @@ class ProjectHelper
     }
 
     /**
+     * Get Add2Mix project ID
+     *
+     * @return int|null
+     */
+    public static function getAdd2MixProjectId()
+    {
+        return self::getProjectIdByName('Add2Mix');
+    }
+
+    /**
      * Get project by name
      *
      * @param string $projectName

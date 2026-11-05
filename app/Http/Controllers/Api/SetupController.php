@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\AdminProjectStatus;
+use App\Models\TypeMapping;
 use App\Helpers\ProjectHelper;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
@@ -71,7 +72,7 @@ class SetupController extends Controller
         }
 
         // Type 3 (PrivateVendor/Supervisor) and Type 4 (User/Farmer) users
-        $users = Admin::whereIn('type', [3, 4])->get();
+        $users = Admin::ofParentType([TypeMapping::PARENT_PRIVATE_VENDOR, TypeMapping::PARENT_USER])->get();
 
         foreach ($users as $admin) {
             try {
@@ -119,7 +120,7 @@ class SetupController extends Controller
         }
 
         // Type 4 (User/Farmer) users
-        $farmers = Admin::where('type', 4)->get();
+        $farmers = Admin::ofParentType(TypeMapping::PARENT_USER)->get();
 
         foreach ($farmers as $farmer) {
             try {
@@ -163,7 +164,7 @@ class SetupController extends Controller
         }
 
         // Type 3 (PrivateVendor/Supervisor) users
-        $supervisors = Admin::where('type', 3)->get();
+        $supervisors = Admin::ofParentType(TypeMapping::PARENT_PRIVATE_VENDOR)->get();
 
         foreach ($supervisors as $supervisor) {
             try {

@@ -1322,6 +1322,8 @@ class DailyRecordController extends BaseController
                 $hangarData['chicks_weight'] = DecimalHelper::formatInteger($totalChicksWeight);
             } else {
                 $hangarData['eggs_tray_30'] = (int) $totalEggsTray;
+                $hangarData['eggs_tray'] = round($totalEggs / 30, 2);
+                $hangarData['eggs_box'] = round($totalEggs / 360, 2);
                 $hangarData['eggs_count'] = (int) $totalEggs;
                 $hangarData['eggs_weight'] = DecimalHelper::formatInteger($totalEggsWeight);
             }
@@ -1353,6 +1355,8 @@ class DailyRecordController extends BaseController
             'flock_status'    => $flockStatus,
             'feed'        => DecimalHelper::formatInteger($totalFeed),
             'eggs_tray_30'    => (int) $totalEggsTray,
+            'eggs_tray'       => round($totalEggs / 30, 2),
+            'eggs_box'        => round($totalEggs / 360, 2),
             'eggs_count'      => (int) $totalEggs,
             'eggs_weight'     => DecimalHelper::formatInteger($totalEggsWeight),
             'chicks_weight'   => DecimalHelper::formatInteger($totalChicksWeight),

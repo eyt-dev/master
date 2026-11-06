@@ -729,7 +729,7 @@ class FlockController extends BaseController
             }
         } else {
             // Layer flock
-            $data['total_eggs'] = $totalEggs;
+            $data['total_eggs'] = DecimalHelper::formatInteger($totalEggs);
             $data['avg_production'] = $this->formatDecimal($avgProduction) . '%';
             if ($isHarvested) {
                 $data['fcr'] = DecimalHelper::formatInteger($fcr);
@@ -1430,7 +1430,7 @@ class FlockController extends BaseController
             }
         } else {
             // Layer: send total eggs for both active and harvested/ended flocks
-            $response['total_eggs'] = $totalEggs;
+            $response['total_eggs'] = DecimalHelper::formatInteger($totalEggs);
 
             if (!$isHarvested) {
                 // Layer active: send production rate %

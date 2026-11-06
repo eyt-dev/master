@@ -64,7 +64,7 @@ class FeedStockController extends BaseController
                     'hangar_id' => $hangar->id,
                     'hangar_name' => $hangar->name,
                     'status' => $hangar->status,
-                    'remaining_quantity' => DecimalHelper::formatInteger(FeedStockHelper::hangarRemaining($hangar->id)),
+                    'remaining_quantity' => round(FeedStockHelper::hangarRemaining($hangar->id)) . ' kg',
                 ];
             });
 

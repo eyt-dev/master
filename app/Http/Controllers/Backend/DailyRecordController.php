@@ -225,8 +225,8 @@ class DailyRecordController extends Controller
         // Show breed-specific fields
         if ($breedType === 'Layer') {
             $html .= '<br>Eggs(C): ' . DecimalHelper::formatInteger($hangar['eggs_count']) .
-                     '<br>Tray: ' . DecimalHelper::formatInteger($hangar['eggs_tray']) .
-                     ' | Box: ' . DecimalHelper::formatEuropean((float) $hangar['eggs_box'], 1) .
+                     '<br>Tray: ' . DecimalHelper::formatEuropean((float) $hangar['eggs_tray'], 2) .
+                     ' | Box: ' . DecimalHelper::formatEuropean((float) $hangar['eggs_box'], 2) .
                      '<br>Eggs Weight: ' . $eggsWeight . ' g';
         } else {
             $html .= '<br>Chicks Weight: ' . $chicksWeightG . ' g';

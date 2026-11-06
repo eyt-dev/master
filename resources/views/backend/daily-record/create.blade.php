@@ -262,9 +262,9 @@
                 row.find('.eggs-hint').text('');
                 return;
             }
-            var tray = Math.floor(eggs / 30);
-            var box = (eggs / 360).toFixed(1).replace('.', ',');
-            row.find('.eggs-hint').text('(Box: ' + box + ' | Tray: ' + formatIntegerEU(tray) + ')');
+            var tray = (eggs / 30).toFixed(2).replace('.', ',');
+            var box = (eggs / 360).toFixed(2).replace('.', ',');
+            row.find('.eggs-hint').text('(Box: ' + box + ' | Tray: ' + tray + ')');
         }
 
         $(document).on('input', '.eggs-count-input', function() {

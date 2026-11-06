@@ -32,12 +32,12 @@ class DailyRecord extends Model
 
     public function getEggsTrayAttribute()
     {
-        return intdiv((int) $this->eggs_count, 30);
+        return round((int) $this->eggs_count / 30, 2);
     }
 
     public function getEggsBoxAttribute()
     {
-        return round((int) $this->eggs_count / 360, 1);
+        return round((int) $this->eggs_count / 360, 2);
     }
 
     public function farm()

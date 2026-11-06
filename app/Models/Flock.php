@@ -100,19 +100,30 @@ class Flock extends Model
      */
     public function latestChicksWeightByHangar(): array
     {
-        $weights = [];
+        return array_map(fn ($day) => $day['weight'], $this->latestWeighedDayByHangar());
+    }
+
+    /**
+     * Latest weighed day per hangar: the date and chicks weight of the most recent daily record with a weight.
+     */
+    public function latestWeighedDayByHangar(): array
+    {
+        $days = [];
 
         $records = DailyRecord::where('flock_id', $this->id)
             ->where('chicks_weight', '>', 0)
             ->orderBy('record_date', 'desc')
             ->orderBy('id', 'desc')
-            ->get(['hangar_id', 'chicks_weight']);
+            ->get(['hangar_id', 'record_date', 'chicks_weight']);
 
         foreach ($records as $record) {
-            $weights[$record->hangar_id] ??= (float) $record->chicks_weight;
+            $days[$record->hangar_id] ??= [
+                'date' => $record->record_date->toDateString(),
+                'weight' => (float) $record->chicks_weight,
+            ];
         }
 
-        return $weights;
+        return $days;
     }
 
     /**
@@ -224,24 +235,30 @@ class Flock extends Model
     }
 
     /**
-     * FCR per hangar as percentages:
-     * act_fcr = chicks weight today ÷ feed per bird of the day before × 100.
-     * trend_fcr = feed per bird of the day before ÷ chicks weight today.
+     * FCR per hangar. "Today" is the hangar's latest weighed day, and the day before is the latest history date before it.
+     * act_fcr = chicks weight today ÷ feed_per_bird_sum of the day before × 100.
+     * trend_fcr = feed_per_bird_sum of the day before ÷ chicks weight today.
      */
     public function fcrByHangar(): array
     {
-        $feedPerBird = $this->feedPerBirdByHangar();
-        $weights = $this->latestChicksWeightByHangar();
+        $history = $this->feedPerBirdHistoryByHangar();
+        $weighedDays = $this->latestWeighedDayByHangar();
 
         $result = [];
         foreach ($this->flockHangarAllocations as $allocation) {
             $hangarId = $allocation->hangar_id;
-            $birds = $feedPerBird[$hangarId] ?? 0;
-            $weight = $weights[$hangarId] ?? 0;
+            $weighedDay = $weighedDays[$hangarId] ?? null;
+            $weight = $weighedDay['weight'] ?? 0;
+
+            // History is newest first, so the first entry before the weighed day is the day before.
+            $dayBefore = $weighedDay
+                ? collect($history[$hangarId] ?? [])->first(fn ($entry) => $entry['date'] < $weighedDay['date'])
+                : null;
+            $feedPerBirdSum = $dayBefore['feed_per_bird_sum'] ?? 0;
 
             $result[$hangarId] = [
-                'act_fcr' => $birds > 0 && $weight > 0 ? round($weight / $birds * 100, 2) : 0,
-                'trend_fcr' => $birds > 0 && $weight > 0 ? round($birds / $weight, 2) : 0,
+                'act_fcr' => $feedPerBirdSum > 0 && $weight > 0 ? round($weight / $feedPerBirdSum * 100, 2) : 0,
+                'trend_fcr' => $feedPerBirdSum > 0 && $weight > 0 ? round($feedPerBirdSum / $weight, 2) : 0,
             ];
         }
 

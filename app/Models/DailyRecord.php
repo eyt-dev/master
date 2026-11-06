@@ -15,7 +15,6 @@ class DailyRecord extends Model
         'hangar_id',
         'flock_id',
         'feed_kg',
-        'eggs_tray_30',
         'eggs_count',
         'mortality',
         'notes',
@@ -27,9 +26,19 @@ class DailyRecord extends Model
     protected $casts = [
         'record_date' => 'date',
         'feed_kg' => 'decimal:2',
-        'eggs_weight' => 'decimal:2',
+        'eggs_weight' => 'integer',
         'chicks_weight' => 'decimal:2',
     ];
+
+    public function getEggsTrayAttribute()
+    {
+        return intdiv((int) $this->eggs_count, 30);
+    }
+
+    public function getEggsBoxAttribute()
+    {
+        return round((int) $this->eggs_count / 360, 1);
+    }
 
     public function farm()
     {

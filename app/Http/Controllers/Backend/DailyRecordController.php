@@ -81,7 +81,8 @@ class DailyRecordController extends Controller
                                 'hangar_name' => $record->hangar->name ?? 'N/A',
                                 'allocated_quantity' => $flockHangar->quantity ?? 'N/A',
                                 'feed_kg' => $record->feed_kg,
-                                'eggs_tray_30' => $record->eggs_tray_30,
+                                'eggs_tray' => $record->eggs_tray,
+                                'eggs_box' => $record->eggs_box,
                                 'eggs_count' => $record->eggs_count,
                                 'eggs_weight' => $record->eggs_weight,
                                 'chicks_weight' => $record->chicks_weight,
@@ -223,9 +224,10 @@ class DailyRecordController extends Controller
 
         // Show breed-specific fields
         if ($breedType === 'Layer') {
-            $html .= '<br>Eggs(T): ' . DecimalHelper::formatInteger($hangar['eggs_tray_30']) .
-                     '<br>Eggs(C): ' . DecimalHelper::formatInteger($hangar['eggs_count']) .
-                     '<br>Eggs Weight: ' . $eggsWeight . ' kg';
+            $html .= '<br>Eggs(C): ' . DecimalHelper::formatInteger($hangar['eggs_count']) .
+                     '<br>Tray: ' . DecimalHelper::formatInteger($hangar['eggs_tray']) .
+                     ' | Box: ' . DecimalHelper::formatEuropean((float) $hangar['eggs_box'], 1) .
+                     '<br>Eggs Weight: ' . $eggsWeight . ' g';
         } else {
             $html .= '<br>Chicks Weight: ' . $chicksWeightG . ' g';
         }
@@ -254,7 +256,7 @@ class DailyRecordController extends Controller
                 return null;
             }
 
-            foreach (['feed_kg', 'eggs_weight', 'chicks_weight'] as $field) {
+            foreach (['feed_kg', 'chicks_weight'] as $field) {
                 if (isset($record[$field])) {
                     $record[$field] = DecimalHelper::parseEuropean($record[$field]);
 
@@ -264,7 +266,7 @@ class DailyRecordController extends Controller
                 }
             }
 
-            foreach (['eggs_tray_30', 'eggs_count', 'mortality'] as $field) {
+            foreach (['eggs_count', 'eggs_weight', 'mortality'] as $field) {
                 if (isset($record[$field])) {
                     $record[$field] = DecimalHelper::parseEuropeanInteger($record[$field]);
 
@@ -415,6 +417,13 @@ class DailyRecordController extends Controller
             }
 
             if ($breedType === 'Layer') {
+                if (!isset($record['eggs_count']) || $record['eggs_count'] === '' || $record['eggs_count'] === null) {
+                    $error = ['hangar_records' => 'Eggs Count is required for Layer breeds.'];
+                    if ($request->expectsJson()) {
+                        return response()->json(['success' => false, 'errors' => $error], 422);
+                    }
+                    return back()->withErrors($error);
+                }
                 if (!isset($record['eggs_weight']) || $record['eggs_weight'] === '' || $record['eggs_weight'] === null) {
                     $error = ['hangar_records' => 'Eggs Weight is required for Layer breeds.'];
                     if ($request->expectsJson()) {
@@ -469,9 +478,8 @@ class DailyRecordController extends Controller
                     'hangar_id' => $record['hangar_id'],
                     'flock_id' => $request->flock_id,
                     'feed_kg' => (float)($record['feed_kg'] ?? 0),
-                    'eggs_tray_30' => (int)($record['eggs_tray_30'] ?? 0),
                     'eggs_count' => (int)($record['eggs_count'] ?? 0),
-                    'eggs_weight' => (float)($record['eggs_weight'] ?? 0),
+                    'eggs_weight' => (int)($record['eggs_weight'] ?? 0),
                     'chicks_weight' => (float)($record['chicks_weight'] ?? 0),
                     'mortality' => (int)($record['mortality'] ?? 0),
                     'notes' => $record['notes'] ?? null,
@@ -629,6 +637,9 @@ class DailyRecordController extends Controller
             }
 
             if ($breedType === 'Layer') {
+                if (!isset($record['eggs_count']) || $record['eggs_count'] === '' || $record['eggs_count'] === null) {
+                    return back()->withErrors(['hangar_records' => 'Eggs Count is required for Layer breeds.']);
+                }
                 if (!isset($record['eggs_weight']) || $record['eggs_weight'] === '' || $record['eggs_weight'] === null) {
                     return back()->withErrors(['hangar_records' => 'Eggs Weight is required for Layer breeds.']);
                 }
@@ -695,9 +706,8 @@ class DailyRecordController extends Controller
                     'hangar_id' => $record['hangar_id'],
                     'flock_id' => $request->flock_id,
                     'feed_kg' => (float)($record['feed_kg'] ?? 0),
-                    'eggs_tray_30' => (int)($record['eggs_tray_30'] ?? 0),
                     'eggs_count' => (int)($record['eggs_count'] ?? 0),
-                    'eggs_weight' => (float)($record['eggs_weight'] ?? 0),
+                    'eggs_weight' => (int)($record['eggs_weight'] ?? 0),
                     'chicks_weight' => (float)($record['chicks_weight'] ?? 0),
                     'mortality' => (int)($record['mortality'] ?? 0),
                     'notes' => $record['notes'] ?? null,

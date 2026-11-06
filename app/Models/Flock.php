@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class Flock extends Model
 {
@@ -161,6 +162,56 @@ class Flock extends Model
         }
 
         return $result;
+    }
+
+    /**
+     * Feed per bird history per hangar, one entry per date that has a daily record for that hangar.
+     * For date D: feed_yesterday_kg = feed of D-1 (0 if none), live_birds = allocated - mortality up to D - harvested up to D.
+     * mortality and total_harvested are cumulative up to D, the same figures used in the live bird calculation.
+     */
+    public function feedPerBirdHistoryByHangar(): array
+    {
+        $dailyByHangar = DailyRecord::where('flock_id', $this->id)
+            ->selectRaw('hangar_id, record_date, SUM(feed_kg) as feed, SUM(mortality) as mortality')
+            ->groupBy('hangar_id', 'record_date')
+            ->orderBy('record_date')
+            ->get()
+            ->groupBy('hangar_id');
+
+        $harvestedByHangar = FlockEnd::where('flock_id', $this->id)
+            ->selectRaw('hangar_id, sale_date, SUM(total_birds_harvested) as harvested')
+            ->groupBy('hangar_id', 'sale_date')
+            ->get()
+            ->groupBy('hangar_id');
+
+        $history = [];
+        foreach ($this->flockHangarAllocations as $allocation) {
+            $hangarId = $allocation->hangar_id;
+            $days = $dailyByHangar->get($hangarId, collect());
+            $harvests = $harvestedByHangar->get($hangarId, collect());
+            $feedByDate = $days->pluck('feed', 'record_date');
+
+            $cumulativeMortality = 0;
+            $history[$hangarId] = [];
+
+            foreach ($days as $day) {
+                $cumulativeMortality += (int) $day->mortality;
+                $cumulativeHarvested = (int) $harvests->where('sale_date', '<=', $day->record_date)->sum('harvested');
+                $liveBirds = max(0, $allocation->quantity - $cumulativeMortality - $cumulativeHarvested);
+                $feedYesterday = (float) ($feedByDate[Carbon::parse($day->record_date)->subDay()->toDateString()] ?? 0);
+
+                $history[$hangarId][] = [
+                    'date' => $day->record_date,
+                    'feed_yesterday_kg' => round($feedYesterday, 2),
+                    'mortality' => $cumulativeMortality,
+                    'total_harvested' => $cumulativeHarvested,
+                    'live_birds' => $liveBirds,
+                    'feed_per_bird' => $liveBirds > 0 ? round($feedYesterday * 1000 / $liveBirds, 2) : 0,
+                ];
+            }
+        }
+
+        return $history;
     }
 
     /**

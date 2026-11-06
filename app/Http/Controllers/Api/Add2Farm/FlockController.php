@@ -642,10 +642,11 @@ class FlockController extends BaseController
         $liveBirdsByHangar = $flock->liveBirdsByHangar();
         $latestWeightByHangar = $flock->latestChicksWeightByHangar();
         $feedPerBirdByHangar = $flock->feedPerBirdByHangar();
+        $feedPerBirdHistoryByHangar = $flock->feedPerBirdHistoryByHangar();
         $fcrByHangar = $flock->fcrByHangar();
         $flockFeedConsumed = 0;
 
-        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock, $liveBirdsByHangar, $latestWeightByHangar, $feedPerBirdByHangar, $fcrByHangar, &$flockFeedConsumed) {
+        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock, $liveBirdsByHangar, $latestWeightByHangar, $feedPerBirdByHangar, $feedPerBirdHistoryByHangar, $fcrByHangar, &$flockFeedConsumed) {
             // Get daily records for this hangar
             $hangarDailyRecords = DailyRecord::where('flock_id', $flock->id)
                 ->where('hangar_id', $allocation->hangar_id)
@@ -680,6 +681,7 @@ class FlockController extends BaseController
                 'avg_weight'    => $avgWeight ? DecimalHelper::formatEuropean(round($avgWeight), 0) . ' g' : '0 g',
                 'act_fcr'       => $this->formatDecimal($fcrByHangar[$allocation->hangar_id]['act_fcr'] ?? 0) . '%',
                 'trend_fcr'     => DecimalHelper::formatInteger($fcrByHangar[$allocation->hangar_id]['trend_fcr'] ?? 0),
+                'feed_per_bird_history' => $feedPerBirdHistoryByHangar[$allocation->hangar_id] ?? [],
             ];
         })->toArray();
 

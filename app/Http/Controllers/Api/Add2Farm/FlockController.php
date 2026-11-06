@@ -645,9 +645,11 @@ class FlockController extends BaseController
         $feedPerBirdHistoryByHangar = $flock->feedPerBirdHistoryByHangar();
         $hangarFeedPerBirdValues = $flock->flockHangarAllocations->map(fn ($allocation) => $this->hangarFeedPerBird($feedPerBirdHistoryByHangar[$allocation->hangar_id] ?? [], $isBroiler))->all();
         $fcrByHangar = $flock->fcrByHangar();
+        $avgProductionByHangar = $flock->avgProductionByHangar();
+        $flockAvgProduction = $avgProductionByHangar ? array_sum($avgProductionByHangar) / count($avgProductionByHangar) : 0;
         $flockFeedConsumed = 0;
 
-        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock, $liveBirdsByHangar, $latestWeightByHangar, $feedPerBirdByHangar, $feedPerBirdHistoryByHangar, $isBroiler, $fcrByHangar, &$flockFeedConsumed) {
+        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock, $liveBirdsByHangar, $latestWeightByHangar, $feedPerBirdByHangar, $feedPerBirdHistoryByHangar, $isBroiler, $fcrByHangar, $avgProductionByHangar, &$flockFeedConsumed) {
             // Get daily records for this hangar
             $hangarDailyRecords = DailyRecord::where('flock_id', $flock->id)
                 ->where('hangar_id', $allocation->hangar_id)
@@ -682,6 +684,7 @@ class FlockController extends BaseController
                 'avg_weight'    => $avgWeight ? DecimalHelper::formatEuropean(round($avgWeight), 0) . ' g' : '0 g',
                 'act_fcr'       => $this->formatDecimal($fcrByHangar[$allocation->hangar_id]['act_fcr'] ?? 0) . ' %',
                 'trend_fcr'     => $this->formatDecimal($fcrByHangar[$allocation->hangar_id]['trend_fcr'] ?? 0),
+                ...($isBroiler ? [] : ['avg_production' => $this->formatDecimal($avgProductionByHangar[$allocation->hangar_id] ?? 0) . ' %']),
                 'feed_per_bird_history' => $feedPerBirdHistoryByHangar[$allocation->hangar_id] ?? [],
             ];
         })->toArray();
@@ -730,11 +733,9 @@ class FlockController extends BaseController
         } else {
             // Layer flock
             $data['total_eggs'] = DecimalHelper::formatInteger($totalEggs);
-            $data['avg_production'] = $this->formatDecimal($avgProduction) . ' %';
+            $data['avg_production'] = $this->formatDecimal($flockAvgProduction) . ' %';
             if ($isHarvested) {
                 $data['fcr'] = DecimalHelper::formatInteger($fcr);
-            } else {
-                $data['production_rate'] = $this->formatDecimal($avgProduction) . ' %';
             }
         }
 
@@ -1302,6 +1303,7 @@ class FlockController extends BaseController
         $liveBirdsByHangar = $flock->liveBirdsByHangar();
         $latestWeightByHangar = $flock->latestChicksWeightByHangar();
         $fcrByHangar = $flock->fcrByHangar();
+        $avgProductionByHangar = $flock->avgProductionByHangar();
 
         // Determine flock type (Broiler or Layer)
         $breedType = $this->extractBreedType($flock->breed);
@@ -1316,7 +1318,7 @@ class FlockController extends BaseController
             $this->hangarFeedPerBird($feedPerBirdHistoryByHangar[$allocation->hangar_id] ?? [], $isBroiler)
         )->all();
 
-        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock, $liveBirdsByHangar, $latestWeightByHangar, $feedPerBirdHistoryByHangar, $isBroiler, $fcrByHangar) {
+        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock, $liveBirdsByHangar, $latestWeightByHangar, $feedPerBirdHistoryByHangar, $isBroiler, $fcrByHangar, $avgProductionByHangar) {
             // Get daily records for this hangar
             $hangarDailyRecords = DailyRecord::where('flock_id', $flock->id)
                 ->where('hangar_id', $allocation->hangar_id)
@@ -1350,6 +1352,7 @@ class FlockController extends BaseController
                 'avg_weight'    => $avgWeight ? DecimalHelper::formatEuropean(round($avgWeight), 0) . ' g' : '0 g',
                 'act_fcr'       => $this->formatDecimal($fcrByHangar[$allocation->hangar_id]['act_fcr'] ?? 0) . ' %',
                 'trend_fcr'     => $this->formatDecimal($fcrByHangar[$allocation->hangar_id]['trend_fcr'] ?? 0),
+                ...($isBroiler ? [] : ['avg_production' => $this->formatDecimal($avgProductionByHangar[$allocation->hangar_id] ?? 0) . ' %']),
             ];
         })->toArray();
 
@@ -1433,12 +1436,9 @@ class FlockController extends BaseController
             // Layer: send total eggs for both active and harvested/ended flocks
             $response['total_eggs'] = $totalEggs;
 
-            if (!$isHarvested) {
-                // Layer active: send production rate %
-                $recordCount = $dailyRecords->count();
-                $avgProduction = $totalBird > 0 && $recordCount > 0 ? ($totalEggs / ($totalBird * $recordCount)) * 100 : 0;
-                $response['production_rate'] = $this->formatDecimal($avgProduction) . ' %';
-            }
+            // Flock avg production = average of the hangars' avg production
+            $flockAvgProduction = $avgProductionByHangar ? array_sum($avgProductionByHangar) / count($avgProductionByHangar) : 0;
+            $response['avg_production'] = $this->formatDecimal($flockAvgProduction) . ' %';
         }
 
         return $response;

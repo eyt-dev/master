@@ -235,6 +235,35 @@ class Flock extends Model
     }
 
     /**
+     * Avg production % per hangar = eggs of the hangar's latest record day ÷ alive birds × 100.
+     * Alive birds are the hangar's current live birds (liveBirdsByHangar).
+     */
+    public function avgProductionByHangar(): array
+    {
+        $liveBirds = $this->liveBirdsByHangar();
+
+        // Eggs per hangar on its latest record day (ordered newest first, so the first row per hangar is the latest)
+        $latestEggs = DailyRecord::where('flock_id', $this->id)
+            ->selectRaw('hangar_id, record_date, SUM(eggs_count) as eggs')
+            ->groupBy('hangar_id', 'record_date')
+            ->orderBy('record_date', 'desc')
+            ->toBase()
+            ->get()
+            ->unique('hangar_id')
+            ->pluck('eggs', 'hangar_id');
+
+        $result = [];
+        foreach ($this->flockHangarAllocations as $allocation) {
+            $hangarId = $allocation->hangar_id;
+            $birds = $liveBirds[$hangarId] ?? 0;
+            $eggs = (float) ($latestEggs[$hangarId] ?? 0);
+            $result[$hangarId] = $birds > 0 ? $eggs / $birds * 100 : 0;
+        }
+
+        return $result;
+    }
+
+    /**
      * FCR per hangar. "Today" is the hangar's latest weighed day, and the day before is the latest history date before it.
      * act_fcr = chicks weight today ÷ feed_per_bird_sum of the day before × 100.
      * trend_fcr = feed_per_bird_sum of the day before ÷ chicks weight today.

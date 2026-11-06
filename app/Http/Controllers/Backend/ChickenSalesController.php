@@ -223,6 +223,11 @@ class ChickenSalesController extends Controller
             $saleDate = \Carbon\Carbon::createFromFormat('Y-m-d', $request->sale_date);
             $netWeight = $request->gross_weight - ($request->cages_weight * $request->cages_count);
 
+            if ($this->hasHarvestOnDate($request->flock_id, $request->hangar_id, $saleDate)) {
+                DB::rollBack();
+                return redirect()->back()->withErrors('A chicken sale already exists for this hangar on this sale date.');
+            }
+
             $flockEnd = FlockEnd::create([
                 'flock_id' => $request->flock_id,
                 'slaughter_id' => $request->slaughter_id,
@@ -268,6 +273,18 @@ class ChickenSalesController extends Controller
             DB::rollBack();
             return redirect()->back()->withErrors('Failed to create chicken sale: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * One chicken sale per flock, hangar and sale date.
+     */
+    private function hasHarvestOnDate($flockId, $hangarId, $saleDate, $exceptId = null): bool
+    {
+        return FlockEnd::where('flock_id', $flockId)
+            ->where('hangar_id', $hangarId)
+            ->whereDate('sale_date', $saleDate->toDateString())
+            ->when($exceptId, fn ($q) => $q->where('id', '!=', $exceptId))
+            ->exists();
     }
 
     public function edit($siteUrl, $id)
@@ -373,6 +390,11 @@ class ChickenSalesController extends Controller
             $remainingBirds = $availableBirds - $totalBirdsHarvested;
             $saleDate = \Carbon\Carbon::createFromFormat('Y-m-d', $request->sale_date);
             $netWeight = $request->gross_weight - ($request->cages_weight * $request->cages_count);
+
+            if ($this->hasHarvestOnDate($request->flock_id, $request->hangar_id, $saleDate, $flockEnd->id)) {
+                DB::rollBack();
+                return redirect()->back()->withErrors('A chicken sale already exists for this hangar on this sale date.');
+            }
 
             $flockEnd->update([
                 'flock_id' => $request->flock_id,

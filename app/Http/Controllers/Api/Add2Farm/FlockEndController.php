@@ -305,6 +305,14 @@ class FlockEndController extends BaseController
 
             $saleDate = \Carbon\Carbon::createFromFormat('d-m-Y', $request->sale_date);
 
+            if ($this->hasHarvestOnDate($flock->id, $request->hangar_id, $saleDate)) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A harvest record already exists for this hangar on this sale date.',
+                ], 422);
+            }
+
             $flockEnd = FlockEnd::create([
                 'flock_id' => $flock->id,
                 'slaughter_id' => $request->slaughter_id,
@@ -485,6 +493,14 @@ class FlockEndController extends BaseController
             $remainingBirds = $availableBirds - $totalBirdsHarvested;
 
             $saleDate = \Carbon\Carbon::createFromFormat('d-m-Y', $request->sale_date);
+
+            if ($this->hasHarvestOnDate($flockEnd->flock_id, $flockEnd->hangar_id, $saleDate, $flockEnd->id)) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A harvest record already exists for this hangar on this sale date.',
+                ], 422);
+            }
 
             $flockEnd->update([
                 'slaughter_id' => $request->slaughter_id,
@@ -778,6 +794,18 @@ class FlockEndController extends BaseController
                 'net_weight' => $this->formatDecimal($netWeight),
             ],
         ]);
+    }
+
+    /**
+     * One harvest record per flock, hangar and sale date.
+     */
+    private function hasHarvestOnDate($flockId, $hangarId, $saleDate, $exceptId = null): bool
+    {
+        return FlockEnd::where('flock_id', $flockId)
+            ->where('hangar_id', $hangarId)
+            ->whereDate('sale_date', $saleDate->toDateString())
+            ->when($exceptId, fn ($q) => $q->where('id', '!=', $exceptId))
+            ->exists();
     }
 
     private function formatFlockEnd(FlockEnd $flockEnd): array

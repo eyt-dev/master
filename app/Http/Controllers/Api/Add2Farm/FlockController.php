@@ -1305,7 +1305,8 @@ class FlockController extends BaseController
 
         // Determine flock type (Broiler or Layer)
         $breedType = $this->extractBreedType($flock->breed);
-        $isBroiler = $breedType === 'Broiler';
+        $isLayer = $breedType === 'Layer';
+        $isBroiler = !$isLayer;
 
         // Same calculation as the flock detail: broiler sums daily values per hangar, layer averages the last 7 days
         $feedPerBirdHistoryByHangar = $flock->feedPerBirdHistoryByHangar();

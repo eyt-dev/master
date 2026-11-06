@@ -646,7 +646,7 @@ class FlockController extends BaseController
         $fcrByHangar = $flock->fcrByHangar();
         $flockFeedConsumed = 0;
 
-        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock, $liveBirdsByHangar, $latestWeightByHangar, $feedPerBirdByHangar, $feedPerBirdHistoryByHangar, $fcrByHangar, &$flockFeedConsumed) {
+        $hangarAllocations = $flock->flockHangarAllocations->map(function ($allocation) use ($flock, $liveBirdsByHangar, $latestWeightByHangar, $feedPerBirdByHangar, $feedPerBirdHistoryByHangar, $isBroiler, $fcrByHangar, &$flockFeedConsumed) {
             // Get daily records for this hangar
             $hangarDailyRecords = DailyRecord::where('flock_id', $flock->id)
                 ->where('hangar_id', $allocation->hangar_id)
@@ -677,7 +677,7 @@ class FlockController extends BaseController
                 ...$this->mortalityFields($totalMortality, $flock, $allocation->hangar_id),
                 'feed' => DecimalHelper::formatInteger($feedConsumed) . ' kg',
                 'remaining_feed' => DecimalHelper::formatInteger($feedRemaining) . ' kg',
-                'feed_per_bird' => DecimalHelper::formatInteger($feedPerBirdByHangar[$allocation->hangar_id] ?? 0) . ' g',
+                'feed_per_bird' => DecimalHelper::formatInteger($this->hangarFeedPerBird($feedPerBirdHistoryByHangar[$allocation->hangar_id] ?? [], $isBroiler)) . ' g',
                 'avg_weight'    => $avgWeight ? DecimalHelper::formatEuropean(round($avgWeight), 0) . ' g' : '0 g',
                 'act_fcr'       => $this->formatDecimal($fcrByHangar[$allocation->hangar_id]['act_fcr'] ?? 0) . '%',
                 'trend_fcr'     => DecimalHelper::formatInteger($fcrByHangar[$allocation->hangar_id]['trend_fcr'] ?? 0),
@@ -1263,6 +1263,20 @@ class FlockController extends BaseController
             'performance_trend' => $performanceTrend,
             'is_layer' => $isLayer,
         ];
+    }
+
+    /**
+     * Hangar feed per bird from its history: broiler sums the daily values, layer averages them.
+     */
+    private function hangarFeedPerBird(array $history, bool $isBroiler): int
+    {
+        $values = array_column($history, 'feed_per_bird');
+
+        if (!$values) {
+            return 0;
+        }
+
+        return $isBroiler ? array_sum($values) : (int) round(array_sum($values) / count($values));
     }
 
     public function formatFlock(Flock $flock): array

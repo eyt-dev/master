@@ -730,11 +730,11 @@ class FlockController extends BaseController
         } else {
             // Layer flock
             $data['total_eggs'] = DecimalHelper::formatInteger($totalEggs);
-            $data['avg_production'] = $this->formatDecimal($avgProduction) . '%';
+            $data['avg_production'] = $this->formatDecimal($avgProduction) . ' %';
             if ($isHarvested) {
                 $data['fcr'] = DecimalHelper::formatInteger($fcr);
             } else {
-                $data['production_rate'] = $this->formatDecimal($avgProduction) . '%';
+                $data['production_rate'] = $this->formatDecimal($avgProduction) . ' %';
             }
         }
 
@@ -1228,7 +1228,7 @@ class FlockController extends BaseController
                     'avg_production' => $this->formatDecimal($avgProd),
                     'feed' => DecimalHelper::formatInteger($weekFeed),
                     'mortality_value' => (int) $weekMortality,
-                    'mortality_rate' => $this->formatDecimal($mortalityPct) . '%',
+                    'mortality_rate' => $this->formatDecimal($mortalityPct) . ' %',
                 ];
             } else {
                 // BROILER - Avg Weight, FCR, Mortality
@@ -1248,14 +1248,14 @@ class FlockController extends BaseController
                     'avg_weight' => DecimalHelper::formatEuropean(round($weekWeight), 0),
                     'fcr' => DecimalHelper::formatInteger($fcr),
                     'mortality_value' => (int) $weekMortality,
-                    'mortality_rate' => $this->formatDecimal($mortalityPct) . '%',
+                    'mortality_rate' => $this->formatDecimal($mortalityPct) . ' %',
                 ];
             }
 
             $mortalityTrend[] = [
                 'week' => 'Week ' . $week,
                 'mortality_value' => (int) $weekMortality,
-                'mortality_rate' => $this->formatDecimal($mortalityPct) . '%',
+                'mortality_rate' => $this->formatDecimal($mortalityPct) . ' %',
             ];
         }
 
@@ -1431,13 +1431,13 @@ class FlockController extends BaseController
             }
         } else {
             // Layer: send total eggs for both active and harvested/ended flocks
-            $response['total_eggs'] = DecimalHelper::formatInteger($totalEggs);
+            $response['total_eggs'] = $totalEggs;
 
             if (!$isHarvested) {
                 // Layer active: send production rate %
                 $recordCount = $dailyRecords->count();
                 $avgProduction = $totalBird > 0 && $recordCount > 0 ? ($totalEggs / ($totalBird * $recordCount)) * 100 : 0;
-                $response['production_rate'] = $this->formatDecimal($avgProduction) . '%';
+                $response['production_rate'] = $this->formatDecimal($avgProduction) . ' %';
             }
         }
 

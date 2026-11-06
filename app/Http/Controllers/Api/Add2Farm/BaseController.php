@@ -70,7 +70,7 @@ class BaseController extends Controller
 
         return [
             'mortality_value' => (int) $mortality,
-            'mortality_rate'  => $this->formatDecimal(round($rate, 2)) . '%',
+            'mortality_rate'  => $this->formatDecimal(round($rate, 2)) . ' %',
         ];
     }
 

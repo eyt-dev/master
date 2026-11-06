@@ -805,7 +805,7 @@ class FlockEndController extends BaseController
             'total_birds' => $flockEnd->available_birds,
             'total_birds_harvested' => $flockEnd->total_birds_harvested,
             'mortality_value' => $mortality,
-            'mortality_rate' => $this->formatDecimal($mortalityRate) . '%',
+            'mortality_rate' => $this->formatDecimal($mortalityRate) . ' %',
             'alive_birds' => $flockEnd->remaining_birds,
             'gross_weight' => $this->formatDecimal($flockEnd->total_weight),
             'net_weight' => $this->formatDecimal($flockEnd->net_weight),

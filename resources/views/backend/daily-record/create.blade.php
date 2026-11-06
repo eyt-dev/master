@@ -164,8 +164,7 @@
                             var breedType = breedTypeFromResponse;
 
                             // Format decimal values with comma as separator
-                            // Feed is entered in grams (integer); stored as kg in the database
-                            var feedValue = existingData.feed_kg ? Math.round(parseFloat(existingData.feed_kg) * 1000).toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) : '';
+                            var feedValue = existingData.feed_kg ? parseFloat(existingData.feed_kg).toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) : '';
                             var eggsWeightValue = formatIntegerEU(existingData.eggs_weight || '');
                             var chicksWeightValue = existingData.chicks_weight ? parseFloat(existingData.chicks_weight).toLocaleString('de-DE', {minimumFractionDigits: 0, maximumFractionDigits: 0}) : '';
                             var eggsCountValue = formatIntegerEU(existingData.eggs_count || '');
@@ -177,14 +176,14 @@
                                     <div class="row">
                                         <div class="col-md-12 mb-3">
                                             <h6 class="mb-0" style="color: #007bff;">
-                                                <i class="fe fe-home mr-2"></i>${hangar.name} (Allocated Birds: ${formatIntegerEU(hangar.quantity)}, Remaining Feed: ${hangar.remaining} g)
+                                                <i class="fe fe-home mr-2"></i>${hangar.name} (Allocated Birds: ${formatIntegerEU(hangar.quantity)}, Remaining Feed: ${hangar.remaining} kg)
                                             </h6>
                                         </div>
                                     </div>
                                     <div class="row">
                                         <div class="col-md-3">
                                             <div class="form-group mb-0">
-                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Feed (g) <span class="text-red">*</span></label>
+                                                <label class="form-label mb-1" style="font-size: 0.85rem;">Feed (Kg) <span class="text-red">*</span></label>
                                                 <input type="text" inputmode="numeric" class="form-control feed-input" name="hangar_feed[${hangar.id}]"
                                                     value="${feedValue}" placeholder="0" data-hangar-id="${hangar.id}" required />
                                             </div>
@@ -281,9 +280,7 @@
 
             container.find('.hangar-record-row').each(function() {
                 var hangarId = $(this).data('hangar-id');
-                // Feed is entered in grams; convert to kg for storage and stock calculations
-                var feedG = Math.round(parseEuropeanNumber($(this).find('.feed-input').val()) || 0);
-                var feedKg = feedG / 1000;
+                var feedKg = parseEuropeanNumber($(this).find('.feed-input').val()) || 0;
                 var eggsCount = parseEuropeanNumber($(this).find('.eggs-count-input').val()) || 0;
                 var eggsWeight = parseEuropeanNumber($(this).find('.eggs-weight-input').val()) || 0;
                 var chicksWeight = parseEuropeanNumber($(this).find('.chicks-weight-input').val()) || 0;

@@ -25,7 +25,7 @@ class DailyRecord extends Model
 
     protected $casts = [
         'record_date' => 'date',
-        'feed_kg' => 'decimal:3',
+        'feed_kg' => 'integer',
         'eggs_weight' => 'integer',
         'chicks_weight' => 'decimal:2',
     ];

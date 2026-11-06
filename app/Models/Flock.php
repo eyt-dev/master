@@ -208,7 +208,7 @@ class Flock extends Model
                     'mortality' => $cumulativeMortality,
                     'total_harvested' => $cumulativeHarvested,
                     'live_birds' => $liveBirds,
-                    'feed_per_bird' => $liveBirds > 0 ? round($feedYesterday * 1000 / $liveBirds, 2) : 0,
+                    'feed_per_bird' => $liveBirds > 0 ? (int) round($feedYesterday * 1000 / $liveBirds) : 0,
                 ];
             }
 

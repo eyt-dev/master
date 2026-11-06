@@ -175,12 +175,14 @@ class Flock extends Model
             ->selectRaw('hangar_id, record_date, SUM(feed_kg) as feed, SUM(mortality) as mortality')
             ->groupBy('hangar_id', 'record_date')
             ->orderBy('record_date')
+            ->toBase()
             ->get()
             ->groupBy('hangar_id');
 
         $harvestedByHangar = FlockEnd::where('flock_id', $this->id)
             ->selectRaw('hangar_id, sale_date, SUM(total_birds_harvested) as harvested')
             ->groupBy('hangar_id', 'sale_date')
+            ->toBase()
             ->get()
             ->groupBy('hangar_id');
 
@@ -209,6 +211,8 @@ class Flock extends Model
                     'feed_per_bird' => $liveBirds > 0 ? round($feedYesterday * 1000 / $liveBirds, 2) : 0,
                 ];
             }
+
+            $history[$hangarId] = array_reverse($history[$hangarId]);
         }
 
         return $history;

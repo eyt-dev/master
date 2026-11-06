@@ -1409,15 +1409,15 @@ class FlockController extends BaseController
         $conditionState = ['Active' => 'active', 'Harvesting' => 'harvesting', 'Ended' => 'ended'][$status];
         $response['flock-condition'] = ($isBroiler ? 'broiler-' : 'layer-') . $conditionState;
 
+        // Average chicks weight across hangars (same value and format as the flock detail endpoint)
+        $avgWeight = $flock->averageLatestChicksWeight();
+        $response['avg_weight'] = $avgWeight ? DecimalHelper::formatEuropean(round($avgWeight), 0) . ' g' : 'N/A';
+
         // Calculate metrics based on flock type and status
         if ($isBroiler) {
             if ($isHarvested) {
                 // Broiler harvesting/ended: send FCR (feed kg per kg of harvested weight)
                 $response['avg_fcr'] = DecimalHelper::formatInteger($fcr);
-            } else {
-                // Broiler active: send avg weight
-                $avgWeight = $flock->averageLatestChicksWeight();
-                $response['avg_weight'] = $avgWeight ? DecimalHelper::formatEuropean(round($avgWeight), 0) . ' g' : '0 g';
             }
         } else {
             // Layer: send total eggs for both active and harvested/ended flocks

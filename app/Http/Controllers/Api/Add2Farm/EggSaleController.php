@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\Add2Farm;
 
+use App\Helpers\DecimalHelper;
+use App\Models\DailyRecord;
 use App\Models\EggSale;
 use App\Models\Flock;
 use Carbon\Carbon;
@@ -225,6 +227,122 @@ class EggSaleController extends BaseController
             'message' => 'Egg sale created successfully.',
             'data' => $item,
         ], 201);
+    }
+
+    /**
+     * Egg sales in the same envelope as the bird sales list (GET /sales with `type: eggs`).
+     *
+     * Totals and `sale_flocks` cover every matching sale; `data` is paginated like the bird list;
+     * `months` gives the totals per month-year. Avg. weight is each flock's last recorded eggs_weight.
+     */
+    public function salesList(Request $request)
+    {
+        $sales = EggSale::with('farm:id,name', 'flock:id,name,farm_id,breed', 'wholesaler:id,name')
+            ->whereIn('farm_id', $this->getAccessibleFarmIds())
+            ->when($request->query('farm_id'), fn ($q, $farmId) => $q->where('farm_id', $farmId))
+            ->when($request->query('flock_id'), fn ($q, $flockId) => $q->where('flock_id', $flockId))
+            ->orderByDesc('sale_date')
+            ->orderByDesc('id')
+            ->get();
+
+        // Latest eggs_weight per flock: daily records newest first, keep the first row of each flock
+        $lastEggWeights = DailyRecord::whereIn('flock_id', $sales->pluck('flock_id')->unique())
+            ->whereNotNull('eggs_weight')
+            ->orderByDesc('record_date')
+            ->orderByDesc('id')
+            ->get(['flock_id', 'eggs_weight'])
+            ->unique('flock_id')
+            ->pluck('eggs_weight', 'flock_id');
+
+        $perPage = min(max((int) $request->query('per_page', 20), 1), 100);
+        $page = max((int) $request->query('page', 1), 1);
+        $total = $sales->count();
+
+        $items = $sales->forPage($page, $perPage)
+            ->map(fn (EggSale $sale) => $this->eggSaleItem($sale, $lastEggWeights[$sale->flock_id] ?? null))
+            ->values();
+
+        $months = [];
+        foreach ($sales as $sale) {
+            $key = $sale->sale_date->format('Y-m');
+
+            $months[$key] ??= [
+                'label' => $sale->sale_date->format('F Y'),
+                'sales_count' => 0,
+                'total_eggs' => 0,
+                'total_trays' => 0,
+                'total_boxes' => 0.0,
+            ];
+
+            $months[$key]['sales_count']++;
+            $months[$key]['total_eggs'] += $sale->total_eggs;
+            $months[$key]['total_trays'] += $sale->tray;
+            $months[$key]['total_boxes'] += (float) $sale->box;
+        }
+
+        foreach ($months as $key => $month) {
+            $months[$key]['total_boxes'] = $this->formatDecimal($month['total_boxes']);
+        }
+
+        $weights = $sales->map(fn (EggSale $sale) => $lastEggWeights[$sale->flock_id] ?? null)->filter(fn ($w) => $w !== null);
+
+        $stock = EggSale::stockByFlock($sales->pluck('flock_id'));
+
+        $saleFlocks = $sales->groupBy('flock_id')->map(function ($flockSales) use ($stock) {
+            $sale = $flockSales->first();
+            $row = $stock[$sale->flock_id];
+
+            return [
+                'id' => $sale->flock_id,
+                'name' => $sale->flock->name ?? null,
+                'farm_id' => $sale->farm_id,
+                'farm_name' => $sale->farm->name ?? null,
+                'breed' => $sale->flock->breed ?? null,
+                'eggs_produced' => $row['total'],
+                'eggs_sold' => $row['sold'],
+                'remaining_eggs' => $row['remaining'],
+            ];
+        })->values();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Egg sales retrieved successfully.',
+            'total_sales' => $total,
+            'total_eggs_sold' => (int) $sales->sum('total_eggs'),
+            'total_trays_sold' => (int) $sales->sum('tray'),
+            'total_boxes_sold' => $this->formatDecimal($sales->sum(fn (EggSale $sale) => (float) $sale->box)),
+            'avg_weight' => $weights->isNotEmpty() ? DecimalHelper::formatInteger(round($weights->avg())) . ' g' : null,
+            'sale_flocks' => $saleFlocks,
+            'months' => (object) $months,
+            'data' => [
+                'current_page' => $page,
+                'data' => $items,
+                'last_page' => max(1, (int) ceil($total / $perPage)),
+                'per_page' => $perPage,
+                'total' => $total,
+            ],
+        ]);
+    }
+
+    private function eggSaleItem(EggSale $sale, $eggWeight): array
+    {
+        return [
+            'id' => $sale->id,
+            'sale_type' => 'eggs',
+            'month_year' => $sale->sale_date->format('Y-m'),
+            'sale_date' => $sale->sale_date->format('Y-m-d'),
+            'flock_id' => $sale->flock_id,
+            'flock_name' => $sale->flock->name ?? null,
+            'farm_id' => $sale->farm_id,
+            'farm_name' => $sale->farm->name ?? null,
+            'wholesaler_id' => $sale->egg_wholesaler_id,
+            'wholesaler_name' => $sale->wholesaler->name ?? null,
+            'tray' => $sale->tray,
+            'box' => $this->formatDecimal($sale->box),
+            'total_eggs' => $sale->total_eggs,
+            'avg_weight' => $eggWeight !== null ? DecimalHelper::formatInteger($eggWeight) . ' g' : null,
+            'created_at' => $sale->created_at?->toISOString(),
+        ];
     }
 
     /**

@@ -93,6 +93,12 @@ class SaleController extends BaseController
             ], 401);
         }
 
+        // `type` header (or query) = eggs: egg sales in the same envelope, grouped by month-year
+        $type = strtolower(trim((string) $request->header('type', $request->query('type', 'birds'))));
+        if ($type === 'eggs') {
+            return app(EggSaleController::class)->salesList($request);
+        }
+
         $accessibleFarmIds = $this->getAccessibleFarmIds();
         $perPage = min(max((int) $request->query('per_page', 20), 1), 100);
 

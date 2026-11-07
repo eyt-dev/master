@@ -237,8 +237,8 @@ class EggSaleController extends BaseController
      * Avg. weight (from daily records' eggs_weight, rows with no weight ignored):
      * - sale item: average of the flock's latest day (e.g. hangar 1 and 2 of that day)
      * - sale_flocks: average of all the flock's records
-     * - months: average of the records of the flocks sold that month, in that month
-     * - top level: average of all records of the flocks in this list
+     * - months: average of the sale items' avg weights in that month
+     * - top level: average of the month averages
      */
     public function salesList(Request $request)
     {
@@ -286,26 +286,32 @@ class EggSaleController extends BaseController
                 'total_eggs' => 0,
                 'total_trays' => 0,
                 'total_boxes' => 0.0,
-                'flock_ids' => [],
+                'weights' => [],
             ];
 
             $months[$key]['sales_count']++;
             $months[$key]['total_eggs'] += $sale->total_eggs;
             $months[$key]['total_trays'] += $sale->tray;
             $months[$key]['total_boxes'] += (float) $sale->box;
-            $months[$key]['flock_ids'][$sale->flock_id] = true;
+            if (isset($latestDayAvg[$sale->flock_id])) {
+                $months[$key]['weights'][] = $latestDayAvg[$sale->flock_id];
+            }
         }
 
+        // Month avg = average of the sale avg weights in that month
+        $monthAverages = [];
         foreach ($months as $key => $month) {
-            $monthFlockIds = array_keys($month['flock_ids']);
-            $monthWeights = $weightRecords->flatten(1)->filter(
-                fn (DailyRecord $r) => in_array($r->flock_id, $monthFlockIds, true) && $r->record_date->format('Y-m') === $key
-            );
+            $monthAverage = $month['weights'] ? array_sum($month['weights']) / count($month['weights']) : null;
+            $monthAverages[] = $monthAverage;
 
-            $months[$key]['avg_weight'] = $this->formatWeight($monthWeights->avg('eggs_weight'));
+            $months[$key]['avg_weight'] = $this->formatWeight($monthAverage);
             $months[$key]['total_boxes'] = $this->formatDecimal($month['total_boxes']);
-            unset($months[$key]['flock_ids']);
+            unset($months[$key]['weights']);
         }
+
+        // Overall avg = average of the month averages
+        $monthAverages = array_filter($monthAverages, fn ($value) => $value !== null);
+        $overallWeight = $monthAverages ? array_sum($monthAverages) / count($monthAverages) : null;
 
         $stock = EggSale::stockByFlock($sales->pluck('flock_id'));
 
@@ -333,7 +339,7 @@ class EggSaleController extends BaseController
             'total_eggs_sold' => (int) $sales->sum('total_eggs'),
             'total_trays_sold' => (int) $sales->sum('tray'),
             'total_boxes_sold' => $this->formatDecimal($sales->sum(fn (EggSale $sale) => (float) $sale->box)),
-            'avg_weight' => $this->formatWeight($weightRecords->flatten(1)->avg('eggs_weight')),
+            'avg_weight' => $this->formatWeight($overallWeight),
             'sale_flocks' => $saleFlocks,
             'months' => (object) $months,
             'data' => [

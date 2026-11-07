@@ -643,7 +643,7 @@ class FlockController extends BaseController
         $feedPerBirdHistoryByHangar = $flock->feedPerBirdHistoryByHangar();
 
         // Generate chart data
-        $chartData = $this->generateChartData($dailyRecords, $flock, $totalBird, $isLayer, $flock->feedPerBirdHistoryByHangar(true), $endDate);
+        $chartData = $this->generateChartData($dailyRecords, $flock, $totalBird, $isLayer, $flock->feedPerBirdHistoryByHangar(true));
         $hangarFeedPerBirdValues = $flock->flockHangarAllocations->map(fn ($allocation) => $this->hangarFeedPerBird($feedPerBirdHistoryByHangar[$allocation->hangar_id] ?? [], $isBroiler))->all();
         $fcrByHangar = $flock->fcrByHangar();
         $avgProductionByHangar = $flock->avgProductionByHangar();
@@ -1189,15 +1189,17 @@ class FlockController extends BaseController
      * as the current figures: feed_per_bird_history (live birds, feed per bird and its running sum)
      * and the day's own records. Periods only exist where records exist; nothing is filled with zero.
      */
-    private function generateChartData($dailyRecords, $flock, $totalBird, $isLayer, $feedPerBirdHistoryByHangar, $endDate)
+    private function generateChartData($dailyRecords, $flock, $totalBird, $isLayer, $feedPerBirdHistoryByHangar)
     {
         if ($dailyRecords->isEmpty()) {
             return null;
         }
 
         $start = Carbon::parse($flock->start_date)->startOfDay();
-        $ageDays = max(0, (int) $start->diffInDays($endDate ? Carbon::parse($endDate) : Carbon::now(), false));
-        $frequency = $this->chartFrequency($ageDays);
+
+        // Frequency follows the number of days that have daily record data (distinct record dates, gaps not counted)
+        $dataDays = $dailyRecords->map(fn ($record) => $record->record_date->toDateString())->unique()->count();
+        $frequency = $this->chartFrequency($dataDays);
 
         // Day values per hangar and date (one record per flock-hangar-date, summed defensively)
         $recordsByHangarDate = [];
@@ -1249,6 +1251,9 @@ class FlockController extends BaseController
         }
 
         $performanceTrend = [];
+        $avgProductionTrend = [];
+        $feedIntakeTrend = [];
+        $mortalityTrend = [];
         foreach ($periods as $period) {
             $cutoff = $period['end'];
             $dateSet = array_flip($period['dates']);
@@ -1280,13 +1285,20 @@ class FlockController extends BaseController
                 }
                 $feedPerBird = $hangarFeedPerBird ? array_sum($hangarFeedPerBird) / count($hangarFeedPerBird) : null;
 
+                $avgProduction = $periodLiveBirds > 0 ? $this->formatDecimal($periodEggs / $periodLiveBirds * 100) : null;
+
                 $performanceTrend[] = [
                     'week' => $period['label'],
-                    'avg_production' => $periodLiveBirds > 0 ? $this->formatDecimal($periodEggs / $periodLiveBirds * 100) : null,
+                    'avg_production' => $avgProduction,
                     'feed' => DecimalHelper::formatInteger($periodFeed),
                     'feed_per_bird' => $feedPerBird !== null ? $this->formatDecimal($feedPerBird) : null,
                     'mortality_value' => $periodMortality,
                     'mortality_rate' => $this->formatDecimal($mortalityPct) . ' %',
+                ];
+
+                $avgProductionTrend[] = [
+                    'week' => $period['label'],
+                    'avg_production' => $avgProduction,
                 ];
             } else {
                 // Latest value per hangar at period end, then averaged across hangars
@@ -1305,18 +1317,33 @@ class FlockController extends BaseController
                     'mortality_rate' => $this->formatDecimal($mortalityPct) . ' %',
                 ];
             }
+
+            // Separate series for the same period: feed intake and mortality
+            $feedIntakeTrend[] = [
+                'week' => $period['label'],
+                'feed' => DecimalHelper::formatInteger($periodFeed),
+            ];
+
+            $mortalityTrend[] = [
+                'week' => $period['label'],
+                'mortality_value' => $periodMortality,
+                'mortality_rate' => $this->formatDecimal($mortalityPct) . ' %',
+            ];
         }
 
         return [
             'flock_type' => $isLayer ? 'Layer' : 'Broiler',
             'chart_frequency' => $frequency,
             'performance_trend' => $performanceTrend,
+            'avg_production_trend' => $avgProductionTrend,
+            'feed_intake_trend' => $feedIntakeTrend,
+            'mortality_trend' => $mortalityTrend,
             'is_layer' => $isLayer,
         ];
     }
 
     /**
-     * Chart frequency by flock age in days: daily under 15, weekly to 90, every 2 weeks to 180, monthly after.
+     * Chart frequency by the number of days with daily record data: daily under 15, weekly to 90, every 2 weeks to 180, monthly after.
      */
     private function chartFrequency(int $ageDays): string
     {

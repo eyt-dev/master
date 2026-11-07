@@ -233,7 +233,12 @@ class EggSaleController extends BaseController
      * Egg sales in the same envelope as the bird sales list (GET /sales with `type: eggs`).
      *
      * Totals and `sale_flocks` cover every matching sale; `data` is paginated like the bird list;
-     * `months` gives the totals per month-year. Avg. weight is each flock's last recorded eggs_weight.
+     * `months` gives the totals per month-year.
+     * Avg. weight (from daily records' eggs_weight, rows with no weight ignored):
+     * - sale item: average of the flock's latest day (e.g. hangar 1 and 2 of that day)
+     * - sale_flocks: average of all the flock's records
+     * - months: average of the records of the flocks sold that month, in that month
+     * - top level: average of all records of the flocks in this list
      */
     public function salesList(Request $request)
     {
@@ -245,21 +250,30 @@ class EggSaleController extends BaseController
             ->orderByDesc('id')
             ->get();
 
-        // Latest eggs_weight per flock: daily records newest first, keep the first row of each flock
-        $lastEggWeights = DailyRecord::whereIn('flock_id', $sales->pluck('flock_id')->unique())
-            ->whereNotNull('eggs_weight')
-            ->orderByDesc('record_date')
-            ->orderByDesc('id')
-            ->get(['flock_id', 'eggs_weight'])
-            ->unique('flock_id')
-            ->pluck('eggs_weight', 'flock_id');
+        // Daily-record weights of the flocks in this list; rows with no weight are ignored
+        $weightRecords = DailyRecord::whereIn('flock_id', $sales->pluck('flock_id')->unique())
+            ->where('eggs_weight', '>', 0)
+            ->get(['flock_id', 'record_date', 'eggs_weight'])
+            ->groupBy('flock_id');
+
+        // Per flock: average of its latest day's rows, and average of all its rows
+        $latestDayAvg = [];
+        $overallAvg = [];
+        foreach ($weightRecords as $flockId => $records) {
+            $latestDate = $records->sortByDesc(fn (DailyRecord $r) => $r->record_date->timestamp)->first()->record_date->format('Y-m-d');
+
+            $latestDayAvg[$flockId] = $records
+                ->filter(fn (DailyRecord $r) => $r->record_date->format('Y-m-d') === $latestDate)
+                ->avg('eggs_weight');
+            $overallAvg[$flockId] = $records->avg('eggs_weight');
+        }
 
         $perPage = min(max((int) $request->query('per_page', 20), 1), 100);
         $page = max((int) $request->query('page', 1), 1);
         $total = $sales->count();
 
         $items = $sales->forPage($page, $perPage)
-            ->map(fn (EggSale $sale) => $this->eggSaleItem($sale, $lastEggWeights[$sale->flock_id] ?? null))
+            ->map(fn (EggSale $sale) => $this->eggSaleItem($sale, $latestDayAvg[$sale->flock_id] ?? null))
             ->values();
 
         $months = [];
@@ -272,23 +286,30 @@ class EggSaleController extends BaseController
                 'total_eggs' => 0,
                 'total_trays' => 0,
                 'total_boxes' => 0.0,
+                'flock_ids' => [],
             ];
 
             $months[$key]['sales_count']++;
             $months[$key]['total_eggs'] += $sale->total_eggs;
             $months[$key]['total_trays'] += $sale->tray;
             $months[$key]['total_boxes'] += (float) $sale->box;
+            $months[$key]['flock_ids'][$sale->flock_id] = true;
         }
 
         foreach ($months as $key => $month) {
-            $months[$key]['total_boxes'] = $this->formatDecimal($month['total_boxes']);
-        }
+            $monthFlockIds = array_keys($month['flock_ids']);
+            $monthWeights = $weightRecords->flatten(1)->filter(
+                fn (DailyRecord $r) => in_array($r->flock_id, $monthFlockIds, true) && $r->record_date->format('Y-m') === $key
+            );
 
-        $weights = $sales->map(fn (EggSale $sale) => $lastEggWeights[$sale->flock_id] ?? null)->filter(fn ($w) => $w !== null);
+            $months[$key]['avg_weight'] = $this->formatWeight($monthWeights->avg('eggs_weight'));
+            $months[$key]['total_boxes'] = $this->formatDecimal($month['total_boxes']);
+            unset($months[$key]['flock_ids']);
+        }
 
         $stock = EggSale::stockByFlock($sales->pluck('flock_id'));
 
-        $saleFlocks = $sales->groupBy('flock_id')->map(function ($flockSales) use ($stock) {
+        $saleFlocks = $sales->groupBy('flock_id')->map(function ($flockSales) use ($stock, $overallAvg) {
             $sale = $flockSales->first();
             $row = $stock[$sale->flock_id];
 
@@ -301,6 +322,7 @@ class EggSaleController extends BaseController
                 'eggs_produced' => $row['total'],
                 'eggs_sold' => $row['sold'],
                 'remaining_eggs' => $row['remaining'],
+                'avg_weight' => $this->formatWeight($overallAvg[$sale->flock_id] ?? null),
             ];
         })->values();
 
@@ -311,7 +333,7 @@ class EggSaleController extends BaseController
             'total_eggs_sold' => (int) $sales->sum('total_eggs'),
             'total_trays_sold' => (int) $sales->sum('tray'),
             'total_boxes_sold' => $this->formatDecimal($sales->sum(fn (EggSale $sale) => (float) $sale->box)),
-            'avg_weight' => $weights->isNotEmpty() ? DecimalHelper::formatInteger(round($weights->avg())) . ' g' : null,
+            'avg_weight' => $this->formatWeight($weightRecords->flatten(1)->avg('eggs_weight')),
             'sale_flocks' => $saleFlocks,
             'months' => (object) $months,
             'data' => [
@@ -340,9 +362,14 @@ class EggSaleController extends BaseController
             'tray' => $sale->tray,
             'box' => $this->formatDecimal($sale->box),
             'total_eggs' => $sale->total_eggs,
-            'avg_weight' => $eggWeight !== null ? DecimalHelper::formatInteger($eggWeight) . ' g' : null,
+            'avg_weight' => $this->formatWeight($eggWeight),
             'created_at' => $sale->created_at?->toISOString(),
         ];
+    }
+
+    private function formatWeight(?float $weight): ?string
+    {
+        return $weight === null ? null : DecimalHelper::formatEuropean($weight, 2) . ' g';
     }
 
     /**

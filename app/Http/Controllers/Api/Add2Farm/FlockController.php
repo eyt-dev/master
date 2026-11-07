@@ -1229,9 +1229,11 @@ class FlockController extends BaseController
 
                 $hangarDays[$hangarId][] = [
                     'date' => $entry['date'],
+                    'feed_yesterday_kg' => $entry['feed_yesterday_kg'],
                     'live_birds' => $entry['live_birds'],
                     'feed_per_bird' => $entry['feed_per_bird'],
                     'feed_per_bird_sum' => $entry['feed_per_bird_sum'],
+                    'previous_feed_per_bird_sum' => $previousFeedPerBirdSum,
                     'weight' => $weight,
                     'act_fcr' => $validFcr ? $weight / $previousFeedPerBirdSum * 100 : null,
                     'trend_fcr' => $validFcr ? $previousFeedPerBirdSum / $weight : null,
@@ -1261,86 +1263,132 @@ class FlockController extends BaseController
             $cutoff = $period['end'];
             $dateSet = array_flip($period['dates']);
 
-            // Period totals: sums of the daily values inside the period
-            $periodRecords = $dailyRecords->filter(fn ($record) => isset($dateSet[$record->record_date->toDateString()]));
-            $periodMortality = (int) $periodRecords->sum('mortality');
-            $cumulativeMortality += $periodMortality;
-            $periodFeed = (float) $periodRecords->sum('feed_kg');
-            $periodEggs = (int) $periodRecords->sum('eggs_count');
-            $mortalityPct = $totalBird > 0 ? ($periodMortality / $totalBird) * 100 : 0;
-
-            // Per hangar detail for the period: latest values at the period end and the daily rows used
-            $hangarDetails = [];
-            $periodLiveBirds = 0;
-            foreach ($hangarDays as $hangarId => $rows) {
-                $hangarDetails[] = $this->hangarChartDetail($hangarId, $rows, $recordsByHangarDate[$hangarId] ?? [], $dateSet, $cutoff);
-                foreach ($rows as $row) {
-                    if (isset($dateSet[$row['date']])) {
-                        $periodLiveBirds += $row['live_birds'];
-                    }
-                }
-            }
-
-            // Flock value = average of the hangars' latest values
-            $latest = array_column($hangarDetails, 'latest');
-            $average = function (string $key) use ($latest) {
-                $values = array_filter(array_column($latest, $key), fn ($v) => $v !== null);
-
-                return $values ? array_sum($values) / count($values) : null;
-            };
-
-            // Same duration and supporting data for every chart in this period
+            // Same duration for every chart in this period
             $duration = [
                 'label' => $period['label'],
                 'start_date' => $period['start'],
                 'end_date' => $period['end'],
             ];
 
-            // Temporary: supporting data to verify each chart value; remove after testing
-            $calc = [
-                'dates' => $period['dates'],
-                'totals' => [
-                    'mortality' => $periodMortality,
-                    'cumulative_mortality' => $cumulativeMortality,
-                    'feed_kg' => $periodFeed,
-                    'eggs' => $periodEggs,
-                    'live_birds_sum' => $periodLiveBirds,
-                    'allocated_birds' => $totalBird,
-                ],
-                'hangars' => $hangarDetails,
-            ];
+            // Mortality: daily sums inside the period, then the running total
+            $periodRecords = $dailyRecords->filter(fn ($record) => isset($dateSet[$record->record_date->toDateString()]));
+            $mortalityDaily = [];
+            foreach ($period['dates'] as $date) {
+                $mortalityDaily[] = [
+                    'date' => $date,
+                    'mortality' => (int) $periodRecords->filter(fn ($record) => $record->record_date->toDateString() === $date)->sum('mortality'),
+                ];
+            }
+            $periodMortality = array_sum(array_column($mortalityDaily, 'mortality'));
+            $cumulativeMortality += $periodMortality;
+
+            // Per hangar inputs for the period
+            $eggsDaily = [];
+            $feedHangars = [];
+            $weightHangars = [];
+            $fcrHangars = [];
+            $periodLiveBirds = 0;
+            foreach ($hangarDays as $hangarId => $rows) {
+                $dayRecords = $recordsByHangarDate[$hangarId] ?? [];
+                $periodRows = array_values(array_filter($rows, fn ($row) => isset($dateSet[$row['date']])));
+
+                // Layer avg production inputs: eggs and alive birds of each day
+                foreach ($periodRows as $row) {
+                    $eggsDaily[] = [
+                        'hangar_id' => $hangarId,
+                        'date' => $row['date'],
+                        'eggs' => $dayRecords[$row['date']]['eggs'] ?? 0,
+                        'live_birds' => $row['live_birds'],
+                    ];
+                    $periodLiveBirds += $row['live_birds'];
+                }
+
+                // Layer feed per bird inputs: last 7 daily values up to the period end
+                $last7 = array_slice(array_values(array_filter($rows, fn ($row) => $row['date'] <= $cutoff)), -7);
+                $feedHangars[] = [
+                    'hangar_id' => $hangarId,
+                    'daily' => array_map(fn ($row) => [
+                        'date' => $row['date'],
+                        'previous_day_feed_kg' => $row['feed_yesterday_kg'],
+                        'live_birds' => $row['live_birds'],
+                        'feed_per_bird' => $row['feed_per_bird'],
+                    ], $periodRows),
+                    'last_7' => array_map(fn ($row) => [
+                        'date' => $row['date'],
+                        'feed_per_bird' => $row['feed_per_bird'],
+                    ], $last7),
+                    'rolling_7' => $last7 ? array_sum(array_column($last7, 'feed_per_bird')) / count($last7) : null,
+                ];
+
+                // Broiler avg weight input: latest weight up to the period end
+                $weightRow = $this->latestChartRow($rows, 'weight', $cutoff);
+                $weightHangars[] = [
+                    'hangar_id' => $hangarId,
+                    'date' => $weightRow['date'] ?? null,
+                    'weight' => $weightRow['weight'] ?? null,
+                ];
+
+                // Broiler trend FCR inputs: latest valid trend FCR up to the period end
+                $fcrRow = $this->latestChartRow($rows, 'trend_fcr', $cutoff);
+                $fcrHangars[] = [
+                    'hangar_id' => $hangarId,
+                    'date' => $fcrRow['date'] ?? null,
+                    'previous_feed_per_bird_sum' => $fcrRow['previous_feed_per_bird_sum'] ?? null,
+                    'weight' => $fcrRow['weight'] ?? null,
+                    'trend_fcr' => $fcrRow['trend_fcr'] ?? null,
+                ];
+            }
+
+            // Flock value = average over hangars of their values
+            $mean = function (array $values) {
+                $values = array_filter($values, fn ($v) => $v !== null);
+
+                return $values ? array_sum($values) / count($values) : null;
+            };
 
             if ($isLayer) {
+                $periodEggs = array_sum(array_column($eggsDaily, 'eggs'));
                 $avgProduction = $periodLiveBirds > 0 ? $periodEggs / $periodLiveBirds * 100 : null;
-                $feedPerBird = $average('feed_per_bird_rolling_7');
+                $feedPerBird = $mean(array_column($feedHangars, 'rolling_7'));
 
                 $charts['avg_production_chart'][] = [
                     'duration' => $duration,
                     'formula' => '(total eggs of day / alive birds of day) * 100 %; period: (total eggs in period / sum of daily alive birds in period) * 100 %',
                     'value' => $avgProduction !== null ? $this->formatDecimal($avgProduction) : null,
-                    'calc' => $calc,
+                    'calc' => [
+                        'daily' => $eggsDaily,
+                        'total_eggs' => $periodEggs,
+                        'total_live_birds' => $periodLiveBirds,
+                    ],
                 ];
                 $charts['feed_intake_chart'][] = [
                     'duration' => $duration,
                     'formula' => 'feed per bird of day = feed of previous day * 1000 / alive birds of day; hangar value = average of its last 7 daily values up to period end; flock = average of hangar values',
                     'value' => $feedPerBird !== null ? $this->formatDecimal($feedPerBird) : null,
-                    'calc' => $calc,
+                    'calc' => [
+                        'hangars' => $feedHangars,
+                        'hangar_average' => $feedPerBird,
+                    ],
                 ];
             } else {
-                $avgWeight = $average('weight');
-                $trendFcr = $average('trend_fcr');
+                $avgWeight = $mean(array_column($weightHangars, 'weight'));
+                $trendFcr = $mean(array_column($fcrHangars, 'trend_fcr'));
 
                 $charts['avg_weight_chart'][] = [
                     'duration' => $duration,
                     'formula' => 'avg weight = average over hangars of each hangar\'s latest chick weight up to period end',
                     'value' => $avgWeight !== null ? DecimalHelper::formatEuropean(round($avgWeight), 0) : null,
-                    'calc' => $calc,
+                    'calc' => [
+                        'hangars' => $weightHangars,
+                    ],
                 ];
                 $charts['trend_fcr_chart'][] = [
                     'duration' => $duration,
                     'formula' => 'trend FCR (hangar) = feed per bird sum of previous day / chick weight of day; flock = average over hangars of latest value up to period end',
                     'value' => $trendFcr !== null ? $this->formatDecimal($trendFcr) : null,
-                    'calc' => $calc,
+                    'calc' => [
+                        'hangars' => $fcrHangars,
+                    ],
                 ];
             }
 
@@ -1349,7 +1397,11 @@ class FlockController extends BaseController
                 'duration' => $duration,
                 'formula' => 'cumulative mortality = sum of period mortality from the first period up to this period end',
                 'value' => $cumulativeMortality,
-                'calc' => $calc,
+                'calc' => [
+                    'daily' => $mortalityDaily,
+                    'period_mortality' => $periodMortality,
+                    'cumulative_mortality' => $cumulativeMortality,
+                ],
             ];
         }
 
@@ -1418,66 +1470,21 @@ class FlockController extends BaseController
     }
 
     /**
-     * Latest non-null value of a field in a hangar's ascending daily rows, dated on or before the cutoff.
+     * Latest row (ascending daily rows) dated on or before the cutoff whose field is not null. Null if none.
      */
-    private function latestChartValue(array $rows, string $field, string $cutoff)
+    private function latestChartRow(array $rows, string $field, string $cutoff): ?array
     {
-        $value = null;
+        $found = null;
         foreach ($rows as $row) {
             if ($row['date'] > $cutoff) {
                 break;
             }
             if ($row[$field] !== null) {
-                $value = $row[$field];
+                $found = $row;
             }
         }
 
-        return $value;
-    }
-
-    /**
-     * One hangar's detail for a chart period: latest values at the period end (for the flock average)
-     * and the daily rows used in the period (for verification).
-     * Layer feed per bird = average of the last 7 daily values up to the period end (fewer if not yet available).
-     */
-    private function hangarChartDetail(int $hangarId, array $rows, array $dayRecords, array $dateSet, string $cutoff): array
-    {
-        $daily = [];
-        foreach ($rows as $row) {
-            if (!isset($dateSet[$row['date']])) {
-                continue;
-            }
-
-            $record = $dayRecords[$row['date']] ?? ['mortality' => 0, 'feed' => 0, 'eggs' => 0];
-            $daily[] = [
-                'date' => $row['date'],
-                'mortality' => $record['mortality'],
-                'feed_kg' => $record['feed'],
-                'eggs' => $record['eggs'],
-                'weight' => $row['weight'],
-                'live_birds' => $row['live_birds'],
-                'feed_per_bird' => $row['feed_per_bird'],
-                'feed_per_bird_sum' => $row['feed_per_bird_sum'],
-                'act_fcr' => $row['act_fcr'],
-                'trend_fcr' => $row['trend_fcr'],
-            ];
-        }
-
-        $last7 = array_slice(array_column(array_filter($rows, fn ($row) => $row['date'] <= $cutoff), 'feed_per_bird'), -7);
-
-        return [
-            'hangar_id' => $hangarId,
-            'as_of' => $cutoff,
-            'latest' => [
-                'weight' => $this->latestChartValue($rows, 'weight', $cutoff),
-                'act_fcr' => $this->latestChartValue($rows, 'act_fcr', $cutoff),
-                'trend_fcr' => $this->latestChartValue($rows, 'trend_fcr', $cutoff),
-                'feed_per_bird_sum' => $this->latestChartValue($rows, 'feed_per_bird_sum', $cutoff),
-                'feed_per_bird_last_7' => $last7,
-                'feed_per_bird_rolling_7' => $last7 ? array_sum($last7) / count($last7) : null,
-            ],
-            'daily' => $daily,
-        ];
+        return $found;
     }
 
     /**

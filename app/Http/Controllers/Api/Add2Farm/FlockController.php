@@ -1263,13 +1263,6 @@ class FlockController extends BaseController
             $cutoff = $period['end'];
             $dateSet = array_flip($period['dates']);
 
-            // Same duration for every chart in this period
-            $duration = [
-                'label' => $period['label'],
-                'start_date' => $period['start'],
-                'end_date' => $period['end'],
-            ];
-
             // Mortality: sum inside the period, then the running total
             $periodRecords = $dailyRecords->filter(fn ($record) => isset($dateSet[$record->record_date->toDateString()]));
             $periodMortality = (int) $periodRecords->sum('mortality');
@@ -1301,23 +1294,12 @@ class FlockController extends BaseController
                     'rolling_7' => $last7 ? array_sum(array_column($last7, 'feed_per_bird')) / count($last7) : null,
                 ];
 
-                // Broiler avg weight input: latest weight up to the period end
+                // Broiler: latest weight and latest valid trend FCR up to the period end
                 $weightRow = $this->latestChartRow($rows, 'weight', $cutoff);
-                $weightHangars[] = [
-                    'hangar_id' => $hangarId,
-                    'date' => $weightRow['date'] ?? null,
-                    'weight' => $weightRow['weight'] ?? null,
-                ];
+                $weightHangars[] = ['weight' => $weightRow['weight'] ?? null];
 
-                // Broiler trend FCR inputs: latest valid trend FCR up to the period end
                 $fcrRow = $this->latestChartRow($rows, 'trend_fcr', $cutoff);
-                $fcrHangars[] = [
-                    'hangar_id' => $hangarId,
-                    'date' => $fcrRow['date'] ?? null,
-                    'previous_feed_per_bird_sum' => $fcrRow['previous_feed_per_bird_sum'] ?? null,
-                    'weight' => $fcrRow['weight'] ?? null,
-                    'trend_fcr' => $fcrRow['trend_fcr'] ?? null,
-                ];
+                $fcrHangars[] = ['trend_fcr' => $fcrRow['trend_fcr'] ?? null];
             }
 
             // Flock value = average over hangars of their values
@@ -1346,20 +1328,14 @@ class FlockController extends BaseController
                 $trendFcr = $mean(array_column($fcrHangars, 'trend_fcr'));
 
                 $charts['avg_weight_chart'][] = [
-                    'duration' => $duration,
-                    'formula' => 'avg weight = average over hangars of each hangar\'s latest chick weight up to period end',
+                    'duration' => $period['start'],
                     'value' => $avgWeight !== null ? DecimalHelper::formatEuropean(round($avgWeight), 0) : null,
-                    'calc' => [
-                        'hangars' => $weightHangars,
-                    ],
+                    'type' => $frequency,
                 ];
                 $charts['trend_fcr_chart'][] = [
-                    'duration' => $duration,
-                    'formula' => 'trend FCR (hangar) = feed per bird sum of previous day / chick weight of day; flock = average over hangars of latest value up to period end',
+                    'duration' => $period['start'],
                     'value' => $trendFcr !== null ? $this->formatDecimal($trendFcr) : null,
-                    'calc' => [
-                        'hangars' => $fcrHangars,
-                    ],
+                    'type' => $frequency,
                 ];
             }
 

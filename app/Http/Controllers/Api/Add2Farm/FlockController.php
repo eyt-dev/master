@@ -1316,11 +1316,13 @@ class FlockController extends BaseController
 
                 $charts['avg_production_chart'][] = [
                     'duration' => $duration,
+                    'formula' => '(total eggs of day / alive birds of day) * 100 %; period: (total eggs in period / sum of daily alive birds in period) * 100 %',
                     'value' => $avgProduction !== null ? $this->formatDecimal($avgProduction) : null,
                     'calc' => $calc,
                 ];
                 $charts['feed_intake_chart'][] = [
                     'duration' => $duration,
+                    'formula' => 'feed per bird of day = feed of previous day * 1000 / alive birds of day; hangar value = average of its last 7 daily values up to period end; flock = average of hangar values',
                     'value' => $feedPerBird !== null ? $this->formatDecimal($feedPerBird) : null,
                     'calc' => $calc,
                 ];
@@ -1330,11 +1332,13 @@ class FlockController extends BaseController
 
                 $charts['avg_weight_chart'][] = [
                     'duration' => $duration,
+                    'formula' => 'avg weight = average over hangars of each hangar\'s latest chick weight up to period end',
                     'value' => $avgWeight !== null ? DecimalHelper::formatEuropean(round($avgWeight), 0) : null,
                     'calc' => $calc,
                 ];
                 $charts['trend_fcr_chart'][] = [
                     'duration' => $duration,
+                    'formula' => 'trend FCR (hangar) = feed per bird sum of previous day / chick weight of day; flock = average over hangars of latest value up to period end',
                     'value' => $trendFcr !== null ? $this->formatDecimal($trendFcr) : null,
                     'calc' => $calc,
                 ];
@@ -1343,6 +1347,7 @@ class FlockController extends BaseController
             // Cumulative: mortality from the first period up to this period's end
             $charts['mortality_chart'][] = [
                 'duration' => $duration,
+                'formula' => 'cumulative mortality = sum of period mortality from the first period up to this period end',
                 'value' => $cumulativeMortality,
                 'calc' => $calc,
             ];

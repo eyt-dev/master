@@ -1254,6 +1254,9 @@ class FlockController extends BaseController
             ? ['avg_production_chart' => [], 'feed_intake_chart' => [], 'mortality_chart' => []]
             : ['avg_weight_chart' => [], 'trend_fcr_chart' => [], 'mortality_chart' => []];
 
+        // Running mortality total across periods, in chronological order
+        $cumulativeMortality = 0;
+
         foreach ($periods as $period) {
             $cutoff = $period['end'];
             $dateSet = array_flip($period['dates']);
@@ -1261,6 +1264,7 @@ class FlockController extends BaseController
             // Period totals: sums of the daily values inside the period
             $periodRecords = $dailyRecords->filter(fn ($record) => isset($dateSet[$record->record_date->toDateString()]));
             $periodMortality = (int) $periodRecords->sum('mortality');
+            $cumulativeMortality += $periodMortality;
             $periodFeed = (float) $periodRecords->sum('feed_kg');
             $periodEggs = (int) $periodRecords->sum('eggs_count');
             $mortalityPct = $totalBird > 0 ? ($periodMortality / $totalBird) * 100 : 0;
@@ -1297,6 +1301,7 @@ class FlockController extends BaseController
                 'dates' => $period['dates'],
                 'totals' => [
                     'mortality' => $periodMortality,
+                    'cumulative_mortality' => $cumulativeMortality,
                     'feed_kg' => $periodFeed,
                     'eggs' => $periodEggs,
                     'live_birds_sum' => $periodLiveBirds,
@@ -1335,9 +1340,10 @@ class FlockController extends BaseController
                 ];
             }
 
+            // Cumulative: mortality from the first period up to this period's end
             $charts['mortality_chart'][] = [
                 'duration' => $duration,
-                'value' => $periodMortality,
+                'value' => $cumulativeMortality,
                 'calc' => $calc,
             ];
         }

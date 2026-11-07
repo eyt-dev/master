@@ -114,6 +114,7 @@ Route::prefix('add2farm')->middleware('set.add2farm.language')->group(function (
         Route::get('material-names', [Add2FarmDropdownController::class, 'materialNames']);
         Route::get('material-types', [Add2FarmDropdownController::class, 'materialTypes']);
         Route::get('feed_suppliers', [Add2FarmDropdownController::class, 'feedSuppliers']);
+        Route::get('egg_wholesalers', [Add2FarmDropdownController::class, 'eggWholesalers']);
     });
 });
 

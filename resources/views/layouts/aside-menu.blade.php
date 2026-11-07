@@ -272,6 +272,16 @@
                         <span class="side-menu__label">Feed Suppliers</span></a>
                 </li>
             @endcan
+            @can('view.egg_wholesaler')
+                <li class="slide">
+                    <a class="side-menu__item" href="{{route('egg-wholesaler.index', ['username' => $siteSlug])}}">
+                        <svg class="side-menu__icon" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                            <path d="M0 0h24v24H0V0z" fill="none"/>
+                            <path d="M12 2C8.5 2 6 8.5 6 14c0 3.9 2.7 8 6 8s6-4.1 6-8c0-5.5-2.5-12-6-12z"/>
+                        </svg>
+                        <span class="side-menu__label">Egg Wholesalers</span></a>
+                </li>
+            @endcan
             @can('view.slaughter')
                 <li class="slide">
                     <a class="side-menu__item" href="{{route('slaughter.index', ['username' => $siteSlug])}}">

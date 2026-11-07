@@ -20,6 +20,7 @@ use App\Http\Controllers\Backend\MaterialTypeController;
 use App\Http\Controllers\Backend\FarmController;
 use App\Http\Controllers\Backend\HangarController;
 use App\Http\Controllers\Backend\FeedSupplierController;
+use App\Http\Controllers\Backend\EggWholesalerController;
 use App\Http\Controllers\Backend\SlaughterController;
 use App\Http\Controllers\Backend\ChicksSupplierController;
 use App\Http\Controllers\Backend\FlockController;
@@ -215,6 +216,14 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('{feed_supplier}/edit', 'edit')->name('feed-supplier.edit')->middleware('permission:edit.feed_supplier');
                         Route::post('{feed_supplier}', 'update')->name('feed-supplier.update')->middleware('permission:edit.feed_supplier');
                         Route::get('destroy/{feed_supplier}', 'destroy')->name('feed-supplier.destroy')->middleware('permission:delete.feed_supplier');
+                    });
+                    Route::controller(EggWholesalerController::class)->prefix('egg-wholesaler')->group(function () {
+                        Route::get('/', 'index')->name('egg-wholesaler.index')->middleware('permission:view.egg_wholesaler');
+                        Route::get('create', 'create')->name('egg-wholesaler.create')->middleware('permission:create.egg_wholesaler');
+                        Route::post('store', 'store')->name('egg-wholesaler.store')->middleware('permission:create.egg_wholesaler');
+                        Route::get('{egg_wholesaler}/edit', 'edit')->name('egg-wholesaler.edit')->middleware('permission:edit.egg_wholesaler');
+                        Route::post('{egg_wholesaler}', 'update')->name('egg-wholesaler.update')->middleware('permission:edit.egg_wholesaler');
+                        Route::get('destroy/{egg_wholesaler}', 'destroy')->name('egg-wholesaler.destroy')->middleware('permission:delete.egg_wholesaler');
                     });
                     Route::controller(SlaughterController::class)->prefix('slaughter')->group(function () {
                         Route::get('/', 'index')->name('slaughter.index')->middleware('permission:view.slaughter');
@@ -564,6 +573,14 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::get('{feed_supplier}/edit', 'edit')->name('feed-supplier.edit')->middleware('permission:edit.feed_supplier');
                 Route::post('{feed_supplier}', 'update')->name('feed-supplier.update')->middleware('permission:edit.feed_supplier');
                 Route::get('destroy/{feed_supplier}', 'destroy')->name('feed-supplier.destroy')->middleware('permission:delete.feed_supplier');
+            });
+            Route::controller(EggWholesalerController::class)->prefix('egg-wholesaler')->group(function () {
+                Route::get('/', 'index')->name('egg-wholesaler.index')->middleware('permission:view.egg_wholesaler');
+                Route::get('create', 'create')->name('egg-wholesaler.create')->middleware('permission:create.egg_wholesaler');
+                Route::post('store', 'store')->name('egg-wholesaler.store')->middleware('permission:create.egg_wholesaler');
+                Route::get('{egg_wholesaler}/edit', 'edit')->name('egg-wholesaler.edit')->middleware('permission:edit.egg_wholesaler');
+                Route::post('{egg_wholesaler}', 'update')->name('egg-wholesaler.update')->middleware('permission:edit.egg_wholesaler');
+                Route::get('destroy/{egg_wholesaler}', 'destroy')->name('egg-wholesaler.destroy')->middleware('permission:delete.egg_wholesaler');
             });
             Route::controller(SlaughterController::class)->prefix('slaughter')->group(function () {
                 Route::get('/', 'index')->name('slaughter.index')->middleware('permission:view.slaughter');

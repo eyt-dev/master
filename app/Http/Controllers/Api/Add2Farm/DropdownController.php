@@ -6,6 +6,7 @@ use App\Models\Farm;
 use App\Models\ChicksSupplier;
 use App\Models\Admin;
 use App\Models\FeedSupplier;
+use App\Models\EggWholesaler;
 use App\Models\TypeMapping;
 use App\Models\MaterialName;
 use App\Models\MaterialType;
@@ -429,6 +430,41 @@ class DropdownController extends BaseController
             'success' => true,
             'message' => 'Farm types retrieved successfully.',
             'data' => $types,
+        ]);
+    }
+
+    /**
+     * Get egg wholesalers dropdown
+     *
+     * Returns list of available egg wholesalers for dropdown selection.
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Egg wholesalers retrieved successfully.",
+     *   "data": [
+     *     {
+     *       "id": 1,
+     *       "name": "Egg Wholesaler Name"
+     *     }
+     *   ]
+     * }
+     */
+    public function eggWholesalers()
+    {
+        $eggWholesalers = EggWholesaler::select('id', 'name')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($wholesaler) {
+                return [
+                    'id' => $wholesaler->id,
+                    'name' => $wholesaler->name,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Egg wholesalers retrieved successfully.',
+            'data' => $eggWholesalers,
         ]);
     }
 

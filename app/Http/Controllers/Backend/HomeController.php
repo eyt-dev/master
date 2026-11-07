@@ -14,6 +14,7 @@ use App\Models\DailyRecord;
 use App\Models\Element;
 use App\Models\Farm;
 use App\Models\FeedSupplier;
+use App\Models\EggWholesaler;
 use App\Models\Flock;
 use App\Models\FlockEnd;
 use App\Models\Game;
@@ -319,6 +320,19 @@ class HomeController extends Controller
                 'name' => 'Feed Suppliers',
                 'count' => $feedSupplierCount,
                 'route' => 'feed-supplier.index',
+                'icon' => 'fe-anchor'
+            ];
+        }
+
+        if ($user->can('view.egg_wholesaler')) {
+            $eggWholesalerCount = EggWholesaler::when(!$isSuperAdmin, function ($q) use ($user) {
+                    $q->where('created_by', $user->id);
+                })
+                ->count();
+            $modules['farm']['items'][] = [
+                'name' => 'Egg Wholesalers',
+                'count' => $eggWholesalerCount,
+                'route' => 'egg-wholesaler.index',
                 'icon' => 'fe-anchor'
             ];
         }

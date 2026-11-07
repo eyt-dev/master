@@ -29,6 +29,11 @@
                                 {{ session('successMsg') }}
                             </div>
                         @endif
+                        @if (session('warningMsg'))
+                            <div class="alert alert-warning">
+                                {{ session('warningMsg') }}
+                            </div>
+                        @endif
 						@include('layouts.header')
 						@yield('page-header')
 						@yield('content')

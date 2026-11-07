@@ -21,6 +21,7 @@ use App\Http\Controllers\Backend\FarmController;
 use App\Http\Controllers\Backend\HangarController;
 use App\Http\Controllers\Backend\FeedSupplierController;
 use App\Http\Controllers\Backend\EggWholesalerController;
+use App\Http\Controllers\Backend\EggSaleController;
 use App\Http\Controllers\Backend\SlaughterController;
 use App\Http\Controllers\Backend\ChicksSupplierController;
 use App\Http\Controllers\Backend\FlockController;
@@ -283,6 +284,16 @@ if ($currentHost === config('domains.admin_subdomain')) {
                         Route::get('flocks-by-farm/{farm}', 'getFlocksByFarm')->name('chicken-sale.flocks-by-farm');
                         Route::get('hangars-by-flock/{flock}', 'getHangarsByFlock')->name('chicken-sale.hangars-by-flock');
                         Route::get('last-net-weights/{flock}/{hangar}', 'getLastNetWeights')->name('chicken-sale.last-net-weights');
+                    });
+                    Route::controller(EggSaleController::class)->prefix('egg-sale')->group(function () {
+                        Route::get('/', 'index')->name('egg-sale.index')->middleware('permission:view.egg_sale');
+                        Route::get('create', 'create')->name('egg-sale.create')->middleware('permission:create.egg_sale');
+                        Route::post('store', 'store')->name('egg-sale.store')->middleware('permission:create.egg_sale');
+                        Route::get('{egg_sale}/edit', 'edit')->name('egg-sale.edit')->middleware('permission:edit.egg_sale');
+                        Route::post('{egg_sale}', 'update')->name('egg-sale.update')->middleware('permission:edit.egg_sale');
+                        Route::get('destroy/{egg_sale}', 'destroy')->name('egg-sale.destroy')->middleware('permission:delete.egg_sale');
+                        Route::get('flocks-by-farm/{farm}', 'getFlocksByFarm')->name('egg-sale.flocks-by-farm');
+                        Route::get('available-eggs/{flock}', 'getAvailableEggs')->name('egg-sale.available-eggs');
                     });
                     Route::controller(TypeMappingController::class)->prefix('type-mapping')->group(function () {
                         Route::get('/', 'index')->name('type-mapping.index')->middleware('permission:view.type_mapping');
@@ -636,6 +647,16 @@ if ($currentHost === config('domains.admin_subdomain')) {
                 Route::get('destroy/{chicken_sale}', 'destroy')->name('chicken-sale.destroy')->middleware('permission:delete.chicken_sale');
                 Route::get('flocks-by-farm/{farm}', 'getFlocksByFarm')->name('chicken-sale.flocks-by-farm');
                 Route::get('hangars-by-flock/{flock}', 'getHangarsByFlock')->name('chicken-sale.hangars-by-flock');
+            });
+            Route::controller(EggSaleController::class)->prefix('egg-sale')->group(function () {
+                Route::get('/', 'index')->name('egg-sale.index')->middleware('permission:view.egg_sale');
+                Route::get('create', 'create')->name('egg-sale.create')->middleware('permission:create.egg_sale');
+                Route::post('store', 'store')->name('egg-sale.store')->middleware('permission:create.egg_sale');
+                Route::get('{egg_sale}/edit', 'edit')->name('egg-sale.edit')->middleware('permission:edit.egg_sale');
+                Route::post('{egg_sale}', 'update')->name('egg-sale.update')->middleware('permission:edit.egg_sale');
+                Route::get('destroy/{egg_sale}', 'destroy')->name('egg-sale.destroy')->middleware('permission:delete.egg_sale');
+                Route::get('flocks-by-farm/{farm}', 'getFlocksByFarm')->name('egg-sale.flocks-by-farm');
+                Route::get('available-eggs/{flock}', 'getAvailableEggs')->name('egg-sale.available-eggs');
             });
             Route::controller(PageController::class)->prefix('page')->group(function () {
                 Route::get('/', 'index')->name('page.index')->middleware('permission:view.page');

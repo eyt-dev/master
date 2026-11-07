@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\Add2Farm\FarmController as Add2FarmFarmController;
 use App\Http\Controllers\Api\Add2Farm\FlockController as Add2FarmFlockController;
 use App\Http\Controllers\Api\Add2Farm\FlockEndController as Add2FarmFlockEndController;
 use App\Http\Controllers\Api\Add2Farm\SaleController as Add2FarmSaleController;
+use App\Http\Controllers\Api\Add2Farm\EggSaleController as Add2FarmEggSaleController;
 use App\Http\Controllers\Api\Add2Farm\DailyRecordController as Add2FarmDailyRecordController;
 use App\Http\Controllers\Api\Add2Farm\DropdownController as Add2FarmDropdownController;
 use App\Http\Controllers\Api\Add2Farm\CountryController as Add2FarmCountryController;
@@ -208,6 +209,13 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
     // Slaughter sales (last 12 months) - same access as flock harvest records
     Route::middleware(['auth:sanctum', 'check.admin.type:0,Admin,Public Vendors,Private Vendors'])->group(function () {
         Route::get('sales', [Add2FarmSaleController::class, 'index']);
+    });
+
+    // Egg sales (tray based) - same access as flock harvest records
+    Route::middleware(['auth:sanctum', 'check.admin.type:0,Admin,Public Vendors,Private Vendors'])->group(function () {
+        Route::get('sale_egg', [Add2FarmEggSaleController::class, 'index']);
+        Route::post('sale_egg', [Add2FarmEggSaleController::class, 'store']);
+        Route::get('available_eggs/{flock_id}', [Add2FarmEggSaleController::class, 'availableEggs']);
     });
 
     // Daily Records - Type 3 (Supervisor) and Type 4 (Farmer)

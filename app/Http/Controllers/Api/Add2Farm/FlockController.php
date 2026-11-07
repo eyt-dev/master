@@ -1283,25 +1283,32 @@ class FlockController extends BaseController
             $cumulativeMortality += $periodMortality;
 
             // Per hangar inputs for the period
-            $eggsDaily = [];
+            $productionHangars = [];
             $feedHangars = [];
             $weightHangars = [];
             $fcrHangars = [];
-            $periodLiveBirds = 0;
             foreach ($hangarDays as $hangarId => $rows) {
                 $dayRecords = $recordsByHangarDate[$hangarId] ?? [];
                 $periodRows = array_values(array_filter($rows, fn ($row) => isset($dateSet[$row['date']])));
 
-                // Layer avg production inputs: eggs and alive birds of each day
+                // Layer avg production: this hangar's eggs and alive birds for each day, then its production %
+                $hangarDaily = [];
                 foreach ($periodRows as $row) {
-                    $eggsDaily[] = [
-                        'hangar_id' => $hangarId,
+                    $hangarDaily[] = [
                         'date' => $row['date'],
                         'eggs' => $dayRecords[$row['date']]['eggs'] ?? 0,
                         'live_birds' => $row['live_birds'],
                     ];
-                    $periodLiveBirds += $row['live_birds'];
                 }
+                $hangarEggs = array_sum(array_column($hangarDaily, 'eggs'));
+                $hangarLiveBirds = array_sum(array_column($hangarDaily, 'live_birds'));
+                $productionHangars[] = [
+                    'hangar_id' => $hangarId,
+                    'daily' => $hangarDaily,
+                    'total_eggs' => $hangarEggs,
+                    'total_live_birds' => $hangarLiveBirds,
+                    'production' => $hangarLiveBirds > 0 ? $hangarEggs / $hangarLiveBirds * 100 : null,
+                ];
 
                 // Layer feed per bird inputs: last 7 daily values up to the period end
                 $last7 = array_slice(array_values(array_filter($rows, fn ($row) => $row['date'] <= $cutoff)), -7);
@@ -1347,18 +1354,16 @@ class FlockController extends BaseController
             };
 
             if ($isLayer) {
-                $periodEggs = array_sum(array_column($eggsDaily, 'eggs'));
-                $avgProduction = $periodLiveBirds > 0 ? $periodEggs / $periodLiveBirds * 100 : null;
+                $avgProduction = $mean(array_column($productionHangars, 'production'));
                 $feedPerBird = $mean(array_column($feedHangars, 'rolling_7'));
 
                 $charts['avg_production_chart'][] = [
                     'duration' => $duration,
-                    'formula' => '(total eggs of day / alive birds of day) * 100 %; period: (total eggs in period / sum of daily alive birds in period) * 100 %',
+                    'formula' => 'hangar production = (total eggs of hangar / alive birds of hangar) * 100 %; flock = average of hangar productions',
                     'value' => $avgProduction !== null ? $this->formatDecimal($avgProduction) : null,
                     'calc' => [
-                        'daily' => $eggsDaily,
-                        'total_eggs' => $periodEggs,
-                        'total_live_birds' => $periodLiveBirds,
+                        'hangars' => $productionHangars,
+                        'hangar_average' => $avgProduction,
                     ],
                 ];
                 $charts['feed_intake_chart'][] = [

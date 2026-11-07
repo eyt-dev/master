@@ -180,8 +180,9 @@ class Flock extends Model
      * For date D: feed_yesterday_kg = feed of D-1 (0 if none), live_birds = allocated - mortality up to D - harvested up to D.
      * mortality and total_harvested are cumulative up to D, the same figures used in the live bird calculation.
      * feed_per_bird_sum is the running sum of feed_per_bird from the first date up to D.
+     * $precise keeps feed_per_bird at 2 decimals (used by the chart); the default rounds to whole grams for the current values.
      */
-    public function feedPerBirdHistoryByHangar(): array
+    public function feedPerBirdHistoryByHangar(bool $precise = false): array
     {
         $dailyByHangar = DailyRecord::where('flock_id', $this->id)
             ->selectRaw('hangar_id, record_date, SUM(feed_kg) as feed, SUM(mortality) as mortality')
@@ -214,7 +215,9 @@ class Flock extends Model
                 $cumulativeHarvested = (int) $harvests->where('sale_date', '<=', $day->record_date)->sum('harvested');
                 $liveBirds = max(0, $allocation->quantity - $cumulativeMortality - $cumulativeHarvested);
                 $feedYesterday = (float) ($feedByDate[Carbon::parse($day->record_date)->subDay()->toDateString()] ?? 0);
-                $feedPerBird = $liveBirds > 0 ? (int) round($feedYesterday * 1000 / $liveBirds) : 0;
+                $feedPerBird = $liveBirds > 0
+                    ? ($precise ? round($feedYesterday * 1000 / $liveBirds, 2) : (int) round($feedYesterday * 1000 / $liveBirds))
+                    : 0;
                 $cumulativeFeedPerBird += $feedPerBird;
 
                 $history[$hangarId][] = [

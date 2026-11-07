@@ -27,7 +27,7 @@
                 <select class="form-control" name="farm_id" id="farm_id" required="">
                     <option value="">Select Farm</option>
                     @foreach($farms as $farm)
-                        <option value="{{ $farm->id }}" {{ old('farm_id', $chickenSale->farm_id ?? '') == $farm->id ? 'selected' : '' }}>
+                        <option value="{{ $farm->id }}" {{ old('farm_id', $chickenSale->flock->farm_id ?? '') == $farm->id ? 'selected' : '' }}>
                             {{ $farm->name }}
                         </option>
                     @endforeach

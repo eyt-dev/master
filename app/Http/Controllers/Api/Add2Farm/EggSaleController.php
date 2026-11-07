@@ -236,7 +236,7 @@ class EggSaleController extends BaseController
      * `months` gives the totals per month-year.
      * Avg. weight (from daily records' eggs_weight, rows with no weight ignored):
      * - sale item: average of the flock's latest day (e.g. hangar 1 and 2 of that day)
-     * - sale_flocks: average of all the flock's records
+     * - sale_flocks: same as the flock's sale items (latest-day average)
      * - months: average of the sale items' avg weights in that month
      * - top level: average of the month averages
      */
@@ -315,7 +315,7 @@ class EggSaleController extends BaseController
 
         $stock = EggSale::stockByFlock($sales->pluck('flock_id'));
 
-        $saleFlocks = $sales->groupBy('flock_id')->map(function ($flockSales) use ($stock, $overallAvg) {
+        $saleFlocks = $sales->groupBy('flock_id')->map(function ($flockSales) use ($stock, $latestDayAvg) {
             $sale = $flockSales->first();
             $row = $stock[$sale->flock_id];
 
@@ -328,7 +328,7 @@ class EggSaleController extends BaseController
                 'eggs_produced' => $row['total'],
                 'eggs_sold' => $row['sold'],
                 'remaining_eggs' => $row['remaining'],
-                'avg_weight' => $this->formatWeight($overallAvg[$sale->flock_id] ?? null),
+                'avg_weight' => $this->formatWeight($latestDayAvg[$sale->flock_id] ?? null),
             ];
         })->values();
 

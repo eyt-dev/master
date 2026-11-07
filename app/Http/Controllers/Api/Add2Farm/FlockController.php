@@ -1270,16 +1270,9 @@ class FlockController extends BaseController
                 'end_date' => $period['end'],
             ];
 
-            // Mortality: daily sums inside the period, then the running total
+            // Mortality: sum inside the period, then the running total
             $periodRecords = $dailyRecords->filter(fn ($record) => isset($dateSet[$record->record_date->toDateString()]));
-            $mortalityDaily = [];
-            foreach ($period['dates'] as $date) {
-                $mortalityDaily[] = [
-                    'date' => $date,
-                    'mortality' => (int) $periodRecords->filter(fn ($record) => $record->record_date->toDateString() === $date)->sum('mortality'),
-                ];
-            }
-            $periodMortality = array_sum(array_column($mortalityDaily, 'mortality'));
+            $periodMortality = (int) $periodRecords->sum('mortality');
             $cumulativeMortality += $periodMortality;
 
             // Per hangar inputs for the period
@@ -1291,39 +1284,20 @@ class FlockController extends BaseController
                 $dayRecords = $recordsByHangarDate[$hangarId] ?? [];
                 $periodRows = array_values(array_filter($rows, fn ($row) => isset($dateSet[$row['date']])));
 
-                // Layer avg production: this hangar's eggs and alive birds for each day, then its production %
-                $hangarDaily = [];
+                // Layer avg production: this hangar's eggs and alive birds in the period, then its production %
+                $hangarEggs = 0;
+                $hangarLiveBirds = 0;
                 foreach ($periodRows as $row) {
-                    $hangarDaily[] = [
-                        'date' => $row['date'],
-                        'eggs' => $dayRecords[$row['date']]['eggs'] ?? 0,
-                        'live_birds' => $row['live_birds'],
-                    ];
+                    $hangarEggs += $dayRecords[$row['date']]['eggs'] ?? 0;
+                    $hangarLiveBirds += $row['live_birds'];
                 }
-                $hangarEggs = array_sum(array_column($hangarDaily, 'eggs'));
-                $hangarLiveBirds = array_sum(array_column($hangarDaily, 'live_birds'));
                 $productionHangars[] = [
-                    'hangar_id' => $hangarId,
-                    'daily' => $hangarDaily,
-                    'total_eggs' => $hangarEggs,
-                    'total_live_birds' => $hangarLiveBirds,
                     'production' => $hangarLiveBirds > 0 ? $hangarEggs / $hangarLiveBirds * 100 : null,
                 ];
 
-                // Layer feed per bird inputs: last 7 daily values up to the period end
+                // Layer feed per bird: average of the last 7 daily values up to the period end
                 $last7 = array_slice(array_values(array_filter($rows, fn ($row) => $row['date'] <= $cutoff)), -7);
                 $feedHangars[] = [
-                    'hangar_id' => $hangarId,
-                    'daily' => array_map(fn ($row) => [
-                        'date' => $row['date'],
-                        'previous_day_feed_kg' => $row['feed_yesterday_kg'],
-                        'live_birds' => $row['live_birds'],
-                        'feed_per_bird' => $row['feed_per_bird'],
-                    ], $periodRows),
-                    'last_7' => array_map(fn ($row) => [
-                        'date' => $row['date'],
-                        'feed_per_bird' => $row['feed_per_bird'],
-                    ], $last7),
                     'rolling_7' => $last7 ? array_sum(array_column($last7, 'feed_per_bird')) / count($last7) : null,
                 ];
 
@@ -1358,22 +1332,14 @@ class FlockController extends BaseController
                 $feedPerBird = $mean(array_column($feedHangars, 'rolling_7'));
 
                 $charts['avg_production_chart'][] = [
-                    'duration' => $duration,
-                    'formula' => 'hangar production = (total eggs of hangar / alive birds of hangar) * 100 %; flock = average of hangar productions',
+                    'duration' => $period['start'],
                     'value' => $avgProduction !== null ? $this->formatDecimal($avgProduction) : null,
-                    'calc' => [
-                        'hangars' => $productionHangars,
-                        'hangar_average' => $avgProduction,
-                    ],
+                    'type' => $frequency,
                 ];
                 $charts['feed_intake_chart'][] = [
-                    'duration' => $duration,
-                    'formula' => 'feed per bird of day = feed of previous day * 1000 / alive birds of day; hangar value = average of its last 7 daily values up to period end; flock = average of hangar values',
+                    'duration' => $period['start'],
                     'value' => $feedPerBird !== null ? $this->formatDecimal($feedPerBird) : null,
-                    'calc' => [
-                        'hangars' => $feedHangars,
-                        'hangar_average' => $feedPerBird,
-                    ],
+                    'type' => $frequency,
                 ];
             } else {
                 $avgWeight = $mean(array_column($weightHangars, 'weight'));
@@ -1399,14 +1365,9 @@ class FlockController extends BaseController
 
             // Cumulative: mortality from the first period up to this period's end
             $charts['mortality_chart'][] = [
-                'duration' => $duration,
-                'formula' => 'cumulative mortality = sum of period mortality from the first period up to this period end',
+                'duration' => $period['start'],
                 'value' => $cumulativeMortality,
-                'calc' => [
-                    'daily' => $mortalityDaily,
-                    'period_mortality' => $periodMortality,
-                    'cumulative_mortality' => $cumulativeMortality,
-                ],
+                'type' => $frequency,
             ];
         }
 

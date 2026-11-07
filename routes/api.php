@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\Add2Farm\CountryController as Add2FarmCountryContro
 use App\Http\Controllers\Api\Add2Farm\FeedStockController as Add2FarmFeedStockController;
 use App\Http\Controllers\Api\Add2Farm\HangarMaintenanceController as Add2FarmHangarMaintenanceController;
 use App\Http\Controllers\Api\Add2Farm\FlockEndMaintenanceController as Add2FarmFlockEndMaintenanceController;
+use App\Http\Controllers\Api\Add2Farm\ChartCalculationController as Add2FarmChartCalculationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -190,6 +191,7 @@ Route::prefix('add2farm')->middleware(['reject.password.reset.token', 'set.add2f
         Route::get('flocks/{flock}', [Add2FarmFlockController::class, 'show']);
         Route::put('flocks/{flock}', [Add2FarmFlockController::class, 'update']);
         Route::delete('flocks/{flock}', [Add2FarmFlockController::class, 'destroy']);
+        Route::get('flocks/{flock}/chart-calculation', [Add2FarmChartCalculationController::class, 'show']);
     });
 
     // Flock Harvest/End Records - Type 3 (Supervisor) only

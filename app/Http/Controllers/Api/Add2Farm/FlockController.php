@@ -1289,6 +1289,7 @@ class FlockController extends BaseController
 
                 $performanceTrend[] = [
                     'week' => $period['label'],
+                    'dates' => $period['dates'],
                     'avg_production' => $avgProduction,
                     'feed' => DecimalHelper::formatInteger($periodFeed),
                     'feed_per_bird' => $feedPerBird !== null ? $this->formatDecimal($feedPerBird) : null,
@@ -1298,6 +1299,7 @@ class FlockController extends BaseController
 
                 $avgProductionTrend[] = [
                     'week' => $period['label'],
+                    'dates' => $period['dates'],
                     'avg_production' => $avgProduction,
                 ];
             } else {
@@ -1309,6 +1311,7 @@ class FlockController extends BaseController
 
                 $performanceTrend[] = [
                     'week' => $period['label'],
+                    'dates' => $period['dates'],
                     'avg_weight' => $avgWeight !== null ? DecimalHelper::formatEuropean(round($avgWeight), 0) : null,
                     'feed_per_bird' => $feedPerBird !== null ? $this->formatDecimal($feedPerBird) : null,
                     'act_fcr' => $actFcr !== null ? $this->formatDecimal($actFcr) : null,
@@ -1321,11 +1324,13 @@ class FlockController extends BaseController
             // Separate series for the same period: feed intake and mortality
             $feedIntakeTrend[] = [
                 'week' => $period['label'],
+                    'dates' => $period['dates'],
                 'feed' => DecimalHelper::formatInteger($periodFeed),
             ];
 
             $mortalityTrend[] = [
                 'week' => $period['label'],
+                    'dates' => $period['dates'],
                 'mortality_value' => $periodMortality,
                 'mortality_rate' => $this->formatDecimal($mortalityPct) . ' %',
             ];
